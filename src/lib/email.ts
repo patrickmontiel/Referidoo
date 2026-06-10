@@ -221,20 +221,21 @@ function paymentSentHtml(p: PaymentPayload) {
           <p style="margin:0;color:#fff;font-size:12px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo</p>
         </td></tr>
         <tr><td style="padding:32px">
-          <p style="margin:0 0 4px;font-size:13px;color:#6b7280">¡Tu premio está en camino!</p>
+          <p style="margin:0 0 4px;font-size:13px;color:#6b7280">¡Tu premio ha sido enviado!</p>
           <h1 style="margin:0 0 24px;font-size:24px;font-weight:700;color:#0a0a0a">${formatMXN(p.rewardAmount)}</h1>
           <table width="100%" style="background:#f9fafb;border-radius:12px;margin-bottom:24px">
             <tr><td style="padding:20px">
               <p style="margin:0 0 4px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:2px;text-transform:uppercase">Por referir a</p>
               <p style="margin:0 0 12px;font-size:18px;font-weight:700;color:#0a0a0a">${p.leadName}</p>
-              <p style="margin:0;font-size:13px;color:#6b7280">${p.advisorName} confirmó que tu contacto contrató un plan. Tu premio #${p.tierPosition} ya fue aprobado.</p>
+              <p style="margin:0;font-size:13px;color:#6b7280">${p.advisorName} confirmó que tu contacto contrató un plan. Tu premio #${p.tierPosition} ha sido enviado.</p>
               ${p.paymentNote ? `<p style="margin:10px 0 0;font-size:12px;color:#9ca3af">Referencia: ${p.paymentNote}</p>` : ""}
             </td></tr>
           </table>
-          <a href="${p.portalUrl}" style="display:block;background:#000;color:#fff;text-align:center;padding:14px;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none;margin-bottom:20px">
-            Ver mi dashboard →
+          <p style="margin:0 0 12px;font-size:15px;font-weight:600;color:#0a0a0a;text-align:center">¿Ya lo recibiste?</p>
+          <a href="${p.portalUrl}" style="display:block;background:#000;color:#fff;text-align:center;padding:16px;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:12px">
+            Sí, lo recibí ✓
           </a>
-          <p style="margin:0;font-size:12px;color:#d1d5db;text-align:center">En unos minutos te pediremos confirmar que lo recibiste.</p>
+          <p style="margin:0;font-size:12px;color:#d1d5db;text-align:center">Si no recibiste nada, contacta a ${p.advisorName} directamente.</p>
         </td></tr>
       </table>
     </td></tr>
