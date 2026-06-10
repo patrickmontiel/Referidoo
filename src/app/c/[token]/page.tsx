@@ -117,7 +117,7 @@ export default function ClientPortalPage() {
   const hoursLeft = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const referralsInWindow = referrals.filter(r => new Date(r.createdAt) <= launchWindowEnd).length;
   const firstTierAmount = tiers[0]?.amount ?? 1500;
-  const bonusAmount = firstTierAmount * 2;
+  const bonusAmount = firstTierAmount + 1000;
 
   // Onboarding modal — shown only on first visit
   if (showOnboarding) {

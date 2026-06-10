@@ -43,7 +43,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           where: { referrerId: referral.referrerId, createdAt: { lte: windowEnd } },
         });
         if (countInWindow >= 3) {
-          finalRewardAmount = referral.rewardAmount * 2;
+          finalRewardAmount = referral.rewardAmount + 1000;
           launchBonusApplied = true;
         }
       }
