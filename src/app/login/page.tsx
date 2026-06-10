@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Logo } from "@/components/Logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -44,15 +45,11 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <div className="mb-10 text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-black mb-6">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M17 20H7C5.9 20 5 19.1 5 18V6C5 4.9 5.9 4 7 4H17C18.1 4 19 4.9 19 6V18C19 19.1 18.1 20 17 20Z" stroke="white" strokeWidth="1.5"/>
-              <path d="M9 12L11 14L15 10" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+        <div className="mb-10 text-center flex flex-col items-center">
+          <div className="mb-4">
+            <Logo size="md" />
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight">Referidoo</h1>
-          <p className="text-sm text-gray-500 mt-1">Panel del asesor</p>
+          <p className="text-sm text-gray-400">Panel del asesor</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

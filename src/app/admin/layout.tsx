@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/Logo";
 
 const nav = [
   { href: "/admin", label: "Resumen", icon: "M3 12L12 3L21 12V20C21 20.6 20.6 21 20 21H15V16H9V21H4C3.4 21 3 20.6 3 20V12Z" },
@@ -113,15 +114,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <header className="bg-white border-b border-gray-100 sticky top-0 z-20"
               style={{ paddingTop: "env(safe-area-inset-top)" }}>
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M17 20H7C5.9 20 5 19.1 5 18V6C5 4.9 5.9 4 7 4H17C18.1 4 19 4.9 19 6V18C19 19.1 18.1 20 17 20Z" stroke="white" strokeWidth="1.5"/>
-                <path d="M9 12L11 14L15 10" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <span className="font-semibold text-sm tracking-tight">Referidoo</span>
-          </div>
+          <Logo size="sm" />
           <div className="flex items-center gap-3">
             <button
               onClick={() => window.dispatchEvent(new Event("referidoo:tour"))}
@@ -238,10 +231,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           style={{ opacity: fadingOut ? 0 : 1, transition: "opacity 0.8s ease-out" }}
         >
           <div className="text-center">
-            {/* Logo */}
-            <div className="flex items-end justify-center gap-0 mb-10">
-              <span className="text-5xl font-bold tracking-tight text-black leading-none">referidoo</span>
-              <span className="w-3.5 h-3.5 rounded-full bg-blue-500 mb-1 ml-0.5 flex-shrink-0" />
+            <div className="mb-10">
+              <Logo size="lg" />
             </div>
             {welcomeName && (
               <p className="text-black/40 text-base font-normal">
