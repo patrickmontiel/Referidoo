@@ -17,6 +17,7 @@ type Client = {
   referrals: { rewardAmount: number; rewardStatus: string; status: string }[];
 };
 
+type Advisor = { name: string; companyName: string | null };
 type CsvRow = { name: string; phone: string; email: string; policyNumber: string };
 type ImportResult = { name: string; ok: boolean; error?: string };
 
@@ -44,12 +45,15 @@ function parseCsv(text: string): CsvRow[] {
 
 export default function ClientesPage() {
   const [clients, setClients] = useState<Client[]>([]);
+  const [advisor, setAdvisor] = useState<Advisor | null>(null);
+  const [maxTierAmount, setMaxTierAmount] = useState(3500);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", policyNumber: "" });
   const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deactivateId, setDeactivateId] = useState<string | null>(null);
   // CSV import
   const fileRef = useRef<HTMLInputElement>(null);
   const [csvRows, setCsvRows] = useState<CsvRow[] | null>(null);
@@ -57,9 +61,18 @@ export default function ClientesPage() {
   const [importResults, setImportResults] = useState<ImportResult[] | null>(null);
 
   function load() {
-    fetch("/api/clients")
-      .then((r) => r.json())
-      .then((d) => { setClients(Array.isArray(d) ? d : []); setLoading(false); });
+    Promise.all([
+      fetch("/api/clients").then((r) => r.json()),
+      fetch("/api/advisor/me").then((r) => r.json()),
+      fetch("/api/tiers").then((r) => r.json()),
+    ]).then(([clientsData, advData, tiersData]) => {
+      setClients(Array.isArray(clientsData) ? clientsData : []);
+      if (advData?.name) setAdvisor(advData);
+      if (tiersData?.tiers?.length) {
+        setMaxTierAmount(Math.max(...tiersData.tiers.map((t: { amount: number }) => t.amount)));
+      }
+      setLoading(false);
+    });
   }
 
   useEffect(() => { load(); }, []);
@@ -109,8 +122,8 @@ export default function ClientesPage() {
   }
 
   async function deactivate(id: string) {
-    if (!confirm("¿Desactivar este cliente?")) return;
     await fetch(`/api/clients/${id}`, { method: "DELETE" });
+    setDeactivateId(null);
     load();
   }
 
@@ -315,15 +328,32 @@ export default function ClientesPage() {
                       </div>
                     </div>
                   </div>
-                  <button
-                    onClick={() => deactivate(client.id)}
-                    className="text-gray-300 hover:text-red-400 transition p-1"
-                    title="Desactivar"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                  </button>
+                  {deactivateId === client.id ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => deactivate(client.id)}
+                        className="text-xs px-2.5 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition font-medium"
+                      >
+                        Confirmar
+                      </button>
+                      <button
+                        onClick={() => setDeactivateId(null)}
+                        className="text-xs text-gray-400 hover:text-gray-600 transition"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setDeactivateId(client.id)}
+                      className="text-gray-300 hover:text-red-400 transition p-1"
+                      title="Desactivar"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      </svg>
+                    </button>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 mt-4">
@@ -346,7 +376,8 @@ export default function ClientesPage() {
                   <button
                     onClick={() => {
                       const firstName = client.name.split(" ")[0];
-                      const msg = `¡Hola ${firstName}! 👋 Habla Eduardo Neri.\n\nQuiero invitarte a Referidoo, mi programa de referidos. Si compartes tu link personal con amigos o familiares y alguno contrata un plan de vida, PPR o cuenta patrimonial, tú ganas en efectivo — hasta $3,500 por referido.\n\nEntra aquí, tarda menos de un minuto:\n${portalLink}`;
+                      const advisorName = advisor?.name ?? "tu asesor";
+                      const msg = `¡Hola ${firstName}! 👋 Habla ${advisorName}.\n\nQuiero invitarte a mi programa de referidos. Si compartes tu link personal con amigos o familiares y alguno contrata un plan, tú ganas en efectivo — hasta ${formatCurrency(maxTierAmount)} por referido.\n\nEntra aquí, tarda menos de un minuto:\n${portalLink}`;
                       const phone = client.phone
                         ? "52" + client.phone.replace(/\D/g, "").replace(/^(52|1)/, "")
                         : "";

@@ -279,7 +279,7 @@ export default function ReferidosPage() {
               autoFocus
             />
             <p className="text-xs text-gray-400 mb-5">
-              Al confirmar, {payTarget.referrerName} recibirá un aviso por correo y en 10 minutos se le pedirá confirmar recibo.
+              Al confirmar, {payTarget.referrerName} recibirá un correo de inmediato con el detalle del premio y un botón para confirmar recibo.
             </p>
             <div className="flex gap-2">
               <button
