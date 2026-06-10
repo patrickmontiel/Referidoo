@@ -195,6 +195,117 @@ export async function sendReferralApprovedNotification(payload: ApprovedPayload)
   });
 }
 
+// ─── Payment sent to referrer ───────────────────────────────────────────────
+
+type PaymentPayload = {
+  referrerName: string;
+  referrerEmail: string;
+  advisorName: string;
+  leadName: string;
+  rewardAmount: number;
+  portalUrl: string;
+  advisorEmail: string;
+  tierPosition: number;
+  paymentNote?: string | null;
+};
+
+function paymentSentHtml(p: PaymentPayload) {
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#fff;border-radius:16px;overflow:hidden">
+        <tr><td style="background:#000;padding:24px 32px">
+          <p style="margin:0;color:#fff;font-size:12px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo</p>
+        </td></tr>
+        <tr><td style="padding:32px">
+          <p style="margin:0 0 4px;font-size:13px;color:#6b7280">¡Tu premio está en camino!</p>
+          <h1 style="margin:0 0 24px;font-size:24px;font-weight:700;color:#0a0a0a">${formatMXN(p.rewardAmount)}</h1>
+          <table width="100%" style="background:#f9fafb;border-radius:12px;margin-bottom:24px">
+            <tr><td style="padding:20px">
+              <p style="margin:0 0 4px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:2px;text-transform:uppercase">Por referir a</p>
+              <p style="margin:0 0 12px;font-size:18px;font-weight:700;color:#0a0a0a">${p.leadName}</p>
+              <p style="margin:0;font-size:13px;color:#6b7280">${p.advisorName} confirmó que tu contacto contrató un plan. Tu premio #${p.tierPosition} ya fue aprobado.</p>
+              ${p.paymentNote ? `<p style="margin:10px 0 0;font-size:12px;color:#9ca3af">Referencia: ${p.paymentNote}</p>` : ""}
+            </td></tr>
+          </table>
+          <a href="${p.portalUrl}" style="display:block;background:#000;color:#fff;text-align:center;padding:14px;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none;margin-bottom:20px">
+            Ver mi dashboard →
+          </a>
+          <p style="margin:0;font-size:12px;color:#d1d5db;text-align:center">En unos minutos te pediremos confirmar que lo recibiste.</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+}
+
+function confirmationRequestHtml(p: PaymentPayload) {
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#fff;border-radius:16px;overflow:hidden">
+        <tr><td style="background:#000;padding:24px 32px">
+          <p style="margin:0;color:#fff;font-size:12px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo</p>
+        </td></tr>
+        <tr><td style="padding:32px">
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0a0a0a">¿Ya recibiste tu premio?</h1>
+          <p style="margin:0 0 24px;font-size:14px;color:#6b7280">${p.advisorName} confirmó el pago de <strong>${formatMXN(p.rewardAmount)}</strong>. Confirma que lo recibiste para mantener tu historial al día.</p>
+          <a href="${p.portalUrl}" style="display:block;background:#000;color:#fff;text-align:center;padding:16px;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:12px">
+            Sí, lo recibí ✓
+          </a>
+          <p style="margin:0;font-size:12px;color:#d1d5db;text-align:center">Si no recibiste nada, contacta a ${p.advisorName} directamente.</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+}
+
+export async function sendPaymentSentNotification(payload: PaymentPayload) {
+  if (!resend) { console.log("[email] sin API key — pago no notificado"); return; }
+  await Promise.allSettled([
+    resend.emails.send({ from: FROM, to: [payload.referrerEmail], subject: `¡Tu premio de ${formatMXN(payload.rewardAmount)} está en camino!`, html: paymentSentHtml(payload) }),
+    resend.emails.send({ from: FROM, to: [CREATOR_EMAIL], subject: `[Pago] ${payload.advisorName} pagó ${formatMXN(payload.rewardAmount)} a ${payload.referrerName}`, html: paymentSentHtml(payload) }),
+  ]);
+}
+
+export async function sendConfirmationRequest(payload: PaymentPayload) {
+  if (!resend || !payload.referrerEmail) return;
+  await resend.emails.send({ from: FROM, to: [payload.referrerEmail], subject: `¿Recibiste tu premio de ${formatMXN(payload.rewardAmount)}?`, html: confirmationRequestHtml(payload) });
+}
+
+export async function sendReferrerConfirmedNotification(payload: { referrerName: string; advisorName: string; leadName: string; rewardAmount: number; saleAmount?: number | null }) {
+  if (!resend) return;
+  await resend.emails.send({
+    from: FROM,
+    to: [CREATOR_EMAIL],
+    subject: `[Confirmado] ${payload.referrerName} confirmó su premio · ${payload.advisorName}`,
+    html: `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"></head><body style="font-family:-apple-system,sans-serif;background:#f4f4f5;padding:40px 16px">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+<table width="100%" style="max-width:480px;background:#fff;border-radius:16px;overflow:hidden">
+  <tr><td style="background:#000;padding:20px 28px"><p style="margin:0;color:#fff;font-size:11px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo · Comisión Verificada</p></td></tr>
+  <tr><td style="padding:28px">
+    <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0a0a0a">${payload.referrerName} confirmó su premio</h1>
+    <p style="margin:0 0 8px;font-size:14px;color:#6b7280">Asesor: <strong>${payload.advisorName}</strong></p>
+    <p style="margin:0 0 8px;font-size:14px;color:#6b7280">Lead convertido: <strong>${payload.leadName}</strong></p>
+    <p style="margin:0 0 8px;font-size:14px;color:#6b7280">Premio pagado: <strong>${formatMXN(payload.rewardAmount)}</strong></p>
+    ${payload.saleAmount ? `<p style="margin:0 0 8px;font-size:14px;color:#6b7280">Valor del plan: <strong style="color:#000">${formatMXN(payload.saleAmount)}</strong></p>` : ""}
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;margin-top:20px">
+      <p style="margin:0;font-size:14px;font-weight:600;color:#166534">✓ Conversión verificada — comisión del 0.25% confirmada</p>
+    </div>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`,
+  });
+}
+
 export async function sendNewReferralNotification(payload: NewReferralPayload) {
   if (!resend) {
     console.log("[email] RESEND_API_KEY no configurado — email no enviado. Payload:", payload);

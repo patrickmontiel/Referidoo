@@ -38,6 +38,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
     client: {
       id: client.id,
       name: client.name,
+      email: client.email,
       referralCode: client.referralCode,
       createdAt: client.createdAt,
     },

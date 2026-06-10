@@ -15,6 +15,9 @@ type Referral = {
   rewardStatus: string;
   tierPosition: number;
   createdAt: string;
+  rewardPaidAt: string | null;
+  confirmedByReferrer: boolean;
+  referrerConfirmedAt: string | null;
 };
 
 type PortalData = {
@@ -47,6 +50,8 @@ export default function ClientPortalPage() {
   const [tab, setTab] = useState<"inicio" | "historial">("inicio");
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch(`/api/portal/${token}`)
@@ -62,6 +67,17 @@ export default function ClientPortalPage() {
         setLoading(false);
       });
   }, [token]);
+
+  async function confirmReceipt(referralId: string) {
+    setConfirming(referralId);
+    const res = await fetch(`/api/portal/${token}/confirm`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ referralId }),
+    });
+    if (res.ok) setConfirmed((prev) => new Set([...prev, referralId]));
+    setConfirming(null);
+  }
 
   function finishOnboarding() {
     localStorage.setItem(`referidos_seen_${token}`, "1");
@@ -260,6 +276,34 @@ export default function ClientPortalPage() {
 
         {tab === "inicio" && (
           <>
+            {/* Confirmation banners for paid-but-unconfirmed referrals */}
+            {referrals.filter(r => r.rewardStatus === "paid" && !r.confirmedByReferrer && !confirmed.has(r.id)).map(r => (
+              <div key={r.id} className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-4">
+                <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1">Premio enviado</p>
+                <p className="text-sm text-amber-900 font-medium mb-0.5">{formatCurrency(r.rewardAmount)} por referir a {r.leadName}</p>
+                <p className="text-xs text-amber-600 mb-3">{advisor.name} confirmó el pago. ¿Ya lo recibiste?</p>
+                <button
+                  onClick={() => confirmReceipt(r.id)}
+                  disabled={confirming === r.id}
+                  className="w-full bg-black text-white text-sm py-2.5 rounded-xl font-medium disabled:opacity-50 transition"
+                >
+                  {confirming === r.id ? "Confirmando..." : "Sí, lo recibí ✓"}
+                </button>
+              </div>
+            ))}
+            {/* Confirmed badge */}
+            {referrals.filter(r => r.confirmedByReferrer || confirmed.has(r.id)).map(r => (
+              <div key={`conf-${r.id}`} className="bg-green-50 border border-green-200 rounded-2xl px-4 py-3 mb-3 flex items-center gap-3">
+                <div className="w-7 h-7 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-green-900">Premio confirmado — {r.leadName}</p>
+                  <p className="text-xs text-green-600">{formatCurrency(r.rewardAmount)} recibidos</p>
+                </div>
+              </div>
+            ))}
+
             {/* Stats row */}
             <div className="grid grid-cols-2 gap-3 mb-5">
               <div className="bg-white rounded-2xl p-4 border border-gray-100">

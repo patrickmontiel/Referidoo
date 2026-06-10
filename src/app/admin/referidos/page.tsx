@@ -14,6 +14,9 @@ type Referral = {
   rewardStatus: string;
   tierPosition: number;
   saleAmount: number | null;
+  rewardPaidAt: string | null;
+  confirmedByReferrer: boolean;
+  referrerConfirmedAt: string | null;
   createdAt: string;
   referrer: { id: string; name: string };
 };
@@ -45,9 +48,12 @@ export default function ReferidosPage() {
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState<Referral | null>(null);
   const [updating, setUpdating] = useState(false);
-  // Sale amount modal
+  // Convert modal
   const [convertTarget, setConvertTarget] = useState<{ id: string; name: string } | null>(null);
   const [saleInput, setSaleInput] = useState("");
+  // Pay modal
+  const [payTarget, setPayTarget] = useState<{ id: string; referrerName: string; amount: number } | null>(null);
+  const [payNote, setPayNote] = useState("");
 
   function load() {
     setLoading(true);
@@ -74,6 +80,18 @@ export default function ReferidosPage() {
     e?.stopPropagation();
     setSaleInput("");
     setConvertTarget({ id, name });
+  }
+
+  function startPay(id: string, referrerName: string, amount: number, e?: React.MouseEvent) {
+    e?.stopPropagation();
+    setPayNote("");
+    setPayTarget({ id, referrerName, amount });
+  }
+
+  async function confirmPay() {
+    if (!payTarget) return;
+    await update(payTarget.id, { rewardStatus: "paid", paymentNote: payNote || null });
+    setPayTarget(null);
   }
 
   async function confirmConvert() {
@@ -177,15 +195,22 @@ export default function ReferidosPage() {
                 )}
                 {r.status === "converted" && r.rewardStatus === "approved" && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); update(r.id, { rewardStatus: "paid" }); }}
+                    onClick={(e) => startPay(r.id, r.referrer.name, r.rewardAmount, e)}
                     className="text-xs px-3 py-1.5 rounded-lg bg-black text-white hover:bg-gray-800 transition font-medium"
                   >
-                    Marcar pagado
+                    Enviar Premio →
                   </button>
                 )}
-                <span className={`ml-auto text-xs px-2.5 py-1 rounded-full font-medium ${rewardBg[r.rewardStatus]}`}>
-                  {getRewardStatusLabel(r.rewardStatus)}
-                </span>
+                {r.rewardStatus === "paid" && (
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${r.confirmedByReferrer ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>
+                    {r.confirmedByReferrer ? "✓ Confirmado" : "Pendiente confirm."}
+                  </span>
+                )}
+                {r.rewardStatus !== "paid" && (
+                  <span className={`ml-auto text-xs px-2.5 py-1 rounded-full font-medium ${rewardBg[r.rewardStatus]}`}>
+                    {getRewardStatusLabel(r.rewardStatus)}
+                  </span>
+                )}
               </div>
             </div>
           ))}
@@ -226,6 +251,45 @@ export default function ReferidosPage() {
                 onClick={() => setConvertTarget(null)}
                 className="px-4 text-sm py-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
               >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pay modal — confirm prize sent to referrer */}
+      {payTarget && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setPayTarget(null)} />
+          <div className="relative bg-white w-full max-w-sm rounded-t-3xl md:rounded-2xl p-6 shadow-2xl">
+            <h2 className="font-semibold mb-1">Enviar premio</h2>
+            <p className="text-sm text-gray-500 mb-5">
+              Confirma que enviaste <span className="font-semibold text-black">{formatCurrency(payTarget.amount)}</span> a {payTarget.referrerName}
+            </p>
+            <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">
+              Referencia del pago (opcional)
+            </label>
+            <input
+              type="text"
+              placeholder="Ej. SPEI 12345 / Efectivo / CLIP"
+              value={payNote}
+              onChange={(e) => setPayNote(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black transition mb-5"
+              autoFocus
+            />
+            <p className="text-xs text-gray-400 mb-5">
+              Al confirmar, {payTarget.referrerName} recibirá un aviso por correo y en 10 minutos se le pedirá confirmar recibo.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={confirmPay}
+                disabled={updating}
+                className="flex-1 bg-black text-white text-sm py-3 rounded-xl font-medium hover:bg-gray-900 disabled:opacity-50 transition"
+              >
+                {updating ? "Guardando..." : "Confirmar envío"}
+              </button>
+              <button onClick={() => setPayTarget(null)} className="px-4 text-sm py-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
                 Cancelar
               </button>
             </div>
