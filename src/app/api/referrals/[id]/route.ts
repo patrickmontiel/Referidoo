@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
-import { sendReferralApprovedNotification, sendPaymentSentNotification } from "@/lib/email";
+import { sendReferralApprovedNotification, sendPaymentSentNotification, type PaymentPayload } from "@/lib/email";
+import { getAdvisorTiers } from "@/lib/rewards";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getAdvisorSession();
@@ -54,9 +55,36 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   // 2. Notify referrer (Ana) and creator when payment is sent
   if (isPaid) {
-    const client = await db.client.findUnique({ where: { id: referral.referrerId }, select: { accessToken: true, email: true, name: true } });
-    const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"}/c/${client?.accessToken ?? ""}`;
-    sendPaymentSentNotification({
+    const [client, tiers, settings] = await Promise.all([
+      db.client.findUnique({ where: { id: referral.referrerId }, select: { accessToken: true, email: true, name: true } }),
+      getAdvisorTiers(referral.advisorId),
+      db.advisorSettings.findUnique({ where: { advisorId: referral.advisorId } }),
+    ]);
+    const base = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+    const portalUrl = `${base}/c/${client?.accessToken ?? ""}`;
+
+    // Calculate next tier for incentive copy
+    const nextPos = referral.tierPosition + 1;
+    const afterLastTier = settings?.afterLastTier ?? "cycle";
+    let nextTierAmount: number | null = null;
+    let nextTierPosition: number | null = null;
+    if (tiers.length > 0 && afterLastTier !== "stop") {
+      const exact = tiers.find((t) => t.position === nextPos);
+      if (exact) {
+        nextTierAmount = exact.amount;
+        nextTierPosition = nextPos;
+      } else if (afterLastTier === "cycle") {
+        const cyclePos = ((nextPos - 1) % tiers.length) + 1;
+        const cycleTier = tiers.find((t) => t.position === cyclePos);
+        nextTierAmount = cycleTier?.amount ?? tiers[0].amount;
+        nextTierPosition = nextPos;
+      } else if (afterLastTier === "flat") {
+        nextTierAmount = settings?.flatAmount ?? 1500;
+        nextTierPosition = nextPos;
+      }
+    }
+
+    const emailPayload: PaymentPayload = {
       referrerName: r.referrer.name,
       referrerEmail: client?.email ?? "",
       advisorName: referral.advisor.name,
@@ -66,7 +94,27 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       tierPosition: referral.tierPosition,
       portalUrl,
       paymentNote: body.paymentNote ?? null,
-    }).catch((err) => console.error("[email] Error enviando pago:", err));
+      nextTierPosition,
+      nextTierAmount,
+    };
+
+    // Schedule with 5-min delay via QStash if configured, otherwise send immediately
+    const qstashToken = process.env.QSTASH_TOKEN;
+    if (qstashToken && client?.email) {
+      const webhookUrl = `${base}/api/webhooks/send-confirmation`;
+      fetch(`https://qstash.upstash.io/v2/publish/${encodeURIComponent(webhookUrl)}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${qstashToken}`,
+          "Upstash-Delay": "300s",
+          "Upstash-Forward-X-Webhook-Secret": process.env.CRON_SECRET ?? "",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(emailPayload),
+      }).catch((err) => console.error("[qstash] Error agendando email:", err));
+    } else {
+      sendPaymentSentNotification(emailPayload).catch((err) => console.error("[email] Error enviando pago:", err));
+    }
   }
 
   return NextResponse.json(updated);

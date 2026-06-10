@@ -197,7 +197,7 @@ export async function sendReferralApprovedNotification(payload: ApprovedPayload)
 
 // ─── Payment sent to referrer ───────────────────────────────────────────────
 
-type PaymentPayload = {
+export type PaymentPayload = {
   referrerName: string;
   referrerEmail: string;
   advisorName: string;
@@ -207,9 +207,21 @@ type PaymentPayload = {
   advisorEmail: string;
   tierPosition: number;
   paymentNote?: string | null;
+  nextTierPosition?: number | null;
+  nextTierAmount?: number | null;
 };
 
 function paymentSentHtml(p: PaymentPayload) {
+  const nextBlock = p.nextTierAmount && p.nextTierPosition
+    ? `<table width="100%" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;margin-bottom:24px">
+        <tr><td style="padding:16px 20px">
+          <p style="margin:0 0 4px;font-size:11px;color:#166534;font-weight:700;letter-spacing:2px;text-transform:uppercase">Siguiente premio</p>
+          <p style="margin:0 0 4px;font-size:20px;font-weight:800;color:#0a0a0a">Premio #${p.nextTierPosition} — ${formatMXN(p.nextTierAmount)}</p>
+          <p style="margin:0;font-size:13px;color:#166534">Confirma que recibiste el #${p.tierPosition} y tu historial quedará al día para seguir acumulando.</p>
+        </td></tr>
+      </table>`
+    : `<p style="margin:0 0 20px;font-size:13px;color:#6b7280;text-align:center">Confirma que lo recibiste para mantener tu historial al día.</p>`;
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -221,21 +233,26 @@ function paymentSentHtml(p: PaymentPayload) {
           <p style="margin:0;color:#fff;font-size:12px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo</p>
         </td></tr>
         <tr><td style="padding:32px">
-          <p style="margin:0 0 4px;font-size:13px;color:#6b7280">¡Tu premio ha sido enviado!</p>
-          <h1 style="margin:0 0 24px;font-size:24px;font-weight:700;color:#0a0a0a">${formatMXN(p.rewardAmount)}</h1>
-          <table width="100%" style="background:#f9fafb;border-radius:12px;margin-bottom:24px">
-            <tr><td style="padding:20px">
-              <p style="margin:0 0 4px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:2px;text-transform:uppercase">Por referir a</p>
-              <p style="margin:0 0 12px;font-size:18px;font-weight:700;color:#0a0a0a">${p.leadName}</p>
-              <p style="margin:0;font-size:13px;color:#6b7280">${p.advisorName} confirmó que tu contacto contrató un plan. Tu premio #${p.tierPosition} ha sido enviado.</p>
-              ${p.paymentNote ? `<p style="margin:10px 0 0;font-size:12px;color:#9ca3af">Referencia: ${p.paymentNote}</p>` : ""}
+          <p style="margin:0 0 4px;font-size:13px;color:#6b7280;font-weight:500">¡Te han enviado un premio!</p>
+          <h1 style="margin:0 0 4px;font-size:28px;font-weight:800;color:#0a0a0a">${formatMXN(p.rewardAmount)}</h1>
+          <p style="margin:0 0 24px;font-size:14px;color:#6b7280">Premio #${p.tierPosition} por referir a ${p.leadName}</p>
+
+          <table width="100%" style="background:#f9fafb;border-radius:12px;margin-bottom:20px">
+            <tr><td style="padding:18px 20px">
+              <p style="margin:0 0 4px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:2px;text-transform:uppercase">Detalles</p>
+              <p style="margin:0 0 8px;font-size:14px;color:#374151">${p.advisorName} confirmó que <strong>${p.leadName}</strong> contrató un plan. Tu Premio #${p.tierPosition} fue aprobado y enviado.</p>
+              ${p.paymentNote ? `<p style="margin:0;font-size:12px;color:#9ca3af">Referencia de pago: ${p.paymentNote}</p>` : ""}
             </td></tr>
           </table>
-          <p style="margin:0 0 12px;font-size:15px;font-weight:600;color:#0a0a0a;text-align:center">¿Ya lo recibiste?</p>
+
+          ${nextBlock}
+
+          <p style="margin:0 0 10px;font-size:15px;font-weight:700;color:#0a0a0a;text-align:center">¿Ya lo recibiste?</p>
+          <p style="margin:0 0 16px;font-size:13px;color:#6b7280;text-align:center">Confírmalo aquí o en la aplicación — tarda menos de 10 segundos.</p>
           <a href="${p.portalUrl}" style="display:block;background:#000;color:#fff;text-align:center;padding:16px;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:12px">
             Sí, lo recibí ✓
           </a>
-          <p style="margin:0;font-size:12px;color:#d1d5db;text-align:center">Si no recibiste nada, contacta a ${p.advisorName} directamente.</p>
+          <p style="margin:0;font-size:12px;color:#d1d5db;text-align:center">¿No lo recibiste? Escríbele directamente a ${p.advisorName}.</p>
         </td></tr>
       </table>
     </td></tr>
