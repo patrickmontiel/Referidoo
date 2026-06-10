@@ -56,10 +56,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [step, setStep] = useState(0);
   const [resetState, setResetState] = useState<null | "confirm" | "busy">(null);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [fadingOut, setFadingOut] = useState(false);
+  const [welcomeName, setWelcomeName] = useState("");
 
   useEffect(() => {
-    if (!localStorage.getItem(ONBOARDING_KEY)) {
-      setShowOnboarding(true);
+    const hasWelcome = sessionStorage.getItem("referidoo_welcome") === "1";
+
+    if (hasWelcome) {
+      sessionStorage.removeItem("referidoo_welcome");
+      setShowWelcome(true);
+      fetch("/api/advisor/me").then(r => r.json()).then(adv => {
+        if (adv?.name) setWelcomeName(adv.name);
+      }).catch(() => {});
+      const t1 = setTimeout(() => setFadingOut(true), 2400);
+      const t2 = setTimeout(() => {
+        setShowWelcome(false);
+        setFadingOut(false);
+        if (!localStorage.getItem(ONBOARDING_KEY)) setShowOnboarding(true);
+      }, 3200);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    } else {
+      if (!localStorage.getItem(ONBOARDING_KEY)) setShowOnboarding(true);
     }
   }, []);
 
@@ -212,6 +230,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </div>
       </nav>
+
+      {/* Full-screen welcome */}
+      {showWelcome && (
+        <div
+          className="fixed inset-0 z-[80] flex flex-col items-center justify-center bg-black select-none"
+          style={{ opacity: fadingOut ? 0 : 1, transition: "opacity 0.8s ease-out" }}
+        >
+          <div className="text-center">
+            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mx-auto mb-10">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M17 20H7C5.9 20 5 19.1 5 18V6C5 4.9 5.9 4 7 4H17C18.1 4 19 4.9 19 6V18C19 19.1 18.1 20 17 20Z" stroke="black" strokeWidth="1.5"/>
+                <path d="M9 12L11 14L15 10" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <p className="text-white/40 text-[11px] uppercase tracking-widest font-medium mb-5">Referidoo</p>
+            <h1 className="text-white text-3xl font-semibold tracking-tight">
+              {welcomeName ? `Bienvenido, ${welcomeName.split(" ")[0]}` : "Bienvenido"}
+            </h1>
+            {welcomeName && (
+              <p className="text-white/30 text-sm mt-2 font-light">{welcomeName}</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Onboarding modal */}
       {showOnboarding && (

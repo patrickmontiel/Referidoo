@@ -50,15 +50,9 @@ export default function AdminOverviewPage() {
   const [advisor, setAdvisor] = useState<Advisor | null>(null);
   const [loading, setLoading] = useState(true);
   const [clientCount, setClientCount] = useState(0);
-  const [showWelcome, setShowWelcome] = useState(false);
   const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && sessionStorage.getItem("referidoo_welcome") === "1") {
-      sessionStorage.removeItem("referidoo_welcome");
-      setShowWelcome(true);
-      setTimeout(() => setShowWelcome(false), 3500);
-    }
     const handler = () => setShowTour(true);
     window.addEventListener("referidoo:tour", handler);
     return () => window.removeEventListener("referidoo:tour", handler);
@@ -99,19 +93,6 @@ export default function AdminOverviewPage() {
   return (
     <div className="max-w-2xl">
       {showTour && <Tour steps={TOUR_STEPS} onDone={() => setShowTour(false)} />}
-
-      {/* Banner de bienvenida post-login */}
-      {showWelcome && advisor && (
-        <div className="bg-black text-white rounded-2xl px-5 py-4 mb-5 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold">
-            {advisor.name.charAt(0)}
-          </div>
-          <div>
-            <p className="font-semibold text-sm">Bienvenido, {advisor.name}</p>
-            <p className="text-xs text-gray-400 mt-0.5">Este es tu panel de Referidoo</p>
-          </div>
-        </div>
-      )}
 
       <div data-tour="greeting" className="mb-6">
         <h1 className="text-xl font-semibold">
