@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
 import { formatCurrency, formatDate, getStatusLabel } from "@/lib/utils";
 
 type Referral = {
@@ -24,16 +23,14 @@ export default function AdminOverviewPage() {
   const [loading, setLoading] = useState(true);
   const [clientCount, setClientCount] = useState(0);
   const [showWelcome, setShowWelcome] = useState(false);
-  const params = useSearchParams();
-  const router = useRouter();
 
   useEffect(() => {
-    if (params.get("welcome") === "1") {
+    if (typeof window !== "undefined" && sessionStorage.getItem("referidoo_welcome") === "1") {
+      sessionStorage.removeItem("referidoo_welcome");
       setShowWelcome(true);
-      router.replace("/admin");
       setTimeout(() => setShowWelcome(false), 3500);
     }
-  }, [params, router]);
+  }, []);
 
   useEffect(() => {
     Promise.all([
