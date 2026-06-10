@@ -30,7 +30,7 @@ export default function AdminOverviewPage() {
       fetch("/api/clients").then((r) => r.json()),
     ]).then(([refs, adv, clients]) => {
       setReferrals(Array.isArray(refs) ? refs : []);
-      setAdvisor(adv);
+      setAdvisor(adv?.name ? adv : null);
       setClientCount(Array.isArray(clients) ? clients.length : 0);
       setLoading(false);
     });

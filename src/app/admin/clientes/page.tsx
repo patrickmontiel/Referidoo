@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatDate, formatCurrency } from "@/lib/utils";
 
 type Client = {
@@ -17,6 +17,31 @@ type Client = {
   referrals: { rewardAmount: number; rewardStatus: string; status: string }[];
 };
 
+type CsvRow = { name: string; phone: string; email: string; policyNumber: string };
+type ImportResult = { name: string; ok: boolean; error?: string };
+
+function parseCsv(text: string): CsvRow[] {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const header = lines[0].split(",").map((h) => h.trim().toLowerCase().replace(/[^a-záéíóúñ]/gi, ""));
+  const colMap: Record<string, number> = {};
+  header.forEach((h, i) => {
+    if (/nombre|name/.test(h)) colMap.name = i;
+    else if (/tel|phone|celular|movil|móvil/.test(h)) colMap.phone = i;
+    else if (/correo|email|mail/.test(h)) colMap.email = i;
+    else if (/poliz|policy/.test(h)) colMap.policyNumber = i;
+  });
+  return lines.slice(1).map((line) => {
+    const cols = line.split(",").map((c) => c.trim().replace(/^"|"$/g, ""));
+    return {
+      name: cols[colMap.name ?? 0] ?? "",
+      phone: cols[colMap.phone ?? -1] ?? "",
+      email: cols[colMap.email ?? -1] ?? "",
+      policyNumber: cols[colMap.policyNumber ?? -1] ?? "",
+    };
+  }).filter((r) => r.name);
+}
+
 export default function ClientesPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +50,11 @@ export default function ClientesPage() {
   const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  // CSV import
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [csvRows, setCsvRows] = useState<CsvRow[] | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResults, setImportResults] = useState<ImportResult[] | null>(null);
 
   function load() {
     fetch("/api/clients")
@@ -48,6 +78,34 @@ export default function ClientesPage() {
       load();
     }
     setSubmitting(false);
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const rows = parseCsv(ev.target?.result as string);
+      setCsvRows(rows);
+      setImportResults(null);
+    };
+    reader.readAsText(file, "utf-8");
+    e.target.value = "";
+  }
+
+  async function runImport() {
+    if (!csvRows?.length) return;
+    setImporting(true);
+    const res = await fetch("/api/clients/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rows: csvRows }),
+    });
+    const data = await res.json();
+    setImportResults(data.results);
+    setCsvRows(null);
+    setImporting(false);
+    load();
   }
 
   async function deactivate(id: string) {
@@ -74,16 +132,75 @@ export default function ClientesPage() {
           <h1 className="text-xl font-semibold">Clientes</h1>
           <p className="text-sm text-gray-400 mt-0.5">{clients.filter((c) => c.active).length} activos</p>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 bg-black text-white text-sm px-4 py-2 rounded-xl hover:bg-gray-900 transition font-medium"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          Nuevo cliente
-        </button>
+        <div className="flex gap-2">
+          <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleFileChange} />
+          <button
+            onClick={() => fileRef.current?.click()}
+            className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition font-medium"
+            title="Importar CSV"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M21 15V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V15M7 10L12 15M12 15L17 10M12 15V3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            CSV
+          </button>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="flex items-center gap-2 bg-black text-white text-sm px-4 py-2 rounded-xl hover:bg-gray-900 transition font-medium"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            Nuevo cliente
+          </button>
+        </div>
       </div>
+
+      {/* CSV preview */}
+      {csvRows && csvRows.length > 0 && (
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-medium text-sm">{csvRows.length} clientes listos para importar</h2>
+            <button onClick={() => setCsvRows(null)} className="text-gray-300 hover:text-gray-500 text-lg leading-none">×</button>
+          </div>
+          <div className="space-y-1.5 max-h-48 overflow-y-auto mb-4">
+            {csvRows.map((row, i) => (
+              <div key={i} className="flex items-center gap-3 text-sm py-1.5 border-b border-gray-50 last:border-0">
+                <span className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-[10px] font-semibold text-gray-500 flex-shrink-0">{i + 1}</span>
+                <span className="font-medium flex-1 truncate">{row.name}</span>
+                {row.phone && <span className="text-gray-400 text-xs">{row.phone}</span>}
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={runImport}
+            disabled={importing}
+            className="w-full bg-black text-white text-sm py-2.5 rounded-xl font-medium hover:bg-gray-900 disabled:opacity-50 transition"
+          >
+            {importing ? "Importando..." : `Importar ${csvRows.length} clientes`}
+          </button>
+        </div>
+      )}
+
+      {/* Import results */}
+      {importResults && (
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-medium text-sm">
+              {importResults.filter(r => r.ok).length} importados
+              {importResults.filter(r => !r.ok).length > 0 && ` · ${importResults.filter(r => !r.ok).length} con error`}
+            </h2>
+            <button onClick={() => setImportResults(null)} className="text-gray-300 hover:text-gray-500 text-lg leading-none">×</button>
+          </div>
+          <div className="space-y-1 max-h-36 overflow-y-auto">
+            {importResults.filter(r => !r.ok).map((r, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs text-red-600">
+                <span>✗</span><span>{r.name} — {r.error}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* New client form */}
       {showForm && (

@@ -13,6 +13,7 @@ type Referral = {
   rewardAmount: number;
   rewardStatus: string;
   tierPosition: number;
+  saleAmount: number | null;
   createdAt: string;
   referrer: { id: string; name: string };
 };
@@ -44,6 +45,9 @@ export default function ReferidosPage() {
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState<Referral | null>(null);
   const [updating, setUpdating] = useState(false);
+  // Sale amount modal
+  const [convertTarget, setConvertTarget] = useState<{ id: string; name: string } | null>(null);
+  const [saleInput, setSaleInput] = useState("");
 
   function load() {
     setLoading(true);
@@ -54,7 +58,7 @@ export default function ReferidosPage() {
 
   useEffect(() => { load(); }, []);
 
-  async function update(id: string, data: Partial<{ status: string; rewardStatus: string; leadNotes: string }>) {
+  async function update(id: string, data: Record<string, unknown>) {
     setUpdating(true);
     await fetch(`/api/referrals/${id}`, {
       method: "PATCH",
@@ -62,10 +66,21 @@ export default function ReferidosPage() {
       body: JSON.stringify(data),
     });
     load();
-    if (selected?.id === id) {
-      setSelected((prev) => prev ? { ...prev, ...data } : null);
-    }
+    if (selected?.id === id) setSelected(null);
     setUpdating(false);
+  }
+
+  function startConvert(id: string, name: string, e?: React.MouseEvent) {
+    e?.stopPropagation();
+    setSaleInput("");
+    setConvertTarget({ id, name });
+  }
+
+  async function confirmConvert() {
+    if (!convertTarget) return;
+    const saleAmount = saleInput ? Number(saleInput.replace(/,/g, "")) : null;
+    await update(convertTarget.id, { status: "converted", rewardStatus: "approved", ...(saleAmount ? { saleAmount } : {}) });
+    setConvertTarget(null);
   }
 
   const filtered = referrals.filter((r) => !filter || r.status === filter);
@@ -122,7 +137,11 @@ export default function ReferidosPage() {
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-sm font-semibold">{formatCurrency(r.rewardAmount)}</p>
+                  {r.saleAmount ? (
+                    <p className="text-sm font-semibold text-green-700">{formatCurrency(r.saleAmount)}</p>
+                  ) : (
+                    <p className="text-sm font-semibold">{formatCurrency(r.rewardAmount)}</p>
+                  )}
                   <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium border ${statusBg[r.status]}`}>
                     {getStatusLabel(r.status)}
                   </span>
@@ -142,7 +161,7 @@ export default function ReferidosPage() {
                 {r.status === "contacted" && (
                   <>
                     <button
-                      onClick={(e) => { e.stopPropagation(); update(r.id, { status: "converted", rewardStatus: "approved" }); }}
+                      onClick={(e) => startConvert(r.id, r.leadName, e)}
                       className="text-xs px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition font-medium"
                     >
                       Convertido ✓
@@ -169,6 +188,47 @@ export default function ReferidosPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Convert modal — capture sale amount */}
+      {convertTarget && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setConvertTarget(null)} />
+          <div className="relative bg-white w-full max-w-sm rounded-t-3xl md:rounded-2xl p-6 shadow-2xl">
+            <h2 className="font-semibold mb-1">Marcar como convertido</h2>
+            <p className="text-sm text-gray-500 mb-5">{convertTarget.name}</p>
+            <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">
+              Valor del plan contratado
+            </label>
+            <div className="relative mb-1">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
+              <input
+                type="number"
+                placeholder="0"
+                value={saleInput}
+                onChange={(e) => setSaleInput(e.target.value)}
+                className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+                autoFocus
+              />
+            </div>
+            <p className="text-xs text-gray-300 mb-5">Opcional — sirve para calcular comisiones</p>
+            <div className="flex gap-2">
+              <button
+                onClick={confirmConvert}
+                disabled={updating}
+                className="flex-1 bg-black text-white text-sm py-3 rounded-xl font-medium hover:bg-gray-900 disabled:opacity-50 transition"
+              >
+                {updating ? "Guardando..." : "Confirmar conversión"}
+              </button>
+              <button
+                onClick={() => setConvertTarget(null)}
+                className="px-4 text-sm py-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -205,23 +265,30 @@ export default function ReferidosPage() {
                   <p className="text-sm font-medium">{selected.tierPosition}º de ese cliente</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-1">Premio</p>
+                  <p className="text-xs text-gray-400 mb-1">Premio al cliente</p>
                   <p className="text-sm font-semibold">{formatCurrency(selected.rewardAmount)}</p>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-400 mb-1">Fecha</p>
-                  <p className="text-sm">{formatDate(selected.createdAt)}</p>
-                </div>
+                {selected.saleAmount ? (
+                  <div>
+                    <p className="text-xs text-gray-400 mb-1">Valor del plan</p>
+                    <p className="text-sm font-bold text-green-700">{formatCurrency(selected.saleAmount)}</p>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-xs text-gray-400 mb-1">Fecha</p>
+                    <p className="text-sm">{formatDate(selected.createdAt)}</p>
+                  </div>
+                )}
               </div>
 
               <div>
                 <p className="text-xs text-gray-400 mb-2">Estado del lead</p>
                 <div className="flex gap-2 flex-wrap">
-                  {["pending", "contacted", "converted", "rejected"].map((s) => (
+                  {(["pending", "contacted", "rejected"] as const).map((s) => (
                     <button
                       key={s}
                       disabled={updating}
-                      onClick={() => update(selected.id, { status: s, ...(s === "converted" ? { rewardStatus: "approved" } : {}) })}
+                      onClick={() => update(selected.id, { status: s })}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
                         selected.status === s
                           ? "bg-black text-white border-black"
@@ -231,6 +298,17 @@ export default function ReferidosPage() {
                       {getStatusLabel(s)}
                     </button>
                   ))}
+                  <button
+                    disabled={updating}
+                    onClick={() => { setSelected(null); startConvert(selected.id, selected.leadName); }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
+                      selected.status === "converted"
+                        ? "bg-black text-white border-black"
+                        : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {getStatusLabel("converted")}
+                  </button>
                 </div>
               </div>
 

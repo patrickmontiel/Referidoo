@@ -71,6 +71,7 @@ model Referral {
   rewardAmount Int
   status       String   @default("pending")
   rewardStatus String   @default("pending")
+  saleAmount   Int?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

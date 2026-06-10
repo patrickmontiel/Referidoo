@@ -102,6 +102,99 @@ function newReferralHtml(p: NewReferralPayload, isCreator = false) {
 </html>`;
 }
 
+type ApprovedPayload = NewReferralPayload & { saleAmount?: number | null };
+
+function referralApprovedHtml(p: ApprovedPayload) {
+  const adminUrl = `${BASE_URL}/admin/referidos`;
+  const saleRow = p.saleAmount
+    ? `<tr><td style="padding:2px 0"><span style="font-size:13px;color:#6b7280">💼 Valor del plan: </span><span style="font-size:13px;font-weight:700;color:#0a0a0a">${formatMXN(p.saleAmount)}</span></td></tr>`
+    : "";
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden">
+        <tr>
+          <td style="background:#000;padding:24px 32px">
+            <p style="margin:0;color:#fff;font-size:12px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo · Comisión</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px">
+            <p style="margin:0 0 4px;font-size:13px;color:#6b7280;font-weight:500">Venta cerrada — ${p.advisorName}</p>
+            <h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#0a0a0a;line-height:1.3">
+              ${p.leadName} contrató un plan
+            </h1>
+            <table width="100%" style="background:#f9fafb;border-radius:12px;margin-bottom:24px">
+              <tr><td style="padding:20px">
+                <p style="margin:0 0 4px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:2px;text-transform:uppercase">Cliente convertido</p>
+                <p style="margin:0 0 16px;font-size:18px;font-weight:700;color:#0a0a0a">${p.leadName}</p>
+                <table>
+                  <tr><td style="padding:2px 0"><span style="font-size:13px;color:#6b7280">📱 </span><a href="tel:${p.leadPhone}" style="font-size:13px;color:#0a0a0a;font-weight:600;text-decoration:none">${p.leadPhone}</a></td></tr>
+                  ${p.leadEmail ? `<tr><td style="padding:2px 0"><span style="font-size:13px;color:#6b7280">✉️ </span><span style="font-size:13px;color:#0a0a0a">${p.leadEmail}</span></td></tr>` : ""}
+                  ${saleRow}
+                </table>
+              </td></tr>
+            </table>
+            <table width="100%" style="margin-bottom:28px">
+              <tr>
+                <td width="50%" style="padding:0 8px 0 0">
+                  <table width="100%" style="background:#f9fafb;border-radius:10px">
+                    <tr><td style="padding:14px 16px">
+                      <p style="margin:0 0 2px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:1px;text-transform:uppercase">Asesor</p>
+                      <p style="margin:0;font-size:14px;font-weight:600;color:#0a0a0a">${p.advisorName}</p>
+                    </td></tr>
+                  </table>
+                </td>
+                <td width="50%" style="padding:0 0 0 8px">
+                  <table width="100%" style="background:#f9fafb;border-radius:10px">
+                    <tr><td style="padding:14px 16px">
+                      <p style="margin:0 0 2px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:1px;text-transform:uppercase">Premio #${p.tierPosition}</p>
+                      <p style="margin:0;font-size:14px;font-weight:700;color:#0a0a0a">${formatMXN(p.rewardAmount)}</p>
+                    </td></tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+            <table width="100%" style="background:#000;border-radius:12px;margin-bottom:20px">
+              <tr><td style="padding:16px 20px">
+                <p style="margin:0 0 2px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:2px;text-transform:uppercase">Referido por</p>
+                <p style="margin:0;font-size:16px;font-weight:700;color:#fff">${p.referrerName}</p>
+              </td></tr>
+            </table>
+            <a href="${adminUrl}" style="display:block;background:#000;color:#fff;text-align:center;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none">
+              Ver en el panel →
+            </a>
+            <p style="margin:20px 0 0;font-size:12px;color:#d1d5db;text-align:center">
+              Notificación de conversión · Referidoo
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendReferralApprovedNotification(payload: ApprovedPayload) {
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY no configurado — conversión no notificada. Payload:", payload);
+    return;
+  }
+
+  const subject = `[Comisión] ${payload.advisorName} cerró — ${payload.leadName}${payload.saleAmount ? ` · Plan ${formatMXN(payload.saleAmount)}` : ""}`;
+
+  await resend.emails.send({
+    from: FROM,
+    to: [CREATOR_EMAIL],
+    subject,
+    html: referralApprovedHtml(payload),
+  });
+}
+
 export async function sendNewReferralNotification(payload: NewReferralPayload) {
   if (!resend) {
     console.log("[email] RESEND_API_KEY no configurado — email no enviado. Payload:", payload);
