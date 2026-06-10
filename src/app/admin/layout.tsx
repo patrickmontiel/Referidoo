@@ -55,6 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [step, setStep] = useState(0);
+  const [resetState, setResetState] = useState<null | "confirm" | "busy">(null);
 
   useEffect(() => {
     if (!localStorage.getItem(ONBOARDING_KEY)) {
@@ -74,6 +75,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+  }
+
+  async function doReset() {
+    setResetState("busy");
+    await fetch("/api/demo/reset", { method: "POST" });
+    await fetch("/api/auth/logout", { method: "POST" });
+    localStorage.removeItem(ONBOARDING_KEY);
     router.push("/login");
   }
 
@@ -134,6 +143,43 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Link>
             );
           })}
+
+          {/* Demo reset — bottom of sidebar */}
+          <div className="mt-auto pt-4 border-t border-gray-100">
+            {resetState === null && (
+              <button
+                onClick={() => setResetState("confirm")}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path d="M1 4V10H7M23 20V14H17M20.49 9C19.9828 7.56678 19.1209 6.2854 17.9845 5.27542C16.8482 4.26543 15.4745 3.55976 13.9917 3.22426C12.5089 2.88875 10.9652 2.93434 9.50481 3.35677C8.04437 3.77921 6.71475 4.56471 5.64 5.64L1 10M23 14L18.36 18.36C17.2853 19.4353 15.9556 20.2208 14.4952 20.6432C13.0348 21.0657 11.4911 21.1113 10.0083 20.7757C8.52547 20.4402 7.1518 19.7346 6.01547 18.7246C4.87913 17.7146 4.01717 16.4332 3.51 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Reiniciar demo
+              </button>
+            )}
+            {resetState === "confirm" && (
+              <div className="px-1">
+                <p className="text-[11px] text-gray-500 mb-2 leading-snug">¿Borrar todos los clientes y referidos?</p>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={doReset}
+                    className="flex-1 text-[11px] py-1.5 rounded-lg bg-black text-white font-medium hover:bg-gray-900 transition"
+                  >
+                    Sí, borrar
+                  </button>
+                  <button
+                    onClick={() => setResetState(null)}
+                    className="flex-1 text-[11px] py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+            {resetState === "busy" && (
+              <p className="text-[11px] text-gray-400 px-3 py-2">Reiniciando...</p>
+            )}
+          </div>
         </aside>
 
         <main className="flex-1 px-5 py-6 overflow-auto"
