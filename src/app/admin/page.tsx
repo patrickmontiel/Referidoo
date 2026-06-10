@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { formatCurrency, formatDate, getStatusLabel } from "@/lib/utils";
 
 type Referral = {
@@ -22,6 +23,17 @@ export default function AdminOverviewPage() {
   const [advisor, setAdvisor] = useState<Advisor | null>(null);
   const [loading, setLoading] = useState(true);
   const [clientCount, setClientCount] = useState(0);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const params = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (params.get("welcome") === "1") {
+      setShowWelcome(true);
+      router.replace("/admin");
+      setTimeout(() => setShowWelcome(false), 3500);
+    }
+  }, [params, router]);
 
   useEffect(() => {
     Promise.all([
@@ -57,6 +69,19 @@ export default function AdminOverviewPage() {
 
   return (
     <div className="max-w-2xl">
+      {/* Banner de bienvenida post-login */}
+      {showWelcome && advisor && (
+        <div className="bg-black text-white rounded-2xl px-5 py-4 mb-5 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold">
+            {advisor.name.charAt(0)}
+          </div>
+          <div>
+            <p className="font-semibold text-sm">Bienvenido, {advisor.name}</p>
+            <p className="text-xs text-gray-400 mt-0.5">Este es tu panel de Referidoo</p>
+          </div>
+        </div>
+      )}
+
       <div className="mb-6">
         <h1 className="text-xl font-semibold">
           {advisor ? `Hola, ${advisor.name.split(" ")[0]}` : "Resumen"}

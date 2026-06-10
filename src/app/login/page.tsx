@@ -1,14 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
+  const params = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const e = params.get("email");
+    const p = params.get("p");
+    if (e) setEmail(e);
+    if (p) setPassword(p);
+  }, [params]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -25,11 +33,11 @@ export default function LoginPage() {
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error ?? "Error al iniciar sesión");
+      setError(data.error ?? "Correo o contraseña incorrectos");
       return;
     }
 
-    router.push("/admin");
+    router.push("/admin?welcome=1");
   }
 
   return (
