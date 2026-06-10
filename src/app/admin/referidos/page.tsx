@@ -78,8 +78,9 @@ export default function ReferidosPage() {
 
   async function confirmConvert() {
     if (!convertTarget) return;
-    const saleAmount = saleInput ? Number(saleInput.replace(/,/g, "")) : null;
-    await update(convertTarget.id, { status: "converted", rewardStatus: "approved", ...(saleAmount ? { saleAmount } : {}) });
+    const saleAmount = Number(saleInput.replace(/,/g, ""));
+    if (!saleAmount) return;
+    await update(convertTarget.id, { status: "converted", rewardStatus: "approved", saleAmount });
     setConvertTarget(null);
   }
 
@@ -199,20 +200,20 @@ export default function ReferidosPage() {
             <h2 className="font-semibold mb-1">Marcar como convertido</h2>
             <p className="text-sm text-gray-500 mb-5">{convertTarget.name}</p>
             <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">
-              Valor del plan contratado
+              Valor contratado
             </label>
-            <div className="relative mb-1">
+            <div className="relative mb-5">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
               <input
                 type="number"
                 placeholder="0"
                 value={saleInput}
                 onChange={(e) => setSaleInput(e.target.value)}
+                required
                 className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
                 autoFocus
               />
             </div>
-            <p className="text-xs text-gray-300 mb-5">Opcional — sirve para calcular comisiones</p>
             <div className="flex gap-2">
               <button
                 onClick={confirmConvert}
