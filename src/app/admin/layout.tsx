@@ -234,22 +234,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Full-screen welcome */}
       {showWelcome && (
         <div
-          className="fixed inset-0 z-[80] flex flex-col items-center justify-center bg-black select-none"
+          className="fixed inset-0 z-[80] flex flex-col items-center justify-center bg-white select-none"
           style={{ opacity: fadingOut ? 0 : 1, transition: "opacity 0.8s ease-out" }}
         >
           <div className="text-center">
-            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mx-auto mb-10">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M17 20H7C5.9 20 5 19.1 5 18V6C5 4.9 5.9 4 7 4H17C18.1 4 19 4.9 19 6V18C19 19.1 18.1 20 17 20Z" stroke="black" strokeWidth="1.5"/>
-                <path d="M9 12L11 14L15 10" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+            {/* Logo */}
+            <div className="flex items-end justify-center gap-0 mb-10">
+              <span className="text-5xl font-bold tracking-tight text-black leading-none">referidoo</span>
+              <span className="w-3.5 h-3.5 rounded-full bg-blue-500 mb-1 ml-0.5 flex-shrink-0" />
             </div>
-            <p className="text-white/40 text-[11px] uppercase tracking-widest font-medium mb-5">Referidoo</p>
-            <h1 className="text-white text-3xl font-semibold tracking-tight">
-              {welcomeName ? `Bienvenido, ${welcomeName.split(" ")[0]}` : "Bienvenido"}
-            </h1>
             {welcomeName && (
-              <p className="text-white/30 text-sm mt-2 font-light">{welcomeName}</p>
+              <p className="text-black/40 text-base font-normal">
+                Bienvenido, {welcomeName.split(" ")[0]}
+              </p>
             )}
           </div>
         </div>
@@ -258,7 +255,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Onboarding modal */}
       {showOnboarding && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/30" />
           <div className="relative bg-white w-full max-w-md rounded-t-3xl md:rounded-2xl shadow-2xl overflow-hidden">
 
             {/* Progress bar */}

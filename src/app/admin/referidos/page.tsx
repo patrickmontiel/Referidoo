@@ -258,7 +258,7 @@ export default function ReferidosPage() {
       {/* Convert modal — capture sale amount */}
       {convertTarget && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setConvertTarget(null)} />
+          <div className="absolute inset-0 bg-black/25" onClick={() => setConvertTarget(null)} />
           <div className="relative bg-white w-full max-w-sm rounded-t-3xl md:rounded-2xl p-6 shadow-2xl">
             <h2 className="font-semibold mb-1">Marcar como convertido</h2>
             <p className="text-sm text-gray-500 mb-5">{convertTarget.name}</p>
@@ -299,7 +299,7 @@ export default function ReferidosPage() {
       {/* Pay modal — confirm prize sent to referrer */}
       {payTarget && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setPayTarget(null)} />
+          <div className="absolute inset-0 bg-black/25" onClick={() => setPayTarget(null)} />
           <div className="relative bg-white w-full max-w-sm rounded-t-3xl md:rounded-2xl p-6 shadow-2xl">
             <h2 className="font-semibold mb-1">Enviar premio</h2>
             <p className="text-sm text-gray-500 mb-5">
@@ -338,7 +338,7 @@ export default function ReferidosPage() {
       {/* Detail drawer */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelected(null)} />
+          <div className="absolute inset-0 bg-black/25" onClick={() => setSelected(null)} />
           <div className="relative bg-white w-full max-w-md rounded-t-3xl md:rounded-2xl max-h-[85vh] overflow-y-auto p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-5">
               <h2 className="font-semibold">Detalle del referido</h2>
