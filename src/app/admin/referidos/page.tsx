@@ -77,6 +77,7 @@ export default function ReferidosPage() {
   const [payTarget, setPayTarget] = useState<{ id: string; referrerName: string; amount: number } | null>(null);
   const [payNote, setPayNote] = useState("");
   const [showTour, setShowTour] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   function load() {
     setLoading(true);
@@ -114,6 +115,13 @@ export default function ReferidosPage() {
     e?.stopPropagation();
     setPayNote("");
     setPayTarget({ id, referrerName, amount });
+  }
+
+  async function deleteReferral(id: string) {
+    await fetch(`/api/referrals/${id}`, { method: "DELETE" });
+    setDeleteId(null);
+    setSelected(null);
+    load();
   }
 
   async function confirmPay() {
@@ -436,6 +444,34 @@ export default function ReferidosPage() {
                 </svg>
                 Llamar a {selected.leadName.split(" ")[0]}
               </a>
+
+              {/* Delete referral */}
+              <div className="pt-2 border-t border-gray-100">
+                {deleteId === selected.id ? (
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-gray-500 flex-1">¿Eliminar este referido?</p>
+                    <button
+                      onClick={() => deleteReferral(selected.id)}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition font-medium"
+                    >
+                      Eliminar
+                    </button>
+                    <button
+                      onClick={() => setDeleteId(null)}
+                      className="text-xs text-gray-400 hover:text-gray-600 transition"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setDeleteId(selected.id)}
+                    className="text-xs text-gray-400 hover:text-red-500 transition"
+                  >
+                    Eliminar referido
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
