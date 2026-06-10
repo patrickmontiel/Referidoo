@@ -71,8 +71,7 @@ export default function ClientesPage() {
       if (tiersData?.tiers?.length) {
         setMaxTierAmount(Math.max(...tiersData.tiers.map((t: { amount: number }) => t.amount)));
       }
-      setLoading(false);
-    });
+    }).catch(console.error).finally(() => setLoading(false));
   }
 
   useEffect(() => { load(); }, []);

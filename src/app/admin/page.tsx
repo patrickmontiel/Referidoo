@@ -32,8 +32,7 @@ export default function AdminOverviewPage() {
       setReferrals(Array.isArray(refs) ? refs : []);
       setAdvisor(adv?.name ? adv : null);
       setClientCount(Array.isArray(clients) ? clients.length : 0);
-      setLoading(false);
-    });
+    }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
   if (loading) {
