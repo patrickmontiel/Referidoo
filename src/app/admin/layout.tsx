@@ -69,12 +69,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       fetch("/api/advisor/me").then(r => r.json()).then(adv => {
         if (adv?.name) setWelcomeName(adv.name);
       }).catch(() => {});
-      const t1 = setTimeout(() => setFadingOut(true), 2400);
+      const t1 = setTimeout(() => setFadingOut(true), 3200);
       const t2 = setTimeout(() => {
         setShowWelcome(false);
         setFadingOut(false);
         if (!localStorage.getItem(ONBOARDING_KEY)) setShowOnboarding(true);
-      }, 3200);
+      }, 4000);
       return () => { clearTimeout(t1); clearTimeout(t2); };
     } else {
       if (!localStorage.getItem(ONBOARDING_KEY)) setShowOnboarding(true);
@@ -245,7 +245,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             {welcomeName && (
               <p className="text-black/40 text-base font-normal">
-                Bienvenido, {welcomeName.split(" ")[0]}
+                Bienvenido, {welcomeName}
               </p>
             )}
           </div>

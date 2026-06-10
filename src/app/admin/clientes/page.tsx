@@ -74,6 +74,7 @@ export default function ClientesPage() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", policyNumber: "" });
   const [submitting, setSubmitting] = useState(false);
   const [showTour, setShowTour] = useState(false);
+  const [createError, setCreateError] = useState("");
   const [search, setSearch] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deactivateId, setDeactivateId] = useState<string | null>(null);
@@ -107,17 +108,26 @@ export default function ClientesPage() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
-    const res = await fetch("/api/clients", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    if (res.ok) {
-      setForm({ name: "", email: "", phone: "", policyNumber: "" });
-      setShowForm(false);
-      load();
+    setCreateError("");
+    try {
+      const res = await fetch("/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        setForm({ name: "", email: "", phone: "", policyNumber: "" });
+        setShowForm(false);
+        load();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setCreateError(data.error ?? "Error al crear el cliente. Intenta de nuevo.");
+      }
+    } catch {
+      setCreateError("Sin conexión. Intenta de nuevo.");
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -294,6 +304,9 @@ export default function ClientesPage() {
               />
             </div>
           </div>
+          {createError && (
+            <p className="text-red-500 text-xs px-1">{createError}</p>
+          )}
           <div className="flex gap-2 pt-1">
             <button
               type="submit"
