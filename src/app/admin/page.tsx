@@ -3,6 +3,34 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCurrency, formatDate, getStatusLabel } from "@/lib/utils";
+import { Tour, type TourStep } from "@/components/Tour";
+
+const TOUR_STEPS: TourStep[] = [
+  {
+    selector: '[data-tour="greeting"]',
+    title: "Tu resumen de un vistazo",
+    body: "Aquí ves el estado general de tu programa: a quién le pusiste el nombre, cuántos referidos van y cuánto dinero se ha movido.",
+    placement: "bottom",
+  },
+  {
+    selector: '[data-tour="stats"]',
+    title: "Métricas del programa",
+    body: "Clientes activos con link de referido, total de leads recibidos, cuántos convirtieron y cuántos están en proceso. Todo en tiempo real.",
+    placement: "bottom",
+  },
+  {
+    selector: '[data-tour="money"]',
+    title: "Premios en tiempo real",
+    body: "Izquierda: lo que ya pagaste a tus clientes. Derecha: lo que está aprobado y listo para pagar en cuanto lo confirmes.",
+    placement: "top",
+  },
+  {
+    selector: '[data-tour="recent"]',
+    title: "Últimos referidos",
+    body: "Los 5 más recientes — quién los mandó, cuándo llegaron y en qué etapa del proceso están. Haz clic en cualquiera para verlo completo.",
+    placement: "top",
+  },
+];
 
 type Referral = {
   id: string;
@@ -23,6 +51,7 @@ export default function AdminOverviewPage() {
   const [loading, setLoading] = useState(true);
   const [clientCount, setClientCount] = useState(0);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined" && sessionStorage.getItem("referidoo_welcome") === "1") {
@@ -30,6 +59,9 @@ export default function AdminOverviewPage() {
       setShowWelcome(true);
       setTimeout(() => setShowWelcome(false), 3500);
     }
+    const handler = () => setShowTour(true);
+    window.addEventListener("referidoo:tour", handler);
+    return () => window.removeEventListener("referidoo:tour", handler);
   }, []);
 
   useEffect(() => {
@@ -66,6 +98,8 @@ export default function AdminOverviewPage() {
 
   return (
     <div className="max-w-2xl">
+      {showTour && <Tour steps={TOUR_STEPS} onDone={() => setShowTour(false)} />}
+
       {/* Banner de bienvenida post-login */}
       {showWelcome && advisor && (
         <div className="bg-black text-white rounded-2xl px-5 py-4 mb-5 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -79,7 +113,7 @@ export default function AdminOverviewPage() {
         </div>
       )}
 
-      <div className="mb-6">
+      <div data-tour="greeting" className="mb-6">
         <h1 className="text-xl font-semibold">
           {advisor ? `Hola, ${advisor.name.split(" ")[0]}` : "Resumen"}
         </h1>
@@ -87,7 +121,7 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div data-tour="stats" className="grid grid-cols-2 gap-3 mb-6">
         {[
           { label: "Clientes activos", value: clientCount, sub: "con link de referido" },
           { label: "Referidos totales", value: referrals.length, sub: "recibidos" },
@@ -103,7 +137,7 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* Money */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div data-tour="money" className="grid grid-cols-2 gap-3 mb-6">
         <div className="bg-black text-white rounded-2xl p-4">
           <p className="text-xs text-gray-400 mb-1">Premios pagados</p>
           <p className="text-xl font-semibold">{formatCurrency(totalPaid)}</p>
@@ -115,7 +149,7 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* Recent */}
-      <div className="bg-white rounded-2xl border border-gray-100">
+      <div data-tour="recent" className="bg-white rounded-2xl border border-gray-100">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
           <h2 className="font-medium text-sm">Últimos referidos</h2>
           <Link href="/admin/referidos" className="text-xs text-gray-400 hover:text-black transition">

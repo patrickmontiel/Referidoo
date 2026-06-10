@@ -2,6 +2,28 @@
 
 import { useEffect, useRef, useState } from "react";
 import { formatDate, formatCurrency } from "@/lib/utils";
+import { Tour, type TourStep } from "@/components/Tour";
+
+const TOUR_STEPS: TourStep[] = [
+  {
+    selector: '[data-tour="actions"]',
+    title: "Agrega tus clientes",
+    body: "Un cliente a la vez con el botón negro, o importa un CSV completo de golpe. Cada cliente recibe su portal personalizado con link de referidos.",
+    placement: "bottom",
+  },
+  {
+    selector: '[data-tour="search"]',
+    title: "Búsqueda rápida",
+    body: "Cuando tengas muchos clientes, filtra por nombre aquí. Ideal para encontrar a alguien específico antes de mandarle su invitación.",
+    placement: "bottom",
+  },
+  {
+    selector: '[data-tour="client-list"]',
+    title: "Tus clientes activos",
+    body: "Cada tarjeta muestra cuántos referidos ha mandado ese cliente, cuántos convirtieron y cuánto ha ganado en premios hasta hoy.",
+    placement: "top",
+  },
+];
 
 type Client = {
   id: string;
@@ -51,6 +73,7 @@ export default function ClientesPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", policyNumber: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [showTour, setShowTour] = useState(false);
   const [search, setSearch] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deactivateId, setDeactivateId] = useState<string | null>(null);
@@ -74,7 +97,12 @@ export default function ClientesPage() {
     }).catch(console.error).finally(() => setLoading(false));
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const handler = () => setShowTour(true);
+    window.addEventListener("referidoo:tour", handler);
+    return () => window.removeEventListener("referidoo:tour", handler);
+  }, []);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -139,12 +167,14 @@ export default function ClientesPage() {
 
   return (
     <div className="max-w-2xl">
+      {showTour && <Tour steps={TOUR_STEPS} onDone={() => setShowTour(false)} />}
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold">Clientes</h1>
           <p className="text-sm text-gray-400 mt-0.5">{clients.filter((c) => c.active).length} activos</p>
         </div>
-        <div className="flex gap-2">
+        <div data-tour="actions" className="flex gap-2">
           <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleFileChange} />
           <button
             onClick={() => fileRef.current?.click()}
@@ -284,7 +314,7 @@ export default function ClientesPage() {
       )}
 
       {/* Search */}
-      <div className="relative mb-4">
+      <div data-tour="search" className="relative mb-4">
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" width="14" height="14" viewBox="0 0 24 24" fill="none">
           <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.134 17 3 13.866 3 10C3 6.134 6.134 3 10 3C13.866 3 17 6.134 17 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
         </svg>
@@ -306,7 +336,7 @@ export default function ClientesPage() {
           <p className="text-sm">{search ? "Sin resultados" : "Agrega tu primer cliente para comenzar."}</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div data-tour="client-list" className="space-y-3">
           {filtered.map((client) => {
             const earned = client.referrals.filter(r => r.rewardStatus === "paid").reduce((s, r) => s + r.rewardAmount, 0);
             const converted = client.referrals.filter(r => r.status === "converted").length;

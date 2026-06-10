@@ -2,6 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { formatCurrency } from "@/lib/utils";
+import { Tour, type TourStep } from "@/components/Tour";
+
+const TOUR_STEPS: TourStep[] = [
+  {
+    selector: '[data-tour="tiers"]',
+    title: "Estructura de premios",
+    body: "Define cuánto gana tu cliente por cada referido que convierte. Por defecto: $1,500 · $1,500 · $3,500. Cambia los montos como quieras.",
+    placement: "bottom",
+  },
+  {
+    selector: '[data-tour="after-last"]',
+    title: "Más allá del último nivel",
+    body: "Si un cliente supera el nivel 3, elige qué pasa: ¿reinicia el ciclo? ¿monto fijo? ¿siempre el mismo máximo? Tú decides la regla.",
+    placement: "bottom",
+  },
+  {
+    selector: '[data-tour="preview"]',
+    title: "Vista previa instantánea",
+    body: "Así ve tu cliente cuánto gana en cada referido. Se actualiza en tiempo real mientras ajustas los montos arriba.",
+    placement: "top",
+  },
+];
 
 type Tier = { amount: number; label: string };
 
@@ -18,6 +40,13 @@ export default function NivelesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setShowTour(true);
+    window.addEventListener("referidoo:tour", handler);
+    return () => window.removeEventListener("referidoo:tour", handler);
+  }, []);
 
   useEffect(() => {
     fetch("/api/tiers")
@@ -71,13 +100,15 @@ export default function NivelesPage() {
 
   return (
     <div className="max-w-lg">
+      {showTour && <Tour steps={TOUR_STEPS} onDone={() => setShowTour(false)} />}
+
       <div className="mb-6">
         <h1 className="text-xl font-semibold">Niveles de premios</h1>
         <p className="text-sm text-gray-400 mt-0.5">Define cuánto gana cada cliente por referido</p>
       </div>
 
       {/* Tiers */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-5">
+      <div data-tour="tiers" className="bg-white rounded-2xl border border-gray-100 p-5 mb-5">
         <h2 className="font-medium text-sm mb-4">Estructura de premios</h2>
         <div className="space-y-3">
           {tiers.map((tier, i) => (
@@ -129,7 +160,7 @@ export default function NivelesPage() {
       </div>
 
       {/* After last tier */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-5">
+      <div data-tour="after-last" className="bg-white rounded-2xl border border-gray-100 p-5 mb-5">
         <h2 className="font-medium text-sm mb-1">¿Qué pasa después del último nivel?</h2>
         <p className="text-xs text-gray-400 mb-4">
           Si un cliente supera el nivel {tiers.length}, ¿qué premio recibe?
@@ -214,7 +245,7 @@ export default function NivelesPage() {
       </div>
 
       {/* Preview */}
-      <div className="bg-gray-50 rounded-2xl p-5 mb-6 border border-gray-100">
+      <div data-tour="preview" className="bg-gray-50 rounded-2xl p-5 mb-6 border border-gray-100">
         <h2 className="font-medium text-sm mb-3">Vista previa de premios</h2>
         <div className="space-y-2">
           {tiers.map((t, i) => (

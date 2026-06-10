@@ -95,9 +95,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             <span className="font-semibold text-sm tracking-tight">Referidoo</span>
           </div>
-          <button onClick={logout} className="text-xs text-gray-400 hover:text-gray-700 transition py-2 px-1">
-            Salir
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => window.dispatchEvent(new Event("referidoo:tour"))}
+              title="Guía de la sección actual"
+              className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-700 transition text-xs font-semibold"
+            >
+              ?
+            </button>
+            <button onClick={logout} className="text-xs text-gray-400 hover:text-gray-700 transition py-2 px-1">
+              Salir
+            </button>
+          </div>
         </div>
       </header>
 

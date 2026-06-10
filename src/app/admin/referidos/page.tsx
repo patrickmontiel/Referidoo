@@ -2,6 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { formatCurrency, formatDate, getStatusLabel, getRewardStatusLabel } from "@/lib/utils";
+import { Tour, type TourStep } from "@/components/Tour";
+
+const TOUR_STEPS: TourStep[] = [
+  {
+    selector: '[data-tour="header"]',
+    title: "Tu pipeline de referidos",
+    body: "Cada persona que alguien te mandó aparece aquí. Tú llevas el control: contactas, conviertes, pagas el premio.",
+    placement: "bottom",
+  },
+  {
+    selector: '[data-tour="filters"]',
+    title: "Filtra por etapa",
+    body: "Ve solo los pendientes por contactar, los que ya abordaste, o los que ya cerraron. Útil cuando tienes varios en proceso al mismo tiempo.",
+    placement: "bottom",
+  },
+  {
+    selector: '[data-tour="list"]',
+    title: "Tarjetas de leads",
+    body: "Cada tarjeta muestra el nombre, quién lo refirió, la fecha y el estado. Haz clic en cualquiera para ver el detalle y cambiar el estado manualmente.",
+    placement: "top",
+  },
+];
 
 type Referral = {
   id: string;
@@ -54,6 +76,7 @@ export default function ReferidosPage() {
   // Pay modal
   const [payTarget, setPayTarget] = useState<{ id: string; referrerName: string; amount: number } | null>(null);
   const [payNote, setPayNote] = useState("");
+  const [showTour, setShowTour] = useState(false);
 
   function load() {
     setLoading(true);
@@ -62,7 +85,12 @@ export default function ReferidosPage() {
       .then((d) => { setReferrals(Array.isArray(d) ? d : []); setLoading(false); });
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const handler = () => setShowTour(true);
+    window.addEventListener("referidoo:tour", handler);
+    return () => window.removeEventListener("referidoo:tour", handler);
+  }, []);
 
   async function update(id: string, data: Record<string, unknown>) {
     setUpdating(true);
@@ -106,13 +134,15 @@ export default function ReferidosPage() {
 
   return (
     <div className="max-w-2xl">
-      <div className="mb-6">
+      {showTour && <Tour steps={TOUR_STEPS} onDone={() => setShowTour(false)} />}
+
+      <div data-tour="header" className="mb-6">
         <h1 className="text-xl font-semibold">Referidos</h1>
         <p className="text-sm text-gray-400 mt-0.5">{referrals.length} en total</p>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2 flex-wrap mb-5">
+      <div data-tour="filters" className="flex gap-2 flex-wrap mb-5">
         {STATUS_OPTIONS.map((opt) => (
           <button
             key={opt.value}
@@ -140,7 +170,7 @@ export default function ReferidosPage() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 text-gray-400 text-sm">Sin referidos en esta categoría.</div>
       ) : (
-        <div className="space-y-3">
+        <div data-tour="list" className="space-y-3">
           {filtered.map((r) => (
             <div
               key={r.id}
