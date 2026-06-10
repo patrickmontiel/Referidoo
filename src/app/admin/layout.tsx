@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -11,14 +12,73 @@ const nav = [
   { href: "/admin/niveles", label: "Niveles", icon: "M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" },
 ];
 
+const ONBOARDING_KEY = "referidoo_admin_onboarded";
+
+const steps = [
+  {
+    icon: "M17 20H7C5.9 20 5 19.1 5 18V6C5 4.9 5.9 4 7 4H17C18.1 4 19 4.9 19 6V18C19 19.1 18.1 20 17 20ZM9 12L11 14L15 10",
+    section: null,
+    title: "Bienvenido a Referidoo",
+    body: "Este es tu panel de asesor. Desde aquí gestionas todo tu programa de referidos — qué clientes están activos, qué leads han llegado, y cuántos premios has enviado. Te explico cómo funciona cada sección.",
+  },
+  {
+    icon: "M17 21V19C17 17.9 16.1 17 15 17H9C7.9 17 7 17.9 7 19V21M12 13C14.2 13 16 11.2 16 9C16 6.8 14.2 5 12 5C9.8 5 8 6.8 8 9C8 11.2 9.8 13 12 13Z",
+    section: "Clientes",
+    title: "Empieza por tus clientes",
+    body: "Agrega a cada cliente con plan activo. Puedes hacerlo uno a uno o importar un CSV. Cada cliente recibe un portal personal con su link de referidos — se lo mandas con un botón de WhatsApp directo desde aquí.",
+    highlight: "/admin/clientes",
+  },
+  {
+    icon: "M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z",
+    section: "Niveles",
+    title: "Configura cuánto gana cada quien",
+    body: "En Niveles defines la estructura de premios. Por defecto están cargados tres niveles: $1,500 · $1,500 · $3,500. Puedes cambiar los montos, agregar niveles, y definir qué pasa cuando un cliente supera el último.",
+    highlight: "/admin/niveles",
+  },
+  {
+    icon: "M17 21V19C17 17.9 16.1 17 15 17H9C7.9 17 7 17.9 7 19V21M12 3C14.2 3 16 4.8 16 7C16 9.2 14.2 11 12 11C9.8 11 8 9.2 8 7C8 4.8 9.8 3 12 3ZM22 21C22 17.7 19.3 15 16 15M2 21C2 17.7 4.7 15 8 15",
+    section: "Referidos",
+    title: "Tu pipeline de ventas por referido",
+    body: "Cada vez que alguien llene el formulario de un cliente tuyo, aparece aquí. Tú marcas si lo contactaste, si convirtió, y cuánto valió el plan. Al enviar el premio, el cliente recibe un email y puede confirmarlo desde su portal.",
+    highlight: "/admin/referidos",
+  },
+  {
+    icon: "M5 12L10 17L19 8",
+    section: null,
+    title: "Todo listo",
+    body: "Agrega a tu primer cliente y mándale su link por WhatsApp. En cuanto comparta su link y alguien llene el formulario, te llegará una notificación y el referido aparecerá aquí.",
+  },
+];
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    if (!localStorage.getItem(ONBOARDING_KEY)) {
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  function finish() {
+    localStorage.setItem(ONBOARDING_KEY, "1");
+    setShowOnboarding(false);
+  }
+
+  function next() {
+    if (step < steps.length - 1) setStep(step + 1);
+    else finish();
+  }
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
   }
+
+  const current = steps[step];
+  const isLast = step === steps.length - 1;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -35,10 +95,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             <span className="font-semibold text-sm tracking-tight">Referidoo</span>
           </div>
-          <button
-            onClick={logout}
-            className="text-xs text-gray-400 hover:text-gray-700 transition py-2 px-1"
-          >
+          <button onClick={logout} className="text-xs text-gray-400 hover:text-gray-700 transition py-2 px-1">
             Salir
           </button>
         </div>
@@ -49,13 +106,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <aside className="hidden md:flex w-48 flex-col py-6 px-3 gap-1 border-r border-gray-100 bg-white">
           {nav.map((item) => {
             const active = pathname === item.href;
+            const highlighted = showOnboarding && current.highlight === item.href;
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition",
-                  active ? "bg-black text-white font-medium" : "text-gray-600 hover:bg-gray-100"
+                  active ? "bg-black text-white font-medium" :
+                  highlighted ? "bg-gray-100 text-gray-900 font-medium ring-2 ring-black ring-offset-1" :
+                  "text-gray-600 hover:bg-gray-100"
                 )}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -97,6 +157,77 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </div>
       </nav>
+
+      {/* Onboarding modal */}
+      {showOnboarding && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div className="relative bg-white w-full max-w-md rounded-t-3xl md:rounded-2xl shadow-2xl overflow-hidden">
+
+            {/* Progress bar */}
+            <div className="h-1 bg-gray-100">
+              <div
+                className="h-1 bg-black transition-all duration-500"
+                style={{ width: `${((step + 1) / steps.length) * 100}%` }}
+              />
+            </div>
+
+            <div className="p-7">
+              {/* Step indicator */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex gap-1.5">
+                  {steps.map((_, i) => (
+                    <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${
+                      i === step ? "w-6 bg-black" : i < step ? "w-3 bg-gray-300" : "w-3 bg-gray-100"
+                    }`} />
+                  ))}
+                </div>
+                {current.section && (
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+                    {current.section}
+                  </span>
+                )}
+              </div>
+
+              {/* Icon */}
+              <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center mb-5">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  {current.icon.includes("M9 12") ? (
+                    <>
+                      <path d="M17 20H7C5.9 20 5 19.1 5 18V6C5 4.9 5.9 4 7 4H17C18.1 4 19 4.9 19 6V18C19 19.1 18.1 20 17 20Z" stroke="white" strokeWidth="1.5"/>
+                      <path d="M9 12L11 14L15 10" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </>
+                  ) : (
+                    <path d={current.icon} stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  )}
+                </svg>
+              </div>
+
+              {/* Content */}
+              <h2 className="text-xl font-semibold mb-3 leading-snug">{current.title}</h2>
+              <p className="text-sm text-gray-500 leading-relaxed mb-7">{current.body}</p>
+
+              {/* Actions */}
+              <div className="flex gap-2">
+                <button
+                  onClick={next}
+                  className="flex-1 bg-black text-white text-sm font-medium py-3.5 rounded-xl hover:bg-gray-900 transition"
+                >
+                  {isLast ? "Empezar →" : "Siguiente"}
+                </button>
+                {!isLast && (
+                  <button
+                    onClick={finish}
+                    className="px-4 text-sm py-3.5 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
+                  >
+                    Saltar
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
