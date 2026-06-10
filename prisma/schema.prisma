@@ -43,18 +43,19 @@ model RewardTier {
 }
 
 model Client {
-  id           String     @id @default(cuid())
-  advisorId    String
-  advisor      Advisor    @relation(fields: [advisorId], references: [id], onDelete: Cascade)
-  name         String
-  email        String?
-  phone        String?
-  policyNumber String?
-  accessToken  String     @unique @default(cuid())
-  referralCode String     @unique
-  active       Boolean    @default(true)
-  createdAt    DateTime   @default(now())
-  referrals    Referral[]
+  id               String     @id @default(cuid())
+  advisorId        String
+  advisor          Advisor    @relation(fields: [advisorId], references: [id], onDelete: Cascade)
+  name             String
+  email            String?
+  phone            String?
+  policyNumber     String?
+  accessToken      String     @unique @default(cuid())
+  referralCode     String     @unique
+  active           Boolean    @default(true)
+  launchBonusUsed  Boolean    @default(false)
+  createdAt        DateTime   @default(now())
+  referrals        Referral[]
 }
 
 model Referral {

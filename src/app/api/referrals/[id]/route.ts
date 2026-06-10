@@ -26,6 +26,29 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const r = referral as typeof referral & { saleAmount?: number | null; referrer: { name: string; email?: string | null } };
   const saleAmount = body.saleAmount != null ? Number(body.saleAmount) : r.saleAmount;
   const isPaid = newRewardStatus === "paid" && referral.rewardStatus !== "paid";
+  const isConverting = newStatus === "converted" && referral.status !== "converted";
+
+  // Check launch bonus at conversion (3+ referrals in first 7 days → 2x first prize)
+  let finalRewardAmount = referral.rewardAmount;
+  let launchBonusApplied = false;
+  if (isConverting) {
+    const refClient = await db.client.findUnique({
+      where: { id: referral.referrerId },
+      select: { createdAt: true, launchBonusUsed: true },
+    });
+    if (refClient && !refClient.launchBonusUsed) {
+      const windowEnd = new Date(refClient.createdAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+      if (new Date() <= windowEnd) {
+        const countInWindow = await db.referral.count({
+          where: { referrerId: referral.referrerId, createdAt: { lte: windowEnd } },
+        });
+        if (countInWindow >= 3) {
+          finalRewardAmount = referral.rewardAmount * 2;
+          launchBonusApplied = true;
+        }
+      }
+    }
+  }
 
   const updated = await db.referral.update({
     where: { id },
@@ -34,12 +57,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       rewardStatus: newRewardStatus,
       leadNotes: body.leadNotes ?? referral.leadNotes,
       saleAmount: saleAmount ?? undefined,
+      ...(finalRewardAmount !== referral.rewardAmount ? { rewardAmount: finalRewardAmount } : {}),
       ...(isPaid ? { rewardPaidAt: new Date(), paymentNote: body.paymentNote ?? null } : {}),
     },
   });
 
+  if (launchBonusApplied) {
+    await db.client.update({ where: { id: referral.referrerId }, data: { launchBonusUsed: true } });
+  }
+
   // 1. Notify creator when advisor marks referral as converted (deal closed)
-  if (newStatus === "converted" && referral.status !== "converted") {
+  if (isConverting) {
     sendReferralApprovedNotification({
       advisorName: referral.advisor.name,
       advisorEmail: referral.advisor.email,
@@ -47,9 +75,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       leadName: referral.leadName,
       leadPhone: referral.leadPhone,
       leadEmail: referral.leadEmail,
-      rewardAmount: referral.rewardAmount,
+      rewardAmount: finalRewardAmount,
       tierPosition: referral.tierPosition,
       saleAmount: saleAmount ?? null,
+      launchBonusApplied,
     }).catch((err) => console.error("[email] Error enviando conversión:", err));
   }
 

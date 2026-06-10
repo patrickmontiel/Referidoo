@@ -102,7 +102,7 @@ function newReferralHtml(p: NewReferralPayload, isCreator = false) {
 </html>`;
 }
 
-type ApprovedPayload = NewReferralPayload & { saleAmount?: number | null };
+type ApprovedPayload = NewReferralPayload & { saleAmount?: number | null; launchBonusApplied?: boolean };
 
 function referralApprovedHtml(p: ApprovedPayload) {
   const adminUrl = `${BASE_URL}/admin/referidos`;
@@ -185,7 +185,7 @@ export async function sendReferralApprovedNotification(payload: ApprovedPayload)
     return;
   }
 
-  const subject = `[Comisión] ${payload.advisorName} cerró — ${payload.leadName}${payload.saleAmount ? ` · Plan ${formatMXN(payload.saleAmount)}` : ""}`;
+  const subject = `[Comisión${payload.launchBonusApplied ? " 🎯 BONO x2" : ""}] ${payload.advisorName} cerró — ${payload.leadName}${payload.saleAmount ? ` · Plan ${formatMXN(payload.saleAmount)}` : ""}`;
 
   await resend.emails.send({
     from: FROM,

@@ -41,6 +41,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
       email: client.email,
       referralCode: client.referralCode,
       createdAt: client.createdAt,
+      launchBonusUsed: (client as typeof client & { launchBonusUsed?: boolean }).launchBonusUsed ?? false,
     },
     advisor: {
       name: client.advisor.name,

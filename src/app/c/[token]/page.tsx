@@ -21,7 +21,7 @@ type Referral = {
 };
 
 type PortalData = {
-  client: { id: string; name: string; referralCode: string; createdAt: string };
+  client: { id: string; name: string; referralCode: string; createdAt: string; launchBonusUsed: boolean };
   advisor: { name: string; phone: string | null; companyName: string | null; whatsappMessage: string | null };
   tiers: RewardTier[];
   settings: { afterLastTier: string; flatAmount: number };
@@ -106,6 +106,18 @@ export default function ClientPortalPage() {
 
   const { client, advisor, tiers, settings, referrals, stats } = data;
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+
+  // Launch bonus calculations
+  const launchWindowEnd = new Date(new Date(client.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000);
+  const now = new Date();
+  const inLaunchWindow = now <= launchWindowEnd;
+  const launchBonusActive = inLaunchWindow && !client.launchBonusUsed;
+  const msLeft = launchWindowEnd.getTime() - now.getTime();
+  const daysLeft = Math.floor(msLeft / (1000 * 60 * 60 * 24));
+  const hoursLeft = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const referralsInWindow = referrals.filter(r => new Date(r.createdAt) <= launchWindowEnd).length;
+  const firstTierAmount = tiers[0]?.amount ?? 1500;
+  const bonusAmount = firstTierAmount * 2;
 
   // Onboarding modal — shown only on first visit
   if (showOnboarding) {
@@ -276,6 +288,74 @@ export default function ClientPortalPage() {
 
         {tab === "inicio" && (
           <>
+            {/* Launch bonus widget */}
+            {client.launchBonusUsed && (
+              <div className="bg-black rounded-2xl p-5 mb-4 text-white">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-lg">🎯</span>
+                  <p className="text-xs font-bold uppercase tracking-widest text-white/60">Bono de Inicio activado</p>
+                </div>
+                <p className="font-bold text-xl mb-0.5">Tu primer premio fue de {formatCurrency(bonusAmount)}</p>
+                <p className="text-sm text-white/60">Invitaste 3 personas en tu primera semana. ¡Bien hecho!</p>
+              </div>
+            )}
+
+            {launchBonusActive && (
+              <div className="rounded-2xl p-5 mb-4 border-2 border-black bg-white">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">⚡</span>
+                    <p className="text-xs font-bold uppercase tracking-widest text-black">Bono de Inicio</p>
+                  </div>
+                  <span className="text-xs font-semibold bg-black text-white px-2.5 py-1 rounded-full">
+                    {daysLeft > 0 ? `${daysLeft}d ${hoursLeft}h` : `${hoursLeft}h`} restantes
+                  </span>
+                </div>
+
+                {referralsInWindow >= 3 ? (
+                  <>
+                    <p className="font-bold text-lg mb-1">¡Lista para activarlo!</p>
+                    <p className="text-sm text-gray-500 mb-3">
+                      Invitaste {referralsInWindow} personas. Si alguna contrata antes de que termine la semana, tu primer premio sube a <strong className="text-black">{formatCurrency(bonusAmount)}</strong> en vez de {formatCurrency(firstTierAmount)}.
+                    </p>
+                    <div className="bg-gray-50 rounded-xl px-4 py-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-500">Premio normal</span>
+                        <span className="text-sm line-through text-gray-400">{formatCurrency(firstTierAmount)}</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-1">
+                        <span className="text-sm font-bold">Con tu bono</span>
+                        <span className="text-base font-bold text-black">{formatCurrency(bonusAmount)}</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-bold text-lg mb-1">
+                      Invita a {3 - referralsInWindow} {3 - referralsInWindow === 1 ? "persona más" : "personas más"} esta semana
+                    </p>
+                    <p className="text-sm text-gray-500 mb-3">
+                      Si alguna contrata, tu primer premio sube de{" "}
+                      <span className="line-through">{formatCurrency(firstTierAmount)}</span> a{" "}
+                      <strong className="text-black">{formatCurrency(bonusAmount)}</strong>.
+                    </p>
+                    {/* Progress dots */}
+                    <div className="flex gap-2 mb-3">
+                      {[1, 2, 3].map((i) => (
+                        <div
+                          key={i}
+                          className={`flex-1 h-2 rounded-full transition-all ${
+                            i <= referralsInWindow ? "bg-black" : "bg-gray-100"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-400">{referralsInWindow}/3 contactos invitados</p>
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Confirmation banners for paid-but-unconfirmed referrals */}
             {referrals.filter(r => r.rewardStatus === "paid" && !r.confirmedByReferrer && !confirmed.has(r.id)).map(r => (
               <div key={r.id} className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-4">
