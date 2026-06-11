@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
+import { Logo } from "@/components/Logo";
 
 type ReferralInfo = {
   referrerName: string;
@@ -13,6 +14,33 @@ type ReferralInfo = {
 };
 
 type Step = "landing" | "form" | "success";
+
+function GrowthIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <path d="M3 3V21H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M7 16L11 11L15 14L21 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2L20 5V11C20 16 16.5 19.5 12 21C7.5 19.5 4 16 4 11V5L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M9 12L11.5 14.5L15.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function ChatIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <path d="M21 11.5C21 16.1944 16.9706 20 12 20C10.6868 20 9.44 19.7295 8.32 19.2353L3 20.5L4.39 16.28C3.5 15.0354 3 13.5482 3 11.5C3 6.80558 7.02944 3 12 3C16.9706 3 21 6.80558 21 11.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M12 8V11.5L14 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
 
 export default function ReferralLandingPage() {
   const { code } = useParams<{ code: string }>();
@@ -199,49 +227,54 @@ export default function ReferralLandingPage() {
       <div className="flex-1 flex flex-col justify-between px-6 max-w-sm mx-auto w-full pt-14 pb-8">
 
         {/* Top */}
-        <div>
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1.5 mb-8">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-            <span className="text-[11px] font-medium text-gray-600 uppercase tracking-wider">
-              Referidoo — {info.companyName ?? info.advisorName}
+        <div className="landing-stagger">
+          {/* Brand */}
+          <div className="flex items-center gap-2 mb-8">
+            <Logo size="sm" />
+            <span className="text-[11px] text-gray-400">
+              · {info.companyName ?? info.advisorName}
             </span>
           </div>
 
           <p className="text-sm text-gray-400 mb-2">{firstName} te quiere compartir algo</p>
           <h1 className="text-[2rem] font-semibold leading-tight tracking-tight mb-5">
-            Tu amigo ya protege su patrimonio.
-            <span className="text-gray-400"> ¿Tú también lo estás haciendo?</span>
+            Tu amigo ya está cuidando su futuro.
+            <span className="text-gray-400"> ¿Y el tuyo?</span>
           </h1>
 
           <p className="text-sm text-gray-500 leading-relaxed mb-8">
             {info.welcomeMessage ||
-              `${firstName} ya tiene un plan de vida y retiro. Te recomienda conocerlo porque cree que es algo que también te conviene.`}
+              `${firstName} ya tiene un plan de vida y retiro, y cree que a ti también te puede convenir. Sin compromiso — solo es información.`}
           </p>
 
           {/* Social proof row */}
           <div className="flex items-center gap-3 mb-8">
             <div className="flex -space-x-2">
-              {["M", "J", "A"].map((l) => (
+              <div className="w-7 h-7 rounded-full bg-black border-2 border-white flex items-center justify-center text-[10px] font-bold text-white">
+                {firstName.charAt(0).toUpperCase()}
+              </div>
+              {["A", "M"].map((l) => (
                 <div key={l} className="w-7 h-7 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-600">
                   {l}
                 </div>
               ))}
             </div>
             <p className="text-xs text-gray-500">
-              Personas que ya cuidan su futuro financiero con Eduardo
+              {firstName} y otras personas ya cuidan su futuro financiero con {info.companyName ?? info.advisorName}
             </p>
           </div>
 
           {/* What you'll learn */}
           <div className="space-y-3">
             {[
-              { icon: "📊", text: "Qué es un PPR y cómo te ayuda a pagar menos impuestos" },
-              { icon: "🛡️", text: "Cómo funciona un seguro de vida con valor en inversión" },
-              { icon: "💬", text: "Una plática de 20 min sin compromiso ni presión" },
+              { icon: <GrowthIcon />, text: "Qué es un PPR y cómo te ayuda a pagar menos impuestos" },
+              { icon: <ShieldIcon />, text: "Cómo funciona un seguro de vida con valor en inversión" },
+              { icon: <ChatIcon />, text: "Una plática de 20 minutos, sin compromiso ni presión" },
             ].map((item) => (
-              <div key={item.text} className="flex items-start gap-3">
-                <span className="text-base leading-none mt-0.5">{item.icon}</span>
+              <div key={item.text} className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gray-50 text-gray-700 flex items-center justify-center flex-shrink-0">
+                  {item.icon}
+                </div>
                 <p className="text-sm text-gray-700 leading-snug">{item.text}</p>
               </div>
             ))}
@@ -249,7 +282,7 @@ export default function ReferralLandingPage() {
         </div>
 
         {/* Bottom CTA */}
-        <div className="mt-10">
+        <div className="landing-cta mt-10">
           <button
             onClick={() => setStep("form")}
             className="w-full bg-black text-white text-sm font-semibold py-4 rounded-2xl hover:bg-gray-900 active:scale-[0.98] transition"
