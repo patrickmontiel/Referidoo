@@ -169,9 +169,16 @@ export default function ReferidosPage() {
 
   function openCalendar(r: Referral) {
     const title = encodeURIComponent(`Llamada con ${r.leadName} — ${r.leadPhone}`);
-    const details = encodeURIComponent(`Referido de ${r.referrer.name} vía Referidoo`);
+    const firstName = r.leadName.split(" ")[0];
+    const detailLines = [
+      `Referido de ${r.referrer.name} vía Referidoo.`,
+      `Contacto: ${r.leadName} · ${r.leadPhone}${r.leadEmail ? ` · ${r.leadEmail}` : ""}`,
+      `Objetivo: presentar el plan de vida/retiro y la oferta que mejor le convenga a ${firstName}.`,
+    ];
+    if (r.leadNotes) detailLines.push(`Notas: ${r.leadNotes}`);
+    const details = encodeURIComponent(detailLines.join("\n\n"));
     const emailParam = r.leadEmail ? `&add=${encodeURIComponent(r.leadEmail)}` : "";
-    window.open(`https://calendar.google.com/calendar/r/eventedit?text=${title}&details=${details}${emailParam}`, "_blank");
+    window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}${emailParam}`, "_blank");
   }
 
   const filtered = referrals.filter((r) => !filter || r.status === filter);
