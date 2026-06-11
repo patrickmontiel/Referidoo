@@ -370,12 +370,15 @@ export default function ClientPortalPage() {
               <div className="bg-white rounded-2xl border border-gray-100">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
                   <h2 className="font-medium text-sm">Premio siguiente</h2>
-                  <span className="text-sm font-semibold">{formatCurrency(nextReward)}</span>
+                  <span className="text-sm font-semibold">
+                    {formatCurrency(launchBonusActive && completedNonRejected + 1 === 1 ? bonusAmount : nextReward)}
+                  </span>
                 </div>
                 <div className="divide-y divide-gray-50">
                   {tiers.map((tier) => {
                     const done = completedNonRejected >= tier.position;
                     const current = completedNonRejected + 1 === tier.position;
+                    const bonusHere = launchBonusActive && current && tier.position === 1;
                     return (
                       <div key={tier.position} className={`flex items-center gap-3 px-5 py-3 ${current ? "bg-black" : ""}`}>
                         <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -395,10 +398,20 @@ export default function ClientPortalPage() {
                           <p className={`text-sm font-medium ${current ? "text-white" : done ? "text-gray-400 line-through" : "text-gray-700"}`}>
                             {tier.label || `Referido #${tier.position}`}
                           </p>
+                          {bonusHere && (
+                            <p className="text-[10px] text-amber-400 font-medium">⚡ Bono de Inicio activo</p>
+                          )}
                         </div>
-                        <span className={`text-sm font-semibold ${current ? "text-white" : done ? "text-green-600" : "text-gray-700"}`}>
-                          {formatCurrency(tier.amount)}
-                        </span>
+                        {bonusHere ? (
+                          <span className="text-sm font-semibold text-white">
+                            <span className="text-white/40 line-through mr-1.5">{formatCurrency(tier.amount)}</span>
+                            {formatCurrency(bonusAmount)}
+                          </span>
+                        ) : (
+                          <span className={`text-sm font-semibold ${current ? "text-white" : done ? "text-green-600" : "text-gray-700"}`}>
+                            {formatCurrency(tier.amount)}
+                          </span>
+                        )}
                       </div>
                     );
                   })}
@@ -458,9 +471,17 @@ export default function ClientPortalPage() {
         {tab === "historial" && (
           <div>
             {referrals.length === 0 ? (
-              <div className="text-center py-16">
+              <div className="text-center py-16 px-6">
                 <p className="text-gray-400 text-sm">Aún no has referido a nadie.</p>
-                <p className="text-xs text-gray-300 mt-1">Tu primer referido vale {formatCurrency(tiers[0]?.amount ?? 1500)}.</p>
+                {launchBonusActive ? (
+                  <p className="text-xs text-gray-400 mt-1">
+                    ⚡ Esta semana tu primer referido vale{" "}
+                    <strong className="text-gray-700">{formatCurrency(bonusAmount)}</strong>{" "}
+                    en vez de {formatCurrency(firstTierAmount)}.
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-300 mt-1">Tu primer referido vale {formatCurrency(tiers[0]?.amount ?? 1500)}.</p>
+                )}
                 <button
                   onClick={() => setTab("inicio")}
                   className="mt-5 px-5 py-2.5 bg-black text-white text-sm rounded-full font-medium"

@@ -21,13 +21,19 @@ export function formatDate(date: Date | string) {
   }).format(new Date(date));
 }
 
+// Avoid ambiguous characters (0/O, 1/I/l) so codes are easy to read and type
+const REFERRAL_CODE_CHARS = "23456789abcdefghjkmnpqrstuvwxyz";
+
 export function generateReferralCode(name: string): string {
   const base = name
     .toLowerCase()
     .replace(/\s+/g, "")
     .replace(/[^a-z0-9]/g, "")
     .slice(0, 6);
-  const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+  let rand = "";
+  for (let i = 0; i < 4; i++) {
+    rand += REFERRAL_CODE_CHARS[Math.floor(Math.random() * REFERRAL_CODE_CHARS.length)];
+  }
   return `${base}${rand}`;
 }
 

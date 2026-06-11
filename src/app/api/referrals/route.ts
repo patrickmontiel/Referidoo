@@ -33,13 +33,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
   }
 
-  const referrer = await db.client.findUnique({
-    where: { referralCode },
-    include: {
-      referrals: { where: { status: { not: "rejected" } } },
-      advisor: { select: { name: true, email: true } },
-    },
-  });
+  const include = {
+    referrals: { where: { status: { not: "rejected" as const } } },
+    advisor: { select: { name: true, email: true } },
+  };
+
+  let referrer = await db.client.findUnique({ where: { referralCode }, include });
+
+  // Fallback: codes shared via WhatsApp/SMS can get auto-capitalized by phones
+  if (!referrer) {
+    const normalized = String(referralCode).trim().toLowerCase();
+    const all = await db.client.findMany({ include });
+    referrer = all.find((c) => c.referralCode.toLowerCase() === normalized) ?? null;
+  }
 
   if (!referrer || !referrer.active) {
     return NextResponse.json({ error: "Código no válido" }, { status: 404 });
