@@ -57,6 +57,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       rewardStatus: newRewardStatus,
       leadNotes: body.leadNotes ?? referral.leadNotes,
       saleAmount: saleAmount ?? undefined,
+      ...(body.productType !== undefined ? { productType: body.productType } : {}),
       ...(finalRewardAmount !== referral.rewardAmount ? { rewardAmount: finalRewardAmount } : {}),
       ...(isPaid ? { rewardPaidAt: new Date(), paymentNote: body.paymentNote ?? null } : {}),
     },

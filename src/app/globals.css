@@ -32,3 +32,41 @@ body {
 .scroll-smooth {
   -webkit-overflow-scrolling: touch;
 }
+
+/* Welcome screen animations — Emil Kowalski style */
+@keyframes welcomeFadeSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes welcomeFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.welcome-logo {
+  animation: welcomeFadeIn 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.welcome-name {
+  animation: welcomeFadeSlideUp 550ms cubic-bezier(0.22, 1, 0.36, 1) 260ms both;
+}
+.welcome-sub {
+  animation: welcomeFadeSlideUp 500ms cubic-bezier(0.22, 1, 0.36, 1) 360ms both;
+}
+
+/* Tour tooltip entrance */
+@keyframes tooltipEnter {
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.tour-tooltip {
+  animation: tooltipEnter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Tour overlay */
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.tour-overlay {
+  animation: overlayIn 180ms ease both;
+}

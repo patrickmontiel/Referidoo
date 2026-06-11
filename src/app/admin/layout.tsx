@@ -228,16 +228,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {showWelcome && (
         <div
           className="fixed inset-0 z-[80] flex flex-col items-center justify-center bg-white select-none"
-          style={{ opacity: fadingOut ? 0 : 1, transition: "opacity 0.8s ease-out" }}
+          style={{ opacity: fadingOut ? 0 : 1, transition: "opacity 1s cubic-bezier(0.22, 1, 0.36, 1)" }}
         >
-          <div className="text-center">
-            <div className="mb-10">
+          <div className="text-center px-8">
+            <div className="welcome-logo mb-12 flex justify-center">
               <Logo size="lg" />
             </div>
             {welcomeName && (
-              <p className="text-black/40 text-base font-normal">
-                Bienvenido, {welcomeName}
-              </p>
+              <>
+                <p className="welcome-name text-[2.75rem] font-semibold tracking-tight text-black leading-none mb-2">
+                  {welcomeName.split(" ")[0]}
+                  <span className="text-black/25"> {welcomeName.split(" ").slice(1).join(" ")}</span>
+                </p>
+                <p className="welcome-sub text-sm text-black/30 font-normal tracking-wide">
+                  Bienvenido de vuelta
+                </p>
+              </>
             )}
           </div>
         </div>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: #fff; color: #0a0a0a; }
+
+  .slide {
+    width: 1120px;
+    min-height: 630px;
+    padding: 64px 72px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ── Slide 1: Portada ── */
+  .s1 { background: #000; color: #fff; }
+  .s1 .brand { font-size: 11px; letter-spacing: 4px; font-weight: 700; text-transform: uppercase; color: #555; margin-bottom: 60px; }
+  .s1 h1 { font-size: 72px; font-weight: 900; line-height: 1.0; margin-bottom: 20px; }
+  .s1 h1 span { color: #fff; }
+  .s1 .sub { font-size: 20px; color: #666; font-weight: 400; max-width: 520px; line-height: 1.5; }
+  .s1 .tag { position: absolute; bottom: 64px; right: 72px; font-size: 13px; color: #333; font-weight: 500; }
+
+  /* ── Slide 2: Problema ── */
+  .s2 { background: #fafafa; }
+  .s2 .label { font-size: 11px; letter-spacing: 3px; font-weight: 700; text-transform: uppercase; color: #9ca3af; margin-bottom: 16px; }
+  .s2 h2 { font-size: 44px; font-weight: 800; line-height: 1.15; margin-bottom: 48px; max-width: 680px; }
+  .s2 .points { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+  .s2 .point { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 28px; }
+  .s2 .point .icon { font-size: 28px; margin-bottom: 14px; }
+  .s2 .point h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .s2 .point p { font-size: 13px; color: #6b7280; line-height: 1.6; }
+
+  /* ── Slide 3: Solución ── */
+  .s3 { background: #fff; }
+  .s3 .label { font-size: 11px; letter-spacing: 3px; font-weight: 700; text-transform: uppercase; color: #9ca3af; margin-bottom: 16px; }
+  .s3 h2 { font-size: 44px; font-weight: 800; line-height: 1.15; margin-bottom: 12px; max-width: 680px; }
+  .s3 .hl { color: #000; }
+  .s3 .desc { font-size: 18px; color: #6b7280; margin-bottom: 48px; max-width: 640px; line-height: 1.6; }
+  .s3 .features { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .s3 .feat { display: flex; gap: 16px; align-items: flex-start; background: #f9fafb; border-radius: 14px; padding: 22px; }
+  .s3 .feat .dot { width: 36px; height: 36px; background: #000; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
+  .s3 .feat h3 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .s3 .feat p { font-size: 12px; color: #6b7280; line-height: 1.5; }
+
+  /* ── Slide 4: Cómo funciona ── */
+  .s4 { background: #000; color: #fff; }
+  .s4 .label { font-size: 11px; letter-spacing: 3px; font-weight: 700; text-transform: uppercase; color: #444; margin-bottom: 16px; }
+  .s4 h2 { font-size: 44px; font-weight: 800; line-height: 1.15; margin-bottom: 52px; }
+  .s4 .steps { display: flex; gap: 0; align-items: stretch; }
+  .s4 .step { flex: 1; padding: 0 24px; border-right: 1px solid #1f1f1f; }
+  .s4 .step:first-child { padding-left: 0; }
+  .s4 .step:last-child { border-right: none; }
+  .s4 .num { font-size: 11px; font-weight: 800; letter-spacing: 3px; color: #444; text-transform: uppercase; margin-bottom: 20px; }
+  .s4 .step h3 { font-size: 16px; font-weight: 700; margin-bottom: 10px; color: #fff; }
+  .s4 .step p { font-size: 13px; color: #666; line-height: 1.6; }
+  .s4 .step .who { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: #1a1a1a; color: #888; padding: 4px 10px; border-radius: 6px; margin-bottom: 12px; }
+
+  /* ── Slide 5: Bono de Inicio ── */
+  .s5 { background: #fff; }
+  .s5 .label { font-size: 11px; letter-spacing: 3px; font-weight: 700; text-transform: uppercase; color: #9ca3af; margin-bottom: 16px; }
+  .s5 h2 { font-size: 44px; font-weight: 800; line-height: 1.15; margin-bottom: 12px; }
+  .s5 .desc { font-size: 17px; color: #6b7280; margin-bottom: 40px; line-height: 1.6; max-width: 640px; }
+  .s5 .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .s5 .card { border-radius: 18px; padding: 32px; }
+  .s5 .card.normal { background: #f9fafb; border: 1px solid #e5e7eb; }
+  .s5 .card.bonus { background: #000; color: #fff; }
+  .s5 .card .tag2 { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 12px; opacity: 0.5; }
+  .s5 .card .amount { font-size: 48px; font-weight: 900; margin-bottom: 8px; }
+  .s5 .card .cond { font-size: 13px; line-height: 1.6; opacity: 0.6; }
+  .s5 .note { margin-top: 24px; font-size: 13px; color: #9ca3af; display: flex; align-items: center; gap: 8px; }
+
+  /* ── Slide 6: Dashboard ── */
+  .s6 { background: #fafafa; }
+  .s6 .label { font-size: 11px; letter-spacing: 3px; font-weight: 700; text-transform: uppercase; color: #9ca3af; margin-bottom: 16px; }
+  .s6 h2 { font-size: 44px; font-weight: 800; line-height: 1.15; margin-bottom: 12px; }
+  .s6 .desc { font-size: 17px; color: #6b7280; margin-bottom: 40px; line-height: 1.6; }
+  .s6 .screens { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .s6 .screen { background: #fff; border: 1px solid #e5e7eb; border-radius: 18px; padding: 28px; }
+  .s6 .screen .stitle { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #9ca3af; margin-bottom: 16px; }
+  .s6 .row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
+  .s6 .row:last-child { border-bottom: none; }
+  .s6 .row .name { font-size: 14px; font-weight: 600; }
+  .s6 .row .meta { font-size: 12px; color: #9ca3af; }
+  .s6 .badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+  .s6 .badge.p { background: #fef9c3; color: #854d0e; }
+  .s6 .badge.c { background: #dcfce7; color: #166534; }
+
+  /* ── Slide 7: Inversión ── */
+  .s7 { background: #000; color: #fff; }
+  .s7 .label { font-size: 11px; letter-spacing: 3px; font-weight: 700; text-transform: uppercase; color: #444; margin-bottom: 16px; }
+  .s7 h2 { font-size: 44px; font-weight: 800; line-height: 1.15; margin-bottom: 48px; }
+  .s7 .plans { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .s7 .plan { border-radius: 18px; padding: 36px; }
+  .s7 .plan.a { background: #111; border: 1px solid #222; }
+  .s7 .plan.b { background: #fff; color: #000; }
+  .s7 .plan .ptag { font-size: 10px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; opacity: 0.5; }
+  .s7 .plan .price { font-size: 52px; font-weight: 900; line-height: 1; margin-bottom: 4px; }
+  .s7 .plan .psub { font-size: 13px; margin-bottom: 24px; opacity: 0.5; }
+  .s7 .plan ul { list-style: none; }
+  .s7 .plan ul li { font-size: 14px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; gap: 10px; align-items: center; }
+  .s7 .plan.b ul li { border-bottom-color: rgba(0,0,0,0.07); }
+  .s7 .plan ul li::before { content: "→"; font-weight: 700; flex-shrink: 0; }
+
+  /* ── Slide 8: Cierre ── */
+  .s8 { background: #fff; }
+  .s8 .label { font-size: 11px; letter-spacing: 3px; font-weight: 700; text-transform: uppercase; color: #9ca3af; margin-bottom: 16px; }
+  .s8 h2 { font-size: 52px; font-weight: 900; line-height: 1.1; margin-bottom: 12px; max-width: 720px; }
+  .s8 .desc { font-size: 18px; color: #6b7280; margin-bottom: 52px; max-width: 580px; line-height: 1.6; }
+  .s8 .actions { display: flex; gap: 16px; align-items: center; }
+  .s8 .btn { background: #000; color: #fff; padding: 18px 36px; border-radius: 14px; font-size: 15px; font-weight: 700; text-decoration: none; }
+  .s8 .link { font-size: 15px; color: #9ca3af; }
+  .s8 .contact { position: absolute; bottom: 64px; left: 72px; }
+  .s8 .contact p { font-size: 13px; color: #9ca3af; }
+  .s8 .contact strong { color: #0a0a0a; }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: PORTADA -->
+<div class="slide s1">
+  <p class="brand">Referidoo · Presentación confidencial</p>
+  <h1>Tu programa<br>de referidos,<br><span style="color:#444">profesional.</span></h1>
+  <p class="sub">Convierte a tus clientes satisfechos en tu fuerza de ventas más efectiva — sin llamadas en frío, sin presión.</p>
+  <p class="tag">Presentado por Patrick Montiel · Lessio AI</p>
+</div>
+
+<!-- SLIDE 2: PROBLEMA -->
+<div class="slide s2">
+  <p class="label">El problema</p>
+  <h2>Tus mejores clientes<br>ya refieren — pero nadie<br>lo está midiendo.</h2>
+  <div class="points">
+    <div class="point">
+      <div class="icon">👋</div>
+      <h3>Sin sistema</h3>
+      <p>Las recomendaciones ocurren por WhatsApp, de boca en boca. No hay seguimiento ni historial.</p>
+    </div>
+    <div class="point">
+      <div class="icon">💸</div>
+      <h3>Sin incentivo real</h3>
+      <p>El cliente refiere por buena voluntad. No hay una razón concreta para ser consistente.</p>
+    </div>
+    <div class="point">
+      <div class="icon">🕳️</div>
+      <h3>Sin visibilidad</h3>
+      <p>No sabes cuántos referidos tienes en proceso, ni quién los mandó, ni en qué etapa están.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: SOLUCIÓN -->
+<div class="slide s3">
+  <p class="label">La solución</p>
+  <h2>Un programa de referidos<br>que tus clientes<br><span class="hl">realmente usan.</span></h2>
+  <p class="desc">Referidoo le da a cada cliente un portal personal donde puede referir contactos y ganar premios en efectivo por cada uno que contrate contigo.</p>
+  <div class="features">
+    <div class="feat">
+      <div class="dot">🔗</div>
+      <div>
+        <h3>Portal personal para cada cliente</h3>
+        <p>Link único. Sin descarga de app. Entra desde WhatsApp en 2 segundos.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="dot">🎯</div>
+      <div>
+        <h3>Premios en efectivo por referido</h3>
+        <p>Tú configuras los montos. El sistema los rastrea y notifica automáticamente.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="dot">📊</div>
+      <div>
+        <h3>Dashboard de asesor en tiempo real</h3>
+        <p>Ves todos tus referidos activos, quién los mandó, y en qué etapa están.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="dot">⚡</div>
+      <div>
+        <h3>Notificaciones automáticas</h3>
+        <p>Tu cliente sabe cuándo su referido avanzó. Tú sabes cuándo cerrar.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: CÓMO FUNCIONA -->
+<div class="slide s4">
+  <p class="label">Flujo completo</p>
+  <h2>Cómo funciona<br>para todos.</h2>
+  <div class="steps">
+    <div class="step">
+      <p class="num">Paso 01</p>
+      <span class="who">Tú · Eduardo</span>
+      <h3>Agregas a Ana al programa</h3>
+      <p>Un clic en tu dashboard. Ana recibe su portal personal por WhatsApp.</p>
+    </div>
+    <div class="step">
+      <p class="num">Paso 02</p>
+      <span class="who">Ana</span>
+      <h3>Ana comparte su link</h3>
+      <p>Manda su enlace a contactos. El sistema registra cada uno y tú recibes una notificación.</p>
+    </div>
+    <div class="step">
+      <p class="num">Paso 03</p>
+      <span class="who">Tú · Eduardo</span>
+      <h3>Cierras la venta</h3>
+      <p>Marcas el referido como convertido en el dashboard. Se registra el valor del plan.</p>
+    </div>
+    <div class="step">
+      <p class="num">Paso 04</p>
+      <span class="who">Ana</span>
+      <h3>Ana recibe su premio</h3>
+      <p>Le llega un email con el monto. Lo confirma en su portal. Todo queda registrado.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: BONO DE INICIO -->
+<div class="slide s5">
+  <p class="label">Diferenciador clave</p>
+  <h2>El Bono de Inicio —<br>la razón para actuar hoy.</h2>
+  <p class="desc">Durante los primeros 7 días en el programa, si Ana invita a 3 o más personas y alguna contrata, su primer premio sube automáticamente. Sin que tú hagas nada.</p>
+  <div class="cards">
+    <div class="card normal">
+      <p class="tag2">Premio estándar</p>
+      <p class="amount">$1,500</p>
+      <p class="cond">Por cada referido que contrate.<br>Siempre disponible, sin límite.</p>
+    </div>
+    <div class="card bonus">
+      <p class="tag2">⚡ Bono de Inicio · Semana 1</p>
+      <p class="amount">$2,500</p>
+      <p class="cond">Si invita a 3+ personas en su primera semana y alguna contrata. Solo aplica una vez.</p>
+    </div>
+  </div>
+  <p class="note">
+    <span>→</span>
+    <span>Los referidos siguientes de esas mismas personas valen $1,500 cada uno, de forma indefinida.</span>
+  </p>
+</div>
+
+<!-- SLIDE 6: DASHBOARD -->
+<div class="slide s6">
+  <p class="label">Lo que tú ves</p>
+  <h2>Tu pipeline de referidos,<br>todo en un lugar.</h2>
+  <p class="desc">Panel de asesor con todos tus clientes activos, sus referidos y el estatus de cada uno en tiempo real.</p>
+  <div class="screens">
+    <div class="screen">
+      <p class="stitle">Tus referidos activos</p>
+      <div class="row">
+        <div><p class="name">Carlos Mendoza</p><p class="meta">Referido por Ana García</p></div>
+        <span class="badge p">En proceso</span>
+      </div>
+      <div class="row">
+        <div><p class="name">Laura Rivas</p><p class="meta">Referida por Jorge Soto</p></div>
+        <span class="badge c">Convertido</span>
+      </div>
+      <div class="row">
+        <div><p class="name">Tomás Herrera</p><p class="meta">Referido por Ana García</p></div>
+        <span class="badge p">En proceso</span>
+      </div>
+    </div>
+    <div class="screen">
+      <p class="stitle">Lo que ve Ana en su portal</p>
+      <div class="row">
+        <div><p class="name" style="font-size:13px">Premio #1 · Carlos Mendoza</p><p class="meta">En proceso</p></div>
+        <span style="font-size:14px;font-weight:700;color:#9ca3af">$1,500</span>
+      </div>
+      <div class="row">
+        <div><p class="name" style="font-size:13px">Premio #2 · Laura Rivas</p><p class="meta">Pagado ✓</p></div>
+        <span style="font-size:14px;font-weight:700;color:#16a34a">$2,500</span>
+      </div>
+      <div style="margin-top:16px;background:#f9fafb;border-radius:10px;padding:12px 16px">
+        <p style="font-size:12px;color:#6b7280">Total ganado <strong style="color:#0a0a0a;float:right">$2,500</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: INVERSIÓN -->
+<div class="slide s7">
+  <p class="label">Inversión</p>
+  <h2>Lanzamiento — Fase 0</h2>
+  <div class="plans">
+    <div class="plan a">
+      <p class="ptag">Plataforma</p>
+      <p class="price">$1,200</p>
+      <p class="psub">/mes · precio de lanzamiento</p>
+      <ul>
+        <li>Clientes ilimitados en el programa</li>
+        <li>Dashboard de asesor completo</li>
+        <li>Portal personal para cada cliente</li>
+        <li>Notificaciones automáticas</li>
+        <li>Bono de Inicio activado por defecto</li>
+        <li>Soporte directo con el equipo</li>
+      </ul>
+    </div>
+    <div class="plan b">
+      <p class="ptag" style="color:#0a0a0a">+ Comisión de éxito</p>
+      <p class="price">0.25%</p>
+      <p class="psub" style="color:#6b7280">del valor del plan contratado</p>
+      <ul style="color:#0a0a0a">
+        <li>Solo pagas cuando cierras</li>
+        <li>Plan de $600,000 → comisión de $1,500</li>
+        <li>Sin comisión si no hay conversión</li>
+        <li>Registro automático al marcar convertido</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: CIERRE -->
+<div class="slide s8">
+  <p class="label">Próximos pasos</p>
+  <h2>Empieza hoy.<br>Tus clientes ya<br>están listos.</h2>
+  <p class="desc">El setup tarda menos de 15 minutos. Subes tu primer cliente hoy y mañana ya tiene su portal activo.</p>
+  <div class="actions">
+    <span class="btn">Activar mi cuenta →</span>
+    <span class="link">referidoo.vercel.app</span>
+  </div>
+  <div class="contact">
+    <p>¿Preguntas? <strong>Patrick Montiel</strong> · patrick@lessio.ai</p>
+  </div>
+</div>
+
+</body>
+</html>

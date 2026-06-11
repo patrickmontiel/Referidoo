@@ -21,5 +21,13 @@ export async function POST() {
     results.push("– launchBonusUsed already exists");
   }
 
+  // Add productType column if missing
+  try {
+    await db.execute("ALTER TABLE Referral ADD COLUMN productType TEXT");
+    results.push("✓ productType added");
+  } catch {
+    results.push("– productType already exists");
+  }
+
   return NextResponse.json({ ok: true, results });
 }

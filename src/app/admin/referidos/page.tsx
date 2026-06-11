@@ -36,6 +36,7 @@ type Referral = {
   rewardStatus: string;
   tierPosition: number;
   saleAmount: number | null;
+  productType: string | null;
   rewardPaidAt: string | null;
   confirmedByReferrer: boolean;
   referrerConfirmedAt: string | null;
@@ -79,6 +80,7 @@ export default function ReferidosPage() {
   // Convert modal
   const [convertTarget, setConvertTarget] = useState<{ id: string; name: string } | null>(null);
   const [saleInput, setSaleInput] = useState("");
+  const [productType, setProductType] = useState("");
   // Pay modal
   const [payTarget, setPayTarget] = useState<{ id: string; referrerName: string; amount: number } | null>(null);
   const [payNote, setPayNote] = useState("");
@@ -117,6 +119,7 @@ export default function ReferidosPage() {
   function startConvert(id: string, name: string, e?: React.MouseEvent) {
     e?.stopPropagation();
     setSaleInput("");
+    setProductType("");
     setConvertTarget({ id, name });
   }
 
@@ -143,8 +146,9 @@ export default function ReferidosPage() {
     if (!convertTarget) return;
     const saleAmount = Number(saleInput.replace(/,/g, ""));
     if (!saleAmount) return;
-    await update(convertTarget.id, { status: "converted", rewardStatus: "approved", saleAmount });
+    await update(convertTarget.id, { status: "converted", rewardStatus: "approved", saleAmount, productType: productType || null });
     setConvertTarget(null);
+    setProductType("");
   }
 
   async function saveEditedSale() {
@@ -164,10 +168,10 @@ export default function ReferidosPage() {
   }
 
   function openCalendar(r: Referral) {
-    const firstName = r.leadName.split(" ")[0];
     const title = encodeURIComponent(`Llamada con ${r.leadName} — ${r.leadPhone}`);
     const details = encodeURIComponent(`Referido de ${r.referrer.name} vía Referidoo`);
-    window.open(`https://calendar.google.com/calendar/r/eventedit?text=${title}&details=${details}`, "_blank");
+    const emailParam = r.leadEmail ? `&add=${encodeURIComponent(r.leadEmail)}` : "";
+    window.open(`https://calendar.google.com/calendar/r/eventedit?text=${title}&details=${details}${emailParam}`, "_blank");
   }
 
   const filtered = referrals.filter((r) => !filter || r.status === filter);
@@ -300,45 +304,71 @@ export default function ReferidosPage() {
       )}
 
       {/* Convert modal */}
-      {convertTarget && (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-          <div className="absolute inset-0 bg-black/25" onClick={() => setConvertTarget(null)} />
-          <div className="relative bg-white w-full max-w-sm rounded-t-3xl md:rounded-2xl p-6 shadow-2xl">
-            <h2 className="font-semibold mb-1">Marcar como convertido</h2>
-            <p className="text-sm text-gray-500 mb-5">{convertTarget.name}</p>
-            <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">
-              Valor contratado
-            </label>
-            <div className="relative mb-5">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
-              <input
-                type="number"
-                placeholder="0"
-                value={saleInput}
-                onChange={(e) => setSaleInput(e.target.value)}
-                required
-                className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
-                autoFocus
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={confirmConvert}
-                disabled={updating}
-                className="flex-1 bg-black text-white text-sm py-3 rounded-xl font-medium hover:bg-gray-900 disabled:opacity-50 transition"
-              >
-                {updating ? "Guardando..." : "Confirmar conversión"}
-              </button>
-              <button
-                onClick={() => setConvertTarget(null)}
-                className="px-4 text-sm py-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
-              >
-                Cancelar
-              </button>
+      {convertTarget && (() => {
+        const isPPRVida = productType === "PPR" || productType === "Vida";
+        const valueLabel = isPPRVida ? "Valor del plan (prima anual)" : productType ? "Prima / Comisión estimada" : "Valor contratado";
+        return (
+          <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+            <div className="absolute inset-0 bg-black/25" onClick={() => setConvertTarget(null)} />
+            <div className="relative bg-white w-full max-w-sm rounded-t-3xl md:rounded-2xl p-6 shadow-2xl">
+              <h2 className="font-semibold mb-1">Marcar como convertido</h2>
+              <p className="text-sm text-gray-500 mb-5">{convertTarget.name}</p>
+
+              {/* Product type selector */}
+              <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">
+                Producto contratado
+              </label>
+              <div className="flex flex-wrap gap-2 mb-5">
+                {["PPR", "Vida", "Daños/Auto", "GMM", "Otro"].map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setProductType(type === productType ? "" : type)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition border ${
+                      productType === type
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+
+              <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">
+                {valueLabel}
+              </label>
+              <div className="relative mb-5">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={saleInput}
+                  onChange={(e) => setSaleInput(e.target.value)}
+                  required
+                  className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+                  autoFocus
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={confirmConvert}
+                  disabled={updating}
+                  className="flex-1 bg-black text-white text-sm py-3 rounded-xl font-medium hover:bg-gray-900 disabled:opacity-50 transition"
+                >
+                  {updating ? "Guardando..." : "Confirmar conversión"}
+                </button>
+                <button
+                  onClick={() => setConvertTarget(null)}
+                  className="px-4 text-sm py-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                >
+                  Cancelar
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Pay modal */}
       {payTarget && (
@@ -425,7 +455,9 @@ export default function ReferidosPage() {
                 <div>
                   {selected.saleAmount ? (
                     <>
-                      <p className="text-xs text-gray-400 mb-1">Valor del plan</p>
+                      <p className="text-xs text-gray-400 mb-1">
+                        {selected.productType ? selected.productType : "Valor del plan"}
+                      </p>
                       {editingSale ? (
                         <div className="flex items-center gap-1.5">
                           <div className="relative flex-1">

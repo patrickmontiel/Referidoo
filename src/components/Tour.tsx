@@ -88,10 +88,11 @@ export function Tour({ steps, onDone }: { steps: TourStep[]; onDone: () => void 
   return (
     <>
       {/* Dismiss area */}
-      <div className="fixed inset-0 z-[59]" style={{ cursor: "pointer" }} onClick={onDone} />
+      <div className="fixed inset-0 z-[59] cursor-pointer" onClick={onDone} />
 
-      {/* Spotlight — box-shadow acts as dim overlay */}
+      {/* Spotlight — box-shadow as dim overlay, animates position smoothly */}
       <div
+        className="tour-overlay"
         style={{
           position: "fixed",
           top: sp.top,
@@ -99,25 +100,26 @@ export function Tour({ steps, onDone }: { steps: TourStep[]; onDone: () => void 
           width: sp.width,
           height: sp.height,
           borderRadius: 14,
-          boxShadow: "0 0 0 9999px rgba(0,0,0,0.48)",
-          border: "1.5px solid rgba(255,255,255,0.2)",
+          boxShadow: "0 0 0 9999px rgba(0,0,0,0.5)",
+          border: "1.5px solid rgba(255,255,255,0.18)",
           zIndex: 60,
           pointerEvents: "none",
-          transition: "top 0.22s ease, left 0.22s ease, width 0.22s ease, height 0.22s ease",
+          transition: "top 0.3s cubic-bezier(0.22,1,0.36,1), left 0.3s cubic-bezier(0.22,1,0.36,1), width 0.3s cubic-bezier(0.22,1,0.36,1), height 0.3s cubic-bezier(0.22,1,0.36,1)",
         }}
       />
 
-      {/* Tooltip */}
+      {/* Tooltip — re-mounts on idx change to retrigger animation */}
       <div
+        key={idx}
         style={{
           position: "fixed",
           top: tipTop,
           left: tipLeft,
           width: TOOLTIP_W,
           zIndex: 61,
-          transition: "top 0.22s ease, left 0.22s ease",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.07)",
         }}
-        className="bg-white rounded-2xl shadow-2xl p-5"
+        className="tour-tooltip bg-white rounded-2xl p-5"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Step dots */}

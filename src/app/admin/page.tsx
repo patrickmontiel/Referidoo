@@ -81,7 +81,7 @@ export default function AdminOverviewPage() {
   const pending = referrals.filter((r) => r.status === "pending").length;
   const converted = referrals.filter((r) => r.status === "converted").length;
   const totalPaid = referrals.filter((r) => r.rewardStatus === "paid").reduce((s, r) => s + r.rewardAmount, 0);
-  const totalApproved = referrals.filter((r) => r.rewardStatus === "approved").reduce((s, r) => s + r.rewardAmount, 0);
+  const totalApproved = referrals.filter((r) => r.rewardStatus === "approved" && r.status === "converted").reduce((s, r) => s + r.rewardAmount, 0);
 
   const statusConfig: Record<string, string> = {
     pending: "bg-amber-50 text-amber-700",
