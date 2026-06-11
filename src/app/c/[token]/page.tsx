@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { formatCurrency, formatDate, getStatusLabel, getRewardStatusLabel } from "@/lib/utils";
+import { Logo } from "@/components/Logo";
 
 type RewardTier = { position: number; amount: number; label: string | null };
 
@@ -66,17 +67,26 @@ export default function ClientPortalPage() {
   const [confirming, setConfirming] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
+  function fetchData(isInitial = false) {
     fetch(`/api/portal/${token}`)
       .then((r) => r.json())
       .then((d) => {
         if (!d.error) {
           setData(d);
-          const key = `referidos_seen_${token}`;
-          if (!localStorage.getItem(key)) setShowOnboarding(true);
+          if (isInitial) {
+            const key = `referidos_seen_${token}`;
+            if (!localStorage.getItem(key)) setShowOnboarding(true);
+          }
         }
-        setLoading(false);
+        if (isInitial) setLoading(false);
       });
+  }
+
+  useEffect(() => {
+    fetchData(true);
+    const interval = setInterval(() => fetchData(false), 30000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   async function confirmReceipt(referralId: string) {
@@ -224,15 +234,7 @@ export default function ClientPortalPage() {
       <header className="bg-white border-b border-gray-100 sticky top-0 z-10"
               style={{ paddingTop: "env(safe-area-inset-top)" }}>
         <div className="max-w-md mx-auto px-5 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M17 20H7C5.9 20 5 19.1 5 18V6C5 4.9 5.9 4 7 4H17C18.1 4 19 4.9 19 6V18C19 19.1 18.1 20 17 20Z" stroke="white" strokeWidth="1.5"/>
-                <path d="M9 12L11 14L15 10" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <span className="font-semibold text-sm tracking-tight">Referidoo</span>
-          </div>
+          <Logo size="sm" />
           <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-xs font-semibold">
             {client.name.charAt(0).toUpperCase()}
           </div>

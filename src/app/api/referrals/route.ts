@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
       ...(status ? { status } : {}),
     },
     include: {
-      referrer: { select: { id: true, name: true, referralCode: true } },
+      referrer: { select: { id: true, name: true, referralCode: true, createdAt: true, launchBonusUsed: true } },
     },
     orderBy: { createdAt: "desc" },
   });

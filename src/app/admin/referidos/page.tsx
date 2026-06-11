@@ -40,7 +40,7 @@ type Referral = {
   confirmedByReferrer: boolean;
   referrerConfirmedAt: string | null;
   createdAt: string;
-  referrer: { id: string; name: string };
+  referrer: { id: string; name: string; createdAt: string; launchBonusUsed: boolean };
 };
 
 const STATUS_OPTIONS = [
@@ -64,6 +64,12 @@ const rewardBg: Record<string, string> = {
   paid:     "bg-green-50 text-green-700",
 };
 
+function isLaunchBonusEligible(referrer: { createdAt: string; launchBonusUsed: boolean }): boolean {
+  if (referrer.launchBonusUsed) return false;
+  const windowEnd = new Date(new Date(referrer.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000);
+  return new Date() <= windowEnd;
+}
+
 export default function ReferidosPage() {
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +84,9 @@ export default function ReferidosPage() {
   const [payNote, setPayNote] = useState("");
   const [showTour, setShowTour] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  // Edit saleAmount
+  const [editingSale, setEditingSale] = useState(false);
+  const [editSaleInput, setEditSaleInput] = useState("");
 
   function load() {
     setLoading(true);
@@ -138,6 +147,29 @@ export default function ReferidosPage() {
     setConvertTarget(null);
   }
 
+  async function saveEditedSale() {
+    if (!selected) return;
+    const saleAmount = Number(editSaleInput.replace(/,/g, ""));
+    if (!saleAmount) return;
+    setUpdating(true);
+    await fetch(`/api/referrals/${selected.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ saleAmount }),
+    });
+    setEditingSale(false);
+    load();
+    setSelected(null);
+    setUpdating(false);
+  }
+
+  function openCalendar(r: Referral) {
+    const firstName = r.leadName.split(" ")[0];
+    const title = encodeURIComponent(`Llamada con ${r.leadName} — ${r.leadPhone}`);
+    const details = encodeURIComponent(`Referido de ${r.referrer.name} vía Referidoo`);
+    window.open(`https://calendar.google.com/calendar/r/eventedit?text=${title}&details=${details}`, "_blank");
+  }
+
   const filtered = referrals.filter((r) => !filter || r.status === filter);
 
   return (
@@ -179,83 +211,95 @@ export default function ReferidosPage() {
         <div className="text-center py-16 text-gray-400 text-sm">Sin referidos en esta categoría.</div>
       ) : (
         <div data-tour="list" className="space-y-3">
-          {filtered.map((r) => (
-            <div
-              key={r.id}
-              className="bg-white rounded-2xl border border-gray-100 p-4 cursor-pointer hover:border-gray-200 transition"
-              onClick={() => setSelected(r)}
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">{r.leadName}</p>
-                  <p className="text-xs text-gray-400">{r.leadPhone}</p>
-                  <p className="text-xs text-gray-300 mt-0.5">
-                    Vía <span className="text-gray-500">{r.referrer.name}</span> · {formatDate(r.createdAt)}
-                  </p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  {r.saleAmount ? (
-                    <p className="text-sm font-semibold text-green-700">{formatCurrency(r.saleAmount)}</p>
-                  ) : (
-                    <p className="text-sm font-semibold">{formatCurrency(r.rewardAmount)}</p>
-                  )}
-                  <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium border ${statusBg[r.status]}`}>
-                    {getStatusLabel(r.status)}
-                  </span>
-                </div>
-              </div>
+          {filtered.map((r) => {
+            const bonusEligible = isLaunchBonusEligible(r.referrer);
+            const displayAmount = bonusEligible && r.status !== "converted"
+              ? r.rewardAmount + 1000
+              : r.rewardAmount;
 
-              {/* Quick actions */}
-              <div className="flex gap-2 mt-4 pt-3 border-t border-gray-50">
-                {r.status === "pending" && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); update(r.id, { status: "contacted" }); }}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition font-medium"
-                  >
-                    Marcar contactado
-                  </button>
-                )}
-                {r.status === "contacted" && (
-                  <>
+            return (
+              <div
+                key={r.id}
+                className="bg-white rounded-2xl border border-gray-100 p-4 cursor-pointer hover:border-gray-200 transition"
+                onClick={() => setSelected(r)}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{r.leadName}</p>
+                    <p className="text-xs text-gray-400">{r.leadPhone}</p>
+                    <p className="text-xs text-gray-300 mt-0.5">
+                      Vía <span className="text-gray-500">{r.referrer.name}</span> · {formatDate(r.createdAt)}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    {r.saleAmount ? (
+                      <p className="text-sm font-semibold text-green-700">{formatCurrency(r.saleAmount)}</p>
+                    ) : (
+                      <div>
+                        <p className="text-sm font-semibold">{formatCurrency(displayAmount)}</p>
+                        {bonusEligible && r.status !== "converted" && (
+                          <p className="text-[10px] text-amber-600 font-medium">⚡ Bono activo</p>
+                        )}
+                      </div>
+                    )}
+                    <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium border ${statusBg[r.status]}`}>
+                      {getStatusLabel(r.status)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Quick actions */}
+                <div className="flex gap-2 mt-4 pt-3 border-t border-gray-50">
+                  {r.status === "pending" && (
                     <button
-                      onClick={(e) => startConvert(r.id, r.leadName, e)}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition font-medium"
+                      onClick={(e) => { e.stopPropagation(); update(r.id, { status: "contacted" }); }}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition font-medium"
                     >
-                      Convertido ✓
+                      Marcar contactado
                     </button>
+                  )}
+                  {r.status === "contacted" && (
+                    <>
+                      <button
+                        onClick={(e) => startConvert(r.id, r.leadName, e)}
+                        className="text-xs px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition font-medium"
+                      >
+                        Convertido ✓
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); update(r.id, { status: "rejected" }); }}
+                        className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition font-medium"
+                      >
+                        Rechazar
+                      </button>
+                    </>
+                  )}
+                  {r.status === "converted" && r.rewardStatus === "approved" && (
                     <button
-                      onClick={(e) => { e.stopPropagation(); update(r.id, { status: "rejected" }); }}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition font-medium"
+                      onClick={(e) => startPay(r.id, r.referrer.name, r.rewardAmount, e)}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-black text-white hover:bg-gray-800 transition font-medium"
                     >
-                      Rechazar
+                      Enviar Premio →
                     </button>
-                  </>
-                )}
-                {r.status === "converted" && r.rewardStatus === "approved" && (
-                  <button
-                    onClick={(e) => startPay(r.id, r.referrer.name, r.rewardAmount, e)}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-black text-white hover:bg-gray-800 transition font-medium"
-                  >
-                    Enviar Premio →
-                  </button>
-                )}
-                {r.rewardStatus === "paid" && (
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${r.confirmedByReferrer ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>
-                    {r.confirmedByReferrer ? "✓ Confirmado" : "Pendiente confirm."}
-                  </span>
-                )}
-                {r.rewardStatus !== "paid" && (
-                  <span className={`ml-auto text-xs px-2.5 py-1 rounded-full font-medium ${rewardBg[r.rewardStatus]}`}>
-                    {getRewardStatusLabel(r.rewardStatus)}
-                  </span>
-                )}
+                  )}
+                  {r.status === "converted" && r.rewardStatus === "paid" && (
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${r.confirmedByReferrer ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>
+                      {r.confirmedByReferrer ? "✓ Confirmado" : "Pendiente confirm."}
+                    </span>
+                  )}
+                  {r.status === "converted" && r.rewardStatus !== "paid" && (
+                    <span className={`ml-auto text-xs px-2.5 py-1 rounded-full font-medium ${rewardBg[r.rewardStatus]}`}>
+                      {getRewardStatusLabel(r.rewardStatus)}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* Convert modal — capture sale amount */}
+      {/* Convert modal */}
       {convertTarget && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
           <div className="absolute inset-0 bg-black/25" onClick={() => setConvertTarget(null)} />
@@ -296,7 +340,7 @@ export default function ReferidosPage() {
         </div>
       )}
 
-      {/* Pay modal — confirm prize sent to referrer */}
+      {/* Pay modal */}
       {payTarget && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
           <div className="absolute inset-0 bg-black/25" onClick={() => setPayTarget(null)} />
@@ -317,7 +361,7 @@ export default function ReferidosPage() {
               autoFocus
             />
             <p className="text-xs text-gray-400 mb-5">
-              Al confirmar, {payTarget.referrerName} recibirá un correo de inmediato con el detalle del premio y un botón para confirmar recibo.
+              Al confirmar, {payTarget.referrerName} recibirá un correo con el detalle del premio y un botón para confirmar recibo.
             </p>
             <div className="flex gap-2">
               <button
@@ -338,12 +382,12 @@ export default function ReferidosPage() {
       {/* Detail drawer */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-          <div className="absolute inset-0 bg-black/25" onClick={() => setSelected(null)} />
+          <div className="absolute inset-0 bg-black/25" onClick={() => { setSelected(null); setEditingSale(false); }} />
           <div className="relative bg-white w-full max-w-md rounded-t-3xl md:rounded-2xl max-h-[85vh] overflow-y-auto p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-5">
               <h2 className="font-semibold">Detalle del referido</h2>
               <button
-                onClick={() => setSelected(null)}
+                onClick={() => { setSelected(null); setEditingSale(false); }}
                 className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition"
               >
                 ×
@@ -369,19 +413,67 @@ export default function ReferidosPage() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Premio al cliente</p>
-                  <p className="text-sm font-semibold">{formatCurrency(selected.rewardAmount)}</p>
+                  {isLaunchBonusEligible(selected.referrer) && selected.status !== "converted" ? (
+                    <div>
+                      <p className="text-sm font-semibold">{formatCurrency(selected.rewardAmount + 1000)}</p>
+                      <p className="text-[10px] text-amber-600 font-medium">⚡ Incluye bono de lanzamiento</p>
+                    </div>
+                  ) : (
+                    <p className="text-sm font-semibold">{formatCurrency(selected.rewardAmount)}</p>
+                  )}
                 </div>
-                {selected.saleAmount ? (
-                  <div>
-                    <p className="text-xs text-gray-400 mb-1">Valor del plan</p>
-                    <p className="text-sm font-bold text-green-700">{formatCurrency(selected.saleAmount)}</p>
-                  </div>
-                ) : (
-                  <div>
-                    <p className="text-xs text-gray-400 mb-1">Fecha</p>
-                    <p className="text-sm">{formatDate(selected.createdAt)}</p>
-                  </div>
-                )}
+                <div>
+                  {selected.saleAmount ? (
+                    <>
+                      <p className="text-xs text-gray-400 mb-1">Valor del plan</p>
+                      {editingSale ? (
+                        <div className="flex items-center gap-1.5">
+                          <div className="relative flex-1">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
+                            <input
+                              type="number"
+                              value={editSaleInput}
+                              onChange={(e) => setEditSaleInput(e.target.value)}
+                              className="w-full pl-5 pr-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+                              autoFocus
+                            />
+                          </div>
+                          <button
+                            onClick={saveEditedSale}
+                            disabled={updating}
+                            className="text-xs px-2 py-1.5 bg-black text-white rounded-lg disabled:opacity-50"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={() => setEditingSale(false)}
+                            className="text-xs px-2 py-1.5 border border-gray-200 rounded-lg text-gray-500"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-bold text-green-700">{formatCurrency(selected.saleAmount)}</p>
+                          <button
+                            onClick={() => { setEditSaleInput(String(selected.saleAmount)); setEditingSale(true); }}
+                            className="text-gray-300 hover:text-gray-500 transition"
+                            title="Editar valor"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                              <path d="M11 4H4C3.44772 4 3 4.44772 3 5V20C3 20.5523 3.44772 21 4 21H19C19.5523 21 20 20.5523 20 20V13M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">Fecha</p>
+                      <p className="text-sm">{formatDate(selected.createdAt)}</p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -415,35 +507,51 @@ export default function ReferidosPage() {
                 </div>
               </div>
 
-              <div>
-                <p className="text-xs text-gray-400 mb-2">Estado del premio</p>
-                <div className="flex gap-2 flex-wrap">
-                  {["pending", "approved", "paid"].map((s) => (
-                    <button
-                      key={s}
-                      disabled={updating}
-                      onClick={() => update(selected.id, { rewardStatus: s })}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
-                        selected.rewardStatus === s
-                          ? "bg-black text-white border-black"
-                          : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-                      }`}
-                    >
-                      {getRewardStatusLabel(s)}
-                    </button>
-                  ))}
+              {/* Estado del premio — solo visible cuando está convertido */}
+              {selected.status === "converted" && (
+                <div>
+                  <p className="text-xs text-gray-400 mb-2">Estado del premio</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {["pending", "approved", "paid"].map((s) => (
+                      <button
+                        key={s}
+                        disabled={updating}
+                        onClick={() => update(selected.id, { rewardStatus: s })}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
+                          selected.rewardStatus === s
+                            ? "bg-black text-white border-black"
+                            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        {getRewardStatusLabel(s)}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <a
-                href={`tel:${selected.leadPhone}`}
-                className="flex items-center justify-center gap-2 w-full bg-black text-white text-sm py-3 rounded-xl font-medium hover:bg-gray-900 transition"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M6.62 10.79C8.06 13.62 10.38 15.93 13.21 17.38L15.41 15.18C15.68 14.91 16.08 14.82 16.43 14.94C17.55 15.31 18.76 15.51 20 15.51C20.55 15.51 21 15.96 21 16.51V20C21 20.55 20.55 21 20 21C10.61 21 3 13.39 3 4C3 3.45 3.45 3 4 3H7.5C8.05 3 8.5 3.45 8.5 4C8.5 5.25 8.7 6.45 9.07 7.57C9.18 7.92 9.1 8.31 8.82 8.59L6.62 10.79Z" fill="currentColor"/>
-                </svg>
-                Llamar a {selected.leadName.split(" ")[0]}
-              </a>
+              {/* Botones de acción — Llamar y Agendar */}
+              <div className="flex gap-2">
+                <a
+                  href={`tel:${selected.leadPhone}`}
+                  className="flex-1 flex items-center justify-center gap-2 bg-gray-100 text-gray-800 text-sm py-3 rounded-xl font-medium hover:bg-gray-200 transition"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M6.62 10.79C8.06 13.62 10.38 15.93 13.21 17.38L15.41 15.18C15.68 14.91 16.08 14.82 16.43 14.94C17.55 15.31 18.76 15.51 20 15.51C20.55 15.51 21 15.96 21 16.51V20C21 20.55 20.55 21 20 21C10.61 21 3 13.39 3 4C3 3.45 3.45 3 4 3H7.5C8.05 3 8.5 3.45 8.5 4C8.5 5.25 8.7 6.45 9.07 7.57C9.18 7.92 9.1 8.31 8.82 8.59L6.62 10.79Z" fill="currentColor"/>
+                  </svg>
+                  Llamar
+                </a>
+                <button
+                  onClick={() => openCalendar(selected)}
+                  className="flex-1 flex items-center justify-center gap-2 bg-black text-white text-sm py-3 rounded-xl font-medium hover:bg-gray-800 transition"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M16 2V6M8 2V6M3 10H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  Agendar
+                </button>
+              </div>
 
               {/* Delete referral */}
               <div className="pt-2 border-t border-gray-100">

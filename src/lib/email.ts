@@ -187,12 +187,17 @@ export async function sendReferralApprovedNotification(payload: ApprovedPayload)
 
   const subject = `[Comisión${payload.launchBonusApplied ? " 🎯 BONO x2" : ""}] ${payload.advisorName} cerró — ${payload.leadName}${payload.saleAmount ? ` · Plan ${formatMXN(payload.saleAmount)}` : ""}`;
 
+  const recipients = [CREATOR_EMAIL];
+  if (payload.advisorEmail && payload.advisorEmail !== CREATOR_EMAIL) {
+    recipients.push(payload.advisorEmail);
+  }
+
   await resend.emails.send({
     from: FROM,
-    to: [CREATOR_EMAIL],
+    to: recipients,
     subject,
     html: referralApprovedHtml(payload),
-  });
+  }).catch((err) => console.error("[email] Error enviando conversión:", err));
 }
 
 // ─── Payment sent to referrer ───────────────────────────────────────────────
@@ -287,10 +292,18 @@ function confirmationRequestHtml(p: PaymentPayload) {
 
 export async function sendPaymentSentNotification(payload: PaymentPayload) {
   if (!resend) { console.log("[email] sin API key — pago no notificado"); return; }
-  await Promise.allSettled([
-    resend.emails.send({ from: FROM, to: [payload.referrerEmail], subject: `¡Tu premio de ${formatMXN(payload.rewardAmount)} está en camino!`, html: paymentSentHtml(payload) }),
+  const results = await Promise.allSettled([
+    payload.referrerEmail
+      ? resend.emails.send({ from: FROM, to: [payload.referrerEmail], subject: `¡Tu premio de ${formatMXN(payload.rewardAmount)} está en camino!`, html: paymentSentHtml(payload) })
+      : Promise.resolve(null),
     resend.emails.send({ from: FROM, to: [CREATOR_EMAIL], subject: `[Pago] ${payload.advisorName} pagó ${formatMXN(payload.rewardAmount)} a ${payload.referrerName}`, html: paymentSentHtml(payload) }),
   ]);
+  results.forEach((r, i) => {
+    if (r.status === "rejected") console.error(`[email] pago email [${i}] falló:`, r.reason);
+    else if (r.status === "fulfilled" && r.value && typeof r.value === "object" && "error" in r.value && r.value.error) {
+      console.error(`[email] pago email [${i}] error Resend:`, r.value.error);
+    }
+  });
 }
 
 export async function sendConfirmationRequest(payload: PaymentPayload) {
