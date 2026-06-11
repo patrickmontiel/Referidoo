@@ -157,10 +157,12 @@ export default function ReferralLandingPage() {
           <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-2">
             Un paso más
           </p>
-          <h2 className="text-2xl font-semibold mb-1">Tus datos</h2>
-          <p className="text-sm text-gray-500 mb-8 leading-relaxed">
-            Tu asesor te contacta para explicarte cómo funciona. Sin formularios largos, sin compromiso.
-          </p>
+          <h2 className="text-2xl font-semibold mb-5">Tus datos</h2>
+          <div className="bg-black rounded-2xl p-4 mb-8">
+            <p className="text-sm text-white/90 leading-relaxed">
+              Tu asesor te contacta para explicarte cómo funciona. Sin formularios largos, sin compromiso.
+            </p>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -242,10 +244,15 @@ export default function ReferralLandingPage() {
             <span className="text-gray-400"> ¿Y el tuyo?</span>
           </h1>
 
-          <p className="text-sm text-gray-500 leading-relaxed mb-8">
-            {info.welcomeMessage ||
-              `${firstName} ya tiene un plan de vida y retiro, y cree que a ti también te puede convenir. Sin compromiso — solo es información.`}
-          </p>
+          <div className="bg-black rounded-2xl p-4 mb-8">
+            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-widest mb-2">
+              Mensaje de {firstName}
+            </p>
+            <p className="text-sm text-white/90 leading-relaxed">
+              {info.welcomeMessage ||
+                `${firstName} ya tiene un plan de vida y retiro, y cree que a ti también te puede convenir. Sin compromiso — solo es información.`}
+            </p>
+          </div>
 
           {/* Social proof row */}
           <div className="flex items-center gap-3 mb-8">

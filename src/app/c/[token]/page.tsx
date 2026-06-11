@@ -271,10 +271,10 @@ export default function ClientPortalPage() {
 
             {/* Launch bonus — activo en ventana */}
             {launchBonusActive && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-4">
+              <div className="bg-black text-white rounded-2xl p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-medium text-gray-700">⚡ Bono de Inicio</p>
-                  <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
+                  <p className="text-xs font-medium text-gray-300">⚡ Bono de Inicio</p>
+                  <span className="text-xs font-medium bg-white/10 text-gray-300 px-2.5 py-1 rounded-full">
                     {daysLeft > 0 ? `${daysLeft}d ${hoursLeft}h` : `${hoursLeft}h`} restantes
                   </span>
                 </div>
@@ -282,18 +282,18 @@ export default function ClientPortalPage() {
                 {referralsInWindow >= 3 ? (
                   <>
                     <p className="text-sm font-semibold mb-1">¡Lista para activarlo!</p>
-                    <p className="text-xs text-gray-500 mb-3">
+                    <p className="text-xs text-gray-400 mb-3">
                       Si alguno de tus contactos contrata esta semana, tu primer premio sube a{" "}
-                      <strong className="text-gray-900">{formatCurrency(bonusAmount)}</strong>{" "}
+                      <strong className="text-white">{formatCurrency(bonusAmount)}</strong>{" "}
                       en vez de {formatCurrency(firstTierAmount)}.
                     </p>
-                    <div className="bg-gray-50 rounded-xl px-4 py-3">
+                    <div className="bg-white/10 rounded-xl px-4 py-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-500">Premio normal</span>
-                        <span className="text-xs line-through text-gray-400">{formatCurrency(firstTierAmount)}</span>
+                        <span className="text-xs text-gray-400">Premio normal</span>
+                        <span className="text-xs line-through text-gray-500">{formatCurrency(firstTierAmount)}</span>
                       </div>
                       <div className="flex justify-between items-center mt-1">
-                        <span className="text-xs font-semibold text-gray-900">Con tu bono</span>
+                        <span className="text-xs font-semibold text-white">Con tu bono</span>
                         <span className="text-sm font-semibold">{formatCurrency(bonusAmount)}</span>
                       </div>
                     </div>
@@ -303,18 +303,18 @@ export default function ClientPortalPage() {
                     <p className="text-sm font-semibold mb-1">
                       Invita a {3 - referralsInWindow} {3 - referralsInWindow === 1 ? "persona más" : "personas más"} esta semana
                     </p>
-                    <p className="text-xs text-gray-500 mb-3">
+                    <p className="text-xs text-gray-400 mb-3">
                       Si alguna contrata, tu primer premio sube de {formatCurrency(firstTierAmount)} a{" "}
-                      <strong className="text-gray-900">{formatCurrency(bonusAmount)}</strong>.
+                      <strong className="text-white">{formatCurrency(bonusAmount)}</strong>.
                     </p>
                     <div className="flex gap-1.5 mb-2">
                       {[1, 2, 3].map((i) => (
                         <div key={i} className={`flex-1 h-1.5 rounded-full transition-all ${
-                          i <= referralsInWindow ? "bg-black" : "bg-gray-100"
+                          i <= referralsInWindow ? "bg-white" : "bg-white/10"
                         }`} />
                       ))}
                     </div>
-                    <p className="text-xs text-gray-400">{referralsInWindow}/3 contactos invitados</p>
+                    <p className="text-xs text-gray-500">{referralsInWindow}/3 contactos invitados</p>
                   </>
                 )}
               </div>
