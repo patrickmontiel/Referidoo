@@ -22,13 +22,16 @@ model Advisor {
 }
 
 model AdvisorSettings {
-  id              String  @id @default(cuid())
-  advisorId       String  @unique
-  advisor         Advisor @relation(fields: [advisorId], references: [id], onDelete: Cascade)
-  afterLastTier   String  @default("cycle")
-  flatAmount      Int     @default(1500)
-  whatsappMessage String?
-  welcomeMessage  String?
+  id                   String  @id @default(cuid())
+  advisorId            String  @unique
+  advisor              Advisor @relation(fields: [advisorId], references: [id], onDelete: Cascade)
+  afterLastTier        String  @default("cycle")
+  flatAmount           Int     @default(1500)
+  whatsappMessage      String?
+  welcomeMessage       String?
+  bubbleAutoPoints     Int     @default(150)
+  bubbleGmmPoints      Int     @default(300)
+  bubbleClaimThreshold Int     @default(500)
 }
 
 model RewardTier {

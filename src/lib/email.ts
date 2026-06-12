@@ -354,7 +354,7 @@ export async function sendReferrerConfirmedNotification(payload: { referrerName:
     <p style="margin:0 0 8px;font-size:14px;color:#6b7280">Premio pagado: <strong>${formatMXN(payload.rewardAmount)}</strong></p>
     ${payload.saleAmount ? `<p style="margin:0 0 8px;font-size:14px;color:#6b7280">Valor del plan: <strong style="color:#000">${formatMXN(payload.saleAmount)}</strong></p>` : ""}
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;margin-top:20px">
-      <p style="margin:0;font-size:14px;font-weight:600;color:#166534">✓ Conversión verificada — comisión del 0.25% confirmada</p>
+      <p style="margin:0;font-size:14px;font-weight:600;color:#166534">✓ El referente confirmó la recepción de su premio</p>
     </div>
   </td></tr>
 </table>

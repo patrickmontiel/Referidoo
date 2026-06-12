@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendBubbleClaimNotification } from "@/lib/email";
-import { BUBBLE_CLAIM_THRESHOLD } from "@/lib/rewards";
+import { getAdvisorBubbleSettings } from "@/lib/rewards";
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -12,8 +12,9 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ to
   });
   if (!client) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
+  const bubbleSettings = await getAdvisorBubbleSettings(client.advisorId);
   const points = client.bubblePoints;
-  if (points < BUBBLE_CLAIM_THRESHOLD) {
+  if (points < bubbleSettings.claimThreshold) {
     return NextResponse.json({ error: "Aún no alcanzas el mínimo para reclamar" }, { status: 400 });
   }
 

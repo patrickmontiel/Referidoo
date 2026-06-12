@@ -232,10 +232,8 @@ export default function ReferidosPage() {
         <div data-tour="list" className="space-y-3">
           {filtered.map((r) => {
             const referralsInWindow = getReferralsInWindow(referrals, r.referrer.id, r.referrer.createdAt);
-            const bonusEligible = r.tierPosition === 1 && isLaunchBonusEligible(r.referrer, referralsInWindow);
-            const displayAmount = bonusEligible && r.status !== "converted"
-              ? r.rewardAmount + 1000
-              : r.rewardAmount;
+            const bonusEligible = r.tierPosition === 1 && r.rewardStatus !== "paid" && isLaunchBonusEligible(r.referrer, referralsInWindow);
+            const displayAmount = bonusEligible ? r.rewardAmount + 1000 : r.rewardAmount;
 
             return (
               <div
@@ -252,16 +250,15 @@ export default function ReferidosPage() {
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    {r.saleAmount ? (
-                      <p className="text-sm font-semibold text-green-700">{formatCurrency(r.saleAmount)}</p>
-                    ) : (
-                      <div>
-                        <p className="text-sm font-semibold">{formatCurrency(displayAmount)}</p>
-                        {bonusEligible && r.status !== "converted" && (
-                          <p className="text-[10px] text-amber-600 font-medium">⚡ Bono activo</p>
-                        )}
-                      </div>
-                    )}
+                    <div>
+                      <p className="text-sm font-semibold">{formatCurrency(displayAmount)}</p>
+                      {bonusEligible && (
+                        <p className="text-[10px] text-amber-600 font-medium">⚡ Bono activo</p>
+                      )}
+                      {r.saleAmount ? (
+                        <p className="text-[11px] text-gray-400 mt-0.5">Venta: {formatCurrency(r.saleAmount)}</p>
+                      ) : null}
+                    </div>
                     <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium border ${statusBg[r.status]}`}>
                       {getStatusLabel(r.status)}
                     </span>
@@ -460,8 +457,8 @@ export default function ReferidosPage() {
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Premio al cliente</p>
                   {selected.tierPosition === 1 &&
-                  isLaunchBonusEligible(selected.referrer, getReferralsInWindow(referrals, selected.referrer.id, selected.referrer.createdAt)) &&
-                  selected.status !== "converted" ? (
+                  selected.rewardStatus !== "paid" &&
+                  isLaunchBonusEligible(selected.referrer, getReferralsInWindow(referrals, selected.referrer.id, selected.referrer.createdAt)) ? (
                     <div>
                       <p className="text-sm font-semibold">{formatCurrency(selected.rewardAmount + 1000)}</p>
                       <p className="text-[10px] text-amber-600 font-medium">⚡ Incluye bono de lanzamiento</p>

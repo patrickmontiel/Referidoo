@@ -54,5 +54,27 @@ export async function POST() {
     results.push("– BubbleClaim table already exists");
   }
 
+  // Add bubble settings columns to AdvisorSettings if missing
+  try {
+    await db.execute("ALTER TABLE AdvisorSettings ADD COLUMN bubbleAutoPoints INTEGER NOT NULL DEFAULT 150");
+    results.push("✓ bubbleAutoPoints added");
+  } catch {
+    results.push("– bubbleAutoPoints already exists");
+  }
+
+  try {
+    await db.execute("ALTER TABLE AdvisorSettings ADD COLUMN bubbleGmmPoints INTEGER NOT NULL DEFAULT 300");
+    results.push("✓ bubbleGmmPoints added");
+  } catch {
+    results.push("– bubbleGmmPoints already exists");
+  }
+
+  try {
+    await db.execute("ALTER TABLE AdvisorSettings ADD COLUMN bubbleClaimThreshold INTEGER NOT NULL DEFAULT 500");
+    results.push("✓ bubbleClaimThreshold added");
+  } catch {
+    results.push("– bubbleClaimThreshold already exists");
+  }
+
   return NextResponse.json({ ok: true, results });
 }

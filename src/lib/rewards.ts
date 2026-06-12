@@ -19,12 +19,33 @@ export function calculateLessioCommission(
 }
 
 // Premios burbuja: Auto + GMM acumulan a un mismo fondo, reclamable al superar el umbral
-export const BUBBLE_POINTS_BY_PRODUCT: Record<string, number> = {
-  "Daños/Auto": 150,
-  GMM: 300,
+export const DEFAULT_BUBBLE_AUTO_POINTS = 150;
+export const DEFAULT_BUBBLE_GMM_POINTS = 300;
+export const DEFAULT_BUBBLE_CLAIM_THRESHOLD = 500;
+
+export type BubbleSettings = {
+  autoPoints: number;
+  gmmPoints: number;
+  claimThreshold: number;
 };
 
-export const BUBBLE_CLAIM_THRESHOLD = 500;
+export async function getAdvisorBubbleSettings(advisorId: string): Promise<BubbleSettings> {
+  const settings = await db.advisorSettings.findUnique({ where: { advisorId } });
+  return {
+    autoPoints: settings?.bubbleAutoPoints ?? DEFAULT_BUBBLE_AUTO_POINTS,
+    gmmPoints: settings?.bubbleGmmPoints ?? DEFAULT_BUBBLE_GMM_POINTS,
+    claimThreshold: settings?.bubbleClaimThreshold ?? DEFAULT_BUBBLE_CLAIM_THRESHOLD,
+  };
+}
+
+export function getBubblePointsForProduct(
+  productType: string | null | undefined,
+  settings: BubbleSettings
+): number | undefined {
+  if (productType === "Daños/Auto") return settings.autoPoints;
+  if (productType === "GMM") return settings.gmmPoints;
+  return undefined;
+}
 
 export type RewardTier = {
   position: number;

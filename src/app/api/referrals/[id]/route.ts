@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
 import { sendReferralApprovedNotification, sendPaymentSentNotification, type PaymentPayload } from "@/lib/email";
-import { getAdvisorTiers, calculateLessioCommission, BUBBLE_POINTS_BY_PRODUCT } from "@/lib/rewards";
+import { getAdvisorTiers, calculateLessioCommission, getAdvisorBubbleSettings, getBubblePointsForProduct } from "@/lib/rewards";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getAdvisorSession();
@@ -29,10 +29,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const isConverting = newStatus === "converted" && referral.status !== "converted";
   const productTypeForConversion: string | null = body.productType !== undefined ? body.productType : referral.productType ?? null;
 
-  // Check launch bonus at conversion (3+ referrals in first 7 days → bonus on first prize only)
+  // Check launch bonus (3+ referrals in first 7 days → bonus on first prize only)
+  // Se recalcula en cada PATCH mientras el premio no se haya pagado, para que aplique
+  // retroactivamente si el referente alcanza 3 referidos después de la conversión.
   let finalRewardAmount = referral.rewardAmount;
   let launchBonusApplied = false;
-  if (isConverting && referral.tierPosition === 1) {
+  if (referral.tierPosition === 1 && referral.rewardStatus !== "paid") {
     const refClient = await db.client.findUnique({
       where: { id: referral.referrerId },
       select: { createdAt: true, launchBonusUsed: true },
@@ -88,7 +90,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }).catch((err) => console.error("[email] Error enviando conversión:", err));
 
     // Premios burbuja: Auto y GMM acumulan a un mismo fondo reclamable
-    const bubblePoints = productTypeForConversion ? BUBBLE_POINTS_BY_PRODUCT[productTypeForConversion] : undefined;
+    const bubbleSettings = await getAdvisorBubbleSettings(referral.advisorId);
+    const bubblePoints = getBubblePointsForProduct(productTypeForConversion, bubbleSettings);
     if (bubblePoints) {
       await db.client.update({
         where: { id: referral.referrerId },
@@ -134,7 +137,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       advisorName: referral.advisor.name,
       advisorEmail: referral.advisor.email,
       leadName: referral.leadName,
-      rewardAmount: referral.rewardAmount,
+      rewardAmount: finalRewardAmount,
       tierPosition: referral.tierPosition,
       portalUrl,
       paymentNote: body.paymentNote ?? null,

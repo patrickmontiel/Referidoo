@@ -20,6 +20,13 @@ export default function BurbujasPage() {
   const [payNote, setPayNote] = useState("");
   const [updating, setUpdating] = useState(false);
 
+  const [bubbleAutoPoints, setBubbleAutoPoints] = useState(150);
+  const [bubbleGmmPoints, setBubbleGmmPoints] = useState(300);
+  const [bubbleClaimThreshold, setBubbleClaimThreshold] = useState(500);
+  const [settingsLoading, setSettingsLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
   function load() {
     setLoading(true);
     fetch("/api/bubble-claims")
@@ -27,7 +34,29 @@ export default function BurbujasPage() {
       .then((d) => { setClaims(Array.isArray(d.claims) ? d.claims : []); setLoading(false); });
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    fetch("/api/bubble-settings")
+      .then((r) => r.json())
+      .then((d) => {
+        setBubbleAutoPoints(d.bubbleAutoPoints ?? 150);
+        setBubbleGmmPoints(d.bubbleGmmPoints ?? 300);
+        setBubbleClaimThreshold(d.bubbleClaimThreshold ?? 500);
+        setSettingsLoading(false);
+      });
+  }, []);
+
+  async function saveSettings() {
+    setSaving(true);
+    await fetch("/api/bubble-settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bubbleAutoPoints, bubbleGmmPoints, bubbleClaimThreshold }),
+    });
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  }
 
   async function confirmPay() {
     if (!payTarget) return;
@@ -51,6 +80,57 @@ export default function BurbujasPage() {
       <div className="mb-6">
         <h1 className="text-xl font-semibold">Premios burbuja</h1>
         <p className="text-sm text-gray-400 mt-0.5">Reclamos acumulados de Auto + GMM</p>
+      </div>
+
+      {/* Settings */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
+        <h2 className="font-medium text-sm mb-1">Configuración de puntos</h2>
+        <p className="text-xs text-gray-400 mb-4">Define cuántos puntos suma cada conversión y a partir de cuánto se puede reclamar.</p>
+
+        {settingsLoading ? (
+          <div className="flex justify-center py-6">
+            <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div>
+                <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">Por Auto</label>
+                <input
+                  type="number"
+                  value={bubbleAutoPoints}
+                  onChange={(e) => setBubbleAutoPoints(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">Por GMM</label>
+                <input
+                  type="number"
+                  value={bubbleGmmPoints}
+                  onChange={(e) => setBubbleGmmPoints(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">Umbral para reclamar</label>
+                <input
+                  type="number"
+                  value={bubbleClaimThreshold}
+                  onChange={(e) => setBubbleClaimThreshold(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+                />
+              </div>
+            </div>
+            <button
+              onClick={saveSettings}
+              disabled={saving}
+              className="w-full bg-black text-white text-sm font-medium py-3 rounded-2xl hover:bg-gray-900 disabled:opacity-50 transition"
+            >
+              {saving ? "Guardando..." : saved ? "¡Guardado ✓" : "Guardar configuración"}
+            </button>
+          </>
+        )}
       </div>
 
       {loading ? (

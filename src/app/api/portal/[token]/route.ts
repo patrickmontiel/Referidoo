@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getAdvisorTiers } from "@/lib/rewards";
+import {
+  getAdvisorTiers,
+  DEFAULT_BUBBLE_AUTO_POINTS,
+  DEFAULT_BUBBLE_GMM_POINTS,
+  DEFAULT_BUBBLE_CLAIM_THRESHOLD,
+} from "@/lib/rewards";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -60,6 +65,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
     settings: {
       afterLastTier: settings?.afterLastTier ?? "cycle",
       flatAmount: settings?.flatAmount ?? 1500,
+      bubbleAutoPoints: settings?.bubbleAutoPoints ?? DEFAULT_BUBBLE_AUTO_POINTS,
+      bubbleGmmPoints: settings?.bubbleGmmPoints ?? DEFAULT_BUBBLE_GMM_POINTS,
+      bubbleClaimThreshold: settings?.bubbleClaimThreshold ?? DEFAULT_BUBBLE_CLAIM_THRESHOLD,
     },
     referrals: client.referrals,
     stats: {
