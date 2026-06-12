@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { Tour, type TourStep } from "@/components/Tour";
 
 const TOUR_STEPS: TourStep[] = [
@@ -18,6 +18,12 @@ const TOUR_STEPS: TourStep[] = [
     placement: "bottom",
   },
   {
+    selector: '[data-tour="bubble"]',
+    title: "Premios burbuja de Auto y GMM",
+    body: "Auto y Gastos Médicos Mayores suman puntos a un pool compartido del cliente. Aquí defines cuántos puntos da cada producto y a partir de cuántos puntos se puede reclamar el premio.",
+    placement: "bottom",
+  },
+  {
     selector: '[data-tour="preview"]',
     title: "Vista previa instantánea",
     body: "Así ve tu cliente cuánto gana en cada referido. Se actualiza en tiempo real mientras ajustas los montos arriba.",
@@ -27,7 +33,18 @@ const TOUR_STEPS: TourStep[] = [
 
 type Tier = { amount: number; label: string };
 
-export default function NivelesPage() {
+type BubbleClaim = {
+  id: string;
+  amount: number;
+  status: string;
+  paymentNote: string | null;
+  createdAt: string;
+  paidAt: string | null;
+  client: { name: string; phone: string | null };
+};
+
+export default function PremiosPage() {
+  // Escalera de premios PPR y Vida
   const [tiers, setTiers] = useState<Tier[]>([
     { amount: 1500, label: "" },
     { amount: 1500, label: "" },
@@ -37,9 +54,23 @@ export default function NivelesPage() {
   const [flatAmount, setFlatAmount] = useState(1500);
   const [whatsappMessage, setWhatsappMessage] = useState("");
   const [welcomeMessage, setWelcomeMessage] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [loadingTiers, setLoadingTiers] = useState(true);
+  const [savingTiers, setSavingTiers] = useState(false);
+  const [savedTiers, setSavedTiers] = useState(false);
+
+  // Premios burbuja de Auto y GMM
+  const [claims, setClaims] = useState<BubbleClaim[]>([]);
+  const [loadingClaims, setLoadingClaims] = useState(true);
+  const [payTarget, setPayTarget] = useState<BubbleClaim | null>(null);
+  const [payNote, setPayNote] = useState("");
+  const [updating, setUpdating] = useState(false);
+  const [bubbleAutoPoints, setBubbleAutoPoints] = useState(150);
+  const [bubbleGmmPoints, setBubbleGmmPoints] = useState(300);
+  const [bubbleClaimThreshold, setBubbleClaimThreshold] = useState(500);
+  const [loadingBubbleSettings, setLoadingBubbleSettings] = useState(true);
+  const [savingBubble, setSavingBubble] = useState(false);
+  const [savedBubble, setSavedBubble] = useState(false);
+
   const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
@@ -61,7 +92,26 @@ export default function NivelesPage() {
           setWhatsappMessage(s.whatsappMessage ?? "");
           setWelcomeMessage(s.welcomeMessage ?? "");
         }
-        setLoading(false);
+        setLoadingTiers(false);
+      });
+  }, []);
+
+  function loadClaims() {
+    setLoadingClaims(true);
+    fetch("/api/bubble-claims")
+      .then((r) => r.json())
+      .then((d) => { setClaims(Array.isArray(d.claims) ? d.claims : []); setLoadingClaims(false); });
+  }
+
+  useEffect(() => {
+    loadClaims();
+    fetch("/api/bubble-settings")
+      .then((r) => r.json())
+      .then((d) => {
+        setBubbleAutoPoints(d.bubbleAutoPoints ?? 150);
+        setBubbleGmmPoints(d.bubbleGmmPoints ?? 300);
+        setBubbleClaimThreshold(d.bubbleClaimThreshold ?? 500);
+        setLoadingBubbleSettings(false);
       });
   }, []);
 
@@ -78,19 +128,48 @@ export default function NivelesPage() {
     setTiers(tiers.map((t, idx) => idx === i ? { ...t, [field]: val } : t));
   }
 
-  async function save() {
-    setSaving(true);
+  async function saveTiers() {
+    setSavingTiers(true);
     await fetch("/api/tiers", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tiers, afterLastTier, flatAmount, whatsappMessage, welcomeMessage }),
     });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    setSavingTiers(false);
+    setSavedTiers(true);
+    setTimeout(() => setSavedTiers(false), 2500);
   }
 
-  if (loading) {
+  async function saveBubbleSettings() {
+    setSavingBubble(true);
+    await fetch("/api/bubble-settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bubbleAutoPoints, bubbleGmmPoints, bubbleClaimThreshold }),
+    });
+    setSavingBubble(false);
+    setSavedBubble(true);
+    setTimeout(() => setSavedBubble(false), 2500);
+  }
+
+  async function confirmPay() {
+    if (!payTarget) return;
+    setUpdating(true);
+    await fetch(`/api/bubble-claims/${payTarget.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "paid", paymentNote: payNote || null }),
+    });
+    setUpdating(false);
+    setPayTarget(null);
+    setPayNote("");
+    loadClaims();
+  }
+
+  const pendingClaims = claims.filter((c) => c.status === "pending");
+  const paidClaims = claims.filter((c) => c.status === "paid");
+
+  if (loadingTiers) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
@@ -99,13 +178,16 @@ export default function NivelesPage() {
   }
 
   return (
-    <div className="max-w-lg">
+    <div className="max-w-2xl">
       {showTour && <Tour steps={TOUR_STEPS} onDone={() => setShowTour(false)} />}
 
       <div className="mb-6">
-        <h1 className="text-xl font-semibold">Niveles de premios</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Define cuánto gana cada cliente por referido</p>
+        <h1 className="text-xl font-semibold">Premios</h1>
+        <p className="text-sm text-gray-400 mt-0.5">Define cuánto gana cada cliente por referido y cómo funcionan los premios burbuja</p>
       </div>
+
+      {/* Escalera de premios PPR y Vida */}
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Escalera de premios PPR y Vida</h2>
 
       {/* Tiers */}
       <div data-tour="tiers" className="bg-white rounded-2xl border border-gray-100 p-5 mb-5">
@@ -207,6 +289,111 @@ export default function NivelesPage() {
         )}
       </div>
 
+      {/* Premios burbuja de Auto y GMM */}
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3 mt-2">Premios burbuja de Auto y Gastos Médicos Mayores</h2>
+
+      <div data-tour="bubble" className="bg-white rounded-2xl border border-gray-100 p-5 mb-5">
+        <h2 className="font-medium text-sm mb-1">Configuración de puntos</h2>
+        <p className="text-xs text-gray-400 mb-4">Define cuántos puntos suma cada conversión y a partir de cuánto se puede reclamar.</p>
+
+        {loadingBubbleSettings ? (
+          <div className="flex justify-center py-6">
+            <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div>
+                <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">Por Auto</label>
+                <input
+                  type="number"
+                  value={bubbleAutoPoints}
+                  onChange={(e) => setBubbleAutoPoints(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">Por GMM</label>
+                <input
+                  type="number"
+                  value={bubbleGmmPoints}
+                  onChange={(e) => setBubbleGmmPoints(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">Umbral para reclamar</label>
+                <input
+                  type="number"
+                  value={bubbleClaimThreshold}
+                  onChange={(e) => setBubbleClaimThreshold(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+                />
+              </div>
+            </div>
+            <button
+              onClick={saveBubbleSettings}
+              disabled={savingBubble}
+              className="w-full bg-black text-white text-sm font-medium py-3 rounded-2xl hover:bg-gray-900 disabled:opacity-50 transition"
+            >
+              {savingBubble ? "Guardando..." : savedBubble ? "¡Guardado ✓" : "Guardar configuración"}
+            </button>
+          </>
+        )}
+      </div>
+
+      {loadingClaims ? (
+        <div className="flex justify-center py-8 mb-5">
+          <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : claims.length === 0 ? (
+        <div className="text-center py-8 mb-5 text-gray-400 text-sm bg-white rounded-2xl border border-gray-100">Aún no hay reclamos de premios burbuja.</div>
+      ) : (
+        <div className="space-y-5 mb-5">
+          {pendingClaims.length > 0 && (
+            <div>
+              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Pendientes de pago</h2>
+              <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
+                {pendingClaims.map((c) => (
+                  <div key={c.id} className="flex items-center justify-between px-5 py-4">
+                    <div>
+                      <p className="text-sm font-medium">{c.client.name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{formatDate(c.createdAt)}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-semibold text-amber-600">{formatCurrency(c.amount)}</span>
+                      <button
+                        onClick={() => setPayTarget(c)}
+                        className="px-3 py-1.5 rounded-full text-xs font-medium bg-black text-white hover:bg-gray-900 transition"
+                      >
+                        Marcar pagado
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {paidClaims.length > 0 && (
+            <div>
+              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Pagados</h2>
+              <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
+                {paidClaims.map((c) => (
+                  <div key={c.id} className="flex items-center justify-between px-5 py-4">
+                    <div>
+                      <p className="text-sm font-medium">{c.client.name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{c.paidAt ? formatDate(c.paidAt) : formatDate(c.createdAt)}</p>
+                    </div>
+                    <span className="text-sm font-semibold text-green-600">{formatCurrency(c.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Messages */}
       <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
         <h2 className="font-medium text-sm mb-4">Mensajes personalizados</h2>
@@ -270,12 +457,51 @@ export default function NivelesPage() {
       </div>
 
       <button
-        onClick={save}
-        disabled={saving}
+        onClick={saveTiers}
+        disabled={savingTiers}
         className="w-full bg-black text-white text-sm font-medium py-3.5 rounded-2xl hover:bg-gray-900 disabled:opacity-50 transition"
       >
-        {saving ? "Guardando..." : saved ? "¡Guardado ✓" : "Guardar configuración"}
+        {savingTiers ? "Guardando..." : savedTiers ? "¡Guardado ✓" : "Guardar configuración"}
       </button>
+
+      {/* Pay modal */}
+      {payTarget && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+          <div className="absolute inset-0 bg-black/25" onClick={() => setPayTarget(null)} />
+          <div className="relative bg-white w-full max-w-sm rounded-t-3xl md:rounded-2xl p-6 shadow-2xl">
+            <h2 className="font-semibold mb-1">Marcar como pagado</h2>
+            <p className="text-sm text-gray-500 mb-5">
+              {payTarget.client.name} · {formatCurrency(payTarget.amount)}
+            </p>
+            <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">
+              Referencia de pago (opcional)
+            </label>
+            <input
+              type="text"
+              value={payNote}
+              onChange={(e) => setPayNote(e.target.value)}
+              placeholder="Ej: Transferencia, efectivo..."
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black transition mb-5"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={confirmPay}
+                disabled={updating}
+                className="flex-1 bg-black text-white text-sm py-3 rounded-xl font-medium hover:bg-gray-900 disabled:opacity-50 transition"
+              >
+                {updating ? "Guardando..." : "Confirmar pago"}
+              </button>
+              <button
+                onClick={() => setPayTarget(null)}
+                className="px-4 text-sm py-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

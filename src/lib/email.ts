@@ -399,7 +399,7 @@ export async function sendBubbleClaimNotification(payload: BubbleClaimPayload) {
     <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0a0a0a">${payload.referrerName} reclamó su premio burbuja</h1>
     <p style="margin:0 0 8px;font-size:14px;color:#6b7280">Asesor: <strong>${payload.advisorName}</strong></p>
     <p style="margin:0 0 16px;font-size:14px;color:#6b7280">Monto acumulado (Auto + GMM): <strong style="color:#000">${formatMXN(payload.amount)}</strong></p>
-    <a href="${BASE_URL}/admin/burbujas" style="display:block;background:#000;color:#fff;text-align:center;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none">
+    <a href="${BASE_URL}/admin/niveles" style="display:block;background:#000;color:#fff;text-align:center;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none">
       Revisar y marcar como pagado →
     </a>
   </td></tr>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatCurrency, formatDate, getStatusLabel, getRewardStatusLabel } from "@/lib/utils";
+import { formatCurrency, formatDate, formatNumberWithCommas, getStatusLabel, getRewardStatusLabel } from "@/lib/utils";
 import { Tour, type TourStep } from "@/components/Tour";
 
 const TOUR_STEPS: TourStep[] = [
@@ -319,7 +319,7 @@ export default function ReferidosPage() {
       {/* Convert modal */}
       {convertTarget && (() => {
         const isPPRVida = productType === "PPR" || productType === "Vida";
-        const valueLabel = isPPRVida ? "Valor del plan (prima anual)" : productType ? "Prima / Comisión estimada" : "Valor contratado";
+        const valueLabel = isPPRVida ? "Valor del plan (prima anual)" : productType ? "Prima" : "Valor contratado";
         return (
           <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
             <div className="absolute inset-0 bg-black/25" onClick={() => setConvertTarget(null)} />
@@ -354,10 +354,11 @@ export default function ReferidosPage() {
               <div className="relative mb-5">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   placeholder="0"
                   value={saleInput}
-                  onChange={(e) => setSaleInput(e.target.value)}
+                  onChange={(e) => setSaleInput(formatNumberWithCommas(e.target.value))}
                   required
                   className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
                   autoFocus
@@ -478,9 +479,10 @@ export default function ReferidosPage() {
                           <div className="relative flex-1">
                             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
                             <input
-                              type="number"
+                              type="text"
+                              inputMode="numeric"
                               value={editSaleInput}
-                              onChange={(e) => setEditSaleInput(e.target.value)}
+                              onChange={(e) => setEditSaleInput(formatNumberWithCommas(e.target.value))}
                               className="w-full pl-5 pr-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
                               autoFocus
                             />
@@ -503,7 +505,7 @@ export default function ReferidosPage() {
                         <div className="flex items-center gap-1.5">
                           <p className="text-sm font-bold text-green-700">{formatCurrency(selected.saleAmount)}</p>
                           <button
-                            onClick={() => { setEditSaleInput(String(selected.saleAmount)); setEditingSale(true); }}
+                            onClick={() => { setEditSaleInput(formatNumberWithCommas(String(selected.saleAmount))); setEditingSale(true); }}
                             className="text-gray-300 hover:text-gray-500 transition"
                             title="Editar valor"
                           >

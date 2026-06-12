@@ -13,6 +13,12 @@ export function formatCurrency(amount: number) {
   }).format(amount);
 }
 
+export function formatNumberWithCommas(value: string): string {
+  const digits = value.replace(/[^\d]/g, "");
+  if (!digits) return "";
+  return new Intl.NumberFormat("en-US").format(Number(digits));
+}
+
 export function formatDate(date: Date | string) {
   return new Intl.DateTimeFormat("es-MX", {
     day: "numeric",
