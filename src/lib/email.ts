@@ -2,8 +2,8 @@ import { Resend } from "resend";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
-const FROM = process.env.EMAIL_FROM ?? "Referidoo <noreply@referidoo.mx>";
-const CREATOR_EMAIL = process.env.EMAIL_NOTIFY_CREATOR ?? "patrick@lessio.ai";
+const FROM = process.env.EMAIL_FROM ?? "Referidoo <noreply@referidoo.com>";
+const CREATOR_EMAIL = process.env.EMAIL_NOTIFY_CREATOR ?? "patrick@referidoo.com";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
 
 function formatMXN(amount: number) {
@@ -102,12 +102,25 @@ function newReferralHtml(p: NewReferralPayload, isCreator = false) {
 </html>`;
 }
 
-type ApprovedPayload = NewReferralPayload & { saleAmount?: number | null; launchBonusApplied?: boolean };
+type ApprovedPayload = NewReferralPayload & {
+  saleAmount?: number | null;
+  launchBonusApplied?: boolean;
+  productType?: string | null;
+  lessioCommission?: number | null;
+};
 
-function referralApprovedHtml(p: ApprovedPayload) {
+function referralApprovedHtml(p: ApprovedPayload, isCreator = false) {
   const adminUrl = `${BASE_URL}/admin/referidos`;
   const saleRow = p.saleAmount
     ? `<tr><td style="padding:2px 0"><span style="font-size:13px;color:#6b7280">💼 Valor del plan: </span><span style="font-size:13px;font-weight:700;color:#0a0a0a">${formatMXN(p.saleAmount)}</span></td></tr>`
+    : "";
+  const commissionBlock = isCreator && p.lessioCommission
+    ? `<table width="100%" style="background:#000;border-radius:12px;margin-bottom:20px">
+        <tr><td style="padding:16px 20px">
+          <p style="margin:0 0 2px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:2px;text-transform:uppercase">Tu comisión Lessio${p.productType ? ` · ${p.productType}` : ""}</p>
+          <p style="margin:0;font-size:20px;font-weight:800;color:#fff">${formatMXN(p.lessioCommission)}</p>
+        </td></tr>
+      </table>`
     : "";
   return `<!DOCTYPE html>
 <html lang="es">
@@ -164,6 +177,7 @@ function referralApprovedHtml(p: ApprovedPayload) {
                 <p style="margin:0;font-size:16px;font-weight:700;color:#fff">${p.referrerName}</p>
               </td></tr>
             </table>
+            ${commissionBlock}
             <a href="${adminUrl}" style="display:block;background:#000;color:#fff;text-align:center;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none">
               Ver en el panel →
             </a>
@@ -187,17 +201,29 @@ export async function sendReferralApprovedNotification(payload: ApprovedPayload)
 
   const subject = `[Comisión${payload.launchBonusApplied ? " 🎯 BONO x2" : ""}] ${payload.advisorName} cerró — ${payload.leadName}${payload.saleAmount ? ` · Plan ${formatMXN(payload.saleAmount)}` : ""}`;
 
-  const recipients = [CREATOR_EMAIL];
+  const sends: Promise<unknown>[] = [];
+
+  // Email al asesor — sin comisión de Lessio
   if (payload.advisorEmail && payload.advisorEmail !== CREATOR_EMAIL) {
-    recipients.push(payload.advisorEmail);
+    sends.push(resend.emails.send({
+      from: FROM,
+      to: [payload.advisorEmail],
+      subject,
+      html: referralApprovedHtml(payload, false),
+    }));
   }
 
-  await resend.emails.send({
+  // Email al creador (Patrick) — incluye su comisión
+  sends.push(resend.emails.send({
     from: FROM,
-    to: recipients,
+    to: [CREATOR_EMAIL],
     subject,
-    html: referralApprovedHtml(payload),
-  }).catch((err) => console.error("[email] Error enviando conversión:", err));
+    html: referralApprovedHtml(payload, true),
+  }));
+
+  await Promise.allSettled(sends).then((results) => {
+    results.forEach((r) => { if (r.status === "rejected") console.error("[email] Error enviando conversión:", r.reason); });
+  });
 }
 
 // ─── Payment sent to referrer ───────────────────────────────────────────────
@@ -335,6 +361,87 @@ export async function sendReferrerConfirmedNotification(payload: { referrerName:
 </td></tr></table>
 </body></html>`,
   });
+}
+
+// ─── Premios burbuja (Auto + GMM) ───────────────────────────────────────────
+
+export type BubbleClaimPayload = {
+  referrerName: string;
+  referrerEmail?: string | null;
+  advisorName: string;
+  advisorEmail: string;
+  amount: number;
+  portalUrl?: string;
+};
+
+export async function sendBubbleClaimNotification(payload: BubbleClaimPayload) {
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY no configurado — reclamo de burbuja no notificado. Payload:", payload);
+    return;
+  }
+
+  const subject = `[Premios burbuja] ${payload.referrerName} reclamó ${formatMXN(payload.amount)}`;
+
+  const recipients = [CREATOR_EMAIL];
+  if (payload.advisorEmail && payload.advisorEmail !== CREATOR_EMAIL) {
+    recipients.push(payload.advisorEmail);
+  }
+
+  await resend.emails.send({
+    from: FROM,
+    to: recipients,
+    subject,
+    html: `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"></head><body style="font-family:-apple-system,sans-serif;background:#f4f4f5;padding:40px 16px">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+<table width="100%" style="max-width:480px;background:#fff;border-radius:16px;overflow:hidden">
+  <tr><td style="background:#000;padding:20px 28px"><p style="margin:0;color:#fff;font-size:11px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo · Premios burbuja</p></td></tr>
+  <tr><td style="padding:28px">
+    <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0a0a0a">${payload.referrerName} reclamó su premio burbuja</h1>
+    <p style="margin:0 0 8px;font-size:14px;color:#6b7280">Asesor: <strong>${payload.advisorName}</strong></p>
+    <p style="margin:0 0 16px;font-size:14px;color:#6b7280">Monto acumulado (Auto + GMM): <strong style="color:#000">${formatMXN(payload.amount)}</strong></p>
+    <a href="${BASE_URL}/admin/burbujas" style="display:block;background:#000;color:#fff;text-align:center;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none">
+      Revisar y marcar como pagado →
+    </a>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`,
+  }).catch((err) => console.error("[email] Error enviando reclamo de burbuja:", err));
+}
+
+export async function sendBubbleClaimPaidNotification(payload: BubbleClaimPayload & { paymentNote?: string | null }) {
+  if (!resend || !payload.referrerEmail) return;
+
+  await resend.emails.send({
+    from: FROM,
+    to: [payload.referrerEmail],
+    subject: `¡Tu premio burbuja de ${formatMXN(payload.amount)} fue enviado!`,
+    html: `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#fff;border-radius:16px;overflow:hidden">
+        <tr><td style="background:#000;padding:24px 32px">
+          <p style="margin:0;color:#fff;font-size:12px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo</p>
+        </td></tr>
+        <tr><td style="padding:32px">
+          <p style="margin:0 0 4px;font-size:13px;color:#6b7280;font-weight:500">¡Tu premio burbuja fue enviado!</p>
+          <h1 style="margin:0 0 24px;font-size:28px;font-weight:800;color:#0a0a0a">${formatMXN(payload.amount)}</h1>
+          <table width="100%" style="background:#f9fafb;border-radius:12px;margin-bottom:20px">
+            <tr><td style="padding:18px 20px">
+              <p style="margin:0;font-size:14px;color:#374151">${payload.advisorName} envió tu premio acumulado por referir seguros de auto y gastos médicos mayores.</p>
+              ${payload.paymentNote ? `<p style="margin:8px 0 0;font-size:12px;color:#9ca3af">Referencia de pago: ${payload.paymentNote}</p>` : ""}
+            </td></tr>
+          </table>
+          <p style="margin:0;font-size:12px;color:#d1d5db;text-align:center">Notificación automática de Referidoo</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`,
+  }).catch((err) => console.error("[email] Error enviando pago de burbuja:", err));
 }
 
 export async function sendNewReferralNotification(payload: NewReferralPayload) {

@@ -21,14 +21,26 @@ type Referral = {
   referrerConfirmedAt: string | null;
 };
 
+type BubbleClaim = {
+  id: string;
+  amount: number;
+  status: string;
+  createdAt: string;
+  paidAt: string | null;
+};
+
 type PortalData = {
-  client: { id: string; name: string; referralCode: string; createdAt: string; launchBonusUsed: boolean };
+  client: { id: string; name: string; referralCode: string; createdAt: string; launchBonusUsed: boolean; bubblePoints: number };
   advisor: { name: string; phone: string | null; companyName: string | null; whatsappMessage: string | null };
   tiers: RewardTier[];
   settings: { afterLastTier: string; flatAmount: number };
   referrals: Referral[];
+  bubbleClaims: BubbleClaim[];
   stats: { totalReferrals: number; convertedCount: number; totalEarned: number; pendingEarnings: number };
 };
+
+// Mantener en sync con BUBBLE_CLAIM_THRESHOLD de src/lib/rewards.ts
+const BUBBLE_CLAIM_THRESHOLD = 500;
 
 function getNextReward(tiers: RewardTier[], completedCount: number, settings: { afterLastTier: string; flatAmount: number }): number {
   if (tiers.length === 0) return 1500;
@@ -66,6 +78,7 @@ export default function ClientPortalPage() {
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
+  const [claimingBubble, setClaimingBubble] = useState(false);
 
   function fetchData(isInitial = false) {
     fetch(`/api/portal/${token}`)
@@ -100,6 +113,13 @@ export default function ClientPortalPage() {
     setConfirming(null);
   }
 
+  async function claimBubble() {
+    setClaimingBubble(true);
+    const res = await fetch(`/api/portal/${token}/claim-bubble`, { method: "POST" });
+    if (res.ok) fetchData(false);
+    setClaimingBubble(false);
+  }
+
   function finishOnboarding() {
     localStorage.setItem(`referidos_seen_${token}`, "1");
     setShowOnboarding(false);
@@ -125,7 +145,8 @@ export default function ClientPortalPage() {
     );
   }
 
-  const { client, advisor, tiers, settings, referrals, stats } = data;
+  const { client, advisor, tiers, settings, referrals, stats, bubbleClaims } = data;
+  const pendingBubbleClaim = bubbleClaims.find((c) => c.status === "pending");
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
 
   // Launch bonus calculations
@@ -367,6 +388,54 @@ export default function ClientPortalPage() {
                 <p className="text-xs text-gray-400 mt-0.5">aprobado</p>
               </div>
             </div>
+
+            {/* Premios burbuja — Auto + GMM */}
+            {(client.bubblePoints > 0 || pendingBubbleClaim) && (
+              <div className="bg-white rounded-2xl border border-gray-100 p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <h2 className="font-medium text-sm">Premios burbuja</h2>
+                  <span className="text-xs text-gray-400">Auto + GMM</span>
+                </div>
+                {pendingBubbleClaim ? (
+                  <div className="flex items-center gap-3 mt-2">
+                    <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 8V12L15 15M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Reclamo en proceso</p>
+                      <p className="text-xs text-gray-400">{formatCurrency(pendingBubbleClaim.amount)} · tu asesor lo enviará pronto</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-400 mb-3">Suma {formatCurrency(150)} por cada Auto y {formatCurrency(300)} por cada GMM que cierres. Al llegar a {formatCurrency(BUBBLE_CLAIM_THRESHOLD)}, reclámalo.</p>
+                    <div className="flex items-end justify-between mb-2">
+                      <p className="text-2xl font-semibold">{formatCurrency(client.bubblePoints)}</p>
+                      <p className="text-xs text-gray-400">Meta {formatCurrency(BUBBLE_CLAIM_THRESHOLD)}</p>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-3">
+                      <div
+                        className="h-2 bg-black rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(100, (client.bubblePoints / BUBBLE_CLAIM_THRESHOLD) * 100)}%` }}
+                      />
+                    </div>
+                    {client.bubblePoints >= BUBBLE_CLAIM_THRESHOLD ? (
+                      <button
+                        onClick={claimBubble}
+                        disabled={claimingBubble}
+                        className="w-full bg-black text-white text-sm font-medium py-3 rounded-xl disabled:opacity-50 transition hover:bg-gray-900"
+                      >
+                        {claimingBubble ? "Reclamando..." : "Reclamar premio"}
+                      </button>
+                    ) : (
+                      <p className="text-xs text-gray-400">Te faltan {formatCurrency(BUBBLE_CLAIM_THRESHOLD - client.bubblePoints)} para poder reclamar.</p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Niveles de premios */}
             {tiers.length > 0 && (

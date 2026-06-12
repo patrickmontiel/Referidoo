@@ -54,8 +54,21 @@ model Client {
   referralCode     String     @unique
   active           Boolean    @default(true)
   launchBonusUsed  Boolean    @default(false)
+  bubblePoints     Int        @default(0)
   createdAt        DateTime   @default(now())
   referrals        Referral[]
+  bubbleClaims     BubbleClaim[]
+}
+
+model BubbleClaim {
+  id          String    @id @default(cuid())
+  clientId    String
+  client      Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  amount      Int
+  status      String    @default("pending") // pending | paid
+  paymentNote String?
+  createdAt   DateTime  @default(now())
+  paidAt      DateTime?
 }
 
 model Referral {

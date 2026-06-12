@@ -14,6 +14,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
       referrals: {
         orderBy: { createdAt: "desc" },
       },
+      bubbleClaims: {
+        orderBy: { createdAt: "desc" },
+        take: 5,
+      },
     },
   });
 
@@ -42,7 +46,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
       referralCode: client.referralCode,
       createdAt: client.createdAt,
       launchBonusUsed: (client as typeof client & { launchBonusUsed?: boolean }).launchBonusUsed ?? false,
+      bubblePoints: client.bubblePoints,
     },
+    bubbleClaims: client.bubbleClaims,
     advisor: {
       name: client.advisor.name,
       phone: client.advisor.phone,

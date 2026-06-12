@@ -29,5 +29,30 @@ export async function POST() {
     results.push("– productType already exists");
   }
 
+  // Add bubblePoints column if missing
+  try {
+    await db.execute("ALTER TABLE Client ADD COLUMN bubblePoints INTEGER NOT NULL DEFAULT 0");
+    results.push("✓ bubblePoints added");
+  } catch {
+    results.push("– bubblePoints already exists");
+  }
+
+  // Create BubbleClaim table if missing
+  try {
+    await db.execute(`CREATE TABLE IF NOT EXISTS BubbleClaim (
+      id TEXT PRIMARY KEY,
+      clientId TEXT NOT NULL,
+      amount INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      paymentNote TEXT,
+      createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      paidAt DATETIME,
+      FOREIGN KEY (clientId) REFERENCES Client(id) ON DELETE CASCADE
+    )`);
+    results.push("✓ BubbleClaim table ready");
+  } catch {
+    results.push("– BubbleClaim table already exists");
+  }
+
   return NextResponse.json({ ok: true, results });
 }

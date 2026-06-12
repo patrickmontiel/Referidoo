@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
 import { sendReferralApprovedNotification, sendPaymentSentNotification, type PaymentPayload } from "@/lib/email";
-import { getAdvisorTiers } from "@/lib/rewards";
+import { getAdvisorTiers, calculateLessioCommission, BUBBLE_POINTS_BY_PRODUCT } from "@/lib/rewards";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getAdvisorSession();
@@ -27,6 +27,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const saleAmount = body.saleAmount != null ? Number(body.saleAmount) : r.saleAmount;
   const isPaid = newRewardStatus === "paid" && referral.rewardStatus !== "paid";
   const isConverting = newStatus === "converted" && referral.status !== "converted";
+  const productTypeForConversion: string | null = body.productType !== undefined ? body.productType : referral.productType ?? null;
 
   // Check launch bonus at conversion (3+ referrals in first 7 days → bonus on first prize only)
   let finalRewardAmount = referral.rewardAmount;
@@ -69,6 +70,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   // 1. Notify creator when advisor marks referral as converted (deal closed)
   if (isConverting) {
+    const lessioCommission = calculateLessioCommission(productTypeForConversion, saleAmount);
+
     sendReferralApprovedNotification({
       advisorName: referral.advisor.name,
       advisorEmail: referral.advisor.email,
@@ -80,7 +83,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       tierPosition: referral.tierPosition,
       saleAmount: saleAmount ?? null,
       launchBonusApplied,
+      productType: productTypeForConversion,
+      lessioCommission,
     }).catch((err) => console.error("[email] Error enviando conversión:", err));
+
+    // Premios burbuja: Auto y GMM acumulan a un mismo fondo reclamable
+    const bubblePoints = productTypeForConversion ? BUBBLE_POINTS_BY_PRODUCT[productTypeForConversion] : undefined;
+    if (bubblePoints) {
+      await db.client.update({
+        where: { id: referral.referrerId },
+        data: { bubblePoints: { increment: bubblePoints } },
+      });
+    }
   }
 
   // 2. Notify referrer (Ana) and creator when payment is sent

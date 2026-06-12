@@ -1,5 +1,31 @@
 import { db } from "./db";
 
+// Comisión de Lessio sobre el valor del plan/prima, pagada una sola vez (primer año)
+const LESSIO_COMMISSION_RATES: Record<string, number> = {
+  PPR: 0.0015,
+  Vida: 0.0015,
+  "Daños/Auto": 0.0008,
+  GMM: 0.0008,
+};
+
+export function calculateLessioCommission(
+  productType: string | null | undefined,
+  saleAmount: number | null | undefined
+): number | null {
+  if (!productType || !saleAmount) return null;
+  const rate = LESSIO_COMMISSION_RATES[productType];
+  if (!rate) return null;
+  return Math.round(saleAmount * rate);
+}
+
+// Premios burbuja: Auto + GMM acumulan a un mismo fondo, reclamable al superar el umbral
+export const BUBBLE_POINTS_BY_PRODUCT: Record<string, number> = {
+  "Daños/Auto": 150,
+  GMM: 300,
+};
+
+export const BUBBLE_CLAIM_THRESHOLD = 500;
+
 export type RewardTier = {
   position: number;
   amount: number;
