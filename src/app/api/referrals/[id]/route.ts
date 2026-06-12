@@ -28,10 +28,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const isPaid = newRewardStatus === "paid" && referral.rewardStatus !== "paid";
   const isConverting = newStatus === "converted" && referral.status !== "converted";
 
-  // Check launch bonus at conversion (3+ referrals in first 7 days → 2x first prize)
+  // Check launch bonus at conversion (3+ referrals in first 7 days → bonus on first prize only)
   let finalRewardAmount = referral.rewardAmount;
   let launchBonusApplied = false;
-  if (isConverting) {
+  if (isConverting && referral.tierPosition === 1) {
     const refClient = await db.client.findUnique({
       where: { id: referral.referrerId },
       select: { createdAt: true, launchBonusUsed: true },

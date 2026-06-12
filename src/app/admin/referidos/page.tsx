@@ -65,10 +65,18 @@ const rewardBg: Record<string, string> = {
   paid:     "bg-green-50 text-green-700",
 };
 
-function isLaunchBonusEligible(referrer: { createdAt: string; launchBonusUsed: boolean }): boolean {
+// El bono de lanzamiento solo aplica al primer referido, y solo una vez que el
+// cliente ya invitó a 3 personas dentro de su primera semana
+function isLaunchBonusEligible(referrer: { createdAt: string; launchBonusUsed: boolean }, referralsInWindow: number): boolean {
   if (referrer.launchBonusUsed) return false;
+  if (referralsInWindow < 3) return false;
   const windowEnd = new Date(new Date(referrer.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000);
   return new Date() <= windowEnd;
+}
+
+function getReferralsInWindow(allReferrals: Referral[], referrerId: string, referrerCreatedAt: string): number {
+  const windowEnd = new Date(new Date(referrerCreatedAt).getTime() + 7 * 24 * 60 * 60 * 1000);
+  return allReferrals.filter((x) => x.referrer.id === referrerId && new Date(x.createdAt) <= windowEnd).length;
 }
 
 export default function ReferidosPage() {
@@ -223,7 +231,8 @@ export default function ReferidosPage() {
       ) : (
         <div data-tour="list" className="space-y-3">
           {filtered.map((r) => {
-            const bonusEligible = isLaunchBonusEligible(r.referrer);
+            const referralsInWindow = getReferralsInWindow(referrals, r.referrer.id, r.referrer.createdAt);
+            const bonusEligible = r.tierPosition === 1 && isLaunchBonusEligible(r.referrer, referralsInWindow);
             const displayAmount = bonusEligible && r.status !== "converted"
               ? r.rewardAmount + 1000
               : r.rewardAmount;
@@ -450,7 +459,9 @@ export default function ReferidosPage() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Premio al cliente</p>
-                  {isLaunchBonusEligible(selected.referrer) && selected.status !== "converted" ? (
+                  {selected.tierPosition === 1 &&
+                  isLaunchBonusEligible(selected.referrer, getReferralsInWindow(referrals, selected.referrer.id, selected.referrer.createdAt)) &&
+                  selected.status !== "converted" ? (
                     <div>
                       <p className="text-sm font-semibold">{formatCurrency(selected.rewardAmount + 1000)}</p>
                       <p className="text-[10px] text-amber-600 font-medium">⚡ Incluye bono de lanzamiento</p>

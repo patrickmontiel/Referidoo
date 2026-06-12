@@ -139,6 +139,8 @@ export default function ClientPortalPage() {
   const referralsInWindow = referrals.filter(r => new Date(r.createdAt) <= launchWindowEnd).length;
   const firstTierAmount = tiers[0]?.amount ?? 1500;
   const bonusAmount = firstTierAmount + 1000;
+  // El bono solo se entrega cuando el cliente ya invitó a 3 personas dentro de su semana de lanzamiento
+  const bonusReady = launchBonusActive && referralsInWindow >= 3;
 
   // Onboarding modal
   if (showOnboarding) {
@@ -211,8 +213,9 @@ export default function ClientPortalPage() {
   }
 
   const referralLink = `${baseUrl}/r/${client.referralCode}`;
-  const nextReward = getNextReward(tiers, referrals.filter(r => r.status !== "rejected").length, settings);
-  const completedNonRejected = referrals.filter(r => r.status !== "rejected").length;
+  // El progreso de premios solo avanza cuando el asesor confirma el pago
+  const paidCount = referrals.filter(r => r.rewardStatus === "paid").length;
+  const nextReward = getNextReward(tiers, paidCount, settings);
 
   function copyLink() {
     navigator.clipboard.writeText(referralLink);
@@ -371,14 +374,14 @@ export default function ClientPortalPage() {
                 <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
                   <h2 className="font-medium text-sm">Premio siguiente</h2>
                   <span className="text-sm font-semibold">
-                    {formatCurrency(launchBonusActive && completedNonRejected + 1 === 1 ? bonusAmount : nextReward)}
+                    {formatCurrency(bonusReady && paidCount === 0 ? bonusAmount : nextReward)}
                   </span>
                 </div>
                 <div className="divide-y divide-gray-50">
                   {tiers.map((tier) => {
-                    const done = completedNonRejected >= tier.position;
-                    const current = completedNonRejected + 1 === tier.position;
-                    const bonusHere = launchBonusActive && current && tier.position === 1;
+                    const done = paidCount >= tier.position;
+                    const current = paidCount + 1 === tier.position;
+                    const bonusHere = bonusReady && current && tier.position === 1;
                     return (
                       <div key={tier.position} className={`flex items-center gap-3 px-5 py-3 ${current ? "bg-black" : ""}`}>
                         <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -475,9 +478,9 @@ export default function ClientPortalPage() {
                 <p className="text-gray-400 text-sm">Aún no has referido a nadie.</p>
                 {launchBonusActive ? (
                   <p className="text-xs text-gray-400 mt-1">
-                    ⚡ Esta semana tu primer referido vale{" "}
-                    <strong className="text-gray-700">{formatCurrency(bonusAmount)}</strong>{" "}
-                    en vez de {formatCurrency(firstTierAmount)}.
+                    ⚡ Invita a 3 personas esta semana y tu primer premio sube de{" "}
+                    {formatCurrency(firstTierAmount)} a{" "}
+                    <strong className="text-gray-700">{formatCurrency(bonusAmount)}</strong>.
                   </p>
                 ) : (
                   <p className="text-xs text-gray-300 mt-1">Tu primer referido vale {formatCurrency(tiers[0]?.amount ?? 1500)}.</p>
