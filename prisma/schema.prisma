@@ -90,6 +90,7 @@ model Referral {
   rewardStatus String   @default("pending")
   saleAmount          Int?
   productType         String?
+  interestProductType String?
   rewardPaidAt        DateTime?
   paymentNote         String?
   confirmedByReferrer Boolean   @default(false)

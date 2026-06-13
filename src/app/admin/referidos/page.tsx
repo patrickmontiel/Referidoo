@@ -37,6 +37,7 @@ type Referral = {
   tierPosition: number;
   saleAmount: number | null;
   productType: string | null;
+  interestProductType: string | null;
   rewardPaidAt: string | null;
   confirmedByReferrer: boolean;
   referrerConfirmedAt: string | null;
@@ -65,23 +66,8 @@ const rewardBg: Record<string, string> = {
   paid:     "bg-green-50 text-green-700",
 };
 
-// El bono de lanzamiento solo aplica al primer referido, y solo una vez que el
-// cliente ya invitó a 3 personas dentro de su primera semana
-function isLaunchBonusEligible(referrer: { createdAt: string; launchBonusUsed: boolean }, referralsInWindow: number): boolean {
-  if (referrer.launchBonusUsed) return false;
-  if (referralsInWindow < 3) return false;
-  const windowEnd = new Date(new Date(referrer.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000);
-  return new Date() <= windowEnd;
-}
-
-function getReferralsInWindow(allReferrals: Referral[], referrerId: string, referrerCreatedAt: string): number {
-  const windowEnd = new Date(new Date(referrerCreatedAt).getTime() + 7 * 24 * 60 * 60 * 1000);
-  return allReferrals.filter((x) => x.referrer.id === referrerId && new Date(x.createdAt) <= windowEnd).length;
-}
-
 export default function ReferidosPage() {
   const [referrals, setReferrals] = useState<Referral[]>([]);
-  const [tier1Amount, setTier1Amount] = useState(1500);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState<Referral | null>(null);
@@ -108,12 +94,6 @@ export default function ReferidosPage() {
 
   useEffect(() => {
     load();
-    fetch("/api/tiers")
-      .then((r) => r.json())
-      .then((d) => {
-        const t1 = d.tiers?.find((t: { position: number; amount: number }) => t.position === 1)?.amount;
-        if (t1) setTier1Amount(t1);
-      });
     const handler = () => setShowTour(true);
     window.addEventListener("referidoo:tour", handler);
     return () => window.removeEventListener("referidoo:tour", handler);
@@ -238,12 +218,7 @@ export default function ReferidosPage() {
       ) : (
         <div data-tour="list" className="space-y-3">
           {filtered.map((r) => {
-            const referralsInWindow = getReferralsInWindow(referrals, r.referrer.id, r.referrer.createdAt);
             const isConverted = r.status === "converted";
-            // Mientras no convierte, el premio final depende de qué referido de este
-            // cliente cierre primero — no del orden en que se registraron los leads.
-            const displayAmount = isConverted ? r.rewardAmount : tier1Amount;
-            const bonusActive = !isConverted && isLaunchBonusEligible(r.referrer, referralsInWindow);
             const includesBonus = isConverted && r.tierPosition === 1 && r.referrer.launchBonusUsed;
             // Daños/Auto, GMM y Otro no consumen escalón de premio — van a premios
             // burbuja en su lugar. Quedan con tierPosition 0.
@@ -266,14 +241,15 @@ export default function ReferidosPage() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <div>
-                      {noEscaleraReward ? (
-                        <p className="text-sm font-semibold text-gray-400">—</p>
-                      ) : (
-                        <p className="text-sm font-semibold">{formatCurrency(displayAmount)}</p>
-                      )}
-                      {!isConverted && (
-                        <p className="text-[10px] text-gray-400">Premio si contrata</p>
-                      )}
+                      {isConverted ? (
+                        noEscaleraReward ? (
+                          <p className="text-sm font-semibold text-gray-400">—</p>
+                        ) : (
+                          <p className="text-sm font-semibold">{formatCurrency(r.rewardAmount)}</p>
+                        )
+                      ) : r.interestProductType ? (
+                        <p className="text-xs font-medium text-gray-500">Interés: {r.interestProductType}</p>
+                      ) : null}
                       {noEscaleraReward && (
                         <p className="text-[10px] text-blue-500 font-medium">
                           {isBubbleProduct ? "Suma a premios burbuja" : "Sin premio en efectivo"}
@@ -281,9 +257,6 @@ export default function ReferidosPage() {
                       )}
                       {includesBonus && (
                         <p className="text-[10px] text-amber-600 font-medium">⚡ Incluye bono</p>
-                      )}
-                      {bonusActive && (
-                        <p className="text-[10px] text-amber-600 font-medium">⚡ Si es el 1º en contratar: {formatCurrency(tier1Amount + 1000)}</p>
                       )}
                       {r.saleAmount ? (
                         <p className="text-[11px] text-gray-400 mt-0.5">Venta: {formatCurrency(r.saleAmount)}</p>
@@ -490,90 +463,113 @@ export default function ReferidosPage() {
                   <p className="text-xs text-gray-400 mb-1">Referido #</p>
                   <p className="text-sm font-medium">{selected.tierPosition > 0 ? `${selected.tierPosition}º de ese cliente` : "—"}</p>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-400 mb-1">Premio al cliente</p>
-                  {selected.status === "converted" ? (
-                    selected.tierPosition === 0 ? (
-                      <div>
-                        <p className="text-sm font-semibold text-gray-400">—</p>
-                        <p className="text-[10px] text-blue-500 font-medium">
-                          {selected.productType === "Daños/Auto" || selected.productType === "GMM" || selected.productType === "Otro" ? "Suma a premios burbuja" : "Sin premio en efectivo"}
-                        </p>
-                      </div>
-                    ) : (
-                      <div>
-                        <p className="text-sm font-semibold">{formatCurrency(selected.rewardAmount)}</p>
-                        {selected.tierPosition === 1 && selected.referrer.launchBonusUsed && (
-                          <p className="text-[10px] text-amber-600 font-medium">⚡ Incluye bono de lanzamiento</p>
-                        )}
-                      </div>
-                    )
-                  ) : (
+                {selected.status === "converted" ? (
+                  <>
                     <div>
-                      <p className="text-sm font-semibold">{formatCurrency(tier1Amount)}</p>
-                      <p className="text-[10px] text-gray-400">Premio si contrata</p>
-                      {isLaunchBonusEligible(selected.referrer, getReferralsInWindow(referrals, selected.referrer.id, selected.referrer.createdAt)) && (
-                        <p className="text-[10px] text-amber-600 font-medium">⚡ Si es el 1º en contratar: {formatCurrency(tier1Amount + 1000)}</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  {selected.saleAmount ? (
-                    <>
-                      <p className="text-xs text-gray-400 mb-1">
-                        {selected.productType ? selected.productType : "Valor del plan"}
-                      </p>
-                      {editingSale ? (
-                        <div className="flex items-center gap-1.5">
-                          <div className="relative flex-1">
-                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={editSaleInput}
-                              onChange={(e) => setEditSaleInput(formatNumberWithCommas(e.target.value))}
-                              className="w-full pl-5 pr-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
-                              autoFocus
-                            />
-                          </div>
-                          <button
-                            onClick={saveEditedSale}
-                            disabled={updating}
-                            className="text-xs px-2 py-1.5 bg-black text-white rounded-lg disabled:opacity-50"
-                          >
-                            ✓
-                          </button>
-                          <button
-                            onClick={() => setEditingSale(false)}
-                            className="text-xs px-2 py-1.5 border border-gray-200 rounded-lg text-gray-500"
-                          >
-                            ✕
-                          </button>
+                      <p className="text-xs text-gray-400 mb-1">Premio al cliente</p>
+                      {selected.tierPosition === 0 ? (
+                        <div>
+                          <p className="text-sm font-semibold text-gray-400">—</p>
+                          <p className="text-[10px] text-blue-500 font-medium">
+                            {selected.productType === "Daños/Auto" || selected.productType === "GMM" || selected.productType === "Otro" ? "Suma a premios burbuja" : "Sin premio en efectivo"}
+                          </p>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-sm font-bold text-green-700">{formatCurrency(selected.saleAmount)}</p>
-                          <button
-                            onClick={() => { setEditSaleInput(formatNumberWithCommas(String(selected.saleAmount))); setEditingSale(true); }}
-                            className="text-gray-300 hover:text-gray-500 transition"
-                            title="Editar valor"
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                              <path d="M11 4H4C3.44772 4 3 4.44772 3 5V20C3 20.5523 3.44772 21 4 21H19C19.5523 21 20 20.5523 20 20V13M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          </button>
+                        <div>
+                          <p className="text-sm font-semibold">{formatCurrency(selected.rewardAmount)}</p>
+                          {selected.tierPosition === 1 && selected.referrer.launchBonusUsed && (
+                            <p className="text-[10px] text-amber-600 font-medium">⚡ Incluye bono de lanzamiento</p>
+                          )}
                         </div>
                       )}
-                    </>
-                  ) : (
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Fecha</p>
-                      <p className="text-sm">{formatDate(selected.createdAt)}</p>
                     </div>
-                  )}
-                </div>
+                    <div>
+                      {selected.saleAmount ? (
+                        <>
+                          <p className="text-xs text-gray-400 mb-1">
+                            {selected.productType ? selected.productType : "Valor del plan"}
+                          </p>
+                          {editingSale ? (
+                            <div className="flex items-center gap-1.5">
+                              <div className="relative flex-1">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  value={editSaleInput}
+                                  onChange={(e) => setEditSaleInput(formatNumberWithCommas(e.target.value))}
+                                  className="w-full pl-5 pr-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+                                  autoFocus
+                                />
+                              </div>
+                              <button
+                                onClick={saveEditedSale}
+                                disabled={updating}
+                                className="text-xs px-2 py-1.5 bg-black text-white rounded-lg disabled:opacity-50"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                onClick={() => setEditingSale(false)}
+                                className="text-xs px-2 py-1.5 border border-gray-200 rounded-lg text-gray-500"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-sm font-bold text-green-700">{formatCurrency(selected.saleAmount)}</p>
+                              <button
+                                onClick={() => { setEditSaleInput(formatNumberWithCommas(String(selected.saleAmount))); setEditingSale(true); }}
+                                className="text-gray-300 hover:text-gray-500 transition"
+                                title="Editar valor"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                                  <path d="M11 4H4C3.44772 4 3 4.44772 3 5V20C3 20.5523 3.44772 21 4 21H19C19.5523 21 20 20.5523 20 20V13M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div>
+                          <p className="text-xs text-gray-400 mb-1">Fecha</p>
+                          <p className="text-sm">{formatDate(selected.createdAt)}</p>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="col-span-2">
+                    <p className="text-xs text-gray-400 mb-1">Fecha</p>
+                    <p className="text-sm">{formatDate(selected.createdAt)}</p>
+                  </div>
+                )}
               </div>
+
+              {/* Interés del lead — antes de convertir aún no se conoce el premio;
+                  solo se sabrá qué se contrató realmente al marcar como convertido */}
+              {selected.status !== "converted" && (
+                <div>
+                  <p className="text-xs text-gray-400 mb-2">Interesado en</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {["Daños/Auto", "GMM", "Vida", "PPR", "Otro"].map((type) => (
+                      <button
+                        key={type}
+                        disabled={updating}
+                        onClick={() => update(selected.id, { interestProductType: type === selected.interestProductType ? null : type })}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
+                          selected.interestProductType === type
+                            ? "bg-blue-50 text-blue-700 border-blue-200"
+                            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <p className="text-xs text-gray-400 mb-2">Estado del lead</p>
