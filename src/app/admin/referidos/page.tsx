@@ -245,9 +245,9 @@ export default function ReferidosPage() {
             const displayAmount = isConverted ? r.rewardAmount : tier1Amount;
             const bonusActive = !isConverted && isLaunchBonusEligible(r.referrer, referralsInWindow);
             const includesBonus = isConverted && r.tierPosition === 1 && r.referrer.launchBonusUsed;
-            // Daños/Auto y GMM no consumen escalón de premio (van a premios burbuja);
-            // "Otro" no genera premio en efectivo. Ambos quedan con tierPosition 0.
-            const isBubbleProduct = r.productType === "Daños/Auto" || r.productType === "GMM";
+            // Daños/Auto, GMM y Otro no consumen escalón de premio — van a premios
+            // burbuja en su lugar. Quedan con tierPosition 0.
+            const isBubbleProduct = r.productType === "Daños/Auto" || r.productType === "GMM" || r.productType === "Otro";
             const noEscaleraReward = isConverted && r.tierPosition === 0;
 
             return (
@@ -497,7 +497,7 @@ export default function ReferidosPage() {
                       <div>
                         <p className="text-sm font-semibold text-gray-400">—</p>
                         <p className="text-[10px] text-blue-500 font-medium">
-                          {selected.productType === "Daños/Auto" || selected.productType === "GMM" ? "Suma a premios burbuja" : "Sin premio en efectivo"}
+                          {selected.productType === "Daños/Auto" || selected.productType === "GMM" || selected.productType === "Otro" ? "Suma a premios burbuja" : "Sin premio en efectivo"}
                         </p>
                       </div>
                     ) : (

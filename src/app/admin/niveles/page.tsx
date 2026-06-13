@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, formatNumberWithCommas } from "@/lib/utils";
 import { Tour, type TourStep } from "@/components/Tour";
 
 const TOUR_STEPS: TourStep[] = [
@@ -19,8 +19,8 @@ const TOUR_STEPS: TourStep[] = [
   },
   {
     selector: '[data-tour="bubble"]',
-    title: "Premios burbuja de Auto y GMM",
-    body: "Auto y Gastos Médicos Mayores suman puntos a un pool compartido del cliente. Aquí defines cuántos puntos da cada producto y a partir de cuántos puntos se puede reclamar el premio.",
+    title: "Premios burbuja de Auto, Otro y GMM",
+    body: "Auto, Otro y Gastos Médicos Mayores suman puntos a un pool compartido del cliente. Aquí defines cuántos puntos da cada producto y a partir de cuántos puntos se puede reclamar el premio.",
     placement: "bottom",
   },
   {
@@ -42,6 +42,30 @@ type BubbleClaim = {
   paidAt: string | null;
   client: { name: string; phone: string | null };
 };
+
+function CurrencyInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: number;
+  onChange: (value: number) => void;
+  placeholder?: string;
+}) {
+  return (
+    <div className="relative">
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">$</span>
+      <input
+        type="text"
+        inputMode="numeric"
+        value={formatNumberWithCommas(String(value))}
+        onChange={(e) => onChange(Number(e.target.value.replace(/[^\d]/g, "")) || 0)}
+        placeholder={placeholder}
+        className="w-full pl-7 pr-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+      />
+    </div>
+  );
+}
 
 export default function PremiosPage() {
   // Escalera de premios PPR y Vida
@@ -187,11 +211,25 @@ export default function PremiosPage() {
       </div>
 
       {/* Escalera de premios PPR y Vida */}
-      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Escalera de premios PPR y Vida</h2>
+      <div className="flex items-center gap-2 mb-3">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="flex-shrink-0 text-gray-400">
+          <path d="M4 20V16H8V12H12V8H16V4H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Escalera de premios PPR y Vida</h2>
+      </div>
 
       {/* Tiers */}
       <div data-tour="tiers" className="bg-white rounded-2xl border border-gray-100 p-5 mb-5">
-        <h2 className="font-medium text-sm mb-4">Estructura de premios</h2>
+        <h2 className="font-medium text-sm mb-1">Estructura de premios</h2>
+        <p className="text-xs text-gray-400 mb-4">Cuánto recibe tu cliente por cada referido (1º, 2º, 3º...) que llega a contratar Vida o PPR.</p>
+
+        <div className="hidden sm:flex items-center gap-3 mb-1.5 px-0">
+          <div className="w-8 flex-shrink-0" />
+          <span className="flex-1 text-xs text-gray-400 uppercase tracking-wide">Monto</span>
+          <span className="flex-1 text-xs text-gray-400 uppercase tracking-wide">Etiqueta (opcional)</span>
+          <div className="w-5 flex-shrink-0" />
+        </div>
+
         <div className="space-y-3">
           {tiers.map((tier, i) => (
             <div key={i} className="flex items-center gap-3">
@@ -199,13 +237,10 @@ export default function PremiosPage() {
                 {i + 1}
               </div>
               <div className="flex-1">
-                <input
-                  type="number"
+                <CurrencyInput
                   value={tier.amount}
-                  onChange={(e) => updateTier(i, "amount", Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
-                  placeholder="Monto en pesos"
-                  min="0"
+                  onChange={(val) => updateTier(i, "amount", val)}
+                  placeholder="0"
                 />
               </div>
               <div className="flex-1">
@@ -214,13 +249,14 @@ export default function PremiosPage() {
                   value={tier.label}
                   onChange={(e) => updateTier(i, "label", e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
-                  placeholder={`Etiqueta (opcional)`}
+                  placeholder={`Ej: ¡Bono especial!`}
                 />
               </div>
               <button
                 onClick={() => removeTier(i)}
                 disabled={tiers.length <= 1}
                 className="p-1 text-gray-300 hover:text-red-400 disabled:opacity-20 transition"
+                aria-label="Eliminar nivel"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -277,24 +313,21 @@ export default function PremiosPage() {
 
         {afterLastTier === "flat" && (
           <div className="mt-3">
-            <label className="block text-xs text-gray-400 mb-1.5 uppercase tracking-wide">Monto fijo (pesos)</label>
-            <input
-              type="number"
-              value={flatAmount}
-              onChange={(e) => setFlatAmount(Number(e.target.value))}
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
-              min="0"
-            />
+            <label className="block text-xs text-gray-400 mb-1.5 uppercase tracking-wide">Monto fijo</label>
+            <CurrencyInput value={flatAmount} onChange={setFlatAmount} placeholder="0" />
           </div>
         )}
       </div>
 
-      {/* Premios burbuja de Auto y GMM */}
-      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3 mt-2">Premios burbuja de Auto y Gastos Médicos Mayores</h2>
+      {/* Premios burbuja de Auto, Otro y GMM */}
+      <div className="flex items-center gap-2 mb-3 mt-2">
+        <div className="w-4 h-4 rounded-full border-2 border-blue-300 bg-blue-50 flex-shrink-0" />
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Premios burbuja de Auto, Otro y Gastos Médicos Mayores</h2>
+      </div>
 
       <div data-tour="bubble" className="bg-white rounded-2xl border border-gray-100 p-5 mb-5">
         <h2 className="font-medium text-sm mb-1">Configuración de puntos</h2>
-        <p className="text-xs text-gray-400 mb-4">Define cuántos puntos suma cada conversión y a partir de cuánto se puede reclamar.</p>
+        <p className="text-xs text-gray-400 mb-4">Cada vez que un referido contrata Auto, Otro tipo de seguro o GMM, se suman puntos a un fondo del cliente. Al llegar a la meta, sus burbujas explotan y reciben el premio.</p>
 
         {loadingBubbleSettings ? (
           <div className="flex justify-center py-6">
@@ -302,41 +335,62 @@ export default function PremiosPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
               <div>
-                <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">Por Auto</label>
-                <input
-                  type="number"
-                  value={bubbleAutoPoints}
-                  onChange={(e) => setBubbleAutoPoints(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
-                />
+                <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">Por Auto / Otro</label>
+                <CurrencyInput value={bubbleAutoPoints} onChange={setBubbleAutoPoints} placeholder="0" />
               </div>
               <div>
                 <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">Por GMM</label>
-                <input
-                  type="number"
-                  value={bubbleGmmPoints}
-                  onChange={(e) => setBubbleGmmPoints(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
-                />
+                <CurrencyInput value={bubbleGmmPoints} onChange={setBubbleGmmPoints} placeholder="0" />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">Umbral para reclamar</label>
-                <input
-                  type="number"
-                  value={bubbleClaimThreshold}
-                  onChange={(e) => setBubbleClaimThreshold(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
-                />
+                <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">Meta para reclamar</label>
+                <CurrencyInput value={bubbleClaimThreshold} onChange={setBubbleClaimThreshold} placeholder="0" />
               </div>
             </div>
+
+            {/* Vista previa de burbujas */}
+            {(() => {
+              const BUBBLE_COUNT = 5;
+              const previewPoints = bubbleAutoPoints * 2 + bubbleGmmPoints;
+              const previewFraction = bubbleClaimThreshold > 0 ? Math.min(1, previewPoints / bubbleClaimThreshold) : 0;
+              const previewFills = Array.from({ length: BUBBLE_COUNT }, (_, i) => Math.max(0, Math.min(1, previewFraction * BUBBLE_COUNT - i)));
+              const previewReady = previewFraction >= 1;
+              return (
+                <div className="mb-4 p-4 rounded-xl bg-blue-50/50 border border-blue-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-medium text-gray-600">Vista previa</p>
+                    <p className="text-xs text-gray-400">2 referidos de Auto/Otro + 1 de GMM</p>
+                  </div>
+                  <div className="flex items-center justify-center gap-3 py-2 mb-2">
+                    {previewFills.map((fill, i) => (
+                      <div
+                        key={i}
+                        className={`relative w-9 h-9 rounded-full border-2 overflow-hidden bg-white ${previewReady ? "border-blue-400 bubble-ready" : "border-blue-100"}`}
+                      >
+                        <div
+                          className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-500 to-blue-300 transition-all duration-700 ease-out"
+                          style={{ height: `${fill * 100}%` }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 text-center">
+                    {previewReady
+                      ? `¡Listo! Tu cliente puede reclamar ${formatCurrency(bubbleClaimThreshold)}.`
+                      : `Suma ${formatCurrency(previewPoints)} de ${formatCurrency(bubbleClaimThreshold)} para reclamar el premio.`}
+                  </p>
+                </div>
+              );
+            })()}
+
             <button
               onClick={saveBubbleSettings}
               disabled={savingBubble}
               className="w-full bg-black text-white text-sm font-medium py-3 rounded-2xl hover:bg-gray-900 disabled:opacity-50 transition"
             >
-              {savingBubble ? "Guardando..." : savedBubble ? "¡Guardado ✓" : "Guardar configuración"}
+              {savingBubble ? "Guardando..." : savedBubble ? "¡Guardado ✓" : "Guardar premios burbuja"}
             </button>
           </>
         )}
@@ -461,7 +515,7 @@ export default function PremiosPage() {
         disabled={savingTiers}
         className="w-full bg-black text-white text-sm font-medium py-3.5 rounded-2xl hover:bg-gray-900 disabled:opacity-50 transition"
       >
-        {savingTiers ? "Guardando..." : savedTiers ? "¡Guardado ✓" : "Guardar configuración"}
+        {savingTiers ? "Guardando..." : savedTiers ? "¡Guardado ✓" : "Guardar escalera y mensajes"}
       </button>
 
       {/* Pay modal */}

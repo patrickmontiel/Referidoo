@@ -42,14 +42,15 @@ export function getBubblePointsForProduct(
   productType: string | null | undefined,
   settings: BubbleSettings
 ): number | undefined {
-  if (productType === "Daños/Auto") return settings.autoPoints;
+  // "Otro" usa la misma escala que Daños/Auto
+  if (productType === "Daños/Auto" || productType === "Otro") return settings.autoPoints;
   if (productType === "GMM") return settings.gmmPoints;
   return undefined;
 }
 
 // Solo Vida/PPR (o sin producto especificado) avanzan en la escalera de premios
-// (1,500/1,500/2,500). Daños/Auto y GMM van a premios burbuja, y "Otro" no genera
-// premio en efectivo para el referente.
+// (1,500/1,500/2,500). Daños/Auto, GMM y Otro van a premios burbuja en vez de
+// la escalera.
 export const ESCALERA_PRODUCTS = ["Vida", "PPR"];
 const NON_ESCALERA_PRODUCTS = ["Daños/Auto", "GMM", "Otro"];
 

@@ -454,11 +454,11 @@ export default function ClientPortalPage() {
               </div>
             )}
 
-            {/* Premios burbuja — Auto + GMM */}
+            {/* Premios burbuja — Auto, Otro + GMM */}
             <div className="bg-white rounded-2xl border border-gray-100 p-4">
               <div className="flex items-center justify-between mb-1">
                 <h2 className="font-medium text-sm">Premios burbuja</h2>
-                <span className="text-xs text-gray-400">Auto + GMM</span>
+                <span className="text-xs text-gray-400">Auto, Otro + GMM</span>
               </div>
               {pendingBubbleClaim ? (
                 <div className="flex items-center gap-3 mt-2">
@@ -474,7 +474,7 @@ export default function ClientPortalPage() {
                 </div>
               ) : (
                 <>
-                  <p className="text-xs text-gray-400 mb-3">Suma {formatCurrency(settings.bubbleAutoPoints)} cuando alguien que invitaste contrate un Auto, y {formatCurrency(settings.bubbleGmmPoints)} si contrata un Gastos Médicos Mayores. Cuando tus burbujas se llenen, explotan y te dan {formatCurrency(settings.bubbleClaimThreshold)}.</p>
+                  <p className="text-xs text-gray-400 mb-3">Suma {formatCurrency(settings.bubbleAutoPoints)} cuando alguien que invitaste contrate un seguro de Auto u Otro tipo, y {formatCurrency(settings.bubbleGmmPoints)} si contrata Gastos Médicos Mayores. Cuando tus burbujas se llenen, explotan y te dan {formatCurrency(settings.bubbleClaimThreshold)}.</p>
                   <div className="flex items-center justify-center gap-3 py-2 mb-3">
                     {bubbleFills.map((fill, i) => (
                       <div
@@ -595,7 +595,7 @@ export default function ClientPortalPage() {
                           <>
                             <p className="text-sm font-semibold text-gray-400">—</p>
                             <p className="text-xs text-blue-500 font-medium mt-0.5">
-                              {r.productType === "Daños/Auto" || r.productType === "GMM" ? "Sumó a premios burbuja" : "Sin premio en efectivo"}
+                              {r.productType === "Daños/Auto" || r.productType === "GMM" || r.productType === "Otro" ? "Sumó a premios burbuja" : "Sin premio en efectivo"}
                             </p>
                           </>
                         ) : (
