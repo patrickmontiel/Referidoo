@@ -81,6 +81,7 @@ function getReferralsInWindow(allReferrals: Referral[], referrerId: string, refe
 
 export default function ReferidosPage() {
   const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [tier1Amount, setTier1Amount] = useState(1500);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState<Referral | null>(null);
@@ -107,6 +108,12 @@ export default function ReferidosPage() {
 
   useEffect(() => {
     load();
+    fetch("/api/tiers")
+      .then((r) => r.json())
+      .then((d) => {
+        const t1 = d.tiers?.find((t: { position: number; amount: number }) => t.position === 1)?.amount;
+        if (t1) setTier1Amount(t1);
+      });
     const handler = () => setShowTour(true);
     window.addEventListener("referidoo:tour", handler);
     return () => window.removeEventListener("referidoo:tour", handler);
@@ -232,8 +239,16 @@ export default function ReferidosPage() {
         <div data-tour="list" className="space-y-3">
           {filtered.map((r) => {
             const referralsInWindow = getReferralsInWindow(referrals, r.referrer.id, r.referrer.createdAt);
-            const bonusEligible = r.tierPosition === 1 && r.rewardStatus !== "paid" && isLaunchBonusEligible(r.referrer, referralsInWindow);
-            const displayAmount = bonusEligible ? r.rewardAmount + 1000 : r.rewardAmount;
+            const isConverted = r.status === "converted";
+            // Mientras no convierte, el premio final depende de qué referido de este
+            // cliente cierre primero — no del orden en que se registraron los leads.
+            const displayAmount = isConverted ? r.rewardAmount : tier1Amount;
+            const bonusActive = !isConverted && isLaunchBonusEligible(r.referrer, referralsInWindow);
+            const includesBonus = isConverted && r.tierPosition === 1 && r.referrer.launchBonusUsed;
+            // Daños/Auto y GMM no consumen escalón de premio (van a premios burbuja);
+            // "Otro" no genera premio en efectivo. Ambos quedan con tierPosition 0.
+            const isBubbleProduct = r.productType === "Daños/Auto" || r.productType === "GMM";
+            const noEscaleraReward = isConverted && r.tierPosition === 0;
 
             return (
               <div
@@ -251,9 +266,24 @@ export default function ReferidosPage() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <div>
-                      <p className="text-sm font-semibold">{formatCurrency(displayAmount)}</p>
-                      {bonusEligible && (
-                        <p className="text-[10px] text-amber-600 font-medium">⚡ Bono activo</p>
+                      {noEscaleraReward ? (
+                        <p className="text-sm font-semibold text-gray-400">—</p>
+                      ) : (
+                        <p className="text-sm font-semibold">{formatCurrency(displayAmount)}</p>
+                      )}
+                      {!isConverted && (
+                        <p className="text-[10px] text-gray-400">Premio si contrata</p>
+                      )}
+                      {noEscaleraReward && (
+                        <p className="text-[10px] text-blue-500 font-medium">
+                          {isBubbleProduct ? "Suma a premios burbuja" : "Sin premio en efectivo"}
+                        </p>
+                      )}
+                      {includesBonus && (
+                        <p className="text-[10px] text-amber-600 font-medium">⚡ Incluye bono</p>
+                      )}
+                      {bonusActive && (
+                        <p className="text-[10px] text-amber-600 font-medium">⚡ Si es el 1º en contratar: {formatCurrency(tier1Amount + 1000)}</p>
                       )}
                       {r.saleAmount ? (
                         <p className="text-[11px] text-gray-400 mt-0.5">Venta: {formatCurrency(r.saleAmount)}</p>
@@ -291,7 +321,7 @@ export default function ReferidosPage() {
                       </button>
                     </>
                   )}
-                  {r.status === "converted" && r.rewardStatus === "approved" && (
+                  {r.status === "converted" && r.rewardStatus === "approved" && r.tierPosition > 0 && (
                     <button
                       onClick={(e) => startPay(r.id, r.referrer.name, r.rewardAmount, e)}
                       className="text-xs px-3 py-1.5 rounded-lg bg-black text-white hover:bg-gray-800 transition font-medium"
@@ -299,14 +329,19 @@ export default function ReferidosPage() {
                       Enviar Premio →
                     </button>
                   )}
-                  {r.status === "converted" && r.rewardStatus === "paid" && (
+                  {r.status === "converted" && r.rewardStatus === "paid" && r.tierPosition > 0 && (
                     <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${r.confirmedByReferrer ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>
                       {r.confirmedByReferrer ? "✓ Confirmado" : "Pendiente confirm."}
                     </span>
                   )}
-                  {r.status === "converted" && r.rewardStatus !== "paid" && (
+                  {r.status === "converted" && r.rewardStatus !== "paid" && r.tierPosition > 0 && (
                     <span className={`ml-auto text-xs px-2.5 py-1 rounded-full font-medium ${rewardBg[r.rewardStatus]}`}>
                       {getRewardStatusLabel(r.rewardStatus)}
+                    </span>
+                  )}
+                  {r.status === "converted" && r.tierPosition === 0 && (
+                    <span className="ml-auto text-xs px-2.5 py-1 rounded-full font-medium bg-blue-50 text-blue-600">
+                      {isBubbleProduct ? "Premios burbuja" : "Sin premio en efectivo"}
                     </span>
                   )}
                 </div>
@@ -453,19 +488,34 @@ export default function ReferidosPage() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Referido #</p>
-                  <p className="text-sm font-medium">{selected.tierPosition}º de ese cliente</p>
+                  <p className="text-sm font-medium">{selected.tierPosition > 0 ? `${selected.tierPosition}º de ese cliente` : "—"}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Premio al cliente</p>
-                  {selected.tierPosition === 1 &&
-                  selected.rewardStatus !== "paid" &&
-                  isLaunchBonusEligible(selected.referrer, getReferralsInWindow(referrals, selected.referrer.id, selected.referrer.createdAt)) ? (
-                    <div>
-                      <p className="text-sm font-semibold">{formatCurrency(selected.rewardAmount + 1000)}</p>
-                      <p className="text-[10px] text-amber-600 font-medium">⚡ Incluye bono de lanzamiento</p>
-                    </div>
+                  {selected.status === "converted" ? (
+                    selected.tierPosition === 0 ? (
+                      <div>
+                        <p className="text-sm font-semibold text-gray-400">—</p>
+                        <p className="text-[10px] text-blue-500 font-medium">
+                          {selected.productType === "Daños/Auto" || selected.productType === "GMM" ? "Suma a premios burbuja" : "Sin premio en efectivo"}
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-sm font-semibold">{formatCurrency(selected.rewardAmount)}</p>
+                        {selected.tierPosition === 1 && selected.referrer.launchBonusUsed && (
+                          <p className="text-[10px] text-amber-600 font-medium">⚡ Incluye bono de lanzamiento</p>
+                        )}
+                      </div>
+                    )
                   ) : (
-                    <p className="text-sm font-semibold">{formatCurrency(selected.rewardAmount)}</p>
+                    <div>
+                      <p className="text-sm font-semibold">{formatCurrency(tier1Amount)}</p>
+                      <p className="text-[10px] text-gray-400">Premio si contrata</p>
+                      {isLaunchBonusEligible(selected.referrer, getReferralsInWindow(referrals, selected.referrer.id, selected.referrer.createdAt)) && (
+                        <p className="text-[10px] text-amber-600 font-medium">⚡ Si es el 1º en contratar: {formatCurrency(tier1Amount + 1000)}</p>
+                      )}
+                    </div>
                   )}
                 </div>
                 <div>
@@ -556,8 +606,8 @@ export default function ReferidosPage() {
                 </div>
               </div>
 
-              {/* Estado del premio — solo visible cuando está convertido */}
-              {selected.status === "converted" && (
+              {/* Estado del premio — solo visible cuando está convertido y entra a la escalera */}
+              {selected.status === "converted" && selected.tierPosition > 0 && (
                 <div>
                   <p className="text-xs text-gray-400 mb-2">Estado del premio</p>
                   <div className="flex gap-2 flex-wrap">

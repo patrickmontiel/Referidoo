@@ -47,6 +47,16 @@ export function getBubblePointsForProduct(
   return undefined;
 }
 
+// Solo Vida/PPR (o sin producto especificado) avanzan en la escalera de premios
+// (1,500/1,500/2,500). Daños/Auto y GMM van a premios burbuja, y "Otro" no genera
+// premio en efectivo para el referente.
+export const ESCALERA_PRODUCTS = ["Vida", "PPR"];
+const NON_ESCALERA_PRODUCTS = ["Daños/Auto", "GMM", "Otro"];
+
+export function isEscaleraProduct(productType: string | null | undefined): boolean {
+  return !productType || !NON_ESCALERA_PRODUCTS.includes(productType);
+}
+
 export type RewardTier = {
   position: number;
   amount: number;

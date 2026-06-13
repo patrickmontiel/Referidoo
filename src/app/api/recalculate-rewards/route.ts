@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
-import { calculateRewardForNextReferral } from "@/lib/rewards";
+import { calculateRewardForNextReferral, isEscaleraProduct } from "@/lib/rewards";
 
 // Endpoint de un solo uso: recalcula tierPosition/rewardAmount de los referidos
 // ya convertidos, ordenados por orden de CONVERSIÓN (createdAt asc entre los
@@ -30,8 +30,13 @@ export async function POST() {
   }> = [];
 
   for (const client of clients) {
-    for (let i = 0; i < client.referrals.length; i++) {
-      const referral = client.referrals[i];
+    // Solo Vida/PPR (escalera) avanzan en tierPosition/rewardAmount. Daños/Auto,
+    // GMM y "Otro" no consumen escalones — su recompensa es vía premios burbuja.
+    const escaleraReferrals = client.referrals.filter((r) => isEscaleraProduct(r.productType));
+    const otherReferrals = client.referrals.filter((r) => !isEscaleraProduct(r.productType));
+
+    for (let i = 0; i < escaleraReferrals.length; i++) {
+      const referral = escaleraReferrals[i];
       const { amount, tierPosition } = await calculateRewardForNextReferral(session.advisorId, i);
       const rewardAmount = tierPosition === 1 && client.launchBonusUsed ? amount + 1000 : amount;
 
@@ -46,6 +51,22 @@ export async function POST() {
           clientName: client.name,
           before: { tierPosition: referral.tierPosition, rewardAmount: referral.rewardAmount },
           after: { tierPosition, rewardAmount },
+        });
+      }
+    }
+
+    for (const referral of otherReferrals) {
+      if (referral.tierPosition !== 0 || referral.rewardAmount !== 0) {
+        await db.referral.update({
+          where: { id: referral.id },
+          data: { tierPosition: 0, rewardAmount: 0 },
+        });
+        updates.push({
+          referralId: referral.id,
+          leadName: referral.leadName,
+          clientName: client.name,
+          before: { tierPosition: referral.tierPosition, rewardAmount: referral.rewardAmount },
+          after: { tierPosition: 0, rewardAmount: 0 },
         });
       }
     }

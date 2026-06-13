@@ -15,6 +15,7 @@ type Referral = {
   rewardAmount: number;
   rewardStatus: string;
   tierPosition: number;
+  productType: string | null;
   createdAt: string;
   rewardPaidAt: string | null;
   confirmedByReferrer: boolean;
@@ -82,6 +83,7 @@ export default function ClientPortalPage() {
   const [confirming, setConfirming] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
   const [claimingBubble, setClaimingBubble] = useState(false);
+  const [poppingBubbles, setPoppingBubbles] = useState(false);
 
   function fetchData(isInitial = false) {
     fetch(`/api/portal/${token}`)
@@ -118,8 +120,13 @@ export default function ClientPortalPage() {
 
   async function claimBubble() {
     setClaimingBubble(true);
+    setPoppingBubbles(true);
     const res = await fetch(`/api/portal/${token}/claim-bubble`, { method: "POST" });
-    if (res.ok) fetchData(false);
+    if (res.ok) {
+      setTimeout(() => { fetchData(false); setPoppingBubbles(false); }, 600);
+    } else {
+      setPoppingBubbles(false);
+    }
     setClaimingBubble(false);
   }
 
@@ -157,14 +164,17 @@ export default function ClientPortalPage() {
   const now = new Date();
   const inLaunchWindow = now <= launchWindowEnd;
   const launchBonusActive = inLaunchWindow && !client.launchBonusUsed;
-  const msLeft = launchWindowEnd.getTime() - now.getTime();
-  const daysLeft = Math.floor(msLeft / (1000 * 60 * 60 * 24));
-  const hoursLeft = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const referralsInWindow = referrals.filter(r => new Date(r.createdAt) <= launchWindowEnd).length;
   const firstTierAmount = tiers[0]?.amount ?? 1500;
   const bonusAmount = firstTierAmount + 1000;
   // El bono solo se entrega cuando el cliente ya invitó a 3 personas dentro de su semana de lanzamiento
   const bonusReady = launchBonusActive && referralsInWindow >= 3;
+
+  // Premios burbuja — se visualizan como burbujas que se van llenando hasta estallar
+  const BUBBLE_COUNT = 5;
+  const bubbleFraction = Math.min(1, client.bubblePoints / settings.bubbleClaimThreshold);
+  const bubbleFills = Array.from({ length: BUBBLE_COUNT }, (_, i) => Math.max(0, Math.min(1, bubbleFraction * BUBBLE_COUNT - i)));
+  const bubblesReady = client.bubblePoints >= settings.bubbleClaimThreshold;
 
   // Onboarding modal
   if (showOnboarding) {
@@ -238,7 +248,8 @@ export default function ClientPortalPage() {
 
   const referralLink = `${baseUrl}/r/${client.referralCode}`;
   // El progreso de premios solo avanza cuando el asesor confirma el pago
-  const paidCount = referrals.filter(r => r.rewardStatus === "paid").length;
+  // Solo los referidos de Vida/PPR (tierPosition > 0) avanzan en la escalera de premios.
+  const paidCount = referrals.filter(r => r.rewardStatus === "paid" && r.tierPosition > 0).length;
   const nextReward = getNextReward(tiers, paidCount, settings);
 
   function copyLink() {
@@ -290,7 +301,7 @@ export default function ClientPortalPage() {
             {/* Launch bonus — activado */}
             {client.launchBonusUsed && (
               <div className="bg-black text-white rounded-2xl p-4">
-                <p className="text-xs font-medium text-gray-400 mb-1">Bono de Inicio activado</p>
+                <p className="text-xs font-medium text-blue-400 mb-1">⚡ Bono de Inicio activado</p>
                 <p className="text-2xl font-semibold">{formatCurrency(bonusAmount)}</p>
                 <p className="text-xs text-gray-400 mt-0.5">Tu primer premio fue duplicado por referir en tu primera semana.</p>
               </div>
@@ -298,57 +309,49 @@ export default function ClientPortalPage() {
 
             {/* Launch bonus — activo en ventana */}
             {launchBonusActive && (
-              <div className="bg-black text-white rounded-2xl p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-medium text-gray-300">⚡ Bono de Inicio</p>
-                  <span className="text-xs font-medium bg-white/10 text-gray-300 px-2.5 py-1 rounded-full">
-                    {daysLeft > 0 ? `${daysLeft}d ${hoursLeft}h` : `${hoursLeft}h`} restantes
-                  </span>
-                </div>
+              <div className="bg-black text-white rounded-2xl p-4 relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl" />
+                <p className="text-xs font-medium text-blue-400 mb-2 relative">⚡ Bono de Inicio</p>
 
                 {referralsInWindow >= 3 ? (
                   <>
-                    <p className="text-sm font-semibold mb-1">¡Lista para activarlo!</p>
-                    <p className="text-xs text-gray-400 mb-3">
-                      Si alguno de tus contactos contrata esta semana, tu primer premio sube a{" "}
-                      <strong className="text-white">{formatCurrency(bonusAmount)}</strong>{" "}
-                      en vez de {formatCurrency(firstTierAmount)}.
-                    </p>
-                    <div className="bg-white/10 rounded-xl px-4 py-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-400">Premio normal</span>
-                        <span className="text-xs line-through text-gray-500">{formatCurrency(firstTierAmount)}</span>
-                      </div>
-                      <div className="flex justify-between items-center mt-1">
-                        <span className="text-xs font-semibold text-white">Con tu bono</span>
-                        <span className="text-sm font-semibold">{formatCurrency(bonusAmount)}</span>
-                      </div>
+                    <p className="text-sm text-gray-300 mb-1 relative">El primero de tus referidos en contratar te da</p>
+                    <div className="flex items-baseline gap-2 mb-3 relative">
+                      <span className="text-base text-gray-500 line-through">{formatCurrency(firstTierAmount)}</span>
+                      <span className="bonus-glow text-3xl font-bold text-blue-400">{formatCurrency(bonusAmount)}</span>
                     </div>
+                    <p className="text-xs text-gray-400 relative">
+                      en vez de {formatCurrency(firstTierAmount)} — válido hasta el {formatDate(launchWindowEnd)}.
+                    </p>
                   </>
                 ) : (
                   <>
-                    <p className="text-sm font-semibold mb-1">
+                    <p className="text-sm text-gray-300 mb-1 relative">Tu primer premio puede subir de</p>
+                    <div className="flex items-baseline gap-2 mb-3 relative">
+                      <span className="text-base text-gray-500 line-through">{formatCurrency(firstTierAmount)}</span>
+                      <span className="text-3xl font-bold text-blue-400">{formatCurrency(bonusAmount)}</span>
+                    </div>
+                    <p className="text-sm font-semibold mb-1 relative">
                       Invita a {3 - referralsInWindow} {3 - referralsInWindow === 1 ? "persona más" : "personas más"} esta semana
                     </p>
-                    <p className="text-xs text-gray-400 mb-3">
-                      Si alguna contrata, tu primer premio sube de {formatCurrency(firstTierAmount)} a{" "}
-                      <strong className="text-white">{formatCurrency(bonusAmount)}</strong>.
+                    <p className="text-xs text-gray-400 mb-3 relative">
+                      Si alguna contrata, te llevas el bono. Tienes hasta el {formatDate(launchWindowEnd)}.
                     </p>
-                    <div className="flex gap-1.5 mb-2">
+                    <div className="flex gap-1.5 mb-2 relative">
                       {[1, 2, 3].map((i) => (
                         <div key={i} className={`flex-1 h-1.5 rounded-full transition-all ${
-                          i <= referralsInWindow ? "bg-white" : "bg-white/10"
+                          i <= referralsInWindow ? "bg-blue-400" : "bg-white/10"
                         }`} />
                       ))}
                     </div>
-                    <p className="text-xs text-gray-500">{referralsInWindow}/3 contactos invitados</p>
+                    <p className="text-xs text-gray-500 relative">{referralsInWindow}/3 contactos invitados</p>
                   </>
                 )}
               </div>
             )}
 
             {/* Confirmación pendiente */}
-            {referrals.filter(r => r.rewardStatus === "paid" && !r.confirmedByReferrer && !confirmed.has(r.id)).map(r => (
+            {referrals.filter(r => r.rewardStatus === "paid" && r.tierPosition > 0 && !r.confirmedByReferrer && !confirmed.has(r.id)).map(r => (
               <div key={r.id} className="bg-white rounded-2xl border border-gray-100 p-4">
                 <p className="text-xs font-medium text-gray-700 mb-0.5">Premio enviado — ¿Lo recibiste?</p>
                 <p className="text-2xl font-semibold mb-0.5">{formatCurrency(r.rewardAmount)}</p>
@@ -364,7 +367,7 @@ export default function ClientPortalPage() {
             ))}
 
             {/* Confirmados */}
-            {referrals.filter(r => r.confirmedByReferrer || confirmed.has(r.id)).map(r => (
+            {referrals.filter(r => r.tierPosition > 0 && (r.confirmedByReferrer || confirmed.has(r.id))).map(r => (
               <div key={`conf-${r.id}`} className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
                 <div className="w-8 h-8 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -390,52 +393,6 @@ export default function ClientPortalPage() {
                 <p className="text-2xl font-semibold">{formatCurrency(stats.pendingEarnings)}</p>
                 <p className="text-xs text-gray-400 mt-0.5">aprobado</p>
               </div>
-            </div>
-
-            {/* Premios burbuja — Auto + GMM */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-4">
-              <div className="flex items-center justify-between mb-1">
-                <h2 className="font-medium text-sm">Premios burbuja</h2>
-                <span className="text-xs text-gray-400">Auto + GMM</span>
-              </div>
-              {pendingBubbleClaim ? (
-                <div className="flex items-center gap-3 mt-2">
-                  <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 8V12L15 15M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Reclamo en proceso</p>
-                    <p className="text-xs text-gray-400">{formatCurrency(pendingBubbleClaim.amount)} · tu asesor lo enviará pronto</p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-xs text-gray-400 mb-3">Suma {formatCurrency(settings.bubbleAutoPoints)} por cada Auto y {formatCurrency(settings.bubbleGmmPoints)} por cada GMM que cierres. Al llegar a {formatCurrency(settings.bubbleClaimThreshold)}, reclámalo.</p>
-                  <div className="flex items-end justify-between mb-2">
-                    <p className="text-2xl font-semibold">{formatCurrency(client.bubblePoints)}</p>
-                    <p className="text-xs text-gray-400">Meta {formatCurrency(settings.bubbleClaimThreshold)}</p>
-                  </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-3">
-                    <div
-                      className="h-2 bg-black rounded-full transition-all duration-300"
-                      style={{ width: `${Math.min(100, (client.bubblePoints / settings.bubbleClaimThreshold) * 100)}%` }}
-                    />
-                  </div>
-                  {client.bubblePoints >= settings.bubbleClaimThreshold ? (
-                    <button
-                      onClick={claimBubble}
-                      disabled={claimingBubble}
-                      className="w-full bg-black text-white text-sm font-medium py-3 rounded-xl disabled:opacity-50 transition hover:bg-gray-900"
-                    >
-                      {claimingBubble ? "Reclamando..." : "Reclamar premio"}
-                    </button>
-                  ) : (
-                    <p className="text-xs text-gray-400">Te faltan {formatCurrency(settings.bubbleClaimThreshold - client.bubblePoints)} para poder reclamar.</p>
-                  )}
-                </>
-              )}
             </div>
 
             {/* Niveles de premios */}
@@ -496,6 +453,62 @@ export default function ClientPortalPage() {
                 )}
               </div>
             )}
+
+            {/* Premios burbuja — Auto + GMM */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-4">
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="font-medium text-sm">Premios burbuja</h2>
+                <span className="text-xs text-gray-400">Auto + GMM</span>
+              </div>
+              {pendingBubbleClaim ? (
+                <div className="flex items-center gap-3 mt-2">
+                  <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 8V12L15 15M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Reclamo en proceso</p>
+                    <p className="text-xs text-gray-400">{formatCurrency(pendingBubbleClaim.amount)} · tu asesor lo enviará pronto</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xs text-gray-400 mb-3">Suma {formatCurrency(settings.bubbleAutoPoints)} cuando alguien que invitaste contrate un Auto, y {formatCurrency(settings.bubbleGmmPoints)} si contrata un Gastos Médicos Mayores. Cuando tus burbujas se llenen, explotan y te dan {formatCurrency(settings.bubbleClaimThreshold)}.</p>
+                  <div className="flex items-center justify-center gap-3 py-2 mb-3">
+                    {bubbleFills.map((fill, i) => (
+                      <div
+                        key={i}
+                        className={`relative w-10 h-10 rounded-full border-2 overflow-hidden bg-blue-50/60 ${
+                          bubblesReady ? "border-blue-400" : "border-blue-100"
+                        } ${poppingBubbles ? "bubble-pop" : bubblesReady ? "bubble-ready" : ""}`}
+                        style={poppingBubbles ? { animationDelay: `${i * 70}ms` } : undefined}
+                      >
+                        <div
+                          className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-500 to-blue-300 transition-all duration-700 ease-out"
+                          style={{ height: `${fill * 100}%` }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-end justify-between mb-3">
+                    <p className="text-lg font-semibold">{formatCurrency(client.bubblePoints)}</p>
+                    <p className="text-xs text-gray-400">Meta {formatCurrency(settings.bubbleClaimThreshold)}</p>
+                  </div>
+                  {bubblesReady ? (
+                    <button
+                      onClick={claimBubble}
+                      disabled={claimingBubble}
+                      className="w-full bg-black text-white text-sm font-medium py-3 rounded-xl disabled:opacity-50 transition hover:bg-gray-900"
+                    >
+                      {claimingBubble ? "Reclamando..." : `Reclamar ${formatCurrency(settings.bubbleClaimThreshold)}`}
+                    </button>
+                  ) : (
+                    <p className="text-xs text-gray-400 text-center">Te faltan {formatCurrency(settings.bubbleClaimThreshold - client.bubblePoints)} para que tus burbujas exploten y te den el premio.</p>
+                  )}
+                </>
+              )}
+            </div>
 
             {/* Share */}
             <div className="bg-black rounded-2xl p-4 text-white">
@@ -578,10 +591,21 @@ export default function ClientPortalPage() {
                         </span>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <p className={`text-sm font-semibold ${rewardConfig[r.rewardStatus] ?? "text-gray-400"}`}>
-                          {formatCurrency(r.rewardAmount)}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-0.5">{getRewardStatusLabel(r.rewardStatus)}</p>
+                        {r.status === "converted" && r.tierPosition === 0 ? (
+                          <>
+                            <p className="text-sm font-semibold text-gray-400">—</p>
+                            <p className="text-xs text-blue-500 font-medium mt-0.5">
+                              {r.productType === "Daños/Auto" || r.productType === "GMM" ? "Sumó a premios burbuja" : "Sin premio en efectivo"}
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className={`text-sm font-semibold ${rewardConfig[r.rewardStatus] ?? "text-gray-400"}`}>
+                              {formatCurrency(r.rewardAmount)}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-0.5">{getRewardStatusLabel(r.rewardStatus)}</p>
+                          </>
+                        )}
                       </div>
                     </div>
                   );

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
 import { sendReferralApprovedNotification, sendPaymentSentNotification, type PaymentPayload } from "@/lib/email";
-import { getAdvisorTiers, calculateLessioCommission, calculateRewardForNextReferral, getAdvisorBubbleSettings, getBubblePointsForProduct } from "@/lib/rewards";
+import { getAdvisorTiers, calculateLessioCommission, calculateRewardForNextReferral, getAdvisorBubbleSettings, getBubblePointsForProduct, isEscaleraProduct, ESCALERA_PRODUCTS } from "@/lib/rewards";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getAdvisorSession();
@@ -31,15 +31,26 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   // El nivel/premio se asigna por orden de CONVERSIÓN (no por orden de registro del lead):
   // al convertir, recalculamos tierPosition según cuántos referidos de este cliente ya convirtieron.
+  // Solo Vida/PPR avanzan en la escalera 1,500/1,500/2,500. Daños/Auto y GMM van a premios
+  // burbuja (no consumen un escalón), y "Otro" no genera premio en efectivo.
   let finalTierPosition = referral.tierPosition;
   let finalRewardAmount = referral.rewardAmount;
   if (isConverting) {
-    const convertedCount = await db.referral.count({
-      where: { referrerId: referral.referrerId, status: "converted" },
-    });
-    const { amount, tierPosition } = await calculateRewardForNextReferral(referral.advisorId, convertedCount);
-    finalTierPosition = tierPosition;
-    finalRewardAmount = amount;
+    if (isEscaleraProduct(productTypeForConversion)) {
+      const convertedCount = await db.referral.count({
+        where: {
+          referrerId: referral.referrerId,
+          status: "converted",
+          OR: [{ productType: { in: ESCALERA_PRODUCTS } }, { productType: null }],
+        },
+      });
+      const { amount, tierPosition } = await calculateRewardForNextReferral(referral.advisorId, convertedCount);
+      finalTierPosition = tierPosition;
+      finalRewardAmount = amount;
+    } else {
+      finalTierPosition = 0;
+      finalRewardAmount = 0;
+    }
   }
 
   // Check launch bonus (3+ referrals in first 7 days → bonus on first prize only)
