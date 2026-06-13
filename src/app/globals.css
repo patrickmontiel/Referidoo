@@ -114,12 +114,31 @@ body {
   animation: bubblePop 0.5s ease-in forwards;
 }
 
+/* Countdown badge — tick on value change, gentle pulse when under 24h */
+@keyframes countdownTick {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.countdown-tick {
+  animation: countdownTick 220ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@keyframes countdownUrgentPulse {
+  0%, 100% { background-color: rgba(251, 191, 36, 0.12); }
+  50%      { background-color: rgba(251, 191, 36, 0.22); }
+}
+.countdown-urgent {
+  animation: countdownUrgentPulse 2.6s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-stagger > *,
   .landing-cta,
   .bonus-glow,
   .bubble-ready,
-  .bubble-pop {
+  .bubble-pop,
+  .countdown-tick,
+  .countdown-urgent {
     animation: none;
   }
 }

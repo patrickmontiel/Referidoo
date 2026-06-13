@@ -84,6 +84,12 @@ export default function ClientPortalPage() {
   const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
   const [claimingBubble, setClaimingBubble] = useState(false);
   const [poppingBubbles, setPoppingBubbles] = useState(false);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const tick = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(tick);
+  }, []);
 
   function fetchData(isInitial = false) {
     fetch(`/api/portal/${token}`)
@@ -161,7 +167,6 @@ export default function ClientPortalPage() {
 
   // Launch bonus calculations
   const launchWindowEnd = new Date(new Date(client.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000);
-  const now = new Date();
   const inLaunchWindow = now <= launchWindowEnd;
   const launchBonusActive = inLaunchWindow && !client.launchBonusUsed;
   const referralsInWindow = referrals.filter(r => new Date(r.createdAt) <= launchWindowEnd).length;
@@ -169,6 +174,14 @@ export default function ClientPortalPage() {
   const bonusAmount = firstTierAmount + 1000;
   // El bono solo se entrega cuando el cliente ya invitó a 3 personas dentro de su semana de lanzamiento
   const bonusReady = launchBonusActive && referralsInWindow >= 3;
+
+  // Contador del Bono de Inicio — se actualiza solo cada minuto vía `now`
+  const msLeft = Math.max(0, launchWindowEnd.getTime() - now.getTime());
+  const daysLeft = Math.floor(msLeft / (1000 * 60 * 60 * 24));
+  const hoursLeft = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutesLeft = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+  const countdownLabel = daysLeft > 0 ? `${daysLeft}d ${hoursLeft}h` : hoursLeft > 0 ? `${hoursLeft}h ${minutesLeft}m` : `${minutesLeft}m`;
+  const countdownUrgent = msLeft < 1000 * 60 * 60 * 24;
 
   // Premios burbuja — se visualizan como burbujas que se van llenando hasta estallar
   const BUBBLE_COUNT = 5;
@@ -311,7 +324,17 @@ export default function ClientPortalPage() {
             {launchBonusActive && (
               <div className="bg-black text-white rounded-2xl p-4 relative overflow-hidden">
                 <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl" />
-                <p className="text-xs font-medium text-blue-400 mb-2 relative">⚡ Bono de Inicio</p>
+                <div className="flex items-center justify-between mb-2 relative">
+                  <p className="text-xs font-medium text-blue-400">⚡ Bono de Inicio</p>
+                  <span
+                    key={countdownLabel}
+                    className={`countdown-tick text-xs font-medium px-2.5 py-1 rounded-full tabular-nums ${
+                      countdownUrgent ? "countdown-urgent bg-amber-400/15 text-amber-300" : "bg-white/10 text-gray-300"
+                    }`}
+                  >
+                    {countdownLabel} restantes
+                  </span>
+                </div>
 
                 {referralsInWindow >= 3 ? (
                   <>
@@ -399,7 +422,10 @@ export default function ClientPortalPage() {
             {tiers.length > 0 && (
               <div className="bg-white rounded-2xl border border-gray-100">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
-                  <h2 className="font-medium text-sm">Premio siguiente</h2>
+                  <div>
+                    <h2 className="font-medium text-sm">Premio siguiente</h2>
+                    <p className="text-xs text-gray-400 mt-0.5">Vida y PPR</p>
+                  </div>
                   <span className="text-sm font-semibold">
                     {formatCurrency(bonusReady && paidCount === 0 ? bonusAmount : nextReward)}
                   </span>
