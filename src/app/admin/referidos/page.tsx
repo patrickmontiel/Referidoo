@@ -86,6 +86,8 @@ export default function ReferidosPage() {
   const [editSaleInput, setEditSaleInput] = useState("");
   // Edit productType (post-conversion)
   const [editingProductType, setEditingProductType] = useState(false);
+  // Puntos burbuja por producto, para mostrar cuánto aportó cada referido al pool
+  const [bubblePointsByProduct, setBubblePointsByProduct] = useState({ autoPoints: 150, gmmPoints: 300 });
 
   function load() {
     setLoading(true);
@@ -96,6 +98,9 @@ export default function ReferidosPage() {
 
   useEffect(() => {
     load();
+    fetch("/api/bubble-settings")
+      .then((r) => r.json())
+      .then((d) => setBubblePointsByProduct({ autoPoints: d.bubbleAutoPoints ?? 150, gmmPoints: d.bubbleGmmPoints ?? 300 }));
     const handler = () => setShowTour(true);
     window.addEventListener("referidoo:tour", handler);
     return () => window.removeEventListener("referidoo:tour", handler);
@@ -477,8 +482,12 @@ export default function ReferidosPage() {
                       {selected.tierPosition === 0 ? (
                         selected.productType === "Daños/Auto" || selected.productType === "GMM" || selected.productType === "Otro" ? (
                           <div>
-                            <p className="text-sm font-semibold text-blue-600">{formatCurrency(selected.referrer.bubblePoints)}</p>
-                            <p className="text-[10px] text-blue-500 font-medium">Acumulado en premios burbuja</p>
+                            <p className="text-sm font-semibold text-blue-600">
+                              +{formatCurrency(selected.productType === "GMM" ? bubblePointsByProduct.gmmPoints : bubblePointsByProduct.autoPoints)}
+                            </p>
+                            <p className="text-[10px] text-blue-500 font-medium">
+                              Sumó esto a premios burbuja · acumulado actual: {formatCurrency(selected.referrer.bubblePoints)}
+                            </p>
                           </div>
                         ) : (
                           <div>
