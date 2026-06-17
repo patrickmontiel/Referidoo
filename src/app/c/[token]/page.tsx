@@ -46,19 +46,6 @@ type PortalData = {
   stats: { totalReferrals: number; convertedCount: number; totalEarned: number; pendingEarnings: number };
 };
 
-function getNextReward(tiers: RewardTier[], completedCount: number, settings: { afterLastTier: string; flatAmount: number }): number {
-  if (tiers.length === 0) return 1500;
-  const next = completedCount + 1;
-  const exact = tiers.find((t) => t.position === next);
-  if (exact) return exact.amount;
-  if (settings.afterLastTier === "cycle") {
-    const pos = ((next - 1) % tiers.length) + 1;
-    return tiers.find((t) => t.position === pos)?.amount ?? tiers[0].amount;
-  }
-  if (settings.afterLastTier === "flat") return settings.flatAmount;
-  return tiers[tiers.length - 1].amount;
-}
-
 const statusConfig: Record<string, { bg: string; text: string; dot: string }> = {
   pending:   { bg: "bg-amber-50",  text: "text-amber-700",  dot: "bg-amber-400" },
   contacted: { bg: "bg-blue-50",   text: "text-blue-700",   dot: "bg-blue-400" },
@@ -267,7 +254,6 @@ export default function ClientPortalPage() {
   // El progreso de premios solo avanza cuando el asesor confirma el pago
   // Solo los referidos de Vida/PPR (tierPosition > 0) avanzan en la escalera de premios.
   const paidCount = referrals.filter(r => r.rewardStatus === "paid" && r.tierPosition > 0).length;
-  const nextReward = getNextReward(tiers, paidCount, settings);
 
   function copyLink() {
     navigator.clipboard.writeText(referralLink);
@@ -342,14 +328,11 @@ export default function ClientPortalPage() {
 
                 {referralsInWindow >= 3 ? (
                   <>
-                    <p className="text-sm text-gray-300 mb-1 relative">El primero de tus referidos en contratar te da</p>
-                    <div className="flex items-baseline gap-2 mb-3 relative">
+                    <p className="text-sm text-gray-300 mb-1 relative">El primero de tus referidos en contratar PPR o Seguro de Vida te da</p>
+                    <div className="flex items-baseline gap-2 relative">
                       <span className="text-base text-gray-500 line-through">{formatCurrency(firstTierAmount)}</span>
                       <span className="bonus-glow text-3xl font-bold text-blue-400">{formatCurrency(bonusAmount)}</span>
                     </div>
-                    <p className="text-xs text-gray-400 relative">
-                      en vez de {formatCurrency(firstTierAmount)} — válido hasta el {formatDate(launchWindowEnd)}.
-                    </p>
                   </>
                 ) : (
                   <>
@@ -362,7 +345,7 @@ export default function ClientPortalPage() {
                       Invita a {3 - referralsInWindow} {3 - referralsInWindow === 1 ? "persona más" : "personas más"} esta semana
                     </p>
                     <p className="text-xs text-gray-400 mb-3 relative">
-                      Si alguna contrata, te llevas el bono. Tienes hasta el {formatDate(launchWindowEnd)}.
+                      Una vez un referido tuyo contrate Seguro de Vida o PPR te llevarás el bono.
                     </p>
                     <div className="flex gap-1.5 mb-2 relative">
                       {[1, 2, 3].map((i) => (
@@ -425,14 +408,8 @@ export default function ClientPortalPage() {
             {/* Niveles de premios */}
             {tiers.length > 0 && (
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
-                  <div>
-                    <h2 className="font-medium text-sm">Premio siguiente</h2>
-                    <p className="text-xs text-gray-400 mt-0.5">Vida y PPR</p>
-                  </div>
-                  <span className="text-sm font-semibold">
-                    {formatCurrency(bonusReady && paidCount === 0 ? bonusAmount : nextReward)}
-                  </span>
+                <div className="px-5 py-4 border-b border-gray-50">
+                  <h2 className="font-medium text-sm">Premios Seguro de Vida y PPRs</h2>
                 </div>
                 <div className="divide-y divide-gray-50">
                   {tiers.map((tier) => {
