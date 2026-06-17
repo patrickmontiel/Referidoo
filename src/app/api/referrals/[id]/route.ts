@@ -33,8 +33,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   // al convertir, recalculamos tierPosition según cuántos referidos de este cliente ya convirtieron.
   // Solo Vida/PPR avanzan en la escalera 1,500/1,500/2,500. Daños/Auto y GMM van a premios
   // burbuja (no consumen un escalón), y "Otro" no genera premio en efectivo.
+  const oldProductType = referral.productType ?? null;
+  // El asesor puede corregir el producto contratado después de la conversión
+  // (p. ej. marcó "Daños/Auto" pero en realidad fue "GMM").
+  const isProductTypeEdit = referral.status === "converted" && !isConverting
+    && body.productType !== undefined && body.productType !== oldProductType;
+
   let finalTierPosition = referral.tierPosition;
   let finalRewardAmount = referral.rewardAmount;
+  let bubblePointsDelta = 0;
   if (isConverting) {
     if (isEscaleraProduct(productTypeForConversion)) {
       const convertedCount = await db.referral.count({
@@ -51,6 +58,38 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       finalTierPosition = 0;
       finalRewardAmount = 0;
     }
+  } else if (isProductTypeEdit) {
+    const newProductType = productTypeForConversion;
+    const oldIsEscalera = isEscaleraProduct(oldProductType);
+    const newIsEscalera = isEscaleraProduct(newProductType);
+    const bubbleSettings = await getAdvisorBubbleSettings(referral.advisorId);
+
+    if (oldIsEscalera && !newIsEscalera) {
+      // Escalera -> burbuja: libera el escalón y suma puntos burbuja del nuevo producto
+      finalTierPosition = 0;
+      finalRewardAmount = 0;
+      bubblePointsDelta += getBubblePointsForProduct(newProductType, bubbleSettings) ?? 0;
+    } else if (!oldIsEscalera && newIsEscalera) {
+      // Burbuja -> escalera: asigna el siguiente escalón disponible y resta los puntos burbuja previos
+      const convertedCount = await db.referral.count({
+        where: {
+          id: { not: referral.id },
+          referrerId: referral.referrerId,
+          status: "converted",
+          OR: [{ productType: { in: ESCALERA_PRODUCTS } }, { productType: null }],
+        },
+      });
+      const { amount, tierPosition } = await calculateRewardForNextReferral(referral.advisorId, convertedCount);
+      finalTierPosition = tierPosition;
+      finalRewardAmount = amount;
+      bubblePointsDelta -= getBubblePointsForProduct(oldProductType, bubbleSettings) ?? 0;
+    } else if (!oldIsEscalera && !newIsEscalera) {
+      // Ambos burbuja (p. ej. Daños/Auto <-> GMM): ajusta la diferencia de puntos
+      const oldPoints = getBubblePointsForProduct(oldProductType, bubbleSettings) ?? 0;
+      const newPoints = getBubblePointsForProduct(newProductType, bubbleSettings) ?? 0;
+      bubblePointsDelta += newPoints - oldPoints;
+    }
+    // Ambos escalera (Vida <-> PPR): tierPosition y rewardAmount no cambian.
   }
 
   // Check launch bonus (3+ referrals in first 7 days → bonus on first prize only)
@@ -93,6 +132,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (launchBonusApplied) {
     await db.client.update({ where: { id: referral.referrerId }, data: { launchBonusUsed: true } });
+  }
+
+  if (bubblePointsDelta !== 0) {
+    const referrerClient = await db.client.findUnique({ where: { id: referral.referrerId }, select: { bubblePoints: true } });
+    const newBubblePoints = Math.max(0, (referrerClient?.bubblePoints ?? 0) + bubblePointsDelta);
+    await db.client.update({ where: { id: referral.referrerId }, data: { bubblePoints: newBubblePoints } });
   }
 
   // 1. Notify creator when advisor marks referral as converted (deal closed)

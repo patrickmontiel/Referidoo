@@ -14,22 +14,28 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ to
 
   const bubbleSettings = await getAdvisorBubbleSettings(client.advisorId);
   const points = client.bubblePoints;
-  if (points < bubbleSettings.claimThreshold) {
+  const threshold = bubbleSettings.claimThreshold;
+  const fullBubbles = Math.floor(points / threshold);
+  if (fullBubbles < 1) {
     return NextResponse.json({ error: "Aún no alcanzas el mínimo para reclamar" }, { status: 400 });
   }
 
+  // Solo se reclaman las burbujas llenas; el resto se conserva para la próxima burbuja.
+  const claimAmount = fullBubbles * threshold;
+  const remainder = points - claimAmount;
+
   const claim = await db.bubbleClaim.create({
-    data: { clientId: client.id, amount: points },
+    data: { clientId: client.id, amount: claimAmount },
   });
 
-  await db.client.update({ where: { id: client.id }, data: { bubblePoints: 0 } });
+  await db.client.update({ where: { id: client.id }, data: { bubblePoints: remainder } });
 
   sendBubbleClaimNotification({
     referrerName: client.name,
     referrerEmail: client.email,
     advisorName: client.advisor.name,
     advisorEmail: client.advisor.email,
-    amount: points,
+    amount: claimAmount,
   }).catch((err) => console.error("[email] Error enviando reclamo de burbuja:", err));
 
   return NextResponse.json({ ok: true, claim });

@@ -42,7 +42,7 @@ type Referral = {
   confirmedByReferrer: boolean;
   referrerConfirmedAt: string | null;
   createdAt: string;
-  referrer: { id: string; name: string; createdAt: string; launchBonusUsed: boolean };
+  referrer: { id: string; name: string; createdAt: string; launchBonusUsed: boolean; bubblePoints: number };
 };
 
 const STATUS_OPTIONS = [
@@ -84,6 +84,8 @@ export default function ReferidosPage() {
   // Edit saleAmount
   const [editingSale, setEditingSale] = useState(false);
   const [editSaleInput, setEditSaleInput] = useState("");
+  // Edit productType (post-conversion)
+  const [editingProductType, setEditingProductType] = useState(false);
 
   function load() {
     setLoading(true);
@@ -434,12 +436,12 @@ export default function ReferidosPage() {
       {/* Detail drawer */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-          <div className="absolute inset-0 bg-black/25" onClick={() => { setSelected(null); setEditingSale(false); }} />
+          <div className="absolute inset-0 bg-black/25" onClick={() => { setSelected(null); setEditingSale(false); setEditingProductType(false); }} />
           <div className="relative bg-white w-full max-w-md rounded-t-3xl md:rounded-2xl max-h-[85vh] overflow-y-auto p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-5">
               <h2 className="font-semibold">Detalle del referido</h2>
               <button
-                onClick={() => { setSelected(null); setEditingSale(false); }}
+                onClick={() => { setSelected(null); setEditingSale(false); setEditingProductType(false); }}
                 className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition"
               >
                 ×
@@ -461,19 +463,29 @@ export default function ReferidosPage() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Referido #</p>
-                  <p className="text-sm font-medium">{selected.tierPosition > 0 ? `${selected.tierPosition}º de ese cliente` : "—"}</p>
+                  <p className="text-sm font-medium">
+                    {referrals
+                      .filter((r) => r.referrer.id === selected.referrer.id)
+                      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+                      .findIndex((r) => r.id === selected.id) + 1}º de ese cliente
+                  </p>
                 </div>
                 {selected.status === "converted" ? (
                   <>
                     <div>
                       <p className="text-xs text-gray-400 mb-1">Premio al cliente</p>
                       {selected.tierPosition === 0 ? (
-                        <div>
-                          <p className="text-sm font-semibold text-gray-400">—</p>
-                          <p className="text-[10px] text-blue-500 font-medium">
-                            {selected.productType === "Daños/Auto" || selected.productType === "GMM" || selected.productType === "Otro" ? "Suma a premios burbuja" : "Sin premio en efectivo"}
-                          </p>
-                        </div>
+                        selected.productType === "Daños/Auto" || selected.productType === "GMM" || selected.productType === "Otro" ? (
+                          <div>
+                            <p className="text-sm font-semibold text-blue-600">{formatCurrency(selected.referrer.bubblePoints)}</p>
+                            <p className="text-[10px] text-blue-500 font-medium">Acumulado en premios burbuja</p>
+                          </div>
+                        ) : (
+                          <div>
+                            <p className="text-sm font-semibold text-gray-400">—</p>
+                            <p className="text-[10px] text-gray-400 font-medium">Sin premio en efectivo</p>
+                          </div>
+                        )
                       ) : (
                         <div>
                           <p className="text-sm font-semibold">{formatCurrency(selected.rewardAmount)}</p>
@@ -486,9 +498,20 @@ export default function ReferidosPage() {
                     <div>
                       {selected.saleAmount ? (
                         <>
-                          <p className="text-xs text-gray-400 mb-1">
-                            {selected.productType ? selected.productType : "Valor del plan"}
-                          </p>
+                          <div className="flex items-center gap-1 mb-1">
+                            <p className="text-xs text-gray-400">
+                              {selected.productType ? selected.productType : "Valor del plan"}
+                            </p>
+                            <button
+                              onClick={() => setEditingProductType((v) => !v)}
+                              className="text-gray-300 hover:text-gray-500 transition"
+                              title="Editar producto contratado"
+                            >
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                                <path d="M11 4H4C3.44772 4 3 4.44772 3 5V20C3 20.5523 3.44772 21 4 21H19C19.5523 21 20 20.5523 20 20V13M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </button>
+                          </div>
                           {editingSale ? (
                             <div className="flex items-center gap-1.5">
                               <div className="relative flex-1">
@@ -546,6 +569,30 @@ export default function ReferidosPage() {
                   </div>
                 )}
               </div>
+
+              {/* Corregir producto contratado tras la conversión — recalcula premio
+                  y puntos burbuja si cambia entre escalera y burbuja. */}
+              {selected.status === "converted" && editingProductType && (
+                <div>
+                  <p className="text-xs text-gray-400 mb-2">Producto contratado</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {["PPR", "Vida", "Daños/Auto", "GMM", "Otro"].map((type) => (
+                      <button
+                        key={type}
+                        disabled={updating}
+                        onClick={() => { setEditingProductType(false); if (type !== selected.productType) update(selected.id, { productType: type }); }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
+                          selected.productType === type
+                            ? "bg-black text-white border-black"
+                            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Interés del lead — antes de convertir aún no se conoce el premio;
                   solo se sabrá qué se contrató realmente al marcar como convertido */}

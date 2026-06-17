@@ -183,11 +183,15 @@ export default function ClientPortalPage() {
   const countdownLabel = daysLeft > 0 ? `${daysLeft}d ${hoursLeft}h` : hoursLeft > 0 ? `${hoursLeft}h ${minutesLeft}m` : `${minutesLeft}m`;
   const countdownUrgent = msLeft < 1000 * 60 * 60 * 24;
 
-  // Premios burbuja — se visualizan como burbujas que se van llenando hasta estallar
-  const BUBBLE_COUNT = 5;
-  const bubbleFraction = Math.min(1, client.bubblePoints / settings.bubbleClaimThreshold);
-  const bubbleFills = Array.from({ length: BUBBLE_COUNT }, (_, i) => Math.max(0, Math.min(1, bubbleFraction * BUBBLE_COUNT - i)));
-  const bubblesReady = client.bubblePoints >= settings.bubbleClaimThreshold;
+  // Premios burbuja — cada burbuja completa vale bubbleClaimThreshold. El cliente puede
+  // acumular varias burbujas llenas y decidir cuándo reclamarlas; la burbuja parcial
+  // (resto) se conserva tras el reclamo.
+  const bubbleThreshold = settings.bubbleClaimThreshold;
+  const fullBubbles = Math.floor(client.bubblePoints / bubbleThreshold);
+  const bubbleRemainder = client.bubblePoints % bubbleThreshold;
+  const bubbleRemainderFraction = bubbleRemainder / bubbleThreshold;
+  const hasClaimableBubbles = fullBubbles >= 1;
+  const claimableBubbleAmount = fullBubbles * bubbleThreshold;
 
   // Onboarding modal
   if (showOnboarding) {
@@ -432,9 +436,14 @@ export default function ClientPortalPage() {
                 </div>
                 <div className="divide-y divide-gray-50">
                   {tiers.map((tier) => {
+                    // Si ya existe un referido convertido en esta posición, su rewardAmount
+                    // refleja el monto real (incluyendo bonos ya aplicados) — más confiable
+                    // que el monto estático del nivel.
+                    const matchingReferral = referrals.find((r) => r.status === "converted" && r.tierPosition === tier.position);
                     const done = paidCount >= tier.position;
                     const current = paidCount + 1 === tier.position;
-                    const bonusHere = bonusReady && current && tier.position === 1;
+                    const bonusHere = !matchingReferral && bonusReady && current && tier.position === 1;
+                    const displayAmount = matchingReferral ? matchingReferral.rewardAmount : tier.amount;
                     return (
                       <div key={tier.position} className={`flex items-center gap-3 px-5 py-3 ${current ? "bg-black" : ""}`}>
                         <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -465,7 +474,7 @@ export default function ClientPortalPage() {
                           </span>
                         ) : (
                           <span className={`text-sm font-semibold ${current ? "text-white" : done ? "text-green-600" : "text-gray-700"}`}>
-                            {formatCurrency(tier.amount)}
+                            {formatCurrency(displayAmount)}
                           </span>
                         )}
                       </div>
@@ -500,37 +509,44 @@ export default function ClientPortalPage() {
                 </div>
               ) : (
                 <>
-                  <p className="text-xs text-gray-400 mb-3">Suma {formatCurrency(settings.bubbleAutoPoints)} cuando alguien que invitaste contrate un seguro de Auto u Otro tipo, y {formatCurrency(settings.bubbleGmmPoints)} si contrata Gastos Médicos Mayores. Cuando tus burbujas se llenen, explotan y te dan {formatCurrency(settings.bubbleClaimThreshold)}.</p>
-                  <div className="flex items-center justify-center gap-3 py-2 mb-3">
-                    {bubbleFills.map((fill, i) => (
+                  <p className="text-xs text-gray-400 mb-3">Suma {formatCurrency(settings.bubbleAutoPoints)} cuando alguien que invitaste contrate un seguro de Auto u Otro tipo, y {formatCurrency(settings.bubbleGmmPoints)} si contrata Gastos Médicos Mayores. Cada burbuja llena vale {formatCurrency(bubbleThreshold)} — puedes acumular varias y reclamarlas cuando quieras.</p>
+                  <div className="flex items-center justify-center gap-3 py-2 mb-3 flex-wrap">
+                    {Array.from({ length: fullBubbles }, (_, i) => (
                       <div
-                        key={i}
-                        className={`relative w-10 h-10 rounded-full border-2 overflow-hidden bg-blue-50/60 ${
-                          bubblesReady ? "border-blue-400" : "border-blue-100"
-                        } ${poppingBubbles ? "bubble-pop" : bubblesReady ? "bubble-ready" : ""}`}
+                        key={`full-${i}`}
+                        className={`relative w-10 h-10 rounded-full border-2 overflow-hidden bg-blue-50/60 border-blue-400 ${
+                          poppingBubbles ? "bubble-pop" : "bubble-ready"
+                        }`}
                         style={poppingBubbles ? { animationDelay: `${i * 70}ms` } : undefined}
                       >
-                        <div
-                          className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-500 to-blue-300 transition-all duration-700 ease-out"
-                          style={{ height: `${fill * 100}%` }}
-                        />
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-500 to-blue-300" style={{ height: "100%" }} />
                       </div>
                     ))}
+                    <div className="relative w-10 h-10 rounded-full border-2 overflow-hidden bg-blue-50/60 border-blue-100">
+                      <div
+                        className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-500 to-blue-300 transition-all duration-700 ease-out"
+                        style={{ height: `${bubbleRemainderFraction * 100}%` }}
+                      />
+                    </div>
                   </div>
                   <div className="flex items-end justify-between mb-3">
                     <p className="text-lg font-semibold">{formatCurrency(client.bubblePoints)}</p>
-                    <p className="text-xs text-gray-400">Meta {formatCurrency(settings.bubbleClaimThreshold)}</p>
+                    {hasClaimableBubbles ? (
+                      <p className="text-xs text-blue-500 font-medium">{fullBubbles} burbuja{fullBubbles > 1 ? "s" : ""} lista{fullBubbles > 1 ? "s" : ""} para reclamar</p>
+                    ) : (
+                      <p className="text-xs text-gray-400">Meta {formatCurrency(bubbleThreshold)}</p>
+                    )}
                   </div>
-                  {bubblesReady ? (
+                  {hasClaimableBubbles ? (
                     <button
                       onClick={claimBubble}
                       disabled={claimingBubble}
                       className="w-full bg-black text-white text-sm font-medium py-3 rounded-xl disabled:opacity-50 transition hover:bg-gray-900"
                     >
-                      {claimingBubble ? "Reclamando..." : `Reclamar ${formatCurrency(settings.bubbleClaimThreshold)}`}
+                      {claimingBubble ? "Reclamando..." : `Reclamar ${formatCurrency(claimableBubbleAmount)}`}
                     </button>
                   ) : (
-                    <p className="text-xs text-gray-400 text-center">Te faltan {formatCurrency(settings.bubbleClaimThreshold - client.bubblePoints)} para que tus burbujas exploten y te den el premio.</p>
+                    <p className="text-xs text-gray-400 text-center">Te faltan {formatCurrency(bubbleThreshold - bubbleRemainder)} para tu próxima burbuja de {formatCurrency(bubbleThreshold)}.</p>
                   )}
                 </>
               )}
