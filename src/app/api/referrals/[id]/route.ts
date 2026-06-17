@@ -42,6 +42,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   let finalTierPosition = referral.tierPosition;
   let finalRewardAmount = referral.rewardAmount;
   let bubblePointsDelta = 0;
+  // Si este referido ocupaba el nivel 1 (donde se aplica el Bono de Inicio) y se libera
+  // sin haberse pagado, hay que devolver la elegibilidad del bono — si no, el cliente queda
+  // bloqueado para siempre creyendo que ya lo usó, sin que ningún referido se lo haya quedado.
+  let releaseLaunchBonus = false;
   if (isConverting) {
     if (isEscaleraProduct(productTypeForConversion)) {
       const convertedCount = await db.referral.count({
@@ -69,6 +73,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       finalTierPosition = 0;
       finalRewardAmount = 0;
       bubblePointsDelta += getBubblePointsForProduct(newProductType, bubbleSettings) ?? 0;
+      if (referral.tierPosition === 1 && referral.rewardStatus !== "paid") releaseLaunchBonus = true;
     } else if (!oldIsEscalera && newIsEscalera) {
       // Burbuja -> escalera: asigna el siguiente escalón disponible y resta los puntos burbuja previos
       const convertedCount = await db.referral.count({
@@ -132,6 +137,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (launchBonusApplied) {
     await db.client.update({ where: { id: referral.referrerId }, data: { launchBonusUsed: true } });
+  } else if (releaseLaunchBonus) {
+    await db.client.update({ where: { id: referral.referrerId }, data: { launchBonusUsed: false } });
   }
 
   if (bubblePointsDelta !== 0) {
@@ -248,5 +255,12 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   }
 
   await db.referral.delete({ where: { id } });
+
+  // Si se borra el referido que ocupaba el nivel 1 sin haberse pagado, libera el Bono de
+  // Inicio para que un futuro referido pueda volver a calificar.
+  if (referral.tierPosition === 1 && referral.rewardStatus !== "paid") {
+    await db.client.update({ where: { id: referral.referrerId }, data: { launchBonusUsed: false } });
+  }
+
   return NextResponse.json({ ok: true });
 }

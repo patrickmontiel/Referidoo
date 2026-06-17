@@ -379,7 +379,7 @@ export default function ClientPortalPage() {
 
             {/* Confirmación pendiente */}
             {referrals.filter(r => r.rewardStatus === "paid" && r.tierPosition > 0 && !r.confirmedByReferrer && !confirmed.has(r.id)).map(r => (
-              <div key={r.id} className="bg-white rounded-2xl border border-gray-100 p-4">
+              <div key={r.id} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
                 <p className="text-xs font-medium text-gray-700 mb-0.5">Premio enviado — ¿Lo recibiste?</p>
                 <p className="text-2xl font-semibold mb-0.5">{formatCurrency(r.rewardAmount)}</p>
                 <p className="text-xs text-gray-400 mb-3">Por referir a {r.leadName}</p>
@@ -395,7 +395,7 @@ export default function ClientPortalPage() {
 
             {/* Confirmados */}
             {referrals.filter(r => r.tierPosition > 0 && (r.confirmedByReferrer || confirmed.has(r.id))).map(r => (
-              <div key={`conf-${r.id}`} className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
+              <div key={`conf-${r.id}`} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex items-center gap-3">
                 <div className="w-8 h-8 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                     <path d="M5 12L10 17L19 8" stroke="#16a34a" strokeWidth="2" strokeLinecap="round"/>
@@ -415,7 +415,7 @@ export default function ClientPortalPage() {
                 <p className="text-2xl font-semibold">{formatCurrency(stats.totalEarned)}</p>
                 <p className="text-xs text-gray-500 mt-0.5">pagado</p>
               </div>
-              <div className="bg-white rounded-2xl border border-gray-100 p-4">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
                 <p className="text-xs text-gray-400 mb-1">Por cobrar</p>
                 <p className="text-2xl font-semibold">{formatCurrency(stats.pendingEarnings)}</p>
                 <p className="text-xs text-gray-400 mt-0.5">aprobado</p>
@@ -424,7 +424,7 @@ export default function ClientPortalPage() {
 
             {/* Niveles de premios */}
             {tiers.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
                   <div>
                     <h2 className="font-medium text-sm">Premio siguiente</h2>
@@ -490,7 +490,7 @@ export default function ClientPortalPage() {
             )}
 
             {/* Premios burbuja — Auto, Otro + GMM */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-4">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
               <div className="flex items-center justify-between mb-1">
                 <h2 className="font-medium text-sm">Premios burbuja</h2>
                 <span className="text-xs text-gray-400">Auto, Otro + GMM</span>
@@ -584,11 +584,11 @@ export default function ClientPortalPage() {
 
             {/* Resumen */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 text-center">
                 <p className="text-2xl font-semibold">{stats.totalReferrals}</p>
                 <p className="text-xs text-gray-400 mt-1">Referidos enviados</p>
               </div>
-              <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 text-center">
                 <p className="text-2xl font-semibold">{stats.convertedCount}</p>
                 <p className="text-xs text-gray-400 mt-1">Convertidos</p>
               </div>
@@ -618,7 +618,7 @@ export default function ClientPortalPage() {
                 </button>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm divide-y divide-gray-50">
                 {referrals.map((r) => {
                   const sc = statusConfig[r.status] ?? statusConfig.pending;
                   return (
@@ -634,12 +634,19 @@ export default function ClientPortalPage() {
                       </div>
                       <div className="text-right flex-shrink-0">
                         {r.status === "converted" && r.tierPosition === 0 ? (
-                          <>
-                            <p className="text-sm font-semibold text-gray-400">—</p>
-                            <p className="text-xs text-blue-500 font-medium mt-0.5">
-                              {r.productType === "Daños/Auto" || r.productType === "GMM" || r.productType === "Otro" ? "Sumó a premios burbuja" : "Sin premio en efectivo"}
-                            </p>
-                          </>
+                          r.productType === "Daños/Auto" || r.productType === "GMM" || r.productType === "Otro" ? (
+                            <>
+                              <p className="text-sm font-semibold text-blue-600">
+                                +{formatCurrency(r.productType === "GMM" ? settings.bubbleGmmPoints : settings.bubbleAutoPoints)}
+                              </p>
+                              <p className="text-xs text-blue-500 font-medium mt-0.5">Premios burbuja</p>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-sm font-semibold text-gray-400">—</p>
+                              <p className="text-xs text-gray-400 font-medium mt-0.5">Sin premio en efectivo</p>
+                            </>
+                          )
                         ) : (
                           <>
                             <p className={`text-sm font-semibold ${rewardConfig[r.rewardStatus] ?? "text-gray-400"}`}>
