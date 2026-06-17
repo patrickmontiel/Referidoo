@@ -36,7 +36,8 @@ type Client = {
   active: boolean;
   createdAt: string;
   _count: { referrals: number };
-  referrals: { rewardAmount: number; rewardStatus: string; status: string }[];
+  referrals: { rewardAmount: number; rewardStatus: string; status: string; tierPosition: number }[];
+  bubbleClaims: { amount: number; status: string }[];
 };
 
 type Advisor = { name: string; companyName: string | null };
@@ -351,7 +352,21 @@ export default function ClientesPage() {
       ) : (
         <div data-tour="client-list" className="space-y-3">
           {filtered.map((client) => {
-            const earned = client.referrals.filter(r => r.rewardStatus === "paid").reduce((s, r) => s + r.rewardAmount, 0);
+            // Escalera (Vida/PPR): premios que avanzan en niveles, identificados por tierPosition > 0
+            const escaleraPagado = client.referrals
+              .filter(r => r.tierPosition > 0 && r.rewardStatus === "paid")
+              .reduce((s, r) => s + r.rewardAmount, 0);
+            const escaleraDebido = client.referrals
+              .filter(r => r.status === "converted" && r.tierPosition > 0 && r.rewardStatus !== "paid")
+              .reduce((s, r) => s + r.rewardAmount, 0);
+            // Premios burbuja: Auto, GMM y Otro acumulan a un pool reclamable aparte
+            const burbujaPagado = client.bubbleClaims
+              .filter(c => c.status === "paid")
+              .reduce((s, c) => s + c.amount, 0);
+            const burbujaDebido = client.bubbleClaims
+              .filter(c => c.status === "pending")
+              .reduce((s, c) => s + c.amount, 0);
+            const totalPagado = escaleraPagado + burbujaPagado;
             const converted = client.referrals.filter(r => r.status === "converted").length;
             const base = typeof window !== "undefined" ? window.location.origin : "";
             const portalLink = `${base}/c/${client.accessToken}`;
@@ -408,10 +423,37 @@ export default function ClientesPage() {
                     <p className="text-[10px] text-gray-400 mt-0.5">Convertidos</p>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-2.5 text-center">
-                    <p className="text-base font-semibold">{formatCurrency(earned)}</p>
+                    <p className="text-base font-semibold">{formatCurrency(totalPagado)}</p>
                     <p className="text-[10px] text-gray-400 mt-0.5">Pagado</p>
                   </div>
                 </div>
+
+                {(escaleraDebido > 0 || escaleraPagado > 0 || burbujaDebido > 0 || burbujaPagado > 0) && (
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="rounded-xl border border-gray-100 p-2.5">
+                      <p className="text-[10px] text-gray-400 mb-1.5">Escalera · Vida y PPR</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-amber-600">Por pagar</span>
+                        <span className="text-xs font-semibold text-amber-600">{formatCurrency(escaleraDebido)}</span>
+                      </div>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <span className="text-[10px] text-green-600">Pagado</span>
+                        <span className="text-xs font-semibold text-green-600">{formatCurrency(escaleraPagado)}</span>
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-gray-100 p-2.5">
+                      <p className="text-[10px] text-gray-400 mb-1.5">Premios burbuja</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-amber-600">Por pagar</span>
+                        <span className="text-xs font-semibold text-amber-600">{formatCurrency(burbujaDebido)}</span>
+                      </div>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <span className="text-[10px] text-green-600">Pagado</span>
+                        <span className="text-xs font-semibold text-green-600">{formatCurrency(burbujaPagado)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-4 pt-3 border-t border-gray-50 space-y-2">
                   {/* WhatsApp — primary action */}

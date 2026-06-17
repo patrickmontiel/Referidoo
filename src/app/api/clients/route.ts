@@ -12,7 +12,10 @@ export async function GET() {
     include: {
       _count: { select: { referrals: true } },
       referrals: {
-        select: { rewardAmount: true, rewardStatus: true, status: true },
+        select: { rewardAmount: true, rewardStatus: true, status: true, tierPosition: true },
+      },
+      bubbleClaims: {
+        select: { amount: true, status: true },
       },
     },
     orderBy: { createdAt: "desc" },
