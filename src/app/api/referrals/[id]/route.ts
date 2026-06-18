@@ -35,8 +35,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   // burbuja (no consumen un escalón), y "Otro" no genera premio en efectivo.
   const oldProductType = referral.productType ?? null;
   // El asesor puede corregir el producto contratado después de la conversión
-  // (p. ej. marcó "Daños/Auto" pero en realidad fue "GMM").
-  const isProductTypeEdit = referral.status === "converted" && !isConverting
+  // (p. ej. marcó "Daños/Auto" pero en realidad fue "GMM") — pero no una vez pagado,
+  // porque recalcular el nivel/premio ahí desincronizaría el monto real ya entregado.
+  const isProductTypeEdit = referral.status === "converted" && !isConverting && referral.rewardStatus !== "paid"
     && body.productType !== undefined && body.productType !== oldProductType;
 
   let finalTierPosition = referral.tierPosition;
@@ -138,7 +139,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       rewardStatus: newRewardStatus,
       leadNotes: body.leadNotes ?? referral.leadNotes,
       saleAmount: saleAmount ?? undefined,
-      ...(body.productType !== undefined ? { productType: body.productType } : {}),
+      // No se permite cambiar el producto de un referido ya convertido una vez pagado
+      // (ver isProductTypeEdit arriba) — el monto/nivel ya entregado quedaría desincronizado.
+      ...(body.productType !== undefined && !(referral.status === "converted" && referral.rewardStatus === "paid")
+        ? { productType: body.productType } : {}),
       ...(body.interestProductType !== undefined ? { interestProductType: body.interestProductType } : {}),
       ...(finalTierPosition !== referral.tierPosition ? { tierPosition: finalTierPosition } : {}),
       ...(finalRewardAmount !== referral.rewardAmount ? { rewardAmount: finalRewardAmount } : {}),

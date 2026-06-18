@@ -521,15 +521,17 @@ export default function ReferidosPage() {
                             <p className="text-xs text-gray-400">
                               {selected.productType ? selected.productType : "Valor del plan"}
                             </p>
-                            <button
-                              onClick={() => setEditingProductType((v) => !v)}
-                              className="text-gray-300 hover:text-gray-500 transition"
-                              title="Editar producto contratado"
-                            >
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                                <path d="M11 4H4C3.44772 4 3 4.44772 3 5V20C3 20.5523 3.44772 21 4 21H19C19.5523 21 20 20.5523 20 20V13M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            </button>
+                            {selected.rewardStatus !== "paid" && (
+                              <button
+                                onClick={() => setEditingProductType((v) => !v)}
+                                className="text-gray-300 hover:text-gray-500 transition"
+                                title="Editar producto contratado"
+                              >
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                                  <path d="M11 4H4C3.44772 4 3 4.44772 3 5V20C3 20.5523 3.44772 21 4 21H19C19.5523 21 20 20.5523 20 20V13M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              </button>
+                            )}
                           </div>
                           {editingSale ? (
                             <div className="flex items-center gap-1.5">
@@ -591,7 +593,7 @@ export default function ReferidosPage() {
 
               {/* Corregir producto contratado tras la conversión — recalcula premio
                   y puntos burbuja si cambia entre escalera y burbuja. */}
-              {selected.status === "converted" && editingProductType && (
+              {selected.status === "converted" && selected.rewardStatus !== "paid" && editingProductType && (
                 <div>
                   <p className="text-xs text-gray-400 mb-2">Producto contratado</p>
                   <div className="flex gap-2 flex-wrap">
