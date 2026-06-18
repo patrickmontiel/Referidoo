@@ -91,9 +91,14 @@ export default function ReferidosPage() {
 
   function load() {
     setLoading(true);
-    fetch("/api/referrals")
+    return fetch("/api/referrals")
       .then((r) => r.json())
-      .then((d) => { setReferrals(Array.isArray(d) ? d : []); setLoading(false); });
+      .then((d) => {
+        const list: Referral[] = Array.isArray(d) ? d : [];
+        setReferrals(list);
+        setLoading(false);
+        return list;
+      });
   }
 
   useEffect(() => {
@@ -113,8 +118,13 @@ export default function ReferidosPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    load();
-    if (selected?.id === id) setSelected(null);
+    const list = await load();
+    // Mantiene la tarjeta abierta y la refresca con los datos nuevos — el asesor decide
+    // cuándo cerrarla (tocando afuera o la X), no se cierra sola por seleccionar una opción.
+    if (selected?.id === id) {
+      const fresh = list.find((r) => r.id === id);
+      if (fresh) setSelected(fresh);
+    }
     setUpdating(false);
   }
 

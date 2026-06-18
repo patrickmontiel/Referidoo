@@ -46,21 +46,32 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   // sin haberse pagado, hay que devolver la elegibilidad del bono — si no, el cliente queda
   // bloqueado para siempre creyendo que ya lo usó, sin que ningún referido se lo haya quedado.
   let releaseLaunchBonus = false;
+  // Si el lead se "desconvirtió" por error (p. ej. se marcó Contactado por accidente) y se
+  // vuelve a convertir, ya tenía un nivel/premio asignado de antes — no se debe recalcular
+  // desde cero, porque se perdería el Bono de Inicio (el flag launchBonusUsed ya está en
+  // true y bloquearía que se vuelva a sumar al recomputar el monto base).
+  const previouslyHadEscaleraSlot = referral.tierPosition > 0 && referral.rewardStatus !== "pending";
   if (isConverting) {
     if (isEscaleraProduct(productTypeForConversion)) {
-      const convertedCount = await db.referral.count({
-        where: {
-          referrerId: referral.referrerId,
-          status: "converted",
-          OR: [{ productType: { in: ESCALERA_PRODUCTS } }, { productType: null }],
-        },
-      });
-      const { amount, tierPosition } = await calculateRewardForNextReferral(referral.advisorId, convertedCount);
-      finalTierPosition = tierPosition;
-      finalRewardAmount = amount;
+      if (previouslyHadEscaleraSlot) {
+        finalTierPosition = referral.tierPosition;
+        finalRewardAmount = referral.rewardAmount;
+      } else {
+        const convertedCount = await db.referral.count({
+          where: {
+            referrerId: referral.referrerId,
+            status: "converted",
+            OR: [{ productType: { in: ESCALERA_PRODUCTS } }, { productType: null }],
+          },
+        });
+        const { amount, tierPosition } = await calculateRewardForNextReferral(referral.advisorId, convertedCount);
+        finalTierPosition = tierPosition;
+        finalRewardAmount = amount;
+      }
     } else {
       finalTierPosition = 0;
       finalRewardAmount = 0;
+      if (previouslyHadEscaleraSlot && referral.rewardStatus !== "paid") releaseLaunchBonus = true;
     }
   } else if (isProductTypeEdit) {
     const newProductType = productTypeForConversion;

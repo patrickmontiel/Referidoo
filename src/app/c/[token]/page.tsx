@@ -421,6 +421,12 @@ export default function ClientPortalPage() {
                     const current = paidCount + 1 === tier.position;
                     const bonusHere = !matchingReferral && bonusReady && current && tier.position === 1;
                     const displayAmount = matchingReferral ? matchingReferral.rewardAmount : tier.amount;
+                    // El bono se sigue mostrando (monto base tachado + monto real) aunque ya
+                    // esté pagado — no solo en la vista previa antes de asignarse.
+                    const hasBonus = matchingReferral ? matchingReferral.rewardAmount > tier.amount : false;
+                    const showBonusBadge = bonusHere || hasBonus;
+                    const amountColor = current ? "text-white" : done ? "text-green-600" : "text-gray-700";
+                    const strikeColor = current ? "text-white/40" : "text-gray-400";
                     return (
                       <div key={tier.position} className={`flex items-center gap-3 px-5 py-3 ${current ? "bg-black" : ""}`}>
                         <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -440,20 +446,16 @@ export default function ClientPortalPage() {
                           <p className={`text-sm font-medium ${current ? "text-white" : done ? "text-gray-400 line-through" : "text-gray-700"}`}>
                             {tier.label || `Referido #${tier.position}`}
                           </p>
-                          {bonusHere && (
-                            <p className="text-[10px] text-amber-400 font-medium">⚡ Bono de Inicio activo</p>
+                          {showBonusBadge && (
+                            <p className="text-[10px] text-amber-400 font-medium">⚡ Bono de Inicio</p>
                           )}
                         </div>
-                        {bonusHere ? (
-                          <span className="text-sm font-semibold text-white">
-                            <span className="text-white/40 line-through mr-1.5">{formatCurrency(tier.amount)}</span>
-                            {formatCurrency(bonusAmount)}
-                          </span>
-                        ) : (
-                          <span className={`text-sm font-semibold ${current ? "text-white" : done ? "text-green-600" : "text-gray-700"}`}>
-                            {formatCurrency(displayAmount)}
-                          </span>
-                        )}
+                        <span className={`text-sm font-semibold ${amountColor}`}>
+                          {showBonusBadge && (
+                            <span className={`${strikeColor} line-through mr-1.5`}>{formatCurrency(tier.amount)}</span>
+                          )}
+                          {formatCurrency(bonusHere ? bonusAmount : displayAmount)}
+                        </span>
                       </div>
                     );
                   })}
