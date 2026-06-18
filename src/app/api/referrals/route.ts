@@ -38,13 +38,14 @@ export async function POST(req: NextRequest) {
     advisor: { select: { name: true, email: true } },
   };
 
-  let referrer = await db.client.findUnique({ where: { referralCode }, include });
+  // Los códigos siempre se generan en minúsculas (ver generateReferralCode en
+  // lib/utils.ts) — normalizar antes del lookup indexado evita un full-table-scan
+  // cuando el código llega con otro casing (típico: WhatsApp auto-capitaliza).
+  const normalizedCode = String(referralCode).trim().toLowerCase();
+  let referrer = await db.client.findUnique({ where: { referralCode: normalizedCode }, include });
 
-  // Fallback: codes shared via WhatsApp/SMS can get auto-capitalized by phones
-  if (!referrer) {
-    const normalized = String(referralCode).trim().toLowerCase();
-    const all = await db.client.findMany({ include });
-    referrer = all.find((c) => c.referralCode.toLowerCase() === normalized) ?? null;
+  if (!referrer && normalizedCode !== referralCode) {
+    referrer = await db.client.findUnique({ where: { referralCode }, include });
   }
 
   if (!referrer || !referrer.active) {

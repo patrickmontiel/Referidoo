@@ -5,6 +5,7 @@ import {
   DEFAULT_BUBBLE_AUTO_POINTS,
   DEFAULT_BUBBLE_GMM_POINTS,
   DEFAULT_BUBBLE_CLAIM_THRESHOLD,
+  invalidateAdvisorConfigCache,
 } from "@/lib/rewards";
 
 export async function GET() {
@@ -37,6 +38,7 @@ export async function PUT(req: NextRequest) {
     create: { advisorId: session.advisorId, ...data },
     update: data,
   });
+  invalidateAdvisorConfigCache(session.advisorId);
 
   return NextResponse.json({ ok: true, ...data });
 }

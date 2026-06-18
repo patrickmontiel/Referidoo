@@ -1,4 +1,36 @@
+import { unstable_cache, revalidateTag } from "next/cache";
 import { db } from "./db";
+
+// Tiers y settings del asesor cambian solo cuando edita /admin/niveles o
+// /admin/burbuja, pero se leen en cada referido creado/convertido (incluyendo
+// los dos endpoints públicos sin auth). Cachear esto evita 2 queries por
+// llamada en el hot path más usado de toda la app.
+const ADVISOR_CONFIG_REVALIDATE_SECONDS = 60;
+
+function advisorConfigTag(advisorId: string) {
+  return `advisor-config-${advisorId}`;
+}
+
+const getCachedAdvisorSettings = (advisorId: string) =>
+  unstable_cache(
+    async () => db.advisorSettings.findUnique({ where: { advisorId } }),
+    ["advisor-settings", advisorId],
+    { tags: [advisorConfigTag(advisorId)], revalidate: ADVISOR_CONFIG_REVALIDATE_SECONDS }
+  )();
+
+const getCachedAdvisorTiers = (advisorId: string) =>
+  unstable_cache(
+    async () =>
+      db.rewardTier.findMany({ where: { advisorId }, orderBy: { position: "asc" } }),
+    ["advisor-tiers", advisorId],
+    { tags: [advisorConfigTag(advisorId)], revalidate: ADVISOR_CONFIG_REVALIDATE_SECONDS }
+  )();
+
+// Llamar después de escribir en /api/tiers o /api/bubble-settings para que el
+// cambio se vea de inmediato en vez de esperar el TTL de 60s.
+export function invalidateAdvisorConfigCache(advisorId: string) {
+  revalidateTag(advisorConfigTag(advisorId), { expire: 0 });
+}
 
 // Comisión de Lessio sobre el valor del plan/prima, pagada una sola vez (primer año)
 const LESSIO_COMMISSION_RATES: Record<string, number> = {
@@ -30,7 +62,7 @@ export type BubbleSettings = {
 };
 
 export async function getAdvisorBubbleSettings(advisorId: string): Promise<BubbleSettings> {
-  const settings = await db.advisorSettings.findUnique({ where: { advisorId } });
+  const settings = await getCachedAdvisorSettings(advisorId);
   return {
     autoPoints: settings?.bubbleAutoPoints ?? DEFAULT_BUBBLE_AUTO_POINTS,
     gmmPoints: settings?.bubbleGmmPoints ?? DEFAULT_BUBBLE_GMM_POINTS,
@@ -65,19 +97,23 @@ export type RewardTier = {
 };
 
 export async function getAdvisorTiers(advisorId: string): Promise<RewardTier[]> {
-  return db.rewardTier.findMany({
-    where: { advisorId },
-    orderBy: { position: "asc" },
-  });
+  return getCachedAdvisorTiers(advisorId);
 }
 
-export async function calculateRewardForNextReferral(
-  advisorId: string,
-  completedReferrals: number
-): Promise<{ amount: number; tierPosition: number }> {
-  const tiers = await getAdvisorTiers(advisorId);
-  const settings = await db.advisorSettings.findUnique({ where: { advisorId } });
+export type AdvisorTierSettings = { afterLastTier: string; flatAmount: number } | null;
 
+export async function getAdvisorSettings(advisorId: string): Promise<AdvisorTierSettings> {
+  return getCachedAdvisorSettings(advisorId);
+}
+
+// Lógica pura de asignación de nivel/premio — separada de la carga de datos
+// para que llamadores con un loop (p. ej. recalculate-rewards) puedan pedir
+// tiers/settings una sola vez en vez de una vez por referido.
+export function computeRewardForPosition(
+  tiers: RewardTier[],
+  settings: AdvisorTierSettings,
+  completedReferrals: number
+): { amount: number; tierPosition: number } {
   const nextPosition = completedReferrals + 1;
 
   if (tiers.length === 0) {
@@ -104,6 +140,17 @@ export async function calculateRewardForNextReferral(
   // "stop" — return last tier
   const lastTier = tiers[tiers.length - 1];
   return { amount: lastTier.amount, tierPosition: nextPosition };
+}
+
+export async function calculateRewardForNextReferral(
+  advisorId: string,
+  completedReferrals: number
+): Promise<{ amount: number; tierPosition: number }> {
+  const [tiers, settings] = await Promise.all([
+    getCachedAdvisorTiers(advisorId),
+    getCachedAdvisorSettings(advisorId),
+  ]);
+  return computeRewardForPosition(tiers, settings, completedReferrals);
 }
 
 export function getProgressSummary(

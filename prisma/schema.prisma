@@ -61,6 +61,8 @@ model Client {
   createdAt        DateTime   @default(now())
   referrals        Referral[]
   bubbleClaims     BubbleClaim[]
+
+  @@index([advisorId])
 }
 
 model BubbleClaim {
@@ -72,6 +74,8 @@ model BubbleClaim {
   paymentNote String?
   createdAt   DateTime  @default(now())
   paidAt      DateTime?
+
+  @@index([clientId])
 }
 
 model Referral {
@@ -97,4 +101,8 @@ model Referral {
   referrerConfirmedAt DateTime?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+
+  @@index([advisorId])
+  @@index([referrerId])
+  @@index([status])
 }

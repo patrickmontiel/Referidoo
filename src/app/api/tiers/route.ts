@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
+import { invalidateAdvisorConfigCache } from "@/lib/rewards";
 
 export async function GET() {
   const session = await getAdvisorSession();
@@ -52,6 +53,7 @@ export async function PUT(req: NextRequest) {
       welcomeMessage: welcomeMessage || null,
     },
   });
+  invalidateAdvisorConfigCache(session.advisorId);
 
   return NextResponse.json({ ok: true });
 }

@@ -15,35 +15,64 @@ export async function POST(req: NextRequest) {
   }
 
   const results: { name: string; ok: boolean; error?: string }[] = [];
-
-  for (const row of rows) {
+  const validRows = rows.filter((row): row is ImportRow => {
     if (!row.name?.trim()) {
       results.push({ name: row.name || "—", ok: false, error: "Nombre vacío" });
-      continue;
+      return false;
     }
+    return true;
+  });
 
-    try {
-      let referralCode = generateReferralCode(row.name);
-      for (let i = 0; i < 5; i++) {
-        const existing = await db.client.findUnique({ where: { referralCode } });
-        if (!existing) break;
-        referralCode = generateReferralCode(row.name);
-      }
+  // Genera códigos únicos dentro del lote en memoria, y verifica colisiones
+  // contra la DB con un solo findMany en vez de hasta 5 queries por fila.
+  const usedInBatch = new Set<string>();
+  const rowsWithCode = validRows.map((row) => {
+    let referralCode = generateReferralCode(row.name);
+    while (usedInBatch.has(referralCode)) referralCode = generateReferralCode(row.name);
+    usedInBatch.add(referralCode);
+    return { row, referralCode };
+  });
 
-      await db.client.create({
-        data: {
-          advisorId: session.advisorId,
-          name: row.name.trim(),
-          email: row.email?.trim() || null,
-          phone: row.phone?.trim() || null,
-          policyNumber: row.policyNumber?.trim() || null,
-          referralCode,
-        },
-      });
-      results.push({ name: row.name, ok: true });
-    } catch {
-      results.push({ name: row.name, ok: false, error: "Error al crear" });
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const existing = await db.client.findMany({
+      where: { referralCode: { in: rowsWithCode.map((r) => r.referralCode) } },
+      select: { referralCode: true },
+    });
+    if (existing.length === 0) break;
+    const taken = new Set(existing.map((e) => e.referralCode));
+    for (const entry of rowsWithCode) {
+      if (!taken.has(entry.referralCode)) continue;
+      let referralCode = generateReferralCode(entry.row.name);
+      while (usedInBatch.has(referralCode)) referralCode = generateReferralCode(entry.row.name);
+      usedInBatch.delete(entry.referralCode);
+      usedInBatch.add(referralCode);
+      entry.referralCode = referralCode;
     }
+  }
+
+  const CHUNK_SIZE = 20;
+  for (let i = 0; i < rowsWithCode.length; i += CHUNK_SIZE) {
+    const chunk = rowsWithCode.slice(i, i + CHUNK_SIZE);
+    const chunkResults = await Promise.all(
+      chunk.map(async ({ row, referralCode }) => {
+        try {
+          await db.client.create({
+            data: {
+              advisorId: session.advisorId,
+              name: row.name.trim(),
+              email: row.email?.trim() || null,
+              phone: row.phone?.trim() || null,
+              policyNumber: row.policyNumber?.trim() || null,
+              referralCode,
+            },
+          });
+          return { name: row.name, ok: true };
+        } catch {
+          return { name: row.name, ok: false, error: "Error al crear" };
+        }
+      })
+    );
+    results.push(...chunkResults);
   }
 
   const created = results.filter((r) => r.ok).length;

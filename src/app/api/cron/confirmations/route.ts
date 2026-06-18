@@ -23,27 +23,29 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  let sent = 0;
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
 
-  for (const r of referrals) {
-    const ref = r.referrer as typeof r.referrer & { email?: string | null; accessToken: string };
-    if (!ref.email) continue;
+  const sendable = referrals.filter((r) => {
+    const ref = r.referrer as typeof r.referrer & { email?: string | null };
+    return !!ref.email;
+  });
 
-    await sendConfirmationRequest({
-      referrerName: ref.name,
-      referrerEmail: ref.email,
-      advisorName: r.advisor.name,
-      advisorEmail: r.advisor.email,
-      leadName: r.leadName,
-      rewardAmount: r.rewardAmount,
-      tierPosition: r.tierPosition,
-      portalUrl: `${base}/c/${ref.accessToken}`,
-      paymentNote: (r as typeof r & { paymentNote?: string | null }).paymentNote,
-    }).catch(console.error);
+  await Promise.allSettled(
+    sendable.map((r) => {
+      const ref = r.referrer as typeof r.referrer & { email?: string | null; accessToken: string };
+      return sendConfirmationRequest({
+        referrerName: ref.name,
+        referrerEmail: ref.email!,
+        advisorName: r.advisor.name,
+        advisorEmail: r.advisor.email,
+        leadName: r.leadName,
+        rewardAmount: r.rewardAmount,
+        tierPosition: r.tierPosition,
+        portalUrl: `${base}/c/${ref.accessToken}`,
+        paymentNote: (r as typeof r & { paymentNote?: string | null }).paymentNote,
+      }).catch(console.error);
+    })
+  );
 
-    sent++;
-  }
-
-  return NextResponse.json({ processed: referrals.length, sent });
+  return NextResponse.json({ processed: referrals.length, sent: sendable.length });
 }
