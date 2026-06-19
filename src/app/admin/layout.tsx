@@ -9,7 +9,7 @@ import { Logo } from "@/components/Logo";
 const nav = [
   { href: "/admin", label: "Resumen", icon: "M3 12L12 3L21 12V20C21 20.6 20.6 21 20 21H15V16H9V21H4C3.4 21 3 20.6 3 20V12Z" },
   { href: "/admin/clientes", label: "Clientes", icon: "M17 21V19C17 17.9 16.1 17 15 17H9C7.9 17 7 17.9 7 19V21M12 13C14.2 13 16 11.2 16 9C16 6.8 14.2 5 12 5C9.8 5 8 6.8 8 9C8 11.2 9.8 13 12 13Z" },
-  { href: "/admin/referidos", label: "Referidos", icon: "M17 21V19C17 17.9 16.1 17 15 17H9C7.9 17 7 17.9 7 19V21M12 3C14.2 3 16 4.8 16 7C16 9.2 14.2 11 12 11C9.8 11 8 9.2 8 7C8 4.8 9.8 3 12 3ZM22 21C22 17.7 19.3 15 16 15M2 21C2 17.7 4.7 15 8 15" },
+  { href: "/admin/referidos", label: "Referidos", icon: "M3 4H21L14 12.5V19L10 21V12.5L3 4Z" },
   { href: "/admin/niveles", label: "Premios", icon: "M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" },
 ];
 
@@ -37,7 +37,7 @@ const steps = [
     highlight: "/admin/niveles",
   },
   {
-    icon: "M17 21V19C17 17.9 16.1 17 15 17H9C7.9 17 7 17.9 7 19V21M12 3C14.2 3 16 4.8 16 7C16 9.2 14.2 11 12 11C9.8 11 8 9.2 8 7C8 4.8 9.8 3 12 3ZM22 21C22 17.7 19.3 15 16 15M2 21C2 17.7 4.7 15 8 15",
+    icon: "M3 4H21L14 12.5V19L10 21V12.5L3 4Z",
     section: "Referidos",
     title: "Tu pipeline de ventas por referido",
     body: "Cada vez que alguien llene el formulario de un cliente tuyo, aparece aquí. Tú marcas si lo contactaste, si convirtió, y cuánto valió el plan. Al enviar el premio, el cliente recibe un email y puede confirmarlo desde su portal.",
