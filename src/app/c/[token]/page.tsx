@@ -488,24 +488,26 @@ export default function ClientPortalPage() {
                 </div>
               ) : (
                 <>
-                  <p className="text-xs text-gray-400 mb-3">Suma {formatCurrency(settings.bubbleAutoPoints)} cuando alguien que invitaste contrate un seguro de Auto u Otro tipo, y {formatCurrency(settings.bubbleGmmPoints)} si contrata Gastos Médicos Mayores. Cada burbuja llena vale {formatCurrency(bubbleThreshold)} — puedes acumular varias y reclamarlas cuando quieras.</p>
+                  <p className="text-xs text-gray-400 mb-3">Se llena con cada venta de Auto, Otro o GMM. Cada burbuja completa vale {formatCurrency(bubbleThreshold)}.</p>
                   <div className="flex items-center justify-center gap-3 py-2 mb-3 flex-wrap">
                     {Array.from({ length: fullBubbles }, (_, i) => (
                       <div
                         key={`full-${i}`}
-                        className={`relative w-10 h-10 rounded-full border-2 overflow-hidden bg-blue-50/60 border-blue-400 ${
+                        className={`relative w-14 h-14 rounded-full border-2 overflow-hidden bg-blue-50/60 border-blue-400 shadow-[0_3px_10px_rgba(59,130,246,0.3)] ${
                           poppingBubbles ? "bubble-pop" : "bubble-ready"
                         }`}
                         style={poppingBubbles ? { animationDelay: `${i * 70}ms` } : undefined}
                       >
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-500 to-blue-300" style={{ height: "100%" }} />
+                        <div className="absolute inset-0 rounded-full bubble-shine" />
                       </div>
                     ))}
-                    <div className="relative w-10 h-10 rounded-full border-2 overflow-hidden bg-blue-50/60 border-blue-100">
+                    <div className="relative w-14 h-14 rounded-full border-2 overflow-hidden bg-blue-50/60 border-blue-100 shadow-[0_3px_10px_rgba(59,130,246,0.12)]">
                       <div
                         className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-500 to-blue-300 transition-all duration-700 ease-out"
                         style={{ height: `${bubbleRemainderFraction * 100}%` }}
                       />
+                      <div className="absolute inset-0 rounded-full bubble-shine" />
                     </div>
                   </div>
                   <div className="flex items-end justify-between mb-3">
