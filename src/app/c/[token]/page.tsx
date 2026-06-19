@@ -184,19 +184,19 @@ export default function ClientPortalPage() {
   if (showOnboarding) {
     const steps = [
       {
-        icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="white" strokeWidth="1.5"/><path d="M12 8V12L15 15" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+        icon: <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="white" strokeWidth="1.5"/><path d="M12 8V12L15 15" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>,
         title: `${client.name.split(" ")[0]}, bienvenido a Referidoo`,
         body: `${advisor.name} te invita a recomendar personas para que también cuiden su patrimonio. Cada vez que alguien contrate un plan gracias a ti, recibes dinero en efectivo.`,
       },
       {
-        icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+        icon: <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
         title: "Así se acumula",
         body: tiers.length > 0
           ? "Por cada persona que contrate gracias a tu recomendación, ganas en efectivo."
           : `Cada referido que contrate un plan te da ${formatCurrency(1500)} en efectivo, directo.`,
       },
       {
-        icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M22 16.92V19.92C22.0011 20.4813 21.7659 21.0171 21.3527 21.4046C20.9395 21.7921 20.3873 21.9971 19.82 21.97C16.7428 21.6429 13.787 20.5973 11.19 18.92C8.77382 17.3883 6.72534 15.3398 5.19 12.92C3.49997 10.3099 2.45418 7.33897 2.13 4.24999C2.10313 3.68453 2.30731 3.13436 2.69261 2.72161C3.07791 2.30886 3.61263 2.07326 4.17 2.04999H7.17C8.18 2.04999 9.04 2.77999 9.17 3.77999L9.67 7.27999C9.71 7.54999 9.64 7.82999 9.47 8.04999L7.72 9.81999C9.17379 12.3484 11.2516 14.4263 13.78 15.88L15.55 14.13C15.77 13.95 16.06 13.88 16.33 13.92L19.83 14.42C20.8199 14.5527 21.5499 15.4127 21.55 16.42L22 16.92Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+        icon: <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M22 16.92V19.92C22.0011 20.4813 21.7659 21.0171 21.3527 21.4046C20.9395 21.7921 20.3873 21.9971 19.82 21.97C16.7428 21.6429 13.787 20.5973 11.19 18.92C8.77382 17.3883 6.72534 15.3398 5.19 12.92C3.49997 10.3099 2.45418 7.33897 2.13 4.24999C2.10313 3.68453 2.30731 3.13436 2.69261 2.72161C3.07791 2.30886 3.61263 2.07326 4.17 2.04999H7.17C8.18 2.04999 9.04 2.77999 9.17 3.77999L9.67 7.27999C9.71 7.54999 9.64 7.82999 9.47 8.04999L7.72 9.81999C9.17379 12.3484 11.2516 14.4263 13.78 15.88L15.55 14.13C15.77 13.95 16.06 13.88 16.33 13.92L19.83 14.42C20.8199 14.5527 21.5499 15.4127 21.55 16.42L22 16.92Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
         title: "Sin papeleo, sin presión",
         body: "Comparte tu link con quien quieras. Si a tu contacto le interesa, el asesor lo atiende. Si contrata, tú cobras. Nada más.",
       },
@@ -216,10 +216,10 @@ export default function ClientPortalPage() {
               }`} />
             ))}
           </div>
-          <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center mb-8">
+          <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mb-8 shadow-[0_8px_20px_rgba(0,0,0,0.12)]">
             {step.icon}
           </div>
-          <h1 className="text-xl font-semibold mb-3 leading-snug">{step.title}</h1>
+          <h1 className="text-2xl font-semibold mb-3 leading-snug tracking-tight">{step.title}</h1>
           <p className="text-gray-500 text-sm leading-relaxed">{step.body}</p>
           {onboardingStep === 1 && tiers.length > 0 && (
             <div className="mt-5 space-y-2">
