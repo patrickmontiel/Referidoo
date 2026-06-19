@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
 
@@ -60,8 +60,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [showWelcome, setShowWelcome] = useState(false);
   const [fadingOut, setFadingOut] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
+  const consumedWelcomeFlag = useRef(false);
 
   useEffect(() => {
+    // sessionStorage is a one-time external resource: React's dev Strict Mode
+    // double-invokes this effect AND runs the first invocation's cleanup
+    // synchronously. The ref guard stops the second invocation from re-reading
+    // the already-consumed flag — but the timers must NOT be returned from a
+    // cleanup function, or Strict Mode's synthetic cleanup cancels them before
+    // they ever fire, leaving showWelcome stuck true forever. This effect is a
+    // one-time initialization, not a synchronized resource, so no cleanup.
+    if (consumedWelcomeFlag.current) return;
+    consumedWelcomeFlag.current = true;
+
     const hasWelcome = sessionStorage.getItem("referidoo_welcome") === "1";
 
     if (hasWelcome) {
@@ -70,13 +81,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       fetch("/api/advisor/me").then(r => r.json()).then(adv => {
         if (adv?.name) setWelcomeName(adv.name);
       }).catch(() => {});
-      const t1 = setTimeout(() => setFadingOut(true), 3200);
-      const t2 = setTimeout(() => {
+      setTimeout(() => setFadingOut(true), 3200);
+      setTimeout(() => {
         setShowWelcome(false);
         setFadingOut(false);
         if (!localStorage.getItem(ONBOARDING_KEY)) setShowOnboarding(true);
       }, 4000);
-      return () => { clearTimeout(t1); clearTimeout(t2); };
     } else {
       if (!localStorage.getItem(ONBOARDING_KEY)) setShowOnboarding(true);
     }
