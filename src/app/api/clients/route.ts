@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
 import { generateReferralCode } from "@/lib/utils";
+import { canAdvisorAddClients, gateErrorMessage } from "@/lib/plan";
 
 export async function GET() {
   const session = await getAdvisorSession();
@@ -30,6 +31,11 @@ export async function POST(req: NextRequest) {
 
   const { name, email, phone, policyNumber } = await req.json();
   if (!name) return NextResponse.json({ error: "El nombre es requerido" }, { status: 400 });
+
+  const gate = await canAdvisorAddClients(session.advisorId);
+  if (!gate.allowed) {
+    return NextResponse.json({ error: gateErrorMessage(gate.reason) }, { status: 403 });
+  }
 
   let referralCode = generateReferralCode(name);
   let attempts = 0;

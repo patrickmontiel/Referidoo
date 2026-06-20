@@ -60,7 +60,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [showWelcome, setShowWelcome] = useState(false);
   const [fadingOut, setFadingOut] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
+  const [emailVerified, setEmailVerified] = useState(true);
   const consumedWelcomeFlag = useRef(false);
+
+  useEffect(() => {
+    fetch("/api/advisor/me")
+      .then((r) => r.json())
+      .then((adv) => { if (typeof adv?.emailVerified === "boolean") setEmailVerified(adv.emailVerified); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     // sessionStorage is a one-time external resource: React's dev Strict Mode
@@ -139,6 +147,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
       </header>
+
+      {!emailVerified && (
+        <div className="bg-sky-50 border-b border-sky-100">
+          <div className="max-w-5xl mx-auto px-5 py-2.5 text-sm text-sky-800">
+            Verifica tu correo para empezar a agregar clientes — revisa tu bandeja de entrada.
+          </div>
+        </div>
+      )}
 
       {/* Side nav + content */}
       <div className="flex flex-1 max-w-5xl mx-auto w-full">

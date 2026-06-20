@@ -444,6 +444,44 @@ export async function sendBubbleClaimPaidNotification(payload: BubbleClaimPayloa
   }).catch((err) => console.error("[email] Error enviando pago de burbuja:", err));
 }
 
+export async function sendVerificationEmail(payload: { advisorEmail: string; advisorName: string; verificationToken: string }) {
+  const verifyUrl = `${BASE_URL}/api/auth/verify-email?token=${payload.verificationToken}`;
+
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY no configurado — verificación no enviada. Link:", verifyUrl);
+    return;
+  }
+
+  await resend.emails.send({
+    from: FROM,
+    to: [payload.advisorEmail],
+    subject: "Confirma tu correo en Referidoo",
+    html: `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden">
+        <tr><td style="background:#000;padding:24px 32px">
+          <p style="margin:0;color:#fff;font-size:12px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo</p>
+        </td></tr>
+        <tr><td style="padding:32px">
+          <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#0a0a0a">Hola ${payload.advisorName}, confirma tu correo</h1>
+          <p style="margin:0 0 24px;font-size:14px;color:#6b7280">Falta un paso para empezar a agregar clientes en Referidoo — confirma tu correo con el botón de abajo.</p>
+          <a href="${verifyUrl}" style="display:block;background:#000;color:#fff;text-align:center;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none">
+            Verificar mi correo →
+          </a>
+          <p style="margin:20px 0 0;font-size:12px;color:#d1d5db;text-align:center">Si no creaste esta cuenta, ignora este correo.</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  }).catch((err) => console.error("[email] Error enviando verificación:", err));
+}
+
 export async function sendNewReferralNotification(payload: NewReferralPayload) {
   if (!resend) {
     console.log("[email] RESEND_API_KEY no configurado — email no enviado. Payload:", payload);

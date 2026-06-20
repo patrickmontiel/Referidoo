@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
 import { generateReferralCode } from "@/lib/utils";
+import { remainingClientQuota, gateErrorMessage } from "@/lib/plan";
 
 type ImportRow = { name: string; phone?: string; email?: string; policyNumber?: string };
 
@@ -15,13 +16,25 @@ export async function POST(req: NextRequest) {
   }
 
   const results: { name: string; ok: boolean; error?: string }[] = [];
-  const validRows = rows.filter((row): row is ImportRow => {
+  let validRows = rows.filter((row): row is ImportRow => {
     if (!row.name?.trim()) {
       results.push({ name: row.name || "—", ok: false, error: "Nombre vacío" });
       return false;
     }
     return true;
   });
+
+  // Cupo restante calculado UNA sola vez antes del loop paralelo de creación
+  // (no fila por fila): evita N queries de conteo y una condición de carrera
+  // donde varias filas en el mismo chunk leerían el mismo conteo antes de que
+  // ninguna se hubiera insertado todavía.
+  const { remaining, reason } = await remainingClientQuota(session.advisorId);
+  if (remaining !== null && validRows.length > remaining) {
+    const blocked = validRows.slice(remaining);
+    const errorMsg = gateErrorMessage(reason ?? "plan_limit");
+    blocked.forEach((row) => results.push({ name: row.name, ok: false, error: errorMsg }));
+    validRows = validRows.slice(0, remaining);
+  }
 
   // Genera códigos únicos dentro del lote en memoria, y verifica colisiones
   // contra la DB con un solo findMany en vez de hasta 5 queries por fila.

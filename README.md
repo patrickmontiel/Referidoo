@@ -48,6 +48,7 @@ EMAIL_NOTIFY_CREATOR=
 TURSO_AUTH_TOKEN=    # usado por /api/migrate para aplicar cambios de esquema en prod
 CRON_SECRET=         # autentica al cron diario de Vercel (ver "Cron y jobs en background")
 QSTASH_TOKEN=        # autentica las llamadas salientes a QStash (webhooks diferidos)
+PLATFORM_OWNER_EMAIL= # único correo con acceso a /admin/plataforma (lista de asesores + toggle de plan)
 ```
 
 ### Base de datos

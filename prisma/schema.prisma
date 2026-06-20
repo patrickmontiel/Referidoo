@@ -8,17 +8,20 @@ datasource db {
 }
 
 model Advisor {
-  id          String           @id @default(cuid())
-  name        String
-  email       String           @unique
-  password    String
-  phone       String?
-  companyName String?
-  createdAt   DateTime         @default(now())
-  clients     Client[]
-  referrals   Referral[]
-  tiers       RewardTier[]
-  settings    AdvisorSettings?
+  id                String           @id @default(cuid())
+  name              String
+  email             String           @unique
+  password          String
+  phone             String?
+  companyName       String?
+  plan              String           @default("freemium")
+  emailVerified     Boolean          @default(false)
+  verificationToken String?          @unique
+  createdAt         DateTime         @default(now())
+  clients           Client[]
+  referrals         Referral[]
+  tiers             RewardTier[]
+  settings          AdvisorSettings?
 }
 
 model AdvisorSettings {

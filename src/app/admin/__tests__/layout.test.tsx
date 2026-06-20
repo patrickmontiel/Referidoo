@@ -28,7 +28,7 @@ describe("AdminLayout welcome screen", () => {
       React.createElement(
         React.StrictMode,
         null,
-        React.createElement(AdminLayout, { children: React.createElement("div", null, "content") })
+        React.createElement(AdminLayout, null, React.createElement("div", null, "content"))
       )
     );
 
@@ -40,5 +40,37 @@ describe("AdminLayout welcome screen", () => {
     });
 
     expect(findOverlay()).toBeNull();
+  });
+});
+
+describe("AdminLayout email verification banner", () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+    localStorage.setItem("referidoo_admin_onboarded", "1"); // skip onboarding modal noise
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("shows the verification banner when /api/advisor/me reports emailVerified=false", async () => {
+    vi.stubGlobal("fetch", vi.fn(() =>
+      Promise.resolve({ json: () => Promise.resolve({ name: "Ana", emailVerified: false }) })
+    ) as unknown as typeof fetch);
+
+    render(React.createElement(AdminLayout, null, React.createElement("div", null, "content")));
+
+    expect(await screen.findByText(/verifica tu correo/i)).toBeInTheDocument();
+  });
+
+  it("does not show the banner when emailVerified=true", async () => {
+    vi.stubGlobal("fetch", vi.fn(() =>
+      Promise.resolve({ json: () => Promise.resolve({ name: "Eduardo Neri", emailVerified: true }) })
+    ) as unknown as typeof fetch);
+
+    render(React.createElement(AdminLayout, null, React.createElement("div", null, "content")));
+
+    await act(async () => {});
+    expect(screen.queryByText(/verifica tu correo/i)).not.toBeInTheDocument();
   });
 });
