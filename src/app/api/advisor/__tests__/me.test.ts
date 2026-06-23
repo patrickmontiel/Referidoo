@@ -34,17 +34,18 @@ describe("GET /api/advisor/me", () => {
   // Regresión: el select original olvidó incluir `plan`, lo que rompía
   // silenciosamente el banner de upgrade en /admin (advisor.plan llegaba
   // undefined al cliente) — solo se detectó probando en navegador real.
-  it("includes plan and emailVerified in the selected fields (regression)", async () => {
+  it("includes plan, emailVerified, and paidUntil in the selected fields (regression)", async () => {
     mockSession.mockResolvedValue({ advisorId: "adv1", email: "a@b.com" });
-    mockFindUnique.mockResolvedValue({ id: "adv1", name: "Ana", plan: "freemium", emailVerified: true });
+    mockFindUnique.mockResolvedValue({ id: "adv1", name: "Ana", plan: "paid", emailVerified: true, paidUntil: "2026-07-23" });
 
     const res = await GET();
     const data = await res.json();
 
     expect(mockFindUnique).toHaveBeenCalledWith(
-      expect.objectContaining({ select: expect.objectContaining({ plan: true, emailVerified: true }) })
+      expect.objectContaining({ select: expect.objectContaining({ plan: true, emailVerified: true, paidUntil: true }) })
     );
-    expect(data.plan).toBe("freemium");
+    expect(data.plan).toBe("paid");
     expect(data.emailVerified).toBe(true);
+    expect(data.paidUntil).toBe("2026-07-23");
   });
 });

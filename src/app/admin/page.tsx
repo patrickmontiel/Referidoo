@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCurrency, formatDate, getStatusLabel } from "@/lib/utils";
 import { Tour, type TourStep } from "@/components/Tour";
-import { UpgradeCardForm } from "@/components/UpgradeCardForm";
 
 const TOUR_STEPS: TourStep[] = [
   {
@@ -44,7 +43,7 @@ type Referral = {
   referrer: { id: string; name: string };
 };
 
-type Advisor = { name: string; companyName: string | null; plan?: string; emailVerified?: boolean };
+type Advisor = { name: string; companyName: string | null; plan?: string };
 
 export default function AdminOverviewPage() {
   const [referrals, setReferrals] = useState<Referral[]>([]);
@@ -52,9 +51,6 @@ export default function AdminOverviewPage() {
   const [loading, setLoading] = useState(true);
   const [clientCount, setClientCount] = useState(0);
   const [showTour, setShowTour] = useState(false);
-  const [billingBusy, setBillingBusy] = useState(false);
-  const [billingError, setBillingError] = useState("");
-  const [showUpgradeForm, setShowUpgradeForm] = useState(false);
 
   useEffect(() => {
     const handler = () => setShowTour(true);
@@ -73,21 +69,6 @@ export default function AdminOverviewPage() {
       setClientCount(Array.isArray(clients) ? clients.length : 0);
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
-
-  function handleUpgradeSuccess() {
-    setShowUpgradeForm(false);
-    setAdvisor((prev) => (prev ? { ...prev, plan: "paid" } : prev));
-  }
-
-  async function handleCancel() {
-    setBillingBusy(true);
-    setBillingError("");
-    const res = await fetch("/api/billing/cancel", { method: "POST" });
-    const data = await res.json();
-    setBillingBusy(false);
-    if (!res.ok) { setBillingError(data.error ?? "No se pudo cancelar"); return; }
-    setAdvisor((prev) => (prev ? { ...prev } : prev));
-  }
 
   if (loading) {
     return (
@@ -113,53 +94,22 @@ export default function AdminOverviewPage() {
     <div className="max-w-2xl">
       {showTour && <Tour steps={TOUR_STEPS} onDone={() => setShowTour(false)} />}
 
-      <div data-tour="greeting" className="mb-6">
-        <h1 className="text-xl font-semibold">
-          {advisor ? `Hola, ${advisor.name.split(" ")[0]}` : "Resumen"}
-        </h1>
-        <p className="text-sm text-gray-400 mt-0.5">{advisor?.companyName ?? "Panel de referidos"}</p>
+      <div data-tour="greeting" className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold">
+            {advisor ? `Hola, ${advisor.name.split(" ")[0]}` : "Resumen"}
+          </h1>
+          <p className="text-sm text-gray-400 mt-0.5">{advisor?.companyName ?? "Panel de referidos"}</p>
+        </div>
+        {advisor?.plan && (
+          <Link
+            href="/admin/perfil"
+            className="text-xs font-medium px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition flex-shrink-0"
+          >
+            {advisor.plan === "paid" ? "Plan pagado" : "Plan freemium"} →
+          </Link>
+        )}
       </div>
-
-      {advisor?.plan === "freemium" && advisor.emailVerified && !showUpgradeForm && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-6 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium">Plan freemium — hasta 2 clientes</p>
-            <p className="text-xs text-gray-400 mt-0.5">Actualiza a pagado ($539/mes) para clientes ilimitados.</p>
-          </div>
-          <button
-            onClick={() => setShowUpgradeForm(true)}
-            className="text-xs font-medium px-4 py-2 rounded-xl bg-black text-white hover:bg-gray-900 transition flex-shrink-0"
-          >
-            Actualizar a pagado
-          </button>
-        </div>
-      )}
-
-      {advisor?.plan === "freemium" && advisor.emailVerified && showUpgradeForm && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
-          <p className="text-sm font-medium mb-4">Actualizar a plan pagado — $539/mes</p>
-          <UpgradeCardForm onSuccess={handleUpgradeSuccess} onCancel={() => setShowUpgradeForm(false)} />
-        </div>
-      )}
-
-      {advisor?.plan === "paid" && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-6 flex items-center justify-between gap-4">
-          <p className="text-sm font-medium">Plan pagado — clientes ilimitados</p>
-          <button
-            onClick={handleCancel}
-            disabled={billingBusy}
-            className="text-xs font-medium px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-50 transition flex-shrink-0"
-          >
-            Cancelar plan
-          </button>
-        </div>
-      )}
-
-      {billingError && (
-        <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-xl mb-6">
-          {billingError}
-        </div>
-      )}
 
       {/* Stats */}
       <div data-tour="stats" className="grid grid-cols-2 gap-3 mb-6">
