@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCurrency, formatDate, getStatusLabel } from "@/lib/utils";
 import { Tour, type TourStep } from "@/components/Tour";
+import { UpgradeCardForm } from "@/components/UpgradeCardForm";
 
 const TOUR_STEPS: TourStep[] = [
   {
@@ -53,6 +54,7 @@ export default function AdminOverviewPage() {
   const [showTour, setShowTour] = useState(false);
   const [billingBusy, setBillingBusy] = useState(false);
   const [billingError, setBillingError] = useState("");
+  const [showUpgradeForm, setShowUpgradeForm] = useState(false);
 
   useEffect(() => {
     const handler = () => setShowTour(true);
@@ -72,14 +74,9 @@ export default function AdminOverviewPage() {
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
-  async function handleUpgrade() {
-    setBillingBusy(true);
-    setBillingError("");
-    const res = await fetch("/api/billing/subscribe", { method: "POST" });
-    const data = await res.json();
-    setBillingBusy(false);
-    if (!res.ok) { setBillingError(data.error ?? "No se pudo iniciar el cobro"); return; }
-    window.location.href = data.checkoutUrl;
+  function handleUpgradeSuccess() {
+    setShowUpgradeForm(false);
+    setAdvisor((prev) => (prev ? { ...prev, plan: "paid" } : prev));
   }
 
   async function handleCancel() {
@@ -123,19 +120,25 @@ export default function AdminOverviewPage() {
         <p className="text-sm text-gray-400 mt-0.5">{advisor?.companyName ?? "Panel de referidos"}</p>
       </div>
 
-      {advisor?.plan === "freemium" && advisor.emailVerified && (
+      {advisor?.plan === "freemium" && advisor.emailVerified && !showUpgradeForm && (
         <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-6 flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-medium">Plan freemium — hasta 2 clientes</p>
             <p className="text-xs text-gray-400 mt-0.5">Actualiza a pagado ($539/mes) para clientes ilimitados.</p>
           </div>
           <button
-            onClick={handleUpgrade}
-            disabled={billingBusy}
-            className="text-xs font-medium px-4 py-2 rounded-xl bg-black text-white hover:bg-gray-900 disabled:opacity-50 transition flex-shrink-0"
+            onClick={() => setShowUpgradeForm(true)}
+            className="text-xs font-medium px-4 py-2 rounded-xl bg-black text-white hover:bg-gray-900 transition flex-shrink-0"
           >
-            {billingBusy ? "Redirigiendo..." : "Actualizar a pagado"}
+            Actualizar a pagado
           </button>
+        </div>
+      )}
+
+      {advisor?.plan === "freemium" && advisor.emailVerified && showUpgradeForm && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
+          <p className="text-sm font-medium mb-4">Actualizar a plan pagado — $539/mes</p>
+          <UpgradeCardForm onSuccess={handleUpgradeSuccess} onCancel={() => setShowUpgradeForm(false)} />
         </div>
       )}
 

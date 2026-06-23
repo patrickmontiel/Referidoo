@@ -59,11 +59,24 @@ describe("createSubscription / cancelSubscription without credentials", () => {
 
   it("createSubscription throws a clear error when MP_ACCESS_TOKEN is missing", async () => {
     const { createSubscription } = await import("../mercadopago");
-    await expect(createSubscription({ id: "adv1", email: "a@b.com", name: "Ana" })).rejects.toThrow(/MP_ACCESS_TOKEN/);
+    await expect(createSubscription({ id: "adv1", email: "a@b.com" }, "token123")).rejects.toThrow(/MP_ACCESS_TOKEN/);
   });
 
   it("cancelSubscription throws a clear error when MP_ACCESS_TOKEN is missing", async () => {
     const { cancelSubscription } = await import("../mercadopago");
     await expect(cancelSubscription("pre1")).rejects.toThrow(/MP_ACCESS_TOKEN/);
+  });
+});
+
+describe("createSubscription without MP_PLAN_ID", () => {
+  beforeEach(() => {
+    process.env.MP_ACCESS_TOKEN = "TEST-fake-token";
+    delete process.env.MP_PLAN_ID;
+    vi.resetModules();
+  });
+
+  it("throws a clear error pointing to the setup script", async () => {
+    const { createSubscription } = await import("../mercadopago");
+    await expect(createSubscription({ id: "adv1", email: "a@b.com" }, "token123")).rejects.toThrow(/MP_PLAN_ID/);
   });
 });

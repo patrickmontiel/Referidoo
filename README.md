@@ -51,6 +51,8 @@ QSTASH_TOKEN=        # autentica las llamadas salientes a QStash (webhooks difer
 PLATFORM_OWNER_EMAIL= # único correo con acceso a /admin/plataforma (lista de asesores + toggle de plan)
 MP_ACCESS_TOKEN=     # Mercado Pago — credencial privada para crear/cancelar suscripciones
 MP_WEBHOOK_SECRET=   # Mercado Pago — secreto de firma del webhook (dashboard de la app, "Tus integraciones")
+MP_PLAN_ID=          # id del Plan de Referidoo en Mercado Pago — generar una vez con scripts/mp-create-plan.ts
+NEXT_PUBLIC_MP_PUBLIC_KEY= # Mercado Pago — public key, expuesta al navegador para tokenizar tarjetas (Secure Fields)
 ```
 
 ### Base de datos
@@ -72,15 +74,18 @@ npm run seed   # prisma/seed.ts — datos de prueba
 
 Plan freemium (hasta 2 clientes, gratis) y plan pagado ($539 MXN/mes, clientes ilimitados). El registro siempre arranca en `freemium` — nunca se asigna `paid` directamente, ni siquiera si el formulario lo pide, para no abrir la puerta a un plan pagado sin pago real.
 
-Checkout hospedado de Mercado Pago (redirect a `init_point`), no embebido — para una suscripción que el asesor autoriza una sola vez, redirigir es menos trabajo de frontend y menos responsabilidad de cumplimiento que embeber Bricks.
+**Arquitectura real (verificada contra la API de Mercado Pago en sandbox, no solo contra la doc):** suscripción contra un **Plan** (`preapproval_plan_id`, creado una sola vez con `scripts/mp-create-plan.ts`) + tarjeta tokenizada en un formulario embebido (`src/components/UpgradeCardForm.tsx`, Secure Fields de `@mercadopago/sdk-react`) — **no** redirect a checkout hospedado. Se intentó redirect primero (más simple); esta cuenta de Mercado Pago devuelve `Internal server error` consistente para suscripciones sin Plan asociado, y "con Plan asociado" la documentación oficial confirma que *siempre* requiere `card_token_id` + `status: "authorized"`, nunca redirect. Ver el historial de commits de esta sección para el proceso de descarte completo.
 
-- `POST /api/billing/subscribe` (autenticado) — crea la suscripción (`PreApproval`) en Mercado Pago, devuelve el link de checkout (`init_point`).
+- `scripts/mp-create-plan.ts` — correr UNA VEZ por cuenta/credencial (test y producción son cuentas separadas) para crear el Plan de Referidoo. Guardar el `planId` resultante en `MP_PLAN_ID`.
+- `POST /api/billing/subscribe` (autenticado, recibe `cardTokenId` ya generado en el navegador) — crea la suscripción (`PreApproval` con `preapproval_plan_id` + `card_token_id` + `status: "authorized"`), autoriza de inmediato (sin esperar webhook), marca `plan: "paid"` + `paidUntil`.
 - `POST /api/webhooks/mercadopago` — recibe notificaciones de Mercado Pago, firma verificada con el validador oficial del SDK (`MP_WEBHOOK_SECRET`). Escucha dos topics (confirmados contra la tabla oficial de eventos del dashboard y contra los tipos del SDK instalado, `mercadopago@3.1.0` — **no** el topic genérico `payment`, que esta integración no usa):
-  - `subscription_preapproval` — alta/autorización de la suscripción misma → activa `plan: "paid"`.
+  - `subscription_preapproval` — cambios de estado de la suscripción misma.
   - `subscription_authorized_payment` — cada cobro recurrente. El `data.id` es un **Invoice** (factura de suscripción, `GET /authorized_payments/{id}` vía el cliente `Invoice` del SDK), no un `Payment` — `invoice.payment.status` aprobado extiende `paidUntil` un mes; rechazado marca `paymentFailedAt` (inicia la gracia de 3 días, sin reiniciarla si ya estaba corriendo).
 - `POST /api/billing/cancel` (autenticado) — cancela en Mercado Pago sin tocar `plan`/`paidUntil` localmente: el asesor ya pagó el periodo actual, así que lo conserva hasta que termine.
 
 En el dashboard de Mercado Pago (Tus integraciones → tu app → Webhooks → Configurar notificaciones), hay que marcar los eventos **"Recurring payment of a subscription"** y **"Subscription linking"** (no solo "payments") y guardar — la clave secreta solo aparece después de guardar la configuración.
+
+**Límite conocido de testing:** las Secure Fields de Mercado Pago rechazan toda interacción automatizada (fill/click/keyboard vía Playwright) — protección anti-fraude deliberada de su lado. `e2e/billing-upgrade.spec.ts` documenta esto y queda en `test.skip`; verificar el flujo de tokenización completo requiere un humano en un navegador real (toma ~30 segundos con una tarjeta de prueba).
 
 ## Tests
 

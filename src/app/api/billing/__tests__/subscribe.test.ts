@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { NextRequest } from "next/server";
 
 vi.mock("@/lib/db", () => ({
   db: { advisor: { findUnique: vi.fn(), update: vi.fn() } },
@@ -16,47 +17,79 @@ const mockFindUnique = db.advisor.findUnique as unknown as ReturnType<typeof vi.
 const mockUpdate = db.advisor.update as unknown as ReturnType<typeof vi.fn>;
 const mockCreateSubscription = createSubscription as unknown as ReturnType<typeof vi.fn>;
 
+function subscribeRequest(body: unknown = { cardTokenId: "token123" }) {
+  return new NextRequest("http://localhost:3050/api/billing/subscribe", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
 beforeEach(() => {
   mockSession.mockReset();
   mockFindUnique.mockReset();
-  mockUpdate.mockReset();
+  mockUpdate.mockReset().mockResolvedValue({});
   mockCreateSubscription.mockReset();
 });
 
 describe("POST /api/billing/subscribe", () => {
   it("returns 401 without a session", async () => {
     mockSession.mockResolvedValue(null);
-    const res = await POST();
+    const res = await POST(subscribeRequest());
     expect(res.status).toBe(401);
+  });
+
+  it("returns 400 when cardTokenId is missing", async () => {
+    mockSession.mockResolvedValue({ advisorId: "adv1", email: "a@b.com" });
+    const res = await POST(subscribeRequest({}));
+    expect(res.status).toBe(400);
+    expect(mockCreateSubscription).not.toHaveBeenCalled();
   });
 
   it("returns 400 if the advisor already has the paid plan", async () => {
     mockSession.mockResolvedValue({ advisorId: "adv1", email: "a@b.com" });
     mockFindUnique.mockResolvedValue({ id: "adv1", plan: "paid" });
-    const res = await POST();
+    const res = await POST(subscribeRequest());
     expect(res.status).toBe(400);
     expect(mockCreateSubscription).not.toHaveBeenCalled();
   });
 
-  it("creates a subscription, saves the preapproval id, and returns the checkout URL", async () => {
+  it("authorizes the subscription, sets plan=paid + paidUntil, and saves the preapproval id", async () => {
     mockSession.mockResolvedValue({ advisorId: "adv1", email: "a@b.com" });
     mockFindUnique.mockResolvedValue({ id: "adv1", plan: "freemium", email: "a@b.com", name: "Ana" });
-    mockCreateSubscription.mockResolvedValue({ preapprovalId: "pre1", initPoint: "https://mp.test/checkout/pre1" });
+    mockCreateSubscription.mockResolvedValue({ preapprovalId: "pre1", status: "authorized" });
 
-    const res = await POST();
+    const res = await POST(subscribeRequest());
     const data = await res.json();
 
     expect(res.status).toBe(200);
-    expect(data.checkoutUrl).toBe("https://mp.test/checkout/pre1");
+    expect(data.status).toBe("authorized");
+    expect(mockCreateSubscription).toHaveBeenCalledWith(
+      { id: "adv1", plan: "freemium", email: "a@b.com", name: "Ana" },
+      "token123"
+    );
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "adv1" },
+        data: expect.objectContaining({ mpPreapprovalId: "pre1", plan: "paid" }),
+      })
+    );
+  });
+
+  it("does not set plan=paid when the subscription comes back pending (not authorized)", async () => {
+    mockSession.mockResolvedValue({ advisorId: "adv1", email: "a@b.com" });
+    mockFindUnique.mockResolvedValue({ id: "adv1", plan: "freemium", email: "a@b.com", name: "Ana" });
+    mockCreateSubscription.mockResolvedValue({ preapprovalId: "pre1", status: "pending" });
+
+    await POST(subscribeRequest());
     expect(mockUpdate).toHaveBeenCalledWith({ where: { id: "adv1" }, data: { mpPreapprovalId: "pre1" } });
   });
 
   it("returns 500 with a friendly message when Mercado Pago errors", async () => {
     mockSession.mockResolvedValue({ advisorId: "adv1", email: "a@b.com" });
     mockFindUnique.mockResolvedValue({ id: "adv1", plan: "freemium", email: "a@b.com", name: "Ana" });
-    mockCreateSubscription.mockRejectedValue(new Error("MP_ACCESS_TOKEN no configurado"));
+    mockCreateSubscription.mockRejectedValue(new Error("card_token_id is required"));
 
-    const res = await POST();
+    const res = await POST(subscribeRequest());
     expect(res.status).toBe(500);
   });
 });

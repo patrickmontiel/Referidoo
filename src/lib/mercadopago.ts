@@ -1,7 +1,8 @@
-import { MercadoPagoConfig, PreApproval, WebhookSignatureValidator, InvalidWebhookSignatureError } from "mercadopago";
+import { MercadoPagoConfig, PreApproval, PreApprovalPlan, WebhookSignatureValidator, InvalidWebhookSignatureError } from "mercadopago";
 
 const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
 const WEBHOOK_SECRET = process.env.MP_WEBHOOK_SECRET;
+const PLAN_ID = process.env.MP_PLAN_ID;
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
 
 export const MONTHLY_PRICE_MXN = 539;
@@ -15,23 +16,59 @@ function getClient() {
   return getMercadoPagoConfig();
 }
 
-// Crea una suscripción recurrente mensual en Mercado Pago y devuelve el link
-// de checkout (init_point) al que se redirige al asesor para autorizarla.
-// Body verificado contra PreApprovalRequest del SDK instalado (mercadopago@3.1.0)
-// — los nombres de campo son correctos. Falta probar contra el sandbox real
-// una vez haya credenciales (MP_ACCESS_TOKEN/MP_WEBHOOK_SECRET).
-export async function createSubscription(advisor: { id: string; email: string; name: string }) {
+// Crea la suscripción del asesor CONTRA el Plan de Referidoo ya existente
+// (MP_PLAN_ID, creado una sola vez con `scripts/mp-create-plan.ts`), usando
+// un card_token_id ya generado en el navegador (Secure Fields / createCardToken
+// de @mercadopago/sdk-react) para autorizarla de inmediato — sin redirect.
+//
+// Probado contra la API real (sandbox) en este orden, hasta encontrar lo que
+// funciona en esta cuenta:
+//   1. PreApproval sin plan + auto_recurring inline + status:"pending"
+//      (redirect, sin card_token_id) → "Internal server error" consistente,
+//      con body idéntico al ejemplo oficial de la doc — parece ser que esta
+//      cuenta no tiene habilitada "suscripciones sin plan asociado".
+//   2. PreApproval CON preapproval_plan_id + status:"pending" (sin token)
+//      → "card_token_id is required" — confirma que "suscripciones con plan
+//      asociado" SIEMPRE requiere card_token_id + status:"authorized"
+//      (documentado: nunca soporta redirect).
+//   3. Esta función (plan + card_token_id + status:"authorized") es la que
+//      sí funciona en esta cuenta.
+export async function createSubscription(advisor: { id: string; email: string }, cardTokenId: string) {
   const client = getClient();
   if (!client) {
     throw new Error("MP_ACCESS_TOKEN no configurado — falta conectar Mercado Pago");
+  }
+  if (!PLAN_ID) {
+    throw new Error("MP_PLAN_ID no configurado — corre scripts/mp-create-plan.ts una vez y guarda el id en .env");
   }
 
   const preapproval = new PreApproval(client);
   const result = await preapproval.create({
     body: {
-      reason: "Referidoo — plan mensual",
+      preapproval_plan_id: PLAN_ID,
       external_reference: advisor.id,
       payer_email: advisor.email,
+      card_token_id: cardTokenId,
+      status: "authorized",
+    },
+  });
+
+  return { preapprovalId: result.id as string, status: result.status as string };
+}
+
+// Crea el Plan de Referidoo en Mercado Pago (una sola vez por cuenta/credencial
+// — test y producción son cuentas separadas, así que esto corre una vez por
+// cada una). El id resultante se guarda en MP_PLAN_ID.
+export async function createPlan(): Promise<{ planId: string; initPoint: string }> {
+  const client = getClient();
+  if (!client) {
+    throw new Error("MP_ACCESS_TOKEN no configurado — falta conectar Mercado Pago");
+  }
+
+  const plan = new PreApprovalPlan(client);
+  const result = await plan.create({
+    body: {
+      reason: "Referidoo — plan mensual",
       back_url: `${BASE_URL}/admin?billing=success`,
       auto_recurring: {
         frequency: 1,
@@ -39,11 +76,10 @@ export async function createSubscription(advisor: { id: string; email: string; n
         transaction_amount: MONTHLY_PRICE_MXN,
         currency_id: "MXN",
       },
-      status: "pending",
     },
   });
 
-  return { preapprovalId: result.id as string, initPoint: result.init_point as string };
+  return { planId: result.id as string, initPoint: result.init_point as string };
 }
 
 export async function cancelSubscription(preapprovalId: string) {
