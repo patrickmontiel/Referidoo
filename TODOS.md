@@ -14,6 +14,20 @@
 **Priority:** P3
 **Depends on:** None
 
+## Billing
+
+### Integrar CFDI (factura fiscal) para el cobro de Mercado Pago
+
+**What:** Generar factura fiscal timbrada (CFDI) para el cobro recurrente de $539/mes, vía un PAC (proveedor autorizado de certificación — ej. Facturama, Open Factura).
+
+**Why:** Decidido explícitamente en esta sesión (2026-06-22/23) diferir CFDI hasta que un asesor lo pida — Mercado Pago da recibo de pago simple sin CFDI timbrado, y con 1-2 asesores pagando no es urgente. Integrar un PAC es trabajo real (días, no horas).
+
+**Context:** Surgió al construir Approach B (cobro automatizado con Mercado Pago) tras confirmar que el asesor de prueba sí pagaría. El webhook de Mercado Pago (`src/app/api/webhooks/mercadopago/route.ts`) y el endpoint de suscripción (`src/app/api/billing/subscribe/route.ts`) no tocan facturación — si esto se vuelve un requisito, hay que decidir qué PAC usar y dónde se dispara el timbrado (¿en el webhook de pago aprobado?).
+
+**Effort:** L
+**Priority:** P4
+**Depends on:** Que un asesor real lo pida, o que el negocio lo requiera fiscalmente.
+
 ## Design
 
 ### Crear DESIGN.md formal

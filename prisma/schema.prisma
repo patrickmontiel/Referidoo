@@ -17,6 +17,9 @@ model Advisor {
   plan              String           @default("freemium")
   emailVerified     Boolean          @default(false)
   verificationToken String?          @unique
+  mpPreapprovalId   String?          @unique
+  paidUntil         DateTime?
+  paymentFailedAt   DateTime?
   createdAt         DateTime         @default(now())
   clients           Client[]
   referrals         Referral[]
