@@ -55,13 +55,32 @@ describe("PerfilPage", () => {
     mockAdvisorFetch({
       name: "Ana", email: "ana@x.com", phone: null, companyName: null,
       createdAt: "2026-06-01", plan: "paid", emailVerified: true, paidUntil: "2026-07-23",
+      monthlyPriceMxn: 539, pendingCommissionTotal: 0, pendingCommissions: [],
     });
 
     render(React.createElement(PerfilPage));
 
     expect(await screen.findByText(/plan pagado/i)).toBeInTheDocument();
-    expect(screen.getByText(/próximo cobro/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/próximo cobro/i).length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /cancelar plan/i })).toBeInTheDocument();
+  });
+
+  it("shows the commission breakdown when there is pending commission", async () => {
+    mockAdvisorFetch({
+      name: "Ana", email: "ana@x.com", phone: null, companyName: null,
+      createdAt: "2026-06-01", plan: "paid", emailVerified: true, paidUntil: "2026-07-23",
+      monthlyPriceMxn: 539, pendingCommissionTotal: 150,
+      pendingCommissions: [
+        { id: "ref-1", leadName: "Juan López", productType: "auto", saleAmount: 5000, lessioCommission: 100, createdAt: "2026-06-10" },
+        { id: "ref-2", leadName: "María Ruiz", productType: "vida", saleAmount: 3000, lessioCommission: 50, createdAt: "2026-06-15" },
+      ],
+    });
+
+    render(React.createElement(PerfilPage));
+
+    expect(await screen.findByText(/comisión por juan lópez/i)).toBeInTheDocument();
+    expect(screen.getByText(/comisión por maría ruiz/i)).toBeInTheDocument();
+    expect(screen.getByText("$689 MXN")).toBeInTheDocument();
   });
 
   it("shows an error message when cancel fails (no active MP subscription)", async () => {
@@ -70,6 +89,7 @@ describe("PerfilPage", () => {
         return Promise.resolve({ json: () => Promise.resolve({
           name: "Ana", email: "ana@x.com", phone: null, companyName: null,
           createdAt: "2026-06-01", plan: "paid", emailVerified: true, paidUntil: "2026-07-23",
+          monthlyPriceMxn: 539, pendingCommissionTotal: 0, pendingCommissions: [],
         }) });
       }
       if (url === "/api/billing/cancel" && init?.method === "POST") {

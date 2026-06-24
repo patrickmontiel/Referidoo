@@ -13,7 +13,7 @@ Plataforma que convierte clientes activos de asesores financieros/seguros en ref
 - **Precio:** $539 MXN/mes por asesor
 - **Comisión por producto:**
   - PPRs y seguros de vida (Allianz, Skandia): **0.15% sobre el valor del plan contratado**
-  - Seguros de daños, autos y GMM: **15% sobre la comisión del asesor**
+  - Seguros de daños, autos y GMM: **0.08% sobre el valor de la prima anual**
 - **Modelo:** Atención directa de Patrick (onboarding, soporte, configuración)
 - **Perfil:** Asesores individuales que necesitan acompañamiento
 - **Objetivo:** Validar el modelo, acumular 20–30 casos de éxito con testimonios
@@ -55,7 +55,7 @@ Plataforma que convierte clientes activos de asesores financieros/seguros en ref
 
 | Fase | Tipo | Mensual | Comisión vida/PPR | Comisión daños/auto/GMM |
 |------|------|---------|-------------------|------------------------|
-| 0 | Asistido por Patrick | $539 MXN | 0.15% del valor del plan | 15% de comisión del asesor |
+| 0 | Asistido por Patrick | $539 MXN | 0.15% del valor del plan | 0.08% de la prima anual |
 | 1 | Freemium → self-service app | Gratis/2 clientes → $189 MXN | 0.25% del valor del plan | 25% de comisión del asesor |
 | 2 | B2B por asiento (despachos) | $99 MXN/asiento | 0.10% del valor del plan | 10% de comisión del asesor |
 | 3 | API enterprise | Por contrato (TBD) | TBD | TBD |
@@ -72,9 +72,9 @@ La comisión varía por tipo de producto porque la estructura de ingreso del ase
 - Ejemplo Fase 0: Plan de $500,000 MXN → Referidoo cobra $750 MXN por ese referido convertido
 
 **Productos de corto plazo / renovación anual (Daños, Auto, GMM):**
-- No hay "valor del plan" como tal — hay una prima y una comisión del asesor
-- Referidoo cobra un % sobre lo que el asesor gana de comisión
-- Ejemplo Fase 0: Asesor gana $3,000 MXN de comisión → Referidoo cobra $450 MXN
+- No hay "valor del plan" como tal — hay una prima anual
+- Referidoo cobra un % sobre el valor de esa prima anual
+- Ejemplo Fase 0: Prima anual de $30,000 MXN → Referidoo cobra $24 MXN por ese referido convertido
 
 ---
 
@@ -127,4 +127,4 @@ La comisión varía por tipo de producto porque la estructura de ingreso del ase
 - [ ] Implementar free trial de 14 días en Fase 1
 - [ ] Definir precio del add-on white-label en Fase 2
 - [ ] Definir estructura de precios API para Fase 3
-- [ ] Confirmar si la comisión del 15/25/10% sobre comisión del asesor aplica también a GMM o solo a daños/auto
+- [ ] Confirmado para Fase 0 (2026-06-24): Daños/Auto/GMM cobra 0.08% sobre la prima anual, no "% sobre comisión del asesor" — corregido en este doc y ya coincide con `src/lib/rewards.ts`. Falta confirmar si Fase 1 (25%) y Fase 2 (10%) tienen el mismo error de redacción ("sobre comisión del asesor") cuando se construyan esas fases.

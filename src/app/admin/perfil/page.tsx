@@ -4,6 +4,15 @@ import { useEffect, useState } from "react";
 import { formatDate } from "@/lib/utils";
 import { UpgradeCardForm } from "@/components/UpgradeCardForm";
 
+type PendingCommission = {
+  id: string;
+  leadName: string;
+  productType: string | null;
+  saleAmount: number | null;
+  lessioCommission: number | null;
+  createdAt: string;
+};
+
 type Advisor = {
   name: string;
   email: string;
@@ -13,6 +22,9 @@ type Advisor = {
   plan: string;
   emailVerified: boolean;
   paidUntil: string | null;
+  monthlyPriceMxn: number;
+  pendingCommissionTotal: number;
+  pendingCommissions: PendingCommission[];
 };
 
 export default function PerfilPage() {
@@ -98,20 +110,61 @@ export default function PerfilPage() {
         )}
 
         {advisor.plan === "paid" ? (
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium">Plan pagado — clientes ilimitados</p>
-              {advisor.paidUntil && (
-                <p className="text-xs text-gray-400 mt-0.5">Próximo cobro: {formatDate(advisor.paidUntil)}</p>
-              )}
+          <div>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium">Plan pagado — clientes ilimitados</p>
+                {advisor.paidUntil && (
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Próximo cobro: {formatDate(advisor.paidUntil)} — $
+                    {advisor.monthlyPriceMxn + advisor.pendingCommissionTotal} MXN
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={handleCancel}
+                disabled={billingBusy}
+                className="text-xs font-medium px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-50 transition flex-shrink-0"
+              >
+                Cancelar plan
+              </button>
             </div>
-            <button
-              onClick={handleCancel}
-              disabled={billingBusy}
-              className="text-xs font-medium px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-50 transition flex-shrink-0"
-            >
-              Cancelar plan
-            </button>
+
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                Desglose del próximo cobro
+              </p>
+              <div className="flex items-center justify-between text-sm py-1">
+                <span className="text-gray-600">Mensualidad</span>
+                <span>${advisor.monthlyPriceMxn} MXN</span>
+              </div>
+              {advisor.pendingCommissions.length === 0 ? (
+                <div className="flex items-center justify-between text-sm py-1">
+                  <span className="text-gray-600">Comisión Referidoo</span>
+                  <span>$0 MXN</span>
+                </div>
+              ) : (
+                <>
+                  {advisor.pendingCommissions.map((c) => (
+                    <div key={c.id} className="flex items-center justify-between text-sm py-1">
+                      <span className="text-gray-600">
+                        Comisión por {c.leadName}
+                        {c.productType ? ` (${c.productType})` : ""}
+                      </span>
+                      <span>${c.lessioCommission} MXN</span>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between text-sm py-1 font-medium border-t border-gray-50 mt-1 pt-1">
+                    <span>Comisión Referidoo</span>
+                    <span>${advisor.pendingCommissionTotal} MXN</span>
+                  </div>
+                </>
+              )}
+              <div className="flex items-center justify-between text-sm py-1 font-medium mt-1 pt-1 border-t border-gray-100">
+                <span>Total</span>
+                <span>${advisor.monthlyPriceMxn + advisor.pendingCommissionTotal} MXN</span>
+              </div>
+            </div>
           </div>
         ) : !showUpgradeForm ? (
           <div className="flex items-center justify-between gap-4">

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { verifyPassword, signToken } from "@/lib/auth";
+import { verifyPassword, signToken, isPlatformOwner } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json();
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
   const token = signToken({ advisorId: advisor.id, email: advisor.email });
 
-  const res = NextResponse.json({ ok: true, advisorId: advisor.id });
+  const res = NextResponse.json({ ok: true, advisorId: advisor.id, isOwner: isPlatformOwner(advisor.email) });
   res.cookies.set("advisor_token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

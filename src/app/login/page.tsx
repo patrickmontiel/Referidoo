@@ -38,6 +38,11 @@ export default function LoginPage() {
       return;
     }
 
+    if (data.isOwner) {
+      router.push("/owner");
+      return;
+    }
+
     sessionStorage.setItem("referidoo_welcome", "1");
     router.push("/admin");
   }

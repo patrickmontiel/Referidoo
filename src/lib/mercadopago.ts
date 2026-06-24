@@ -82,6 +82,23 @@ export async function createPlan(): Promise<{ planId: string; initPoint: string 
   return { planId: result.id as string, initPoint: result.init_point as string };
 }
 
+// Sube (o baja) el monto que se cobrará en el siguiente ciclo de una
+// suscripción ya autorizada. Confirmado contra la API real en sandbox: el PUT
+// SÍ aplica sobre suscripciones creadas con preapproval_plan_id — no hace
+// falta migrar al modelo "sin plan asociado" para esto.
+export async function updateSubscriptionAmount(preapprovalId: string, newAmountMxn: number) {
+  const client = getClient();
+  if (!client) {
+    throw new Error("MP_ACCESS_TOKEN no configurado — falta conectar Mercado Pago");
+  }
+
+  const preapproval = new PreApproval(client);
+  await preapproval.update({
+    id: preapprovalId,
+    body: { auto_recurring: { transaction_amount: newAmountMxn, currency_id: "MXN" } },
+  });
+}
+
 export async function cancelSubscription(preapprovalId: string) {
   const client = getClient();
   if (!client) {
