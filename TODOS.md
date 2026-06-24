@@ -85,6 +85,25 @@ persistida es dinero real no contabilizado en los reportes de ingresos.
 **Priority:** P3
 **Depends on:** Que haya suficiente volumen histórico real para que valga la pena.
 
+## Legal
+
+### Confirmar con un abogado que las recompensas en efectivo a clientes por referir no violan regulación de seguros
+
+**What:** Validar formalmente (con un abogado especializado en seguros/CNSF, no solo investigación automatizada) que pagar recompensas en efectivo a un cliente por referir a un amigo que termina comprando una póliza no constituye "ejercer la actividad de agente de seguros" sin cédula, ni viola alguna disposición de la CUSF no revisada todavía.
+
+**Why:** Surgió durante `/plan-ceo-review` (2026-06-24) por analogía con la regla FINRA 3220 de EUA (asesores financieros, restringe comisiones de referido entre licenciados). México no tiene una ley idéntica para este caso específico, pero nunca se había planteado la pregunta para Referidoo.
+
+**Context:** Investigación ya hecha (no es punto de partida desde cero):
+- **LISF Artículo 93:** ejercer la actividad de "agente de seguros" requiere autorización/cédula de la CNSF.
+- **LISF Artículo 101:** las aseguradoras (Instituciones) solo pueden pagar comisión por contratación de seguros a agentes con cédula — pero esto regula a la ASEGURADORA pagándole a su canal de distribución, no a un asesor ya licenciado gastando su propia comisión en premiar referidos.
+- **CUSF:** se encontró una disposición sobre "comisiones a favor de contratantes" pero es de contabilidad (NIF C-9) para descuentos de prima que la aseguradora misma otorga — no aplica al mecanismo de Referidoo. La CUSF es muy extensa y NO se revisó completa.
+- **LFPIORPI (Ley Antilavado):** solo aplica a "Actividades Vulnerables" enumeradas (inmuebles, joyas, vehículos, apuestas, etc.) con umbrales de reporte en cientos de miles de pesos — los montos de Referidoo ($1,500-$3,500 MXN) están muy por debajo y la actividad no está en la lista.
+- **Lectura actual (no es asesoría legal real):** el cliente que refiere no realiza ningún acto de intermediación (no asesora, no negocia términos, no cierra la venta) — el asesor licenciado sigue siendo quien hace todo eso. Esto sugiere que el mecanismo de Referidoo cae fuera de las actividades reservadas a agentes con cédula, pero un abogado real podría encontrar un ángulo no revisado.
+
+**Effort:** S (una consulta con abogado, no desarrollo)
+**Priority:** P3
+**Depends on:** Que el volumen real de dinero crezca lo suficiente para que el riesgo deje de ser teórico.
+
 ## Design
 
 ### Crear DESIGN.md formal
