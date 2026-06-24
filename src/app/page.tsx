@@ -46,7 +46,7 @@ export default async function Home() {
             <Link href="/login" className="text-sm text-gray-500 hover:text-black transition px-3 py-2">
               Iniciar sesión
             </Link>
-            <Link href="/registro" className="text-sm font-medium bg-black text-white px-4 py-2 rounded-xl hover:bg-gray-900 transition">
+            <Link href="/registro" className="text-sm font-medium bg-black text-white px-4 py-2 rounded-xl transition-[background-color,transform] duration-150 hover:bg-gray-900 active:scale-[0.97]">
               Crear cuenta gratis
             </Link>
           </div>
@@ -55,7 +55,7 @@ export default async function Home() {
 
       {/* Hero */}
       <section className="max-w-5xl mx-auto px-5 pt-16 pb-12 grid md:grid-cols-2 gap-10 items-center">
-        <div>
+        <div className="landing-stagger">
           <h1 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight mb-5">
             Tus referidos, organizados.
             <br />
@@ -67,17 +67,17 @@ export default async function Home() {
             paga por ti.
           </p>
           <div className="flex items-center gap-3">
-            <Link href="/registro" className="text-sm font-medium bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-900 transition">
+            <Link href="/registro" className="text-sm font-medium bg-black text-white px-5 py-3 rounded-xl transition-[background-color,transform] duration-150 hover:bg-gray-900 active:scale-[0.97]">
               Crear cuenta gratis
             </Link>
-            <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-black px-5 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition">
+            <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-black px-5 py-3 rounded-xl border border-gray-200 transition-[background-color,transform] duration-150 hover:bg-gray-50 active:scale-[0.97]">
               Ya tengo cuenta
             </Link>
           </div>
           <p className="text-xs text-gray-400 mt-4">Gratis hasta 2 clientes. Sin tarjeta para empezar.</p>
         </div>
 
-        <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100">
+        <div className="landing-cta bg-gray-50 rounded-3xl p-6 border border-gray-100">
           <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">Así se ve tu panel</p>
           <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-3">
             <p className="text-xs text-gray-400 mb-1">Premios pagados</p>
@@ -165,7 +165,7 @@ export default async function Home() {
               <li>Premios automáticos</li>
               <li>Portal para tus clientes</li>
             </ul>
-            <Link href="/registro" className="block text-center text-sm font-medium border border-gray-200 px-4 py-3 rounded-xl hover:bg-gray-50 transition">
+            <Link href="/registro" className="block text-center text-sm font-medium border border-gray-200 px-4 py-3 rounded-xl transition-[background-color,transform] duration-150 hover:bg-gray-50 active:scale-[0.97]">
               Crear cuenta gratis
             </Link>
           </div>
@@ -178,7 +178,7 @@ export default async function Home() {
               <li>Clientes ilimitados</li>
               <li>Cobro automático vía Mercado Pago</li>
             </ul>
-            <Link href="/registro" className="block text-center text-sm font-medium bg-black text-white px-4 py-3 rounded-xl hover:bg-gray-900 transition">
+            <Link href="/registro" className="block text-center text-sm font-medium bg-black text-white px-4 py-3 rounded-xl transition-[background-color,transform] duration-150 hover:bg-gray-900 active:scale-[0.97]">
               Empezar
             </Link>
           </div>
