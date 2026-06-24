@@ -88,9 +88,9 @@ export default async function Home() {
               <p className="text-xl font-semibold">4</p>
               <p className="text-xs text-gray-400 mt-1">Clientes activos</p>
             </div>
-            <div className="bg-black text-white rounded-2xl p-4">
+            <div className="bg-blue-500 text-white rounded-2xl p-4">
               <p className="text-xl font-semibold">8</p>
-              <p className="text-xs text-gray-400 mt-1">Convertidos</p>
+              <p className="text-xs text-blue-100 mt-1">Convertidos</p>
             </div>
           </div>
         </div>
@@ -119,7 +119,7 @@ export default async function Home() {
         <div className="grid md:grid-cols-2 gap-4">
           {FEATURES.map((f) => (
             <div key={f.title} className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
-              <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center mb-4">
+              <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center mb-4">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d={f.icon} stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -137,9 +137,9 @@ export default async function Home() {
           Antes vs. con Referidoo
         </h2>
         <div className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
-          <div className="grid grid-cols-2 text-xs font-medium uppercase tracking-wider text-gray-400 px-6 py-3 border-b border-gray-100">
-            <span>Antes</span>
-            <span>Con Referidoo</span>
+          <div className="grid grid-cols-2 text-xs font-medium uppercase tracking-wider px-6 py-3 border-b border-gray-100">
+            <span className="text-gray-400">Antes</span>
+            <span className="text-blue-600">Con Referidoo</span>
           </div>
           {COMPARISON.map((row, i) => (
             <div key={i} className={`grid grid-cols-2 px-6 py-4 text-sm ${i > 0 ? "border-t border-gray-100" : ""}`}>
@@ -169,8 +169,8 @@ export default async function Home() {
               Crear cuenta gratis
             </Link>
           </div>
-          <div className="rounded-2xl border-2 border-black p-7">
-            <p className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-2">Pagado</p>
+          <div className="rounded-2xl border-2 border-blue-500 p-7">
+            <p className="text-sm font-medium text-blue-600 uppercase tracking-wider mb-2">Pagado</p>
             <p className="text-3xl font-semibold mb-1">$539 MXN<span className="text-base font-normal text-gray-400">/mes</span></p>
             <p className="text-sm text-gray-400 mb-6">Clientes ilimitados</p>
             <ul className="text-sm text-gray-500 space-y-2 mb-7">
