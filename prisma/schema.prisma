@@ -101,6 +101,10 @@ model Referral {
   saleAmount          Int?
   productType         String?
   interestProductType String?
+  // Comisión de Referidoo sobre este contrato cerrado. null = no calculada
+  // (referido convertido antes de que este campo existiera, o producto sin
+  // tasa definida) — nunca 0, para no confundir "no aplica" con "comisión cero".
+  lessioCommission    Int?
   rewardPaidAt        DateTime?
   paymentNote         String?
   confirmedByReferrer Boolean   @default(false)

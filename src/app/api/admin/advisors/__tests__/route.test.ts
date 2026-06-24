@@ -3,9 +3,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("@/lib/db", () => ({
   db: { advisor: { findMany: vi.fn(), update: vi.fn() } },
 }));
-vi.mock("@/lib/auth", () => ({
-  getAdvisorSession: vi.fn(),
-}));
+vi.mock("@/lib/auth", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/auth")>();
+  return { ...actual, getAdvisorSession: vi.fn() };
+});
 
 import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
@@ -40,13 +41,23 @@ describe("GET /api/admin/advisors", () => {
 
   it("returns the advisor list (minimal fields only) for the platform owner", async () => {
     mockSession.mockResolvedValue({ advisorId: "owner1", email: "patrick@referidoo.com" });
-    mockFindMany.mockResolvedValue([{ id: "adv1", name: "Ana", email: "ana@x.com", plan: "freemium", emailVerified: true, createdAt: new Date() }]);
+    mockFindMany.mockResolvedValue([{ id: "adv1", name: "Ana", email: "ana@x.com", plan: "freemium", emailVerified: true, createdAt: new Date(), paidUntil: null, paymentFailedAt: null, mpPreapprovalId: null }]);
 
     const res = await GET();
     expect(res.status).toBe(200);
     expect(mockFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        select: { id: true, name: true, email: true, plan: true, emailVerified: true, createdAt: true },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          plan: true,
+          emailVerified: true,
+          createdAt: true,
+          paidUntil: true,
+          paymentFailedAt: true,
+          mpPreapprovalId: true,
+        },
       })
     );
   });

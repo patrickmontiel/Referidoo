@@ -30,3 +30,7 @@ export async function getAdvisorSession(): Promise<{ advisorId: string; email: s
   if (!token) return null;
   return verifyToken(token);
 }
+
+export function isPlatformOwner(email: string): boolean {
+  return !!process.env.PLATFORM_OWNER_EMAIL && email === process.env.PLATFORM_OWNER_EMAIL;
+}

@@ -28,6 +28,63 @@
 **Priority:** P4
 **Depends on:** Que un asesor real lo pida, o que el negocio lo requiera fiscalmente.
 
+## Plataforma / Dashboard de dueño
+
+### Paginación en GET /api/admin/advisors
+
+**What:** Agregar paginación (o al menos un límite + cursor) al endpoint que lista
+todos los asesores para el dashboard de dueño.
+
+**Why:** Hoy carga todos los asesores sin límite con `db.advisor.findMany()`. A 1
+asesor no importa; en cuanto haya cientos, la tabla se vuelve lenta de cargar.
+
+**Context:** Surgió durante `/plan-eng-review` del dashboard de dueño (2026-06-23/24),
+sección de Performance. No bloquea nada hoy — es una optimización para cuando haya
+volumen real de asesores registrados.
+
+**Effort:** S
+**Priority:** P4
+**Depends on:** Que el número de asesores crezca lo suficiente para notarse.
+
+### /owner/pagos — monitoreo de webhooks/cobros fallidos de Mercado Pago
+
+**What:** Página dentro del dashboard de dueño que muestre webhooks fallidos o
+pagos rechazados de Mercado Pago, antes de que el asesor afectado se queje.
+
+**Why:** Es uno de los 4 disparadores reales confirmados en `/office-hours`
+(2026-06-23) para el dashboard de dueño — pero la fuente de datos no estaba
+resuelta a tiempo para v1.
+
+**Context:** Mercado Pago no expone un log histórico simple de webhooks fallidos
+vía API. Dos caminos: (a) construir una tabla propia de eventos, registrando cada
+webhook recibido (éxito o falla) en `src/app/api/webhooks/mercadopago/route.ts`, o
+(b) inferir indirectamente desde `Advisor.paymentFailedAt` (más simple, menos
+completo — no distingue fallo de webhook de fallo de cobro). Diferido a v1.1 del
+dashboard de dueño (ver design doc en `~/.gstack/projects/patrickmontiel-Referidoo/`).
+
+**Effort:** M
+**Priority:** P3
+**Depends on:** Decidir (a) vs (b) cuando se retome.
+
+### Backfill histórico de comisión Referidoo (lessioCommission)
+
+**What:** Calcular y persistir `lessioCommission` para referidos YA convertidos
+antes del lanzamiento del campo (hoy queda `null`, no se recalcula retroactivamente).
+
+**Why:** `saleAmount` y `productType` ya están persistidos en `Referral`, así que el
+backfill es técnicamente posible en cualquier momento — solo se difirió porque el
+volumen histórico hoy es bajo (datos de prueba) y no justificaba bloquear el
+arreglo más urgente (el shell de dueño).
+
+**Context:** Decidido explícitamente en `/office-hours` (2026-06-23) tras una
+segunda opinión que cuestionó meter el backfill en el alcance de v1. En cuanto
+haya varios asesores reales con meses de conversiones, ese histórico sin comisión
+persistida es dinero real no contabilizado en los reportes de ingresos.
+
+**Effort:** S
+**Priority:** P3
+**Depends on:** Que haya suficiente volumen histórico real para que valga la pena.
+
 ## Design
 
 ### Crear DESIGN.md formal

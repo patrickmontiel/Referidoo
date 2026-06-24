@@ -109,6 +109,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // Ambos escalera (Vida <-> PPR): tierPosition y rewardAmount no cambian.
   }
 
+  // Comisión de Referidoo sobre el contrato: se recalcula tanto al convertir como
+  // al corregir el producto/monto de un referido ya convertido (isProductTypeEdit) —
+  // si no, quedaría con el valor del producto viejo después de una corrección.
+  // null si el producto no tiene tasa definida o no hay saleAmount (nunca 0).
+  const lessioCommission = (isConverting || isProductTypeEdit)
+    ? calculateLessioCommission(productTypeForConversion, saleAmount)
+    : undefined;
+
   // Check launch bonus (3+ referrals in first 7 days → bonus on first prize only)
   // Se recalcula en cada PATCH mientras el premio no se haya pagado, para que aplique
   // retroactivamente si el referente alcanza 3 referidos después de la conversión.
@@ -147,6 +155,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(finalTierPosition !== referral.tierPosition ? { tierPosition: finalTierPosition } : {}),
       ...(finalRewardAmount !== referral.rewardAmount ? { rewardAmount: finalRewardAmount } : {}),
       ...(isPaid ? { rewardPaidAt: new Date(), paymentNote: body.paymentNote ?? null } : {}),
+      ...(lessioCommission !== undefined ? { lessioCommission } : {}),
     },
   });
 
@@ -164,8 +173,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   // 1. Notify creator when advisor marks referral as converted (deal closed)
   if (isConverting) {
-    const lessioCommission = calculateLessioCommission(productTypeForConversion, saleAmount);
-
     sendReferralApprovedNotification({
       advisorName: referral.advisor.name,
       advisorEmail: referral.advisor.email,
