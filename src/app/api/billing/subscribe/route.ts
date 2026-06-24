@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
-import { createSubscription } from "@/lib/mercadopago";
+import { createSubscription, mercadoPagoErrorMessage } from "@/lib/mercadopago";
 
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -35,6 +35,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, status });
   } catch (err) {
     console.error("[billing] Error creando suscripción:", err);
-    return NextResponse.json({ error: "No se pudo procesar el pago, verifica los datos de tu tarjeta" }, { status: 500 });
+    return NextResponse.json({ error: mercadoPagoErrorMessage(err) }, { status: 500 });
   }
 }

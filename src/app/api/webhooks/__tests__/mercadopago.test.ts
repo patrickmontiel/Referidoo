@@ -65,6 +65,18 @@ describe("POST /api/webhooks/mercadopago", () => {
     );
   });
 
+  // Regresión: si el pago viene APROBADO pero la escritura a la DB falla,
+  // antes regresábamos 200 igual — Mercado Pago nunca reintentaba y el
+  // asesor se quedaba pagado-pero-freemium para siempre.
+  it("returns 500 (not 200) when an approved payment fails to persist, so Mercado Pago retries", async () => {
+    mockVerify.mockReturnValue(true);
+    mockInvoiceGet.mockResolvedValue({ external_reference: "adv1", payment: { status: "approved" } });
+    mockUpdate.mockRejectedValue(new Error("DB connection lost"));
+
+    const res = await POST(webhookRequest({ type: "subscription_authorized_payment" }, "inv1"));
+    expect(res.status).toBe(500);
+  });
+
   it("on a rejected authorized payment with no prior failure, sets paymentFailedAt (starts the grace clock)", async () => {
     mockVerify.mockReturnValue(true);
     mockInvoiceGet.mockResolvedValue({ external_reference: "adv1", payment: { status: "rejected" } });

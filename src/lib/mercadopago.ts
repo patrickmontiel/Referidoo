@@ -92,6 +92,29 @@ export async function cancelSubscription(preapprovalId: string) {
   await preapproval.update({ id: preapprovalId, body: { status: "cancelled" } });
 }
 
+// Traduce un error del SDK de Mercado Pago a un mensaje que sí le sirve al
+// asesor. El SDK (ver node_modules/mercadopago/dist/utils/restClient) ya
+// reintenta internamente cualquier 5xx con backoff exponencial antes de
+// tirar el error — si nos llega un 5xx, es una caída persistente de MP, no
+// algo que el asesor pueda arreglar reintentando su tarjeta. Los 4xx no se
+// reintentan: ahí SÍ puede ser la tarjeta, o el token de tarjeta (vence en
+// ~7 minutos) si el asesor se tardó llenando el formulario.
+export function mercadoPagoErrorMessage(err: unknown): string {
+  const status = (err as { api_response?: { status?: number }; status?: number })?.api_response?.status
+    ?? (err as { status?: number })?.status;
+
+  if (typeof status === "number" && status >= 500) {
+    return "Mercado Pago no está respondiendo en este momento — intenta de nuevo en unos minutos.";
+  }
+
+  const message = String((err as { message?: string })?.message ?? "").toLowerCase();
+  if (message.includes("token")) {
+    return "Los datos de tu tarjeta caducaron mientras llenabas el formulario — vuelve a intentarlo.";
+  }
+
+  return "No se pudo procesar el pago, verifica los datos de tu tarjeta.";
+}
+
 // Verificación de firma de webhook usando el validador oficial del SDK
 // (constant-time, con tolerancia de replay). Requiere MP_WEBHOOK_SECRET del
 // dashboard de Mercado Pago ("Tus integraciones" → la app → Webhooks).

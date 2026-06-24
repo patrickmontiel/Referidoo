@@ -5,7 +5,10 @@ vi.mock("@/lib/db", () => ({
   db: { advisor: { findUnique: vi.fn(), update: vi.fn() } },
 }));
 vi.mock("@/lib/auth", () => ({ getAdvisorSession: vi.fn() }));
-vi.mock("@/lib/mercadopago", () => ({ createSubscription: vi.fn() }));
+vi.mock("@/lib/mercadopago", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/mercadopago")>();
+  return { ...actual, createSubscription: vi.fn() };
+});
 
 import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
@@ -84,12 +87,36 @@ describe("POST /api/billing/subscribe", () => {
     expect(mockUpdate).toHaveBeenCalledWith({ where: { id: "adv1" }, data: { mpPreapprovalId: "pre1" } });
   });
 
-  it("returns 500 with a friendly message when Mercado Pago errors", async () => {
+  it("returns 500 blaming the card when Mercado Pago rejects it (4xx, generic)", async () => {
     mockSession.mockResolvedValue({ advisorId: "adv1", email: "a@b.com" });
     mockFindUnique.mockResolvedValue({ id: "adv1", plan: "freemium", email: "a@b.com", name: "Ana" });
-    mockCreateSubscription.mockRejectedValue(new Error("card_token_id is required"));
+    mockCreateSubscription.mockRejectedValue({ message: "card declined", api_response: { status: 400 } });
 
     const res = await POST(subscribeRequest());
+    const data = await res.json();
     expect(res.status).toBe(500);
+    expect(data.error).toMatch(/verifica los datos de tu tarjeta/i);
+  });
+
+  it("returns a token-expired message when the error mentions the card token", async () => {
+    mockSession.mockResolvedValue({ advisorId: "adv1", email: "a@b.com" });
+    mockFindUnique.mockResolvedValue({ id: "adv1", plan: "freemium", email: "a@b.com", name: "Ana" });
+    mockCreateSubscription.mockRejectedValue({ message: "card_token_id is required or expired", api_response: { status: 400 } });
+
+    const res = await POST(subscribeRequest());
+    const data = await res.json();
+    expect(res.status).toBe(500);
+    expect(data.error).toMatch(/caducaron/i);
+  });
+
+  it("returns a Mercado Pago outage message on a persistent 5xx (already retried by the SDK)", async () => {
+    mockSession.mockResolvedValue({ advisorId: "adv1", email: "a@b.com" });
+    mockFindUnique.mockResolvedValue({ id: "adv1", plan: "freemium", email: "a@b.com", name: "Ana" });
+    mockCreateSubscription.mockRejectedValue({ message: "internal server error", api_response: { status: 500 } });
+
+    const res = await POST(subscribeRequest());
+    const data = await res.json();
+    expect(res.status).toBe(500);
+    expect(data.error).toMatch(/no está respondiendo/i);
   });
 });

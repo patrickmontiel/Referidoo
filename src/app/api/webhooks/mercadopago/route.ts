@@ -32,7 +32,15 @@ export async function POST(req: NextRequest) {
   const type = body?.type;
 
   if (type === "subscription_authorized_payment" && dataId) {
-    await handleAuthorizedPaymentNotification(dataId);
+    // A diferencia de los demás casos, un pago APROBADO que no logramos
+    // guardar es crítico: el asesor ya pagó de verdad y se quedaría en
+    // freemium para siempre si regresamos 200 — Mercado Pago nunca
+    // reintentaría el webhook porque le dijimos que todo salió bien. Por
+    // eso este caso sí propaga el fallo al status code de la respuesta.
+    const persisted = await handleAuthorizedPaymentNotification(dataId);
+    if (!persisted) {
+      return NextResponse.json({ error: "No se pudo registrar el pago, reintentar" }, { status: 500 });
+    }
   }
 
   if (type === "subscription_preapproval" && dataId) {
@@ -42,32 +50,41 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-async function handleAuthorizedPaymentNotification(invoiceId: string) {
+// Devuelve false solo cuando un pago APROBADO no se pudo guardar (caso
+// crítico, ver el comentario en POST). Para invoice no encontrado, sin
+// advisor, o pago rechazado, devuelve true — no hay nada que reintentar.
+async function handleAuthorizedPaymentNotification(invoiceId: string): Promise<boolean> {
   const config = getMercadoPagoConfig();
-  if (!config) return;
+  if (!config) return true;
 
   const invoice = await new Invoice(config).get({ id: invoiceId }).catch((err) => {
     console.error("[mp-webhook] Error obteniendo invoice:", err);
     return null;
   });
-  if (!invoice) return;
+  if (!invoice) return true;
 
   const advisorId = invoice.external_reference;
-  if (!advisorId) return;
+  if (!advisorId) return true;
 
   const status = invoice.payment?.status;
 
   if (status === "approved") {
-    await db.advisor.update({
+    const ok = await db.advisor.update({
       where: { id: advisorId },
       data: { plan: "paid", paidUntil: new Date(Date.now() + ONE_MONTH_MS), paymentFailedAt: null },
-    }).catch((err) => console.error("[mp-webhook] Error registrando pago aprobado:", err));
-    return;
+    }).then(() => true).catch((err) => {
+      console.error("[mp-webhook] Error registrando pago aprobado:", err);
+      return false;
+    });
+    return ok;
   }
 
   if (status === "rejected") {
     // Solo marcar el inicio de la gracia si no había una marca ya activa —
     // un segundo rechazo dentro de los 3 días de gracia no debe reiniciar el reloj.
+    // Si esta escritura falla no es crítico (es solo el inicio de la cuenta
+    // de gracia, no un pago aprobado perdido) — se queda como antes, sin
+    // propagar el fallo.
     const advisor = await db.advisor.findUnique({ where: { id: advisorId }, select: { paymentFailedAt: true } });
     if (advisor && !advisor.paymentFailedAt) {
       await db.advisor.update({
@@ -76,6 +93,8 @@ async function handleAuthorizedPaymentNotification(invoiceId: string) {
       }).catch((err) => console.error("[mp-webhook] Error registrando pago rechazado:", err));
     }
   }
+
+  return true;
 }
 
 async function handlePreapprovalNotification(preapprovalId: string) {
