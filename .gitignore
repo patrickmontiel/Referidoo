@@ -52,3 +52,17 @@ next-env.d.ts
 
 .vercel
 .gstack/
+
+.vercel
+.env*
+
+# stray empty db files / dev server logs (not real artifacts)
+/db
+/db-wal
+qa-dev-server.log
+
+# impeccable/taste-skill scaffolding (vendored in this project by mistake; lives at workspace root instead)
+.agents/
+.claude/
+.context/
+skills-lock.json

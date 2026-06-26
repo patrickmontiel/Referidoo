@@ -99,7 +99,7 @@ export default function AdminOverviewPage() {
           <h1 className="text-xl font-semibold">
             {advisor ? `Hola, ${advisor.name.split(" ")[0]}` : "Resumen"}
           </h1>
-          <p className="text-sm text-gray-400 mt-0.5">{advisor?.companyName ?? "Panel de referidos"}</p>
+          <p className="text-sm text-gray-500 mt-0.5">{advisor?.companyName ?? "Panel de referidos"}</p>
         </div>
         {advisor?.plan && (
           <Link
@@ -122,7 +122,7 @@ export default function AdminOverviewPage() {
           <div key={s.label} className="bg-white rounded-2xl border border-gray-100 p-4">
             <p className="text-2xl font-semibold">{s.value}</p>
             <p className="text-xs font-medium text-gray-700 mt-1">{s.label}</p>
-            <p className="text-xs text-gray-400">{s.sub}</p>
+            <p className="text-xs text-gray-500">{s.sub}</p>
           </div>
         ))}
       </div>
@@ -130,11 +130,11 @@ export default function AdminOverviewPage() {
       {/* Money */}
       <div data-tour="money" className="grid grid-cols-2 gap-3 mb-6">
         <div className="bg-black text-white rounded-2xl p-4">
-          <p className="text-xs text-gray-400 mb-1">Premios pagados</p>
+          <p className="text-xs text-gray-500 mb-1">Premios pagados</p>
           <p className="text-xl font-semibold">{formatCurrency(totalPaid)}</p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 p-4">
-          <p className="text-xs text-gray-400 mb-1">Por pagar (aprobados)</p>
+          <p className="text-xs text-gray-500 mb-1">Por pagar (aprobados)</p>
           <p className="text-xl font-semibold">{formatCurrency(totalApproved)}</p>
         </div>
       </div>
@@ -143,13 +143,13 @@ export default function AdminOverviewPage() {
       <div data-tour="recent" className="bg-white rounded-2xl border border-gray-100">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
           <h2 className="font-medium text-sm">Últimos referidos</h2>
-          <Link href="/admin/referidos" className="text-xs text-gray-400 hover:text-black transition">
+          <Link href="/admin/referidos" className="text-xs text-gray-500 hover:text-black transition">
             Ver todos →
           </Link>
         </div>
         {referrals.length === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-gray-400 text-sm">Aún no hay referidos.</p>
+            <p className="text-gray-500 text-sm">Aún no hay referidos.</p>
             <Link href="/admin/clientes" className="text-xs text-black underline mt-2 inline-block">
               Agrega tu primer cliente
             </Link>
@@ -159,14 +159,14 @@ export default function AdminOverviewPage() {
             {referrals.slice(0, 5).map((r) => (
               <div key={r.id} className="flex items-center gap-4 px-5 py-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{r.leadName}</p>
-                  <p className="text-xs text-gray-400">Vía {r.referrer.name} · {formatDate(r.createdAt)}</p>
+                  <p className="text-sm font-medium truncate">{r.leadName}</p>
+                  <p className="text-xs text-gray-500 truncate">Vía {r.referrer.name} · {formatDate(r.createdAt)}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusConfig[r.status]}`}>
                     {getStatusLabel(r.status)}
                   </span>
-                  <p className="text-xs text-gray-400 mt-1">{formatCurrency(r.rewardAmount)}</p>
+                  <p className="text-xs text-gray-500 mt-1">{formatCurrency(r.rewardAmount)}</p>
                 </div>
               </div>
             ))}

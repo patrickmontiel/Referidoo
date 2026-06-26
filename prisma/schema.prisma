@@ -25,6 +25,7 @@ model Advisor {
   referrals         Referral[]
   tiers             RewardTier[]
   settings          AdvisorSettings?
+  planEvents        PlanEvent[]
 }
 
 model AdvisorSettings {
@@ -82,6 +83,17 @@ model BubbleClaim {
   paidAt      DateTime?
 
   @@index([clientId])
+}
+
+model PlanEvent {
+  id        String   @id @default(cuid())
+  advisorId String
+  advisor   Advisor  @relation(fields: [advisorId], references: [id], onDelete: Cascade)
+  event     String // activated | failed | cancelled
+  createdAt DateTime @default(now())
+
+  @@index([advisorId])
+  @@index([createdAt])
 }
 
 model Referral {

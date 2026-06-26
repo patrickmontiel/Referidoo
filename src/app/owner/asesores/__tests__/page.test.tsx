@@ -89,6 +89,9 @@ describe("OwnerAsesoresPage", () => {
     const button = await screen.findByRole("button", { name: /pasar a pagado/i });
     fireEvent.click(button);
 
+    const confirmButton = await screen.findByRole("button", { name: /confirmar/i });
+    fireEvent.click(confirmButton);
+
     expect(await screen.findByText("Pagado")).toBeInTheDocument();
   });
 });

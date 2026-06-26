@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Logo } from "@/components/Logo";
 
 export default function RegistroPage() {
@@ -43,7 +44,7 @@ export default function RegistroPage() {
           <div className="mb-4">
             <Logo size="md" />
           </div>
-          <p className="text-sm text-gray-400">Crea tu cuenta de asesor</p>
+          <p className="text-sm text-gray-500">Crea tu cuenta de asesor</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -94,12 +95,12 @@ export default function RegistroPage() {
               className="w-full min-h-11 px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
               placeholder="••••••••"
             />
-            <p className="text-xs text-gray-400 mt-1">Mínimo 8 caracteres</p>
+            <p className="text-xs text-gray-500 mt-1">Mínimo 8 caracteres</p>
           </div>
 
           <div>
             <label htmlFor="reg-company" className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-              Despacho / empresa <span className="text-gray-300 font-normal normal-case tracking-normal">(opcional)</span>
+              Despacho / empresa <span className="text-gray-500 font-normal normal-case tracking-normal">(opcional)</span>
             </label>
             <input
               id="reg-company"
@@ -121,14 +122,14 @@ export default function RegistroPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full min-h-11 bg-black text-white text-sm font-medium py-3 rounded-xl hover:bg-gray-900 disabled:opacity-50 transition"
+            className="w-full min-h-11 bg-black text-white text-sm font-medium py-3 rounded-xl hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-[background-color,transform,opacity] duration-150 active:scale-[0.98]"
           >
             {loading ? "Creando cuenta..." : "Crear cuenta"}
           </button>
         </form>
 
         <div className="text-center mt-5 text-sm text-gray-600">
-          Ya tengo cuenta — <a href="/login" className="text-black font-medium">Iniciar sesión</a>
+          Ya tengo cuenta — <Link href="/login" className="text-black font-medium hover:underline">Iniciar sesión</Link>
         </div>
       </div>
     </div>

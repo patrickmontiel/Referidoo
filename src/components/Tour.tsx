@@ -133,7 +133,7 @@ export function Tour({ steps, onDone }: { steps: TourStep[]; onDone: () => void 
             />
           ))}
         </div>
-        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
+        <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
           {idx + 1} / {steps.length}
         </p>
         <h3 className="text-sm font-semibold leading-snug mb-1.5">{step.title}</h3>
@@ -148,7 +148,7 @@ export function Tour({ steps, onDone }: { steps: TourStep[]; onDone: () => void 
           {!isLast && (
             <button
               onClick={onDone}
-              className="px-3.5 text-xs py-2.5 rounded-xl border border-gray-200 text-gray-400 hover:bg-gray-50 transition"
+              className="px-3.5 text-xs py-2.5 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
             >
               Saltar
             </button>

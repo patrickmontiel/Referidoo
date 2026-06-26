@@ -54,7 +54,7 @@ const statusConfig: Record<string, { bg: string; text: string; dot: string }> = 
 };
 
 const rewardConfig: Record<string, string> = {
-  pending:  "text-gray-400",
+  pending:  "text-gray-500",
   approved: "text-amber-600",
   paid:     "text-green-600",
 };
@@ -241,7 +241,7 @@ export default function ClientPortalPage() {
             {isLast ? "Ir a mi dashboard →" : "Siguiente"}
           </button>
           {!isLast && (
-            <button onClick={finishOnboarding} className="w-full mt-2 text-gray-400 text-xs py-2 hover:text-gray-600 transition">
+            <button onClick={finishOnboarding} className="w-full mt-2 text-gray-500 text-xs py-2 hover:text-gray-600 transition">
               Saltar
             </button>
           )}
@@ -306,7 +306,7 @@ export default function ClientPortalPage() {
               <div className="bg-black text-white rounded-2xl p-4">
                 <p className="text-xs font-medium text-blue-400 mb-1">⚡ Bono de Inicio activado</p>
                 <p className="text-2xl font-semibold">{formatCurrency(bonusAmount)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Tu primer premio fue duplicado por referir en tu primera semana.</p>
+                <p className="text-xs text-gray-500 mt-0.5">Tu primer premio fue duplicado por referir en tu primera semana.</p>
               </div>
             )}
 
@@ -319,7 +319,7 @@ export default function ClientPortalPage() {
                   <span
                     key={countdownLabel}
                     className={`countdown-tick text-xs font-medium px-2.5 py-1 rounded-full tabular-nums ${
-                      countdownUrgent ? "countdown-urgent bg-amber-400/15 text-amber-300" : "bg-white/10 text-gray-300"
+                      countdownUrgent ? "countdown-urgent bg-amber-400/15 text-amber-300" : "bg-white/10 text-gray-500"
                     }`}
                   >
                     {countdownLabel} restantes
@@ -328,7 +328,7 @@ export default function ClientPortalPage() {
 
                 {referralsInWindow >= 3 ? (
                   <>
-                    <p className="text-sm text-gray-300 mb-1 relative">El primero de tus referidos en contratar PPR o Seguro de Vida te da</p>
+                    <p className="text-sm text-gray-500 mb-1 relative">El primero de tus referidos en contratar PPR o Seguro de Vida te da</p>
                     <div className="flex items-baseline gap-2 relative">
                       <span className="text-base text-gray-500 line-through">{formatCurrency(firstTierAmount)}</span>
                       <span className="bonus-glow text-3xl font-bold text-blue-400">{formatCurrency(bonusAmount)}</span>
@@ -336,7 +336,7 @@ export default function ClientPortalPage() {
                   </>
                 ) : (
                   <>
-                    <p className="text-sm text-gray-300 mb-1 relative">Tu primer premio puede subir de</p>
+                    <p className="text-sm text-gray-500 mb-1 relative">Tu primer premio puede subir de</p>
                     <div className="flex items-baseline gap-2 mb-3 relative">
                       <span className="text-base text-gray-500 line-through">{formatCurrency(firstTierAmount)}</span>
                       <span className="text-3xl font-bold text-blue-400">{formatCurrency(bonusAmount)}</span>
@@ -344,7 +344,7 @@ export default function ClientPortalPage() {
                     <p className="text-sm font-semibold mb-1 relative">
                       Invita a {3 - referralsInWindow} {3 - referralsInWindow === 1 ? "persona más" : "personas más"} esta semana
                     </p>
-                    <p className="text-xs text-gray-400 mb-3 relative">
+                    <p className="text-xs text-gray-500 mb-3 relative">
                       Una vez un referido tuyo contrate Seguro de Vida o PPR te llevarás el bono.
                     </p>
                     <div className="flex gap-1.5 mb-2 relative">
@@ -365,7 +365,7 @@ export default function ClientPortalPage() {
               <div key={r.id} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
                 <p className="text-xs font-medium text-gray-700 mb-0.5">Premio enviado — ¿Lo recibiste?</p>
                 <p className="text-2xl font-semibold mb-0.5">{formatCurrency(r.rewardAmount)}</p>
-                <p className="text-xs text-gray-400 mb-3">Por referir a {r.leadName}</p>
+                <p className="text-xs text-gray-500 mb-3">Por referir a {r.leadName}</p>
                 <button
                   onClick={() => confirmReceipt(r.id)}
                   disabled={confirming === r.id}
@@ -386,7 +386,7 @@ export default function ClientPortalPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium">Premio confirmado</p>
-                  <p className="text-xs text-gray-400">{formatCurrency(r.rewardAmount)} · {r.leadName}</p>
+                  <p className="text-xs text-gray-500">{formatCurrency(r.rewardAmount)} · {r.leadName}</p>
                 </div>
               </div>
             ))}
@@ -394,14 +394,14 @@ export default function ClientPortalPage() {
             {/* Stats */}
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-black text-white rounded-2xl p-4">
-                <p className="text-xs text-gray-400 mb-1">Ganado</p>
+                <p className="text-xs text-gray-500 mb-1">Ganado</p>
                 <p className="text-2xl font-semibold">{formatCurrency(stats.totalEarned)}</p>
                 <p className="text-xs text-gray-500 mt-0.5">pagado</p>
               </div>
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
-                <p className="text-xs text-gray-400 mb-1">Por cobrar</p>
+                <p className="text-xs text-gray-500 mb-1">Por cobrar</p>
                 <p className="text-2xl font-semibold">{formatCurrency(stats.pendingEarnings)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">aprobado</p>
+                <p className="text-xs text-gray-500 mt-0.5">aprobado</p>
               </div>
             </div>
 
@@ -426,7 +426,7 @@ export default function ClientPortalPage() {
                     const hasBonus = matchingReferral ? matchingReferral.rewardAmount > tier.amount : false;
                     const showBonusBadge = bonusHere || hasBonus;
                     const amountColor = current ? "text-white" : done ? "text-green-600" : "text-gray-700";
-                    const strikeColor = current ? "text-white/40" : "text-gray-400";
+                    const strikeColor = current ? "text-white/40" : "text-gray-500";
                     return (
                       <div key={tier.position} className={`flex items-center gap-3 px-5 py-3 ${current ? "bg-black" : ""}`}>
                         <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -443,7 +443,7 @@ export default function ClientPortalPage() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium ${current ? "text-white" : done ? "text-gray-400 line-through" : "text-gray-700"}`}>
+                          <p className={`text-sm font-medium truncate ${current ? "text-white" : done ? "text-gray-500 line-through" : "text-gray-700"}`}>
                             {tier.label || `Referido #${tier.position}`}
                           </p>
                           {showBonusBadge && (
@@ -461,7 +461,7 @@ export default function ClientPortalPage() {
                   })}
                 </div>
                 {settings.afterLastTier === "cycle" && (
-                  <p className="text-xs text-gray-400 text-center py-3 border-t border-gray-50">
+                  <p className="text-xs text-gray-500 text-center py-3 border-t border-gray-50">
                     Los premios se repiten después del nivel {tiers.length}
                   </p>
                 )}
@@ -472,7 +472,7 @@ export default function ClientPortalPage() {
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
               <div className="flex items-center justify-between mb-1">
                 <h2 className="font-medium text-sm">Premios burbuja</h2>
-                <span className="text-xs text-gray-400">Auto, Otro + GMM</span>
+                <span className="text-xs text-gray-500">Auto, Otro + GMM</span>
               </div>
               {pendingBubbleClaim ? (
                 <div className="flex items-center gap-3 mt-2">
@@ -483,12 +483,12 @@ export default function ClientPortalPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium">Reclamo en proceso</p>
-                    <p className="text-xs text-gray-400">{formatCurrency(pendingBubbleClaim.amount)} · tu asesor lo enviará pronto</p>
+                    <p className="text-xs text-gray-500">{formatCurrency(pendingBubbleClaim.amount)} · tu asesor lo enviará pronto</p>
                   </div>
                 </div>
               ) : (
                 <>
-                  <p className="text-xs text-gray-400 mb-3">Se llena con cada venta de Auto, Otro o GMM. Cada burbuja completa vale {formatCurrency(bubbleThreshold)}.</p>
+                  <p className="text-xs text-gray-500 mb-3">Se llena con cada venta de Auto, Otro o GMM. Cada burbuja completa vale {formatCurrency(bubbleThreshold)}.</p>
                   <div className="flex items-center justify-center gap-3 py-2 mb-3 flex-wrap">
                     {Array.from({ length: fullBubbles }, (_, i) => (
                       <div
@@ -515,7 +515,7 @@ export default function ClientPortalPage() {
                     {hasClaimableBubbles ? (
                       <p className="text-xs text-blue-500 font-medium">{fullBubbles} burbuja{fullBubbles > 1 ? "s" : ""} lista{fullBubbles > 1 ? "s" : ""} para reclamar</p>
                     ) : (
-                      <p className="text-xs text-gray-400">Meta {formatCurrency(bubbleThreshold)}</p>
+                      <p className="text-xs text-gray-500">Meta {formatCurrency(bubbleThreshold)}</p>
                     )}
                   </div>
                   {hasClaimableBubbles ? (
@@ -527,7 +527,7 @@ export default function ClientPortalPage() {
                       {claimingBubble ? "Reclamando..." : `Reclamar ${formatCurrency(claimableBubbleAmount)}`}
                     </button>
                   ) : (
-                    <p className="text-xs text-gray-400 text-center">Te faltan {formatCurrency(bubbleThreshold - bubbleRemainder)} para tu próxima burbuja de {formatCurrency(bubbleThreshold)}.</p>
+                    <p className="text-xs text-gray-500 text-center">Te faltan {formatCurrency(bubbleThreshold - bubbleRemainder)} para tu próxima burbuja de {formatCurrency(bubbleThreshold)}.</p>
                   )}
                 </>
               )}
@@ -567,11 +567,11 @@ export default function ClientPortalPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 text-center">
                 <p className="text-2xl font-semibold">{stats.totalReferrals}</p>
-                <p className="text-xs text-gray-400 mt-1">Referidos enviados</p>
+                <p className="text-xs text-gray-500 mt-1">Referidos enviados</p>
               </div>
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 text-center">
                 <p className="text-2xl font-semibold">{stats.convertedCount}</p>
-                <p className="text-xs text-gray-400 mt-1">Convertidos</p>
+                <p className="text-xs text-gray-500 mt-1">Convertidos</p>
               </div>
             </div>
           </div>
@@ -581,15 +581,15 @@ export default function ClientPortalPage() {
           <div>
             {referrals.length === 0 ? (
               <div className="text-center py-16 px-6">
-                <p className="text-gray-400 text-sm">Aún no has referido a nadie.</p>
+                <p className="text-gray-500 text-sm">Aún no has referido a nadie.</p>
                 {launchBonusActive ? (
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-500 mt-1">
                     ⚡ Invita a 3 personas esta semana y tu primer premio sube de{" "}
                     {formatCurrency(firstTierAmount)} a{" "}
                     <strong className="text-gray-700">{formatCurrency(bonusAmount)}</strong>.
                   </p>
                 ) : (
-                  <p className="text-xs text-gray-300 mt-1">Tu primer referido vale {formatCurrency(tiers[0]?.amount ?? 1500)}.</p>
+                  <p className="text-xs text-gray-500 mt-1">Tu primer referido vale {formatCurrency(tiers[0]?.amount ?? 1500)}.</p>
                 )}
                 <button
                   onClick={() => setTab("inicio")}
@@ -605,9 +605,9 @@ export default function ClientPortalPage() {
                   return (
                     <div key={r.id} className="flex items-start gap-4 px-5 py-4">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{r.leadName}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{r.leadPhone}</p>
-                        <p className="text-xs text-gray-300 mt-1">{formatDate(r.createdAt)}</p>
+                        <p className="text-sm font-medium truncate">{r.leadName}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{r.leadPhone}</p>
+                        <p className="text-xs text-gray-500 mt-1">{formatDate(r.createdAt)}</p>
                         <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium mt-2 ${sc.bg} ${sc.text}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
                           {getStatusLabel(r.status)}
@@ -624,16 +624,16 @@ export default function ClientPortalPage() {
                             </>
                           ) : (
                             <>
-                              <p className="text-sm font-semibold text-gray-400">—</p>
-                              <p className="text-xs text-gray-400 font-medium mt-0.5">Sin premio en efectivo</p>
+                              <p className="text-sm font-semibold text-gray-500">—</p>
+                              <p className="text-xs text-gray-500 font-medium mt-0.5">Sin premio en efectivo</p>
                             </>
                           )
                         ) : (
                           <>
-                            <p className={`text-sm font-semibold ${rewardConfig[r.rewardStatus] ?? "text-gray-400"}`}>
+                            <p className={`text-sm font-semibold ${rewardConfig[r.rewardStatus] ?? "text-gray-500"}`}>
                               {formatCurrency(r.rewardAmount)}
                             </p>
-                            <p className="text-xs text-gray-400 mt-0.5">{getRewardStatusLabel(r.rewardStatus)}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{getRewardStatusLabel(r.rewardStatus)}</p>
                           </>
                         )}
                       </div>

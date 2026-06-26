@@ -2,6 +2,23 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getAdvisorSession } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
+import { ScrollReveal } from "@/components/ScrollReveal";
+
+function CheckIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className={`flex-shrink-0 ${className}`}>
+      <path d="M5 13L9 17L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function XIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className={`flex-shrink-0 ${className}`}>
+      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 const FEATURES = [
   {
@@ -42,11 +59,11 @@ export default async function Home() {
       <header className="border-b border-gray-100">
         <div className="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between">
           <Logo size="md" />
-          <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-3">
             <Link href="/login" className="text-sm text-gray-500 hover:text-black transition px-3 py-2">
               Iniciar sesión
             </Link>
-            <Link href="/registro" className="text-sm font-medium bg-black text-white px-4 py-2 rounded-xl transition-[background-color,transform] duration-150 hover:bg-gray-900 active:scale-[0.97]">
+            <Link href="/registro" className="text-sm font-medium bg-black text-white px-4 py-2 rounded-xl transition-[background-color,transform] duration-150 hover:bg-gray-900 active:scale-[0.97] whitespace-nowrap">
               Crear cuenta gratis
             </Link>
           </div>
@@ -56,7 +73,7 @@ export default async function Home() {
       {/* Hero */}
       <section className="max-w-5xl mx-auto px-5 pt-16 pb-12 grid md:grid-cols-2 gap-10 items-center">
         <div className="landing-stagger">
-          <h1 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight mb-5">
+          <h1 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight mb-5 text-balance">
             Tus referidos, organizados.
             <br />
             Tus premios, automáticos.
@@ -74,19 +91,19 @@ export default async function Home() {
               Ya tengo cuenta
             </Link>
           </div>
-          <p className="text-xs text-gray-400 mt-4">Gratis hasta 2 clientes. Sin tarjeta para empezar.</p>
+          <p className="text-xs text-gray-500 mt-4">Gratis hasta 2 clientes. Sin tarjeta para empezar.</p>
         </div>
 
-        <div className="landing-cta bg-gray-50 rounded-3xl p-6 border border-gray-100">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">Así se ve tu panel</p>
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-3">
-            <p className="text-xs text-gray-400 mb-1">Premios pagados</p>
+        <div className="landing-cta bg-gray-100 rounded-3xl p-6 border border-gray-200">
+          <p className="text-xs font-medium text-gray-600 uppercase tracking-wider mb-3">Así se ve tu panel</p>
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-3">
+            <p className="text-xs text-gray-600 mb-1">Premios pagados</p>
             <p className="text-2xl font-semibold">$2,500</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white rounded-2xl border border-gray-100 p-4">
+            <div className="bg-white rounded-2xl border border-gray-200 p-4">
               <p className="text-xl font-semibold">4</p>
-              <p className="text-xs text-gray-400 mt-1">Clientes activos</p>
+              <p className="text-xs text-gray-600 mt-1">Clientes activos</p>
             </div>
             <div className="bg-blue-500 text-white rounded-2xl p-4">
               <p className="text-xl font-semibold">8</p>
@@ -98,8 +115,8 @@ export default async function Home() {
 
       {/* Feature highlight */}
       <section className="max-w-5xl mx-auto px-5 py-16 border-t border-gray-100">
-        <div className="max-w-2xl">
-          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-4">
+        <ScrollReveal className="max-w-2xl">
+          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-4 text-balance">
             Cobra automático, sin perseguir pagos
           </h2>
           <p className="text-gray-500 leading-relaxed">
@@ -108,80 +125,113 @@ export default async function Home() {
             propias reglas — escalera para Vida y PPR, premios burbuja para Auto
             y Gastos Médicos Mayores. Tú decides los montos, Referidoo hace las cuentas.
           </p>
-        </div>
+        </ScrollReveal>
       </section>
 
       {/* Feature grid */}
       <section className="max-w-5xl mx-auto px-5 py-16 border-t border-gray-100">
-        <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-10 max-w-xl">
-          Todo lo que necesitas para no perder ni un referido
-        </h2>
+        <ScrollReveal>
+          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-10 max-w-xl text-balance">
+            Todo lo que necesitas para no perder ni un referido
+          </h2>
+        </ScrollReveal>
         <div className="grid md:grid-cols-2 gap-4">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
-              <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center mb-4">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d={f.icon} stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+          {FEATURES.map((f, i) => (
+            <ScrollReveal key={f.title} delayMs={i * 60}>
+              <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center mb-4">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d={f.icon} stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <h3 className="font-medium mb-2">{f.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{f.body}</p>
               </div>
-              <h3 className="font-medium mb-2">{f.title}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">{f.body}</p>
-            </div>
+            </ScrollReveal>
           ))}
         </div>
       </section>
 
       {/* Comparison */}
       <section className="max-w-5xl mx-auto px-5 py-16 border-t border-gray-100">
-        <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-10 text-center">
-          Antes vs. con Referidoo
-        </h2>
-        <div className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
-          <div className="grid grid-cols-2 text-xs font-medium uppercase tracking-wider px-6 py-3 border-b border-gray-100">
-            <span className="text-gray-400">Antes</span>
+        <ScrollReveal>
+          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-10 text-center text-balance">
+            Antes vs. con Referidoo
+          </h2>
+        </ScrollReveal>
+        <ScrollReveal delayMs={60} className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="hidden sm:grid grid-cols-2 text-xs font-medium uppercase tracking-wider px-6 py-3 border-b border-gray-100">
+            <span className="text-gray-500">Antes</span>
             <span className="text-blue-600">Con Referidoo</span>
           </div>
           {COMPARISON.map((row, i) => (
-            <div key={i} className={`grid grid-cols-2 px-6 py-4 text-sm ${i > 0 ? "border-t border-gray-100" : ""}`}>
-              <p className="text-gray-500 pr-4">{row.antes}</p>
-              <p className="font-medium pr-4">{row.despues}</p>
+            <div key={i} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-0 px-6 py-4 text-sm ${i > 0 ? "border-t border-gray-100" : ""}`}>
+              <div className="flex items-start gap-2 text-gray-500 sm:pr-4">
+                <XIcon className="text-gray-400 mt-0.5" />
+                <p>
+                  <span className="sm:hidden block text-xs font-medium uppercase tracking-wider text-gray-500 mb-1">Antes</span>
+                  {row.antes}
+                </p>
+              </div>
+              <div className="flex items-start gap-2 font-medium sm:pr-4">
+                <CheckIcon className="text-green-600 mt-0.5" />
+                <p>
+                  <span className="sm:hidden block text-xs font-medium uppercase tracking-wider text-blue-600 mb-1">Con Referidoo</span>
+                  {row.despues}
+                </p>
+              </div>
             </div>
           ))}
-        </div>
+        </ScrollReveal>
       </section>
 
       {/* Pricing */}
       <section className="max-w-5xl mx-auto px-5 py-16 border-t border-gray-100">
-        <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-10 text-center">
-          Simple y transparente
-        </h2>
+        <ScrollReveal>
+          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-10 text-center text-balance">
+            Simple y transparente
+          </h2>
+        </ScrollReveal>
         <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-          <div className="rounded-2xl border border-gray-100 p-7">
-            <p className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-2">Freemium</p>
-            <p className="text-3xl font-semibold mb-1">Gratis</p>
-            <p className="text-sm text-gray-400 mb-6">Hasta 2 clientes</p>
-            <ul className="text-sm text-gray-500 space-y-2 mb-7">
-              <li>Seguimiento de referidos</li>
-              <li>Premios automáticos</li>
-              <li>Portal para tus clientes</li>
-            </ul>
-            <Link href="/registro" className="block text-center text-sm font-medium border border-gray-200 px-4 py-3 rounded-xl transition-[background-color,transform] duration-150 hover:bg-gray-50 active:scale-[0.97]">
-              Crear cuenta gratis
-            </Link>
-          </div>
-          <div className="rounded-2xl border-2 border-blue-500 p-7">
-            <p className="text-sm font-medium text-blue-600 uppercase tracking-wider mb-2">Pagado</p>
-            <p className="text-3xl font-semibold mb-1">$539 MXN<span className="text-base font-normal text-gray-400">/mes</span></p>
-            <p className="text-sm text-gray-400 mb-6">Clientes ilimitados</p>
-            <ul className="text-sm text-gray-500 space-y-2 mb-7">
-              <li>Todo lo del plan freemium</li>
-              <li>Clientes ilimitados</li>
-              <li>Cobro automático vía Mercado Pago</li>
-            </ul>
-            <Link href="/registro" className="block text-center text-sm font-medium bg-black text-white px-4 py-3 rounded-xl transition-[background-color,transform] duration-150 hover:bg-gray-900 active:scale-[0.97]">
-              Empezar
-            </Link>
-          </div>
+          <ScrollReveal>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-7">
+              <p className="text-sm font-medium text-gray-600 uppercase tracking-wider mb-2">Freemium</p>
+              <p className="text-3xl font-semibold mb-1">Gratis</p>
+              <p className="text-sm text-gray-500 mb-6">Hasta 2 clientes</p>
+              <ul className="text-sm text-gray-600 space-y-2.5 mb-7">
+                {["Seguimiento de referidos", "Premios automáticos", "Portal para tus clientes"].map((item) => (
+                  <li key={item} className="flex items-center gap-2">
+                    <CheckIcon className="text-gray-400" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/registro" className="block text-center text-sm font-medium bg-white border border-gray-200 px-4 py-3 rounded-xl transition-[background-color,transform] duration-150 hover:bg-gray-100 active:scale-[0.97]">
+                Crear cuenta gratis
+              </Link>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal delayMs={60}>
+            <div className="relative rounded-2xl border-2 border-blue-500 p-7">
+              <span className="absolute -top-3 left-7 bg-blue-500 text-white text-xs font-medium px-3 py-1 rounded-full">
+                Recomendado
+              </span>
+              <p className="text-sm font-medium text-blue-600 uppercase tracking-wider mb-2">Pagado</p>
+              <p className="text-3xl font-semibold mb-1">$539 MXN<span className="text-base font-normal text-gray-500">/mes</span></p>
+              <p className="text-sm text-gray-500 mb-6">Clientes ilimitados</p>
+              <ul className="text-sm text-gray-700 space-y-2.5 mb-7">
+                {["Todo lo del plan freemium", "Clientes ilimitados", "Cobro automático vía Mercado Pago"].map((item) => (
+                  <li key={item} className="flex items-center gap-2">
+                    <CheckIcon className="text-blue-500" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/registro" className="block text-center text-sm font-medium bg-black text-white px-4 py-3 rounded-xl transition-[background-color,transform] duration-150 hover:bg-gray-900 active:scale-[0.97]">
+                Empezar
+              </Link>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -189,7 +239,7 @@ export default async function Home() {
       <footer className="border-t border-gray-100">
         <div className="max-w-5xl mx-auto px-5 py-8 flex items-center justify-between">
           <Logo size="sm" />
-          <div className="flex items-center gap-5 text-sm text-gray-400">
+          <div className="flex items-center gap-5 text-sm text-gray-500">
             <Link href="/login" className="hover:text-black transition">Iniciar sesión</Link>
             <Link href="/registro" className="hover:text-black transition">Crear cuenta</Link>
           </div>

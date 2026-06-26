@@ -201,7 +201,7 @@ export default function ReferidosPage() {
 
       <div data-tour="header" className="mb-6">
         <h1 className="text-xl font-semibold">Referidos</h1>
-        <p className="text-sm text-gray-400 mt-0.5">{referrals.length} en total</p>
+        <p className="text-sm text-gray-500 mt-0.5">{referrals.length} en total</p>
       </div>
 
       {/* Filters */}
@@ -231,7 +231,7 @@ export default function ReferidosPage() {
           <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-gray-400 text-sm">Sin referidos en esta categoría.</div>
+        <div className="text-center py-16 text-gray-500 text-sm">Sin referidos en esta categoría.</div>
       ) : (
         <div data-tour="list" className="space-y-3">
           {filtered.map((r) => {
@@ -250,9 +250,9 @@ export default function ReferidosPage() {
               >
                 <div className="flex items-start gap-4">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm">{r.leadName}</p>
-                    <p className="text-xs text-gray-400">{r.leadPhone}</p>
-                    <p className="text-xs text-gray-300 mt-0.5">
+                    <p className="font-medium text-sm truncate">{r.leadName}</p>
+                    <p className="text-xs text-gray-500">{r.leadPhone}</p>
+                    <p className="text-xs text-gray-500 mt-0.5 truncate">
                       Vía <span className="text-gray-500">{r.referrer.name}</span> · {formatDate(r.createdAt)}
                     </p>
                   </div>
@@ -260,7 +260,7 @@ export default function ReferidosPage() {
                     <div>
                       {isConverted ? (
                         noEscaleraReward ? (
-                          <p className="text-sm font-semibold text-gray-400">—</p>
+                          <p className="text-sm font-semibold text-gray-500">—</p>
                         ) : (
                           <p className="text-sm font-semibold">{formatCurrency(r.rewardAmount)}</p>
                         )
@@ -276,7 +276,7 @@ export default function ReferidosPage() {
                         <p className="text-[10px] text-amber-600 font-medium">⚡ Incluye bono</p>
                       )}
                       {r.saleAmount ? (
-                        <p className="text-[11px] text-gray-400 mt-0.5">Venta: {formatCurrency(r.saleAmount)}</p>
+                        <p className="text-[11px] text-gray-500 mt-0.5">Venta: {formatCurrency(r.saleAmount)}</p>
                       ) : null}
                     </div>
                     <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium border ${statusBg[r.status]}`}>
@@ -353,7 +353,7 @@ export default function ReferidosPage() {
               <p className="text-sm text-gray-500 mb-5">{convertTarget.name}</p>
 
               {/* Product type selector */}
-              <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">
+              <label className="block text-xs text-gray-500 uppercase tracking-wide mb-2">
                 Producto contratado
               </label>
               <div className="flex flex-wrap gap-2 mb-5">
@@ -373,11 +373,11 @@ export default function ReferidosPage() {
                 ))}
               </div>
 
-              <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">
+              <label className="block text-xs text-gray-500 uppercase tracking-wide mb-2">
                 {valueLabel}
               </label>
               <div className="relative mb-5">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">$</span>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -418,7 +418,7 @@ export default function ReferidosPage() {
             <p className="text-sm text-gray-500 mb-5">
               Confirma que enviaste <span className="font-semibold text-black">{formatCurrency(payTarget.amount)}</span> a {payTarget.referrerName}
             </p>
-            <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">
+            <label className="block text-xs text-gray-500 uppercase tracking-wide mb-2">
               Referencia del pago (opcional)
             </label>
             <input
@@ -429,7 +429,7 @@ export default function ReferidosPage() {
               className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black transition mb-5"
               autoFocus
             />
-            <p className="text-xs text-gray-400 mb-5">
+            <p className="text-xs text-gray-500 mb-5">
               Al confirmar, {payTarget.referrerName} recibirá un correo con el detalle del premio y un botón para confirmar recibo.
             </p>
             <div className="flex gap-2">
@@ -465,7 +465,7 @@ export default function ReferidosPage() {
 
             <div className="space-y-4">
               <div>
-                <p className="text-xs text-gray-400 mb-1">Lead</p>
+                <p className="text-xs text-gray-500 mb-1">Lead</p>
                 <p className="font-medium">{selected.leadName}</p>
                 <p className="text-sm text-gray-500">{selected.leadPhone}</p>
                 {selected.leadEmail && <p className="text-sm text-gray-500">{selected.leadEmail}</p>}
@@ -473,11 +473,11 @@ export default function ReferidosPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-xs text-gray-400 mb-1">Referido por</p>
+                  <p className="text-xs text-gray-500 mb-1">Referido por</p>
                   <p className="text-sm font-medium">{selected.referrer.name}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-1">Referido #</p>
+                  <p className="text-xs text-gray-500 mb-1">Referido #</p>
                   <p className="text-sm font-medium">
                     {referrals
                       .filter((r) => r.referrer.id === selected.referrer.id)
@@ -488,7 +488,7 @@ export default function ReferidosPage() {
                 {selected.status === "converted" ? (
                   <>
                     <div>
-                      <p className="text-xs text-gray-400 mb-1">Premio al cliente</p>
+                      <p className="text-xs text-gray-500 mb-1">Premio al cliente</p>
                       {selected.tierPosition === 0 ? (
                         selected.productType === "Daños/Auto" || selected.productType === "GMM" || selected.productType === "Otro" ? (
                           <div>
@@ -501,8 +501,8 @@ export default function ReferidosPage() {
                           </div>
                         ) : (
                           <div>
-                            <p className="text-sm font-semibold text-gray-400">—</p>
-                            <p className="text-[10px] text-gray-400 font-medium">Sin premio en efectivo</p>
+                            <p className="text-sm font-semibold text-gray-500">—</p>
+                            <p className="text-[10px] text-gray-500 font-medium">Sin premio en efectivo</p>
                           </div>
                         )
                       ) : (
@@ -518,13 +518,13 @@ export default function ReferidosPage() {
                       {selected.saleAmount ? (
                         <>
                           <div className="flex items-center gap-1 mb-1">
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-gray-500">
                               {selected.productType ? selected.productType : "Valor del plan"}
                             </p>
                             {selected.rewardStatus !== "paid" && (
                               <button
                                 onClick={() => setEditingProductType((v) => !v)}
-                                className="text-gray-300 hover:text-gray-500 transition"
+                                className="text-gray-500 hover:text-gray-700 transition"
                                 title="Editar producto contratado"
                               >
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
@@ -536,7 +536,7 @@ export default function ReferidosPage() {
                           {editingSale ? (
                             <div className="flex items-center gap-1.5">
                               <div className="relative flex-1">
-                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
                                 <input
                                   type="text"
                                   inputMode="numeric"
@@ -565,7 +565,7 @@ export default function ReferidosPage() {
                               <p className="text-sm font-bold text-green-700">{formatCurrency(selected.saleAmount)}</p>
                               <button
                                 onClick={() => { setEditSaleInput(formatNumberWithCommas(String(selected.saleAmount))); setEditingSale(true); }}
-                                className="text-gray-300 hover:text-gray-500 transition"
+                                className="text-gray-500 hover:text-gray-700 transition"
                                 title="Editar valor"
                               >
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
@@ -577,7 +577,7 @@ export default function ReferidosPage() {
                         </>
                       ) : (
                         <div>
-                          <p className="text-xs text-gray-400 mb-1">Fecha</p>
+                          <p className="text-xs text-gray-500 mb-1">Fecha</p>
                           <p className="text-sm">{formatDate(selected.createdAt)}</p>
                         </div>
                       )}
@@ -585,7 +585,7 @@ export default function ReferidosPage() {
                   </>
                 ) : (
                   <div className="col-span-2">
-                    <p className="text-xs text-gray-400 mb-1">Fecha</p>
+                    <p className="text-xs text-gray-500 mb-1">Fecha</p>
                     <p className="text-sm">{formatDate(selected.createdAt)}</p>
                   </div>
                 )}
@@ -595,7 +595,7 @@ export default function ReferidosPage() {
                   y puntos burbuja si cambia entre escalera y burbuja. */}
               {selected.status === "converted" && selected.rewardStatus !== "paid" && editingProductType && (
                 <div>
-                  <p className="text-xs text-gray-400 mb-2">Producto contratado</p>
+                  <p className="text-xs text-gray-500 mb-2">Producto contratado</p>
                   <div className="flex gap-2 flex-wrap">
                     {["PPR", "Vida", "Daños/Auto", "GMM", "Otro"].map((type) => (
                       <button
@@ -619,7 +619,7 @@ export default function ReferidosPage() {
                   solo se sabrá qué se contrató realmente al marcar como convertido */}
               {selected.status !== "converted" && (
                 <div>
-                  <p className="text-xs text-gray-400 mb-2">Interesado en</p>
+                  <p className="text-xs text-gray-500 mb-2">Interesado en</p>
                   <div className="flex gap-2 flex-wrap">
                     {["Daños/Auto", "GMM", "Vida", "PPR", "Otro"].map((type) => (
                       <button
@@ -640,7 +640,7 @@ export default function ReferidosPage() {
               )}
 
               <div>
-                <p className="text-xs text-gray-400 mb-2">Estado del lead</p>
+                <p className="text-xs text-gray-500 mb-2">Estado del lead</p>
                 <div className="flex gap-2 flex-wrap">
                   {(["pending", "contacted", "rejected"] as const).map((s) => (
                     <button
@@ -673,7 +673,7 @@ export default function ReferidosPage() {
               {/* Estado del premio — solo visible cuando está convertido y entra a la escalera */}
               {selected.status === "converted" && selected.tierPosition > 0 && (
                 <div>
-                  <p className="text-xs text-gray-400 mb-2">Estado del premio</p>
+                  <p className="text-xs text-gray-500 mb-2">Estado del premio</p>
                   <div className="flex gap-2 flex-wrap">
                     {["pending", "approved", "paid"].map((s) => (
                       <button
@@ -729,7 +729,7 @@ export default function ReferidosPage() {
                     </button>
                     <button
                       onClick={() => setDeleteId(null)}
-                      className="text-xs text-gray-400 hover:text-gray-600 transition"
+                      className="text-xs text-gray-500 hover:text-gray-600 transition"
                     >
                       Cancelar
                     </button>
@@ -737,7 +737,7 @@ export default function ReferidosPage() {
                 ) : (
                   <button
                     onClick={() => setDeleteId(selected.id)}
-                    className="text-xs text-gray-400 hover:text-red-500 transition"
+                    className="text-xs text-gray-500 hover:text-red-500 transition"
                   >
                     Eliminar referido
                   </button>

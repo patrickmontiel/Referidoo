@@ -26,11 +26,11 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Logo size="sm" />
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 px-2 py-0.5 rounded-full bg-gray-100">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 px-2 py-0.5 rounded-full bg-gray-100">
               Dueño
             </span>
           </div>
-          <button onClick={logout} className="text-xs text-gray-400 hover:text-gray-700 transition py-2 px-1">
+          <button onClick={logout} className="text-xs text-gray-500 hover:text-gray-700 transition py-2 px-1">
             Salir
           </button>
         </div>
@@ -75,7 +75,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
                 href={item.href}
                 className={cn(
                   "flex-1 flex flex-col items-center pt-3 pb-2 gap-1 active:bg-gray-50 transition",
-                  active ? "text-black" : "text-gray-400"
+                  active ? "text-black" : "text-gray-500"
                 )}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">

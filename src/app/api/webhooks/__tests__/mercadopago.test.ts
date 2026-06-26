@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
 vi.mock("@/lib/db", () => ({
-  db: { advisor: { findUnique: vi.fn(), update: vi.fn() } },
+  db: { advisor: { findUnique: vi.fn(), update: vi.fn() }, planEvent: { create: vi.fn() } },
 }));
 vi.mock("@/lib/mercadopago", () => ({
   verifyWebhookSignature: vi.fn(),
@@ -22,6 +22,7 @@ import { POST } from "../mercadopago/route";
 
 const mockFindUnique = db.advisor.findUnique as unknown as ReturnType<typeof vi.fn>;
 const mockUpdate = db.advisor.update as unknown as ReturnType<typeof vi.fn>;
+const mockPlanEventCreate = db.planEvent.create as unknown as ReturnType<typeof vi.fn>;
 const mockVerify = verifyWebhookSignature as unknown as ReturnType<typeof vi.fn>;
 
 function webhookRequest(body: unknown, dataId?: string) {
@@ -38,6 +39,7 @@ function webhookRequest(body: unknown, dataId?: string) {
 beforeEach(() => {
   mockFindUnique.mockReset();
   mockUpdate.mockReset().mockResolvedValue({});
+  mockPlanEventCreate.mockReset().mockResolvedValue({});
   mockVerify.mockReset();
   mockInvoiceGet.mockReset();
 });
@@ -63,6 +65,7 @@ describe("POST /api/webhooks/mercadopago", () => {
         data: expect.objectContaining({ plan: "paid", paymentFailedAt: null }),
       })
     );
+    expect(mockPlanEventCreate).toHaveBeenCalledWith({ data: { advisorId: "adv1", event: "activated" } });
   });
 
   // Regresión: si el pago viene APROBADO pero la escritura a la DB falla,
@@ -86,6 +89,7 @@ describe("POST /api/webhooks/mercadopago", () => {
     expect(mockUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "adv1" }, data: expect.objectContaining({ paymentFailedAt: expect.any(Date) }) })
     );
+    expect(mockPlanEventCreate).toHaveBeenCalledWith({ data: { advisorId: "adv1", event: "failed" } });
   });
 
   it("does not reset the grace clock on a second rejected payment while one is already running", async () => {

@@ -183,7 +183,7 @@ export default function ClientesPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold">Clientes</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{clients.filter((c) => c.active).length} activos</p>
+          <p className="text-sm text-gray-500 mt-0.5">{clients.filter((c) => c.active).length} activos</p>
         </div>
         <div data-tour="actions" className="flex gap-2">
           <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleFileChange} />
@@ -214,14 +214,14 @@ export default function ClientesPage() {
         <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-5">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-medium text-sm">{csvRows.length} clientes listos para importar</h2>
-            <button onClick={() => setCsvRows(null)} className="text-gray-300 hover:text-gray-500 text-lg leading-none">×</button>
+            <button onClick={() => setCsvRows(null)} className="text-gray-500 hover:text-gray-700 text-lg leading-none p-1 -m-1 transition">×</button>
           </div>
           <div className="space-y-1.5 max-h-48 overflow-y-auto mb-4">
             {csvRows.map((row, i) => (
               <div key={i} className="flex items-center gap-3 text-sm py-1.5 border-b border-gray-50 last:border-0">
                 <span className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-[10px] font-semibold text-gray-500 flex-shrink-0">{i + 1}</span>
                 <span className="font-medium flex-1 truncate">{row.name}</span>
-                {row.phone && <span className="text-gray-400 text-xs">{row.phone}</span>}
+                {row.phone && <span className="text-gray-500 text-xs">{row.phone}</span>}
               </div>
             ))}
           </div>
@@ -243,7 +243,7 @@ export default function ClientesPage() {
               {importResults.filter(r => r.ok).length} importados
               {importResults.filter(r => !r.ok).length > 0 && ` · ${importResults.filter(r => !r.ok).length} con error`}
             </h2>
-            <button onClick={() => setImportResults(null)} className="text-gray-300 hover:text-gray-500 text-lg leading-none">×</button>
+            <button onClick={() => setImportResults(null)} className="text-gray-500 hover:text-gray-700 text-lg leading-none p-1 -m-1 transition">×</button>
           </div>
           <div className="space-y-1 max-h-36 overflow-y-auto">
             {importResults.filter(r => !r.ok).map((r, i) => (
@@ -264,7 +264,7 @@ export default function ClientesPage() {
           <h2 className="font-medium text-sm">Nuevo cliente</h2>
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <label className="block text-xs text-gray-400 mb-1.5 uppercase tracking-wide">Nombre *</label>
+              <label className="block text-xs text-gray-500 mb-1.5 uppercase tracking-wide">Nombre *</label>
               <input
                 type="text"
                 value={form.name}
@@ -275,7 +275,7 @@ export default function ClientesPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5 uppercase tracking-wide">Teléfono</label>
+              <label className="block text-xs text-gray-500 mb-1.5 uppercase tracking-wide">Teléfono</label>
               <input
                 type="tel"
                 value={form.phone}
@@ -285,7 +285,7 @@ export default function ClientesPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5 uppercase tracking-wide">Correo</label>
+              <label className="block text-xs text-gray-500 mb-1.5 uppercase tracking-wide">Correo</label>
               <input
                 type="email"
                 value={form.email}
@@ -295,7 +295,7 @@ export default function ClientesPage() {
               />
             </div>
             <div className="col-span-2">
-              <label className="block text-xs text-gray-400 mb-1.5 uppercase tracking-wide">No. de póliza</label>
+              <label className="block text-xs text-gray-500 mb-1.5 uppercase tracking-wide">No. de póliza</label>
               <input
                 type="text"
                 value={form.policyNumber}
@@ -329,7 +329,7 @@ export default function ClientesPage() {
 
       {/* Search */}
       <div data-tour="search" className="relative mb-4">
-        <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" width="14" height="14" viewBox="0 0 24 24" fill="none">
           <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.134 17 3 13.866 3 10C3 6.134 6.134 3 10 3C13.866 3 17 6.134 17 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
         </svg>
         <input
@@ -346,7 +346,7 @@ export default function ClientesPage() {
           <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-gray-500">
           <p className="text-sm">{search ? "Sin resultados" : "Agrega tu primer cliente para comenzar."}</p>
         </div>
       ) : (
@@ -379,9 +379,9 @@ export default function ClientesPage() {
                       <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0">
                         {client.name.charAt(0)}
                       </div>
-                      <div>
-                        <p className="font-medium text-sm">{client.name}</p>
-                        {client.phone && <p className="text-xs text-gray-400">{client.phone}</p>}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm truncate">{client.name}</p>
+                        {client.phone && <p className="text-xs text-gray-500 truncate">{client.phone}</p>}
                       </div>
                     </div>
                   </div>
@@ -395,7 +395,7 @@ export default function ClientesPage() {
                       </button>
                       <button
                         onClick={() => setDeactivateId(null)}
-                        className="text-xs text-gray-400 hover:text-gray-600 transition"
+                        className="text-xs text-gray-500 hover:text-gray-600 transition"
                       >
                         Cancelar
                       </button>
@@ -403,7 +403,7 @@ export default function ClientesPage() {
                   ) : (
                     <button
                       onClick={() => setDeactivateId(client.id)}
-                      className="text-gray-300 hover:text-red-400 transition p-1"
+                      className="text-gray-500 hover:text-red-400 transition p-1"
                       title="Desactivar"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -416,22 +416,22 @@ export default function ClientesPage() {
                 <div className="grid grid-cols-3 gap-2 mt-4">
                   <div className="bg-gray-50 rounded-xl p-2.5 text-center">
                     <p className="text-base font-semibold">{client._count.referrals}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">Referidos</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">Referidos</p>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-2.5 text-center">
                     <p className="text-base font-semibold">{converted}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">Convertidos</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">Convertidos</p>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-2.5 text-center">
                     <p className="text-base font-semibold">{formatCurrency(totalPagado)}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">Pagado</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">Pagado</p>
                   </div>
                 </div>
 
                 {(escaleraDebido > 0 || escaleraPagado > 0 || burbujaDebido > 0 || burbujaPagado > 0) && (
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     <div className="rounded-xl border border-gray-100 p-2.5">
-                      <p className="text-[10px] text-gray-400 mb-1.5">Escalera · Vida y PPR</p>
+                      <p className="text-[10px] text-gray-500 mb-1.5">Escalera · Vida y PPR</p>
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] text-amber-600">Por pagar</span>
                         <span className="text-xs font-semibold text-amber-600">{formatCurrency(escaleraDebido)}</span>
@@ -442,7 +442,7 @@ export default function ClientesPage() {
                       </div>
                     </div>
                     <div className="rounded-xl border border-gray-100 p-2.5">
-                      <p className="text-[10px] text-gray-400 mb-1.5">Premios burbuja</p>
+                      <p className="text-[10px] text-gray-500 mb-1.5">Premios burbuja</p>
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] text-amber-600">Por pagar</span>
                         <span className="text-xs font-semibold text-amber-600">{formatCurrency(burbujaDebido)}</span>
@@ -498,9 +498,9 @@ export default function ClientesPage() {
                 </div>
 
                 {client.policyNumber && (
-                  <p className="text-xs text-gray-300 mt-2">Póliza: {client.policyNumber}</p>
+                  <p className="text-xs text-gray-500 mt-2">Póliza: {client.policyNumber}</p>
                 )}
-                <p className="text-xs text-gray-300 mt-0.5">Desde {formatDate(client.createdAt)}</p>
+                <p className="text-xs text-gray-500 mt-0.5">Desde {formatDate(client.createdAt)}</p>
               </div>
             );
           })}

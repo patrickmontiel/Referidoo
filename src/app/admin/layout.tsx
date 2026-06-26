@@ -138,11 +138,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <button
               onClick={() => window.dispatchEvent(new Event("referidoo:tour"))}
               title="Guía de la sección actual"
-              className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-700 transition text-xs font-semibold"
+              className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition text-xs font-semibold"
             >
               ?
             </button>
-            <button onClick={logout} className="text-xs text-gray-400 hover:text-gray-700 transition py-2 px-1">
+            <button onClick={logout} className="text-xs text-gray-500 hover:text-gray-700 transition py-2 px-1">
               Salir
             </button>
           </div>
@@ -187,7 +187,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {resetState === null && (
               <button
                 onClick={() => setResetState("confirm")}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition"
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-gray-500 hover:text-gray-600 hover:bg-gray-50 transition"
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                   <path d="M1 4V10H7M23 20V14H17M20.49 9C19.9828 7.56678 19.1209 6.2854 17.9845 5.27542C16.8482 4.26543 15.4745 3.55976 13.9917 3.22426C12.5089 2.88875 10.9652 2.93434 9.50481 3.35677C8.04437 3.77921 6.71475 4.56471 5.64 5.64L1 10M23 14L18.36 18.36C17.2853 19.4353 15.9556 20.2208 14.4952 20.6432C13.0348 21.0657 11.4911 21.1113 10.0083 20.7757C8.52547 20.4402 7.1518 19.7346 6.01547 18.7246C4.87913 17.7146 4.01717 16.4332 3.51 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -215,7 +215,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
             )}
             {resetState === "busy" && (
-              <p className="text-[11px] text-gray-400 px-3 py-2">Reiniciando...</p>
+              <p className="text-[11px] text-gray-500 px-3 py-2">Reiniciando...</p>
             )}
           </div>
         </aside>
@@ -238,7 +238,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={item.href}
                 className={cn(
                   "flex-1 flex flex-col items-center pt-3 pb-2 gap-1 active:bg-gray-50 transition",
-                  active ? "text-black" : "text-gray-400"
+                  active ? "text-black" : "text-gray-500"
                 )}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -301,7 +301,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   ))}
                 </div>
                 {current.section && (
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
                     {current.section}
                   </span>
                 )}

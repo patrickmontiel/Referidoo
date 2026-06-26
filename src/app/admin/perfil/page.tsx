@@ -33,6 +33,7 @@ export default function PerfilPage() {
   const [billingBusy, setBillingBusy] = useState(false);
   const [billingError, setBillingError] = useState("");
   const [showUpgradeForm, setShowUpgradeForm] = useState(false);
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
 
   useEffect(() => {
     fetch("/api/advisor/me")
@@ -53,6 +54,7 @@ export default function PerfilPage() {
     const res = await fetch("/api/billing/cancel", { method: "POST" });
     const data = await res.json();
     setBillingBusy(false);
+    setConfirmingCancel(false);
     if (!res.ok) { setBillingError(data.error ?? "No se pudo cancelar"); return; }
   }
 
@@ -65,7 +67,7 @@ export default function PerfilPage() {
   }
 
   if (!advisor) {
-    return <p className="text-sm text-gray-400">No se pudo cargar tu perfil.</p>;
+    return <p className="text-sm text-gray-500">No se pudo cargar tu perfil.</p>;
   }
 
   return (
@@ -77,23 +79,23 @@ export default function PerfilPage() {
         <h2 className="text-sm font-medium mb-4">Datos de la cuenta</h2>
         <dl className="space-y-3">
           <div>
-            <dt className="text-xs font-medium text-gray-400 uppercase tracking-wider">Nombre</dt>
+            <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</dt>
             <dd className="text-sm mt-0.5">{advisor.name}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-gray-400 uppercase tracking-wider">Correo</dt>
+            <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Correo</dt>
             <dd className="text-sm mt-0.5">{advisor.email}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-gray-400 uppercase tracking-wider">Despacho / empresa</dt>
+            <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Despacho / empresa</dt>
             <dd className="text-sm mt-0.5">{advisor.companyName || "—"}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-gray-400 uppercase tracking-wider">Teléfono</dt>
+            <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</dt>
             <dd className="text-sm mt-0.5">{advisor.phone || "—"}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-gray-400 uppercase tracking-wider">Asesor desde</dt>
+            <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Asesor desde</dt>
             <dd className="text-sm mt-0.5">{formatDate(advisor.createdAt)}</dd>
           </div>
         </dl>
@@ -111,27 +113,45 @@ export default function PerfilPage() {
 
         {advisor.plan === "paid" ? (
           <div>
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
               <div>
                 <p className="text-sm font-medium">Plan pagado — clientes ilimitados</p>
                 {advisor.paidUntil && (
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-500 mt-0.5">
                     Próximo cobro: {formatDate(advisor.paidUntil)} — $
                     {advisor.monthlyPriceMxn + advisor.pendingCommissionTotal} MXN
                   </p>
                 )}
               </div>
-              <button
-                onClick={handleCancel}
-                disabled={billingBusy}
-                className="text-xs font-medium px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-50 transition flex-shrink-0"
-              >
-                Cancelar plan
-              </button>
+              {confirmingCancel ? (
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    onClick={handleCancel}
+                    disabled={billingBusy}
+                    className="text-xs font-medium px-3 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 transition"
+                  >
+                    {billingBusy ? "Cancelando..." : "Confirmar"}
+                  </button>
+                  <button
+                    onClick={() => setConfirmingCancel(false)}
+                    disabled={billingBusy}
+                    className="text-xs font-medium px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition"
+                  >
+                    No, mantener plan
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmingCancel(true)}
+                  className="text-xs font-medium px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 transition self-start sm:flex-shrink-0"
+                >
+                  Cancelar plan
+                </button>
+              )}
             </div>
 
             <div className="mt-4 pt-4 border-t border-gray-100">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
                 Desglose del próximo cobro
               </p>
               <div className="flex items-center justify-between text-sm py-1">
@@ -167,15 +187,15 @@ export default function PerfilPage() {
             </div>
           </div>
         ) : !showUpgradeForm ? (
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
             <div>
               <p className="text-sm font-medium">Plan freemium — hasta 2 clientes</p>
-              <p className="text-xs text-gray-400 mt-0.5">Actualiza a pagado ($539/mes) para clientes ilimitados.</p>
+              <p className="text-xs text-gray-500 mt-0.5">Actualiza a pagado ($539/mes) para clientes ilimitados.</p>
             </div>
             <button
               onClick={() => setShowUpgradeForm(true)}
               disabled={!advisor.emailVerified}
-              className="text-xs font-medium px-4 py-2 rounded-xl bg-black text-white hover:bg-gray-900 disabled:opacity-50 transition flex-shrink-0"
+              className="text-xs font-medium px-4 py-2 rounded-xl bg-black text-white hover:bg-gray-900 disabled:opacity-50 transition self-start sm:flex-shrink-0"
             >
               Actualizar a pagado
             </button>

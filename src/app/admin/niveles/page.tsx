@@ -54,7 +54,7 @@ function CurrencyInput({
 }) {
   return (
     <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">$</span>
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none">$</span>
       <input
         type="text"
         inputMode="numeric"
@@ -207,26 +207,26 @@ export default function PremiosPage() {
 
       <div className="mb-6">
         <h1 className="text-xl font-semibold">Premios</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Define cuánto gana cada cliente por referido y cómo funcionan los premios burbuja</p>
+        <p className="text-sm text-gray-500 mt-0.5">Define cuánto gana cada cliente por referido y cómo funcionan los premios burbuja</p>
       </div>
 
       {/* Escalera de premios PPR y Vida */}
       <div className="flex items-center gap-2 mb-3">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="flex-shrink-0 text-gray-400">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="flex-shrink-0 text-gray-500">
           <path d="M4 20V16H8V12H12V8H16V4H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Escalera de premios PPR y Vida</h2>
+        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Escalera de premios PPR y Vida</h2>
       </div>
 
       {/* Tiers */}
       <div data-tour="tiers" className="bg-white rounded-2xl border border-gray-100 p-5 mb-5">
         <h2 className="font-medium text-sm mb-1">Estructura de premios</h2>
-        <p className="text-xs text-gray-400 mb-4">Cuánto recibe tu cliente por cada referido (1º, 2º, 3º...) que llega a contratar Vida o PPR.</p>
+        <p className="text-xs text-gray-500 mb-4">Cuánto recibe tu cliente por cada referido (1º, 2º, 3º...) que llega a contratar Vida o PPR.</p>
 
         <div className="hidden sm:flex items-center gap-3 mb-1.5 px-0">
           <div className="w-8 flex-shrink-0" />
-          <span className="flex-1 text-xs text-gray-400 uppercase tracking-wide">Monto</span>
-          <span className="flex-1 text-xs text-gray-400 uppercase tracking-wide">Etiqueta (opcional)</span>
+          <span className="flex-1 text-xs text-gray-500 uppercase tracking-wide">Monto</span>
+          <span className="flex-1 text-xs text-gray-500 uppercase tracking-wide">Etiqueta (opcional)</span>
           <div className="w-5 flex-shrink-0" />
         </div>
 
@@ -255,7 +255,7 @@ export default function PremiosPage() {
               <button
                 onClick={() => removeTier(i)}
                 disabled={tiers.length <= 1}
-                className="p-1 text-gray-300 hover:text-red-400 disabled:opacity-20 transition"
+                className="p-1 text-gray-500 hover:text-red-400 disabled:opacity-20 transition"
                 aria-label="Eliminar nivel"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -280,7 +280,7 @@ export default function PremiosPage() {
       {/* After last tier */}
       <div data-tour="after-last" className="bg-white rounded-2xl border border-gray-100 p-5 mb-5">
         <h2 className="font-medium text-sm mb-1">¿Qué pasa después del último nivel?</h2>
-        <p className="text-xs text-gray-400 mb-4">
+        <p className="text-xs text-gray-500 mb-4">
           Si un cliente supera el nivel {tiers.length}, ¿qué premio recibe?
         </p>
         <div className="space-y-2">
@@ -305,7 +305,7 @@ export default function PremiosPage() {
               />
               <div>
                 <p className="text-sm font-medium">{opt.label}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{opt.desc}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
               </div>
             </label>
           ))}
@@ -313,7 +313,7 @@ export default function PremiosPage() {
 
         {afterLastTier === "flat" && (
           <div className="mt-3">
-            <label className="block text-xs text-gray-400 mb-1.5 uppercase tracking-wide">Monto fijo</label>
+            <label className="block text-xs text-gray-500 mb-1.5 uppercase tracking-wide">Monto fijo</label>
             <CurrencyInput value={flatAmount} onChange={setFlatAmount} placeholder="0" />
           </div>
         )}
@@ -322,12 +322,12 @@ export default function PremiosPage() {
       {/* Premios burbuja de Auto, Otro y GMM */}
       <div className="flex items-center gap-2 mb-3 mt-2">
         <div className="w-4 h-4 rounded-full border-2 border-blue-300 bg-blue-50 flex-shrink-0" />
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Premios burbuja de Auto, Otro y Gastos Médicos Mayores</h2>
+        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Premios burbuja de Auto, Otro y Gastos Médicos Mayores</h2>
       </div>
 
       <div data-tour="bubble" className="bg-white rounded-2xl border border-gray-100 p-5 mb-5">
         <h2 className="font-medium text-sm mb-1">Configuración de puntos</h2>
-        <p className="text-xs text-gray-400 mb-4">Cada vez que un referido contrata Auto, Otro tipo de seguro o GMM, se suman puntos a un fondo del cliente. Al llegar a la meta, sus burbujas explotan y reciben el premio.</p>
+        <p className="text-xs text-gray-500 mb-4">Cada vez que un referido contrata Auto, Otro tipo de seguro o GMM, se suman puntos a un fondo del cliente. Al llegar a la meta, sus burbujas explotan y reciben el premio.</p>
 
         {loadingBubbleSettings ? (
           <div className="flex justify-center py-6">
@@ -337,15 +337,15 @@ export default function PremiosPage() {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
               <div>
-                <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">Por Auto / Otro</label>
+                <label className="block text-xs text-gray-500 uppercase tracking-wide mb-2">Por Auto / Otro</label>
                 <CurrencyInput value={bubbleAutoPoints} onChange={setBubbleAutoPoints} placeholder="0" />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">Por GMM</label>
+                <label className="block text-xs text-gray-500 uppercase tracking-wide mb-2">Por GMM</label>
                 <CurrencyInput value={bubbleGmmPoints} onChange={setBubbleGmmPoints} placeholder="0" />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">Meta para reclamar</label>
+                <label className="block text-xs text-gray-500 uppercase tracking-wide mb-2">Meta para reclamar</label>
                 <CurrencyInput value={bubbleClaimThreshold} onChange={setBubbleClaimThreshold} placeholder="0" />
               </div>
             </div>
@@ -361,7 +361,7 @@ export default function PremiosPage() {
                 <div className="mb-4 p-4 rounded-xl bg-blue-50/50 border border-blue-100">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-xs font-medium text-gray-600">Vista previa</p>
-                    <p className="text-xs text-gray-400">2 referidos de Auto/Otro + 1 de GMM</p>
+                    <p className="text-xs text-gray-500">2 referidos de Auto/Otro + 1 de GMM</p>
                   </div>
                   <div className="flex items-center justify-center gap-3 py-2 mb-2">
                     {previewFills.map((fill, i) => (
@@ -402,18 +402,18 @@ export default function PremiosPage() {
           <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
         </div>
       ) : claims.length === 0 ? (
-        <div className="text-center py-8 mb-5 text-gray-400 text-sm bg-white rounded-2xl border border-gray-100">Aún no hay reclamos de premios burbuja.</div>
+        <div className="text-center py-8 mb-5 text-gray-500 text-sm bg-white rounded-2xl border border-gray-100">Aún no hay reclamos de premios burbuja.</div>
       ) : (
         <div className="space-y-5 mb-5">
           {pendingClaims.length > 0 && (
             <div>
-              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Pendientes de pago</h2>
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Pendientes de pago</h2>
               <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
                 {pendingClaims.map((c) => (
                   <div key={c.id} className="flex items-center justify-between px-5 py-4">
                     <div>
                       <p className="text-sm font-medium">{c.client.name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{formatDate(c.createdAt)}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{formatDate(c.createdAt)}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-semibold text-amber-600">{formatCurrency(c.amount)}</span>
@@ -432,13 +432,13 @@ export default function PremiosPage() {
 
           {paidClaims.length > 0 && (
             <div>
-              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Pagados</h2>
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Pagados</h2>
               <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
                 {paidClaims.map((c) => (
                   <div key={c.id} className="flex items-center justify-between px-5 py-4">
                     <div>
                       <p className="text-sm font-medium">{c.client.name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{c.paidAt ? formatDate(c.paidAt) : formatDate(c.createdAt)}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{c.paidAt ? formatDate(c.paidAt) : formatDate(c.createdAt)}</p>
                     </div>
                     <span className="text-sm font-semibold text-green-600">{formatCurrency(c.amount)}</span>
                   </div>
@@ -455,7 +455,7 @@ export default function PremiosPage() {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5 uppercase tracking-wide">
+            <label className="block text-xs text-gray-500 mb-1.5 uppercase tracking-wide">
               Mensaje de bienvenida (landing de referidos)
             </label>
             <textarea
@@ -468,7 +468,7 @@ export default function PremiosPage() {
           </div>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5 uppercase tracking-wide">
+            <label className="block text-xs text-gray-500 mb-1.5 uppercase tracking-wide">
               Mensaje de WhatsApp
             </label>
             <textarea
@@ -478,7 +478,7 @@ export default function PremiosPage() {
               placeholder={`Ej: ¡Hola! {nombre} te recomienda cotizar un seguro sin compromiso. Entra aquí: {link}`}
               className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black transition resize-none"
             />
-            <p className="text-xs text-gray-400 mt-1.5">
+            <p className="text-xs text-gray-500 mt-1.5">
               Usa <code className="bg-gray-100 px-1 rounded">{"{link}"}</code> para el enlace y{" "}
               <code className="bg-gray-100 px-1 rounded">{"{nombre}"}</code> para el nombre del cliente.
             </p>
@@ -528,7 +528,7 @@ export default function PremiosPage() {
             <p className="text-sm text-gray-500 mb-5">
               {payTarget.client.name} · {formatCurrency(payTarget.amount)}
             </p>
-            <label className="block text-xs text-gray-400 uppercase tracking-wide mb-2">
+            <label className="block text-xs text-gray-500 uppercase tracking-wide mb-2">
               Referencia de pago (opcional)
             </label>
             <input

@@ -15,15 +15,32 @@ export async function GET(req: NextRequest) {
   const now = new Date();
   const graceCutoff = new Date(now.getTime() - GRACE_PERIOD_MS);
 
+  // updateMany solo devuelve { count }, no los registros afectados — hay que
+  // capturar los IDs antes de actualizar para poder registrar el PlanEvent
+  // de cada asesor downgradeado.
+  const expiredAdvisors = await db.advisor.findMany({
+    where: { plan: "paid", paidUntil: { lt: now } },
+    select: { id: true },
+  });
   const expired = await db.advisor.updateMany({
     where: { plan: "paid", paidUntil: { lt: now } },
     data: { plan: "freemium", paymentFailedAt: null },
   });
+  await db.planEvent.createMany({
+    data: expiredAdvisors.map((a) => ({ advisorId: a.id, event: "cancelled" })),
+  }).catch((err) => console.error("[cron/billing-downgrade] Error registrando PlanEvent cancelled (expired):", err));
 
+  const failedTooLongAdvisors = await db.advisor.findMany({
+    where: { plan: "paid", paymentFailedAt: { lt: graceCutoff } },
+    select: { id: true },
+  });
   const failedTooLong = await db.advisor.updateMany({
     where: { plan: "paid", paymentFailedAt: { lt: graceCutoff } },
     data: { plan: "freemium" },
   });
+  await db.planEvent.createMany({
+    data: failedTooLongAdvisors.map((a) => ({ advisorId: a.id, event: "cancelled" })),
+  }).catch((err) => console.error("[cron/billing-downgrade] Error registrando PlanEvent cancelled (grace):", err));
 
   return NextResponse.json({
     expiredDowngraded: expired.count,

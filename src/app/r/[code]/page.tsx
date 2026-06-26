@@ -103,7 +103,7 @@ export default function ReferralLandingPage() {
         <div>
           <p className="text-5xl mb-5">🔗</p>
           <h1 className="text-xl font-semibold mb-2">Enlace no válido</h1>
-          <p className="text-gray-400 text-sm">{error || "Este enlace ya no está activo."}</p>
+          <p className="text-gray-500 text-sm">{error || "Este enlace ya no está activo."}</p>
         </div>
       </div>
     );
@@ -128,7 +128,7 @@ export default function ReferralLandingPage() {
             Tu asesor te contactará pronto para platicar sobre tu situación patrimonial sin ningún compromiso.
           </p>
           <div className="bg-gray-50 rounded-2xl p-4 text-left">
-            <p className="text-[11px] text-gray-400 uppercase tracking-widest font-medium mb-1">
+            <p className="text-[11px] text-gray-500 uppercase tracking-widest font-medium mb-1">
               Te recomendó
             </p>
             <p className="font-semibold">{info.referrerName}</p>
@@ -146,7 +146,7 @@ export default function ReferralLandingPage() {
         <div className="flex-1 flex flex-col justify-center px-6 max-w-sm mx-auto w-full py-10">
           <button
             onClick={() => setStep("landing")}
-            className="flex items-center gap-2 text-sm text-gray-400 mb-8 -ml-1 active:opacity-60 transition"
+            className="flex items-center gap-2 text-sm text-gray-500 mb-8 -ml-1 py-2 px-1 active:opacity-60 transition"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -154,7 +154,7 @@ export default function ReferralLandingPage() {
             Volver
           </button>
 
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-2">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mb-2">
             Un paso más
           </p>
           <h2 className="text-2xl font-semibold mb-5">Tus datos</h2>
@@ -166,11 +166,12 @@ export default function ReferralLandingPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[11px] font-medium text-gray-400 uppercase tracking-widest mb-2">
+              <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-widest mb-2">
                 Nombre completo *
               </label>
               <input
                 type="text"
+                autoComplete="name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
@@ -179,11 +180,12 @@ export default function ReferralLandingPage() {
               />
             </div>
             <div>
-              <label className="block text-[11px] font-medium text-gray-400 uppercase tracking-widest mb-2">
+              <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-widest mb-2">
                 WhatsApp / Teléfono *
               </label>
               <input
                 type="tel"
+                autoComplete="tel"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 required
@@ -192,11 +194,12 @@ export default function ReferralLandingPage() {
               />
             </div>
             <div>
-              <label className="block text-[11px] font-medium text-gray-400 uppercase tracking-widest mb-2">
+              <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-widest mb-2">
                 Correo (opcional)
               </label>
               <input
                 type="email"
+                autoComplete="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder="tu@correo.com"
@@ -213,7 +216,7 @@ export default function ReferralLandingPage() {
             >
               {submitting ? "Enviando..." : "Quiero que me contacten"}
             </button>
-            <p className="text-[11px] text-gray-400 text-center">
+            <p className="text-[11px] text-gray-500 text-center">
               Tu información solo será usada para contactarte. Nada más.
             </p>
           </form>
@@ -233,19 +236,19 @@ export default function ReferralLandingPage() {
           {/* Brand */}
           <div className="flex items-center gap-2 mb-8">
             <Logo size="sm" />
-            <span className="text-[11px] text-gray-400">
+            <span className="text-[11px] text-gray-500">
               · {info.companyName ?? info.advisorName}
             </span>
           </div>
 
-          <p className="text-sm text-gray-400 mb-2">{firstName} te quiere compartir algo</p>
+          <p className="text-sm text-gray-500 mb-2">{firstName} te quiere compartir algo</p>
           <h1 className="text-[2rem] font-semibold leading-tight tracking-tight mb-5">
             Tu amigo ya está cuidando su futuro.
-            <span className="text-gray-400"> ¿Y el tuyo?</span>
+            <span className="text-gray-500"> ¿Y el tuyo?</span>
           </h1>
 
           <div className="bg-black rounded-2xl p-4 mb-8">
-            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-widest mb-2">
+            <p className="text-[11px] font-medium text-gray-500 uppercase tracking-widest mb-2">
               Mensaje de {firstName}
             </p>
             <p className="text-sm text-white/90 leading-relaxed">
@@ -296,7 +299,7 @@ export default function ReferralLandingPage() {
           >
             Quiero conocer mi oportunidad
           </button>
-          <p className="text-center text-[11px] text-gray-400 mt-3">
+          <p className="text-center text-[11px] text-gray-500 mt-3">
             Te lo recomienda <strong className="text-gray-600">{info.referrerName}</strong>
           </p>
         </div>

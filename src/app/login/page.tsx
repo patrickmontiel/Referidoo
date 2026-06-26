@@ -54,7 +54,7 @@ export default function LoginPage() {
           <div className="mb-4">
             <Logo size="md" />
           </div>
-          <p className="text-sm text-gray-400">Panel del asesor</p>
+          <p className="text-sm text-gray-500">Panel del asesor</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -64,10 +64,11 @@ export default function LoginPage() {
             </label>
             <input
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+              className="w-full min-h-11 px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
               placeholder="tu@correo.com"
             />
           </div>
@@ -78,10 +79,11 @@ export default function LoginPage() {
             </label>
             <input
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+              className="w-full min-h-11 px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
               placeholder="••••••••"
             />
           </div>
@@ -95,7 +97,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-black text-white text-sm font-medium py-3 rounded-xl hover:bg-gray-900 disabled:opacity-50 transition"
+            className="w-full min-h-11 bg-black text-white text-sm font-medium py-3 rounded-xl hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-[background-color,transform,opacity] duration-150 active:scale-[0.98]"
           >
             {loading ? "Verificando..." : "Entrar"}
           </button>

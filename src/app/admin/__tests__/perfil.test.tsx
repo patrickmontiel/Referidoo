@@ -104,6 +104,9 @@ describe("PerfilPage", () => {
     const cancelButton = await screen.findByRole("button", { name: /cancelar plan/i });
     cancelButton.click();
 
+    const confirmButton = await screen.findByRole("button", { name: /confirmar/i });
+    confirmButton.click();
+
     expect(await screen.findByText(/no tienes una suscripción activa/i)).toBeInTheDocument();
   });
 });

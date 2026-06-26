@@ -76,6 +76,10 @@ async function handleAuthorizedPaymentNotification(invoiceId: string): Promise<b
       console.error("[mp-webhook] Error registrando pago aprobado:", err);
       return false;
     });
+    if (ok) {
+      await db.planEvent.create({ data: { advisorId, event: "activated" } })
+        .catch((err) => console.error("[mp-webhook] Error registrando PlanEvent activated:", err));
+    }
     return ok;
   }
 
@@ -91,6 +95,8 @@ async function handleAuthorizedPaymentNotification(invoiceId: string): Promise<b
         where: { id: advisorId },
         data: { paymentFailedAt: new Date() },
       }).catch((err) => console.error("[mp-webhook] Error registrando pago rechazado:", err));
+      await db.planEvent.create({ data: { advisorId, event: "failed" } })
+        .catch((err) => console.error("[mp-webhook] Error registrando PlanEvent failed:", err));
     }
   }
 
@@ -107,5 +113,8 @@ async function handlePreapprovalNotification(preapprovalId: string) {
   await db.advisor.update({
     where: { id: advisor.id },
     data: { plan: "paid", paidUntil: new Date(Date.now() + ONE_MONTH_MS) },
+  }).then(async () => {
+    await db.planEvent.create({ data: { advisorId: advisor.id, event: "activated" } })
+      .catch((err) => console.error("[mp-webhook] Error registrando PlanEvent activated:", err));
   }).catch((err) => console.error("[mp-webhook] Error activando suscripción:", err));
 }
