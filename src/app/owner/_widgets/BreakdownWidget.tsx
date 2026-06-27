@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell, Legend } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { formatCurrency } from "@/lib/utils";
 import { DonutSkeleton } from "./Skeletons";
 
 type BreakdownRow = { productType: string; commission: number };
 
-const COLORS = ["#000000", "#16a34a", "#9ca3af", "#f59e0b", "#3b82f6", "#ec4899"];
+// Azul de marca primero, luego negro/grises de apoyo — mismo orden que TrendsWidget
+const COLORS = ["#3b82f6", "#0a0a0a", "#9ca3af", "#93c5fd", "#d4d4d8", "#52525b"];
 
 export function BreakdownWidget() {
   const [breakdown, setBreakdown] = useState<BreakdownRow[] | null>(null);
@@ -60,14 +62,14 @@ export function BreakdownWidget() {
       )}
 
       {!loading && !error && breakdown && breakdown.length > 1 && (
-        <ResponsiveContainer width="100%" height={220}>
+        <ChartContainer config={{}} className="aspect-auto h-[220px] w-full">
           <PieChart>
             <Pie data={breakdown} dataKey="commission" nameKey="productType" innerRadius={50} outerRadius={80} paddingAngle={2}>
               {breakdown.map((_, i) => (
                 <Cell key={i} fill={COLORS[i % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip formatter={(value) => formatCurrency(Number(value ?? 0))} />
+            <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatCurrency(Number(value ?? 0))} />} />
             <Legend
               formatter={(value: string, entry) => {
                 const commission = (entry?.payload as unknown as BreakdownRow)?.commission ?? 0;
@@ -76,7 +78,7 @@ export function BreakdownWidget() {
               }}
             />
           </PieChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       )}
     </div>
   );

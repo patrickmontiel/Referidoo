@@ -1,9 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { ChartSkeleton } from "./Skeletons";
+
+const chartConfig = {
+  mrr: { label: "MRR", color: "#3b82f6" },
+  commission: { label: "Comisión", color: "#0a0a0a" },
+  activeAdvisors: { label: "Asesores activos", color: "#9ca3af" },
+} satisfies ChartConfig;
 
 type TrendPoint = {
   date: string;
@@ -77,23 +84,33 @@ export function TrendsWidget() {
 
 function SimpleChart({ points }: { points: TrendPoint[] }) {
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <ChartContainer config={chartConfig} className="aspect-auto h-[220px] w-full">
       <LineChart data={points}>
         <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
         <XAxis dataKey="date" tickFormatter={(d) => formatDate(d)} fontSize={11} stroke="#6b7280" />
         <YAxis fontSize={11} stroke="#6b7280" />
-        <Tooltip
-          labelFormatter={(d) => formatDate(d as string)}
-          formatter={(value, name) => {
-            const n = Number(value ?? 0);
-            if (name === "mrr" || name === "commission") return [formatCurrency(n), name];
-            return [n, name];
-          }}
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              labelFormatter={(d) => formatDate(d as string)}
+              formatter={(value, name) => {
+                const n = Number(value ?? 0);
+                const label = chartConfig[name as keyof typeof chartConfig]?.label ?? name;
+                const display = name === "mrr" || name === "commission" ? formatCurrency(n) : n;
+                return (
+                  <div className="flex w-full justify-between gap-2">
+                    <span className="text-muted-foreground">{label}</span>
+                    <span className="font-mono font-medium text-foreground tabular-nums">{display}</span>
+                  </div>
+                );
+              }}
+            />
+          }
         />
-        <Line type="monotone" dataKey="mrr" stroke="#000000" strokeWidth={2} dot={false} name="MRR" />
-        <Line type="monotone" dataKey="commission" stroke="#16a34a" strokeWidth={2} dot={false} name="Comisión" />
-        <Line type="monotone" dataKey="activeAdvisors" stroke="#9ca3af" strokeWidth={2} dot={false} name="Asesores activos" />
+        <Line type="monotone" dataKey="mrr" stroke="var(--color-mrr)" strokeWidth={2} dot={false} name="mrr" />
+        <Line type="monotone" dataKey="commission" stroke="var(--color-commission)" strokeWidth={2} dot={false} name="commission" />
+        <Line type="monotone" dataKey="activeAdvisors" stroke="var(--color-activeAdvisors)" strokeWidth={2} dot={false} name="activeAdvisors" />
       </LineChart>
-    </ResponsiveContainer>
+    </ChartContainer>
   );
 }
