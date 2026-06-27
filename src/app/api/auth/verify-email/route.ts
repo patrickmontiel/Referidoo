@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { signToken } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
@@ -19,5 +20,18 @@ export async function GET(req: NextRequest) {
     data: { emailVerified: true, verificationToken: null },
   });
 
-  return NextResponse.redirect(new URL("/admin?verify=success", baseUrl));
+  // El link de verificación ya prueba identidad (token de un solo uso) — auto-
+  // inicia sesión en vez de mandar a /login, para que quien dé clic llegue
+  // directo a /admin ya autenticado, sin pedir contraseña otra vez.
+  const sessionToken = signToken({ advisorId: advisor.id, email: advisor.email });
+  const res = NextResponse.redirect(new URL("/admin?verify=success", baseUrl));
+  res.cookies.set("advisor_token", sessionToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 30,
+    path: "/",
+  });
+
+  return res;
 }

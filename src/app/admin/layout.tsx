@@ -1,10 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
+
+// useSearchParams() forces a Suspense boundary in the App Router — isolated
+// here so it doesn't bail the rest of AdminLayout out of static rendering.
+function VerifiedBannerWatcher({ onVerified }: { onVerified: () => void }) {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (searchParams.get("verify") === "success") {
+      onVerified();
+      router.replace(pathname);
+    }
+  }, [searchParams, pathname, router, onVerified]);
+
+  return null;
+}
 
 const nav = [
   { href: "/admin", label: "Resumen", icon: "M3 12L12 3L21 12V20C21 20.6 20.6 21 20 21H15V16H9V21H4C3.4 21 3 20.6 3 20V12Z" },
@@ -13,8 +30,6 @@ const nav = [
   { href: "/admin/niveles", label: "Premios", icon: "M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" },
   { href: "/admin/perfil", label: "Perfil", icon: "M12 8a4 4 0 100 8 4 4 0 000-8zM19.4 13a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33 1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82 1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" },
 ];
-
-const ONBOARDING_KEY = "referidoo_admin_onboarded";
 
 const steps = [
   {
@@ -62,14 +77,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [fadingOut, setFadingOut] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
   const [emailVerified, setEmailVerified] = useState(true);
+  const [showVerifiedBanner, setShowVerifiedBanner] = useState(false);
   const consumedWelcomeFlag = useRef(false);
 
-  useEffect(() => {
-    fetch("/api/advisor/me")
-      .then((r) => r.json())
-      .then((adv) => { if (typeof adv?.emailVerified === "boolean") setEmailVerified(adv.emailVerified); })
-      .catch(() => {});
-  }, []);
+  function handleVerified() {
+    setShowVerifiedBanner(true);
+    setTimeout(() => setShowVerifiedBanner(false), 5000);
+  }
 
   useEffect(() => {
     // sessionStorage is a one-time external resource: React's dev Strict Mode
@@ -83,27 +97,40 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     consumedWelcomeFlag.current = true;
 
     const hasWelcome = sessionStorage.getItem("referidoo_welcome") === "1";
+    if (hasWelcome) sessionStorage.removeItem("referidoo_welcome");
+    if (hasWelcome) setShowWelcome(true);
+
+    // Onboarding-seen state lives on the Advisor record (onboardedAt), not in
+    // localStorage — a browser-local flag doesn't follow the account across
+    // devices/browsers, so the tour kept re-appearing for anyone who switched
+    // browsers or cleared site data. Fetch once and use it as the single
+    // source of truth for whether to show the tour. Runs in parallel with the
+    // welcome screen (not blocking it) — by the time the welcome timers below
+    // finish (4s), this has long resolved.
+    const advisorPromise = fetch("/api/advisor/me")
+      .then((r) => r.json())
+      .then((adv) => {
+        if (typeof adv?.emailVerified === "boolean") setEmailVerified(adv.emailVerified);
+        if (adv?.name) setWelcomeName(adv.name);
+        return !adv?.onboardedAt; // needsOnboarding
+      })
+      .catch(() => false);
 
     if (hasWelcome) {
-      sessionStorage.removeItem("referidoo_welcome");
-      setShowWelcome(true);
-      fetch("/api/advisor/me").then(r => r.json()).then(adv => {
-        if (adv?.name) setWelcomeName(adv.name);
-      }).catch(() => {});
       setTimeout(() => setFadingOut(true), 3200);
       setTimeout(() => {
         setShowWelcome(false);
         setFadingOut(false);
-        if (!localStorage.getItem(ONBOARDING_KEY)) setShowOnboarding(true);
+        advisorPromise.then((needsOnboarding) => { if (needsOnboarding) setShowOnboarding(true); });
       }, 4000);
     } else {
-      if (!localStorage.getItem(ONBOARDING_KEY)) setShowOnboarding(true);
+      advisorPromise.then((needsOnboarding) => { if (needsOnboarding) setShowOnboarding(true); });
     }
   }, []);
 
   function finish() {
-    localStorage.setItem(ONBOARDING_KEY, "1");
     setShowOnboarding(false);
+    fetch("/api/advisor/onboarded", { method: "POST" }).catch(() => {});
   }
 
   function next() {
@@ -120,7 +147,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setResetState("busy");
     await fetch("/api/demo/reset", { method: "POST" });
     await fetch("/api/auth/logout", { method: "POST" });
-    localStorage.removeItem(ONBOARDING_KEY);
     router.push("/login");
   }
 
@@ -129,6 +155,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Suspense fallback={null}>
+        <VerifiedBannerWatcher onVerified={handleVerified} />
+      </Suspense>
       {/* Top bar */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-20"
               style={{ paddingTop: "env(safe-area-inset-top)" }}>
@@ -149,7 +178,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </header>
 
-      {!emailVerified && (
+      {showVerifiedBanner && (
+        <div className="bg-green-50 border-b border-green-100">
+          <div className="max-w-5xl mx-auto px-5 py-2.5 text-sm text-green-800">
+            ✓ Tu correo quedó verificado. Ya puedes agregar clientes.
+          </div>
+        </div>
+      )}
+
+      {!emailVerified && !showVerifiedBanner && (
         <div className="bg-sky-50 border-b border-sky-100">
           <div className="max-w-5xl mx-auto px-5 py-2.5 text-sm text-sky-800">
             Verifica tu correo para empezar a agregar clientes — revisa tu bandeja de entrada.

@@ -9,7 +9,7 @@ export async function GET() {
 
   const advisor = await db.advisor.findUnique({
     where: { id: session.advisorId },
-    select: { id: true, name: true, email: true, phone: true, companyName: true, createdAt: true, emailVerified: true, plan: true, paidUntil: true },
+    select: { id: true, name: true, email: true, phone: true, companyName: true, createdAt: true, emailVerified: true, plan: true, paidUntil: true, onboardedAt: true },
   });
 
   if (!advisor) return NextResponse.json({ error: "No encontrado" }, { status: 404 });

@@ -20,6 +20,7 @@ model Advisor {
   mpPreapprovalId   String?          @unique
   paidUntil         DateTime?
   paymentFailedAt   DateTime?
+  onboardedAt       DateTime?
   createdAt         DateTime         @default(now())
   clients           Client[]
   referrals         Referral[]

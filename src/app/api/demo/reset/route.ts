@@ -6,8 +6,9 @@ export async function POST() {
   const session = await getAdvisorSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  await db.referral.deleteMany({});
-  await db.client.deleteMany({});
+  await db.referral.deleteMany({ where: { advisorId: session.advisorId } });
+  await db.client.deleteMany({ where: { advisorId: session.advisorId } });
+  await db.advisor.update({ where: { id: session.advisorId }, data: { onboardedAt: null } });
 
   return NextResponse.json({ ok: true });
 }

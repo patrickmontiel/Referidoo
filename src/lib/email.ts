@@ -463,8 +463,8 @@ export async function sendVerificationEmail(payload: { advisorEmail: string; adv
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
     <tr><td align="center">
       <table width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden">
-        <tr><td style="background:#000;padding:24px 32px">
-          <p style="margin:0;color:#fff;font-size:12px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo</p>
+        <tr><td style="background:#ffffff;padding:28px 32px;border-bottom:1px solid #f3f4f6">
+          <span style="font-size:21px;font-weight:800;letter-spacing:-0.02em;color:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">referidoo</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#3b82f6;margin-left:3px"></span>
         </td></tr>
         <tr><td style="padding:32px">
           <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#0a0a0a">Hola ${payload.advisorName}, confirma tu correo</h1>

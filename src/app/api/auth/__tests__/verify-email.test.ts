@@ -40,7 +40,7 @@ describe("GET /api/auth/verify-email", () => {
   });
 
   it("marks the advisor verified and clears the token on a valid token", async () => {
-    mockFindUnique.mockResolvedValue({ id: "adv1", verificationToken: "good-token" });
+    mockFindUnique.mockResolvedValue({ id: "adv1", email: "a@x.com", verificationToken: "good-token" });
     const res = await GET(getRequest("good-token"));
 
     expect(mockUpdate).toHaveBeenCalledWith({
@@ -48,5 +48,18 @@ describe("GET /api/auth/verify-email", () => {
       data: { emailVerified: true, verificationToken: null },
     });
     expect(res.headers.get("location")).toContain("verify=success");
+  });
+
+  // Regresión: el link de verificación redirigía a /admin sin iniciar sesión,
+  // así que proxy.ts mandaba al usuario a /login en vez de dejarlo ya
+  // autenticado — un paso extra innecesario para un link de un solo uso que
+  // ya prueba identidad.
+  it("logs the advisor in by setting the session cookie on success", async () => {
+    mockFindUnique.mockResolvedValue({ id: "adv1", email: "a@x.com", verificationToken: "good-token" });
+    const res = await GET(getRequest("good-token"));
+
+    const cookie = res.cookies.get("advisor_token");
+    expect(cookie).toBeDefined();
+    expect(cookie?.value).toBeTruthy();
   });
 });
