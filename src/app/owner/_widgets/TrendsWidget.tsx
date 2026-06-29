@@ -45,17 +45,17 @@ export function TrendsWidget() {
   useEffect(load, []);
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-4">
-      <p className="text-xs text-gray-500 mb-3">Tendencia (MRR / asesores activos / comisión)</p>
+    <div className="bg-white rounded-2xl border border-brand-border-1 p-4">
+      <p className="text-xs text-brand-gray-4 mb-3">Tendencia (MRR / asesores activos / comisión)</p>
 
       {loading && <ChartSkeleton />}
 
       {!loading && error && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">No se pudieron cargar las tendencias.</p>
+          <p className="text-sm text-brand-gray-4">No se pudieron cargar las tendencias.</p>
           <button
             onClick={load}
-            className="text-xs font-medium text-black hover:underline transition-transform active:scale-95 py-2 px-1 -mx-1"
+            className="text-xs font-medium text-brand-ink hover:underline transition-transform active:scale-95 py-2 px-1 -mx-1"
           >
             Reintentar
           </button>
@@ -63,7 +63,7 @@ export function TrendsWidget() {
       )}
 
       {!loading && !error && data && !data.hasData && (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-brand-gray-4">
           Todavía no hay datos suficientes — la tendencia empieza a llenarse desde hoy.
         </p>
       )}

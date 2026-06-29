@@ -47,58 +47,58 @@ export default function OwnerAsesoresPage() {
   }
 
   if (error) {
-    return <p className="text-sm text-gray-500">{error}</p>;
+    return <p className="text-sm text-brand-gray-4">{error}</p>;
   }
 
   return (
     <div>
-      <h1 className="text-xl font-semibold mb-5">Asesores</h1>
+      <h1 className="text-xl font-bold mb-5 text-brand-ink">Asesores</h1>
 
-      {advisors === null && <p className="text-sm text-gray-500">Cargando...</p>}
+      {advisors === null && <p className="text-sm text-brand-gray-4">Cargando...</p>}
 
       {advisors !== null && advisors.length === 0 && (
-        <p className="text-sm text-gray-500">Sin asesores registrados todavía.</p>
+        <p className="text-sm text-brand-gray-4">Sin asesores registrados todavía.</p>
       )}
 
       {advisors !== null && advisors.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-x-auto">
+        <div className="bg-white rounded-2xl border border-brand-border-1 overflow-x-auto">
           <table className="w-full text-sm min-w-[640px]">
-            <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+            <thead className="bg-brand-surface text-brand-gray-4 text-xs uppercase tracking-wider">
               <tr>
                 <th className="text-left px-4 py-3">Nombre</th>
                 <th className="text-left px-4 py-3">Correo</th>
                 <th className="text-left px-4 py-3">Plan</th>
                 <th className="text-left px-4 py-3">Verificado</th>
                 <th className="text-left px-4 py-3">Desde</th>
-                <th className="text-right px-4 py-3 sticky right-0 bg-gray-50">Acción</th>
+                <th className="text-right px-4 py-3 sticky right-0 bg-brand-surface">Acción</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-brand-border-1">
               {advisors.map((advisor) => (
                 <Fragment key={advisor.id}>
                   <tr
                     onClick={() => setExpandedId(expandedId === advisor.id ? null : advisor.id)}
-                    className="group cursor-pointer hover:bg-gray-50"
+                    className="group cursor-pointer hover:bg-brand-surface"
                   >
                     <td className="px-4 py-3 font-medium">{advisor.name}</td>
-                    <td className="px-4 py-3 text-gray-500">{advisor.email}</td>
+                    <td className="px-4 py-3 text-brand-gray-4">{advisor.email}</td>
                     <td className="px-4 py-3">{advisor.plan === "paid" ? "Pagado" : "Freemium"}</td>
                     <td className="px-4 py-3">{advisor.emailVerified ? "Sí" : "No"}</td>
-                    <td className="px-4 py-3 text-gray-500">{formatDate(advisor.createdAt)}</td>
-                    <td className="px-4 py-3 text-right sticky right-0 bg-white group-hover:bg-gray-50">
+                    <td className="px-4 py-3 text-brand-gray-4">{formatDate(advisor.createdAt)}</td>
+                    <td className="px-4 py-3 text-right sticky right-0 bg-white group-hover:bg-brand-surface">
                       {confirmToggleId === advisor.id ? (
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={(e) => { e.stopPropagation(); togglePlan(advisor); }}
                             disabled={busyId === advisor.id}
-                            className="text-xs font-medium px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 transition"
+                            className="text-xs font-medium px-3 py-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 transition"
                           >
                             {busyId === advisor.id ? "Cambiando..." : "Confirmar"}
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); setConfirmToggleId(null); }}
                             disabled={busyId === advisor.id}
-                            className="text-xs text-gray-500 hover:text-gray-700 transition"
+                            className="text-xs text-brand-gray-4 hover:text-brand-gray-1 transition"
                           >
                             Cancelar
                           </button>
@@ -106,7 +106,7 @@ export default function OwnerAsesoresPage() {
                       ) : (
                         <button
                           onClick={(e) => { e.stopPropagation(); setConfirmToggleId(advisor.id); }}
-                          className="text-xs font-medium px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition"
+                          className="text-xs font-medium px-3 py-1.5 rounded-full border border-brand-border-4 hover:bg-brand-surface transition"
                         >
                           {advisor.plan === "paid" ? "Pasar a freemium" : "Pasar a pagado"}
                         </button>
@@ -114,19 +114,19 @@ export default function OwnerAsesoresPage() {
                     </td>
                   </tr>
                   {expandedId === advisor.id && (
-                    <tr className="bg-gray-50">
+                    <tr className="bg-brand-surface">
                       <td colSpan={6} className="px-4 py-4">
                         <dl className="grid grid-cols-3 gap-4 text-xs">
                           <div>
-                            <dt className="text-gray-500 uppercase tracking-wider mb-1">Próximo cobro</dt>
+                            <dt className="text-brand-gray-4 uppercase tracking-wider mb-1">Próximo cobro</dt>
                             <dd>{advisor.paidUntil ? formatDate(advisor.paidUntil) : "Sin suscripción activa"}</dd>
                           </div>
                           <div>
-                            <dt className="text-gray-500 uppercase tracking-wider mb-1">Último cobro fallido</dt>
+                            <dt className="text-brand-gray-4 uppercase tracking-wider mb-1">Último cobro fallido</dt>
                             <dd>{advisor.paymentFailedAt ? formatDate(advisor.paymentFailedAt) : "Ninguno"}</dd>
                           </div>
                           <div>
-                            <dt className="text-gray-500 uppercase tracking-wider mb-1">ID suscripción Mercado Pago</dt>
+                            <dt className="text-brand-gray-4 uppercase tracking-wider mb-1">ID suscripción Mercado Pago</dt>
                             <dd className="truncate">{advisor.mpPreapprovalId ?? "—"}</dd>
                           </div>
                         </dl>

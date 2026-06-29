@@ -48,17 +48,17 @@ export function ProblemsWidget() {
   const total = (data?.failedPayments.length ?? 0) + (data?.stuckReferrals.length ?? 0);
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-4">
-      <p className="text-xs text-gray-500 mb-3">Problemas operativos</p>
+    <div className="bg-white rounded-2xl border border-brand-border-1 p-4">
+      <p className="text-xs text-brand-gray-4 mb-3">Problemas operativos</p>
 
       {loading && <ListSkeleton rows={2} />}
 
       {!loading && error && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">No se pudo cargar el feed de problemas.</p>
+          <p className="text-sm text-brand-gray-4">No se pudo cargar el feed de problemas.</p>
           <button
             onClick={load}
-            className="text-xs font-medium text-black hover:underline transition-transform active:scale-95 py-2 px-1 -mx-1"
+            className="text-xs font-medium text-brand-ink hover:underline transition-transform active:scale-95 py-2 px-1 -mx-1"
           >
             Reintentar
           </button>
@@ -66,7 +66,7 @@ export function ProblemsWidget() {
       )}
 
       {!loading && !error && data && total === 0 && (
-        <p className="text-sm text-gray-500">Sin problemas operativos pendientes. 🎉</p>
+        <p className="text-sm text-brand-gray-4">Sin problemas operativos pendientes. 🎉</p>
       )}
 
       {!loading && !error && data && total > 0 && (
@@ -75,7 +75,7 @@ export function ProblemsWidget() {
             <div key={p.advisorId} className="flex items-center justify-between text-sm gap-2">
               <div className="min-w-0">
                 <p className="font-medium truncate">{p.advisorName}</p>
-                <p className="text-xs text-gray-500 truncate">{p.advisorEmail}</p>
+                <p className="text-xs text-brand-gray-4 truncate">{p.advisorEmail}</p>
               </div>
               <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap shrink-0 ${p.pastGracePeriod ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-600"}`}>
                 Pago fallido desde {formatDate(p.failedAt)}
@@ -86,7 +86,7 @@ export function ProblemsWidget() {
             <div key={r.referralId} className="flex items-center justify-between text-sm gap-2">
               <div className="min-w-0">
                 <p className="font-medium truncate">{r.leadName}</p>
-                <p className="text-xs text-gray-500 truncate">{r.advisorName} · referido por {r.referrerName}</p>
+                <p className="text-xs text-brand-gray-4 truncate">{r.advisorName} · referido por {r.referrerName}</p>
               </div>
               <span className="text-xs px-2 py-1 rounded-full whitespace-nowrap shrink-0 bg-amber-50 text-amber-600">
                 Sin confirmar desde {formatDate(r.createdAt)}

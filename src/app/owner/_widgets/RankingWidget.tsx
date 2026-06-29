@@ -32,17 +32,17 @@ export function RankingWidget() {
   useEffect(load, []);
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-4">
-      <p className="text-xs text-gray-500 mb-3">Ranking de asesores (este mes)</p>
+    <div className="bg-white rounded-2xl border border-brand-border-1 p-4">
+      <p className="text-xs text-brand-gray-4 mb-3">Ranking de asesores (este mes)</p>
 
       {loading && <ListSkeleton rows={3} />}
 
       {!loading && error && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">No se pudo cargar el ranking.</p>
+          <p className="text-sm text-brand-gray-4">No se pudo cargar el ranking.</p>
           <button
             onClick={load}
-            className="text-xs font-medium text-black hover:underline transition-transform active:scale-95 py-2 px-1 -mx-1"
+            className="text-xs font-medium text-brand-ink hover:underline transition-transform active:scale-95 py-2 px-1 -mx-1"
           >
             Reintentar
           </button>
@@ -50,7 +50,7 @@ export function RankingWidget() {
       )}
 
       {!loading && !error && ranking && ranking.length === 0 && (
-        <p className="text-sm text-gray-500">Todavía no hay asesores con referidos convertidos.</p>
+        <p className="text-sm text-brand-gray-4">Todavía no hay asesores con referidos convertidos.</p>
       )}
 
       {!loading && !error && ranking && ranking.length > 0 && (
@@ -61,12 +61,12 @@ export function RankingWidget() {
           {ranking.map((row, i) => (
             <div key={row.advisorId} className="flex items-center justify-between text-sm gap-2">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="text-xs text-gray-500 w-4 shrink-0">{i + 1}</span>
+                <span className="text-xs text-brand-gray-4 w-4 shrink-0">{i + 1}</span>
                 <p className="font-medium truncate">{row.advisorName}</p>
               </div>
               <div className="text-right shrink-0">
                 <p className="font-medium">{formatCurrency(row.commissionThisMonth)}</p>
-                <p className="text-xs text-gray-500">{row.convertedTotal} convertido(s) en total</p>
+                <p className="text-xs text-brand-gray-4">{row.convertedTotal} convertido(s) en total</p>
               </div>
             </div>
           ))}

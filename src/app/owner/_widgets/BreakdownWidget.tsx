@@ -34,17 +34,17 @@ export function BreakdownWidget() {
   const total = breakdown?.reduce((s, r) => s + r.commission, 0) ?? 0;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-4">
-      <p className="text-xs text-gray-500 mb-3">Comisión por tipo de producto</p>
+    <div className="bg-white rounded-2xl border border-brand-border-1 p-4">
+      <p className="text-xs text-brand-gray-4 mb-3">Comisión por tipo de producto</p>
 
       {loading && <DonutSkeleton />}
 
       {!loading && error && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">No se pudo cargar el desglose.</p>
+          <p className="text-sm text-brand-gray-4">No se pudo cargar el desglose.</p>
           <button
             onClick={load}
-            className="text-xs font-medium text-black hover:underline transition-transform active:scale-95 py-2 px-1 -mx-1"
+            className="text-xs font-medium text-brand-ink hover:underline transition-transform active:scale-95 py-2 px-1 -mx-1"
           >
             Reintentar
           </button>
@@ -52,7 +52,7 @@ export function BreakdownWidget() {
       )}
 
       {!loading && !error && breakdown && breakdown.length === 0 && (
-        <p className="text-sm text-gray-500">Todavía no hay comisión registrada para desglosar.</p>
+        <p className="text-sm text-brand-gray-4">Todavía no hay comisión registrada para desglosar.</p>
       )}
 
       {!loading && !error && breakdown && breakdown.length === 1 && (
