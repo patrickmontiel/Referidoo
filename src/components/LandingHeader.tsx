@@ -25,6 +25,9 @@ export function LandingHeader() {
       <div className="max-w-[1180px] mx-auto px-8 h-16 flex items-center justify-between">
         <Logo size="md" />
         <div className="hidden sm:flex items-center gap-3">
+          <Link href="/como-funciona" className="text-sm text-[#5A626E] hover:text-[#0B0B0C] transition px-3 py-2">
+            Cómo funciona
+          </Link>
           <Link href="/login" className="text-sm text-[#5A626E] hover:text-[#0B0B0C] transition px-3 py-2">
             Iniciar sesión
           </Link>

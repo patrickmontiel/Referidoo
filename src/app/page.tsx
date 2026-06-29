@@ -4,6 +4,8 @@ import { Hanken_Grotesk } from "next/font/google";
 import { getAdvisorSession } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
 import { LandingHeader } from "@/components/LandingHeader";
+import { LandingFooter } from "@/components/LandingFooter";
+import { FaqAccordion } from "@/components/FaqAccordion";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
 const hankenGrotesk = Hanken_Grotesk({
@@ -53,6 +55,33 @@ const COMPARISON = [
   { antes: "Cuentas tus referidos a mano, en un chat de WhatsApp que ya nadie revisa", despues: "Cada referido se registra solo — su estatus siempre a la vista, sin perseguir a nadie" },
   { antes: "Se te olvida quién te refirió a quién, o cuánto le debes", despues: "El premio se calcula solo, con tus propias reglas. Cero cuentas a mano" },
   { antes: "Tu cliente no tiene idea de cuánto le falta para su premio, ni cómo reclamarlo", despues: "Tu cliente ve su progreso y reclama su premio solo, desde su propio portal" },
+];
+
+const SECURITY_FAQ = [
+  {
+    question: "¿Mis clientes tienen que dar información sensible?",
+    answer: "No. Solo nombre, teléfono y correo — lo mismo que ya te comparten por WhatsApp. Nunca pedimos RFC, cuentas bancarias ni datos de la póliza.",
+  },
+  {
+    question: "¿Quién puede ver los datos de mis clientes?",
+    answer: "Solo tú. Nadie más entra a tu cuenta, y no vendemos ni compartimos tu información con terceros — ni con otros asesores.",
+  },
+  {
+    question: "¿Cómo protegen mi contraseña?",
+    answer: "Se guarda cifrada con bcrypt, nunca en texto plano. Ni nosotros podemos ver tu contraseña real.",
+  },
+  {
+    question: "¿Guardan los datos de mi tarjeta?",
+    answer: "No. El cobro pasa por Mercado Pago, que tokeniza tu tarjeta — Referidoo nunca ve ni guarda tu número completo.",
+  },
+  {
+    question: "¿Dónde se guarda toda la información?",
+    answer: "En una base de datos cifrada, con conexión segura (HTTPS) en todo momento — la misma infraestructura que usan miles de aplicaciones reales todos los días.",
+  },
+  {
+    question: "¿Qué pasa si cancelo mi cuenta?",
+    answer: "Cancelas cuando quieras, sin penalización. Tus datos no se venden ni se quedan dando vueltas en ningún lado.",
+  },
 ];
 
 export default async function Home() {
@@ -151,10 +180,14 @@ export default async function Home() {
           <h2 className={`${SECTION_HEADING} mb-4 max-w-xl mx-auto text-balance`} style={SECTION_HEADING_SIZE}>
             Tú pones los montos. Referidoo hace las cuentas.
           </h2>
-          <p className="text-[#5A626E] max-w-md mx-auto leading-[1.6]" style={{ fontSize: 18 }}>
+          <p className="text-[#5A626E] max-w-md mx-auto leading-[1.6] mb-3" style={{ fontSize: 18 }}>
             Dos formas de premiar, según el producto — tú decides los números,
             el sistema nunca se equivoca.
           </p>
+          <Link href="/como-funciona" className="inline-flex items-center gap-1.5 text-sm font-medium text-[#2563EB] hover:gap-2.5 transition-[gap]">
+            Ver cómo funciona, paso a paso
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </Link>
         </ScrollReveal>
 
         <div className="grid md:grid-cols-2 gap-4">
@@ -288,6 +321,19 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Seguridad y privacidad */}
+      <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
+        <ScrollReveal className="max-w-[680px] mx-auto">
+          <h2 className={`${SECTION_HEADING} mb-3 text-center text-balance`} style={SECTION_HEADING_SIZE}>
+            ¿Cómo protegemos los datos?
+          </h2>
+          <p className="text-[#5A626E] text-center mb-10 leading-[1.6]" style={{ fontSize: 17 }}>
+            Manejas información de tus clientes. Esto es exactamente lo que hacemos con ella.
+          </p>
+          <FaqAccordion items={SECURITY_FAQ} />
+        </ScrollReveal>
+      </section>
+
       {/* Pricing */}
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal>
@@ -342,38 +388,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-[#EFEFF1] overflow-hidden">
-        <div className="relative" style={{ height: "21.8vw", minHeight: 130 }}>
-          <div className="absolute inset-0 flex items-end overflow-hidden whitespace-nowrap pl-8">
-            <span className="font-bold text-[#0B0B0C]" style={{ fontSize: "24.2vw", lineHeight: 0.9 }}>
-              referidoo
-            </span>
-          </div>
-          <div
-            className="absolute rounded-full bg-[#2563EB]"
-            style={{ width: "34vw", height: "34vw", right: "-7vw", bottom: "-11vw" }}
-          />
-          <div
-            className="absolute inset-0 flex items-end overflow-hidden whitespace-nowrap pl-8"
-            style={{
-              WebkitMaskImage: "radial-gradient(17vw 17vw at calc(100% - 10vw) calc(100% - 6vw), #000 99.5%, transparent 100%)",
-              maskImage: "radial-gradient(17vw 17vw at calc(100% - 10vw) calc(100% - 6vw), #000 99.5%, transparent 100%)",
-            }}
-          >
-            <span className="font-bold text-white" style={{ fontSize: "24.2vw", lineHeight: 0.9 }}>
-              referidoo
-            </span>
-          </div>
-        </div>
-        <div className="max-w-[1180px] mx-auto px-8 py-6 flex items-center justify-between border-t border-[#EFEFF1] text-xs text-[#8A8F98]">
-          <p>© 2026 Referidoo. Todos los derechos reservados.</p>
-          <div className="flex items-center gap-5">
-            <Link href="/login" className="hover:text-[#0B0B0C] transition">Iniciar sesión</Link>
-            <Link href="/registro" className="hover:text-[#0B0B0C] transition">Crear cuenta</Link>
-          </div>
-        </div>
-      </footer>
+      <LandingFooter />
     </div>
   );
 }
