@@ -83,22 +83,30 @@ components:
 
 ## 1. Overview
 
-**Dos sistemas conviven hoy, por diseño — no por inconsistencia.**
+**Dos sistemas conviven hoy, en propagación activa — no por inconsistencia.**
 
-- **App de producto** (`/admin`, `/owner`, `/login`, `/registro`, `/c/[token]`):
-  el sistema "Herramienta de Confianza" original — Geist, blanco/negro plano,
-  azul `#3b82f6` solo como punto del logo, cero `box-shadow`. Ver sección 7.
-- **Landing pública** (`/`): sistema nuevo, confirmado explícitamente por
-  Patrick con spec exacto (tipografía, paleta, sombras, efecto de footer) el
-  29 de junio de 2026. Documentado en las secciones 2-6 de este archivo.
+- **Sistema nuevo** (sección 2-6): `/` (landing), `/login`, `/registro` — ya
+  migradas. Tipografía Hanken Grotesk, paleta `#0B0B0C`/`#2563EB`, botones
+  `rounded-full`, sombras puntuales documentadas.
+- **Sistema original "Herramienta de Confianza"** (sección 7): `/admin`,
+  `/owner`, `/c/[token]` — todavía sin migrar. Geist, blanco/negro plano,
+  azul `#3b82f6` solo como punto del logo, cero `box-shadow`.
 
-**Por qué dos sistemas:** la landing es la primera impresión pública del
-producto — tiene permiso de ser más expresiva (tipografía con más peso,
-sombras deliberadas, una pieza de marca grande en el footer). La app de
-producto sigue la disciplina de herramienta de trabajo: el asesor maneja
-dinero real, la interfaz se queda quieta. **Plan:** propagar gradualmente el
-sistema nuevo (sección 2-6) al resto de la app — hasta que eso pase, tratar
-ambos sistemas como vigentes según la superficie.
+**Orden de propagación** (decidido el 29 de junio de 2026, ver
+`~/.gstack/projects/patrickmontiel-Referidoo/`): páginas públicas simples
+primero (`/login`, `/registro` ✅ → `/r/[code]` pendiente), luego `/c/[token]`
+(tiene su propio lenguaje visual de burbuja, requiere más cuidado), luego
+`/admin/*` (superficie de trabajo diaria del asesor — ahí entran los
+primeros asesores reales, se migra con cautela y no antes de que ese flujo
+esté estable), y `/owner/*` al final (la usa solo Patrick, menor urgencia).
+
+**Por qué dos sistemas mientras dura la migración:** la landing es la
+primera impresión pública — tiene permiso de ser más expresiva (tipografía
+con más peso, sombras deliberadas, una pieza de marca grande en el footer).
+La app de producto sigue la disciplina de herramienta de trabajo: el asesor
+maneja dinero real, la interfaz se queda quieta — eso no cambia con la
+migración, solo cambian los tokens visuales (color/tipografía/radios), no la
+filosofía de quietud de la sección 7.
 
 ## 2. Colors (sistema nuevo — landing)
 
@@ -227,10 +235,11 @@ evidencia real; mientras no exista, se usa lenguaje de acceso anticipado
 explícitamente con Patrick el 29 de junio de 2026 — ver
 `~/.gstack/projects/patrickmontiel-Referidoo/patri-master-design-20260629-013637.md`.
 
-## 7. Sistema original — app de producto (`/admin`, `/owner`, `/login`, `/registro`, `/c/[token]`)
+## 7. Sistema original — app de producto (`/admin`, `/owner`, `/c/[token]`)
 
 **Creative North Star: "La Herramienta de Confianza"** — vigente en estas
-superficies hasta que se propague el sistema nuevo.
+superficies hasta que se propague el sistema nuevo. (`/login` y `/registro`
+ya migraron a la sección 2-6.)
 
 Blanco y negro plano, sin decoración que compita con la tarea. No hay
 sombras, no hay gradientes, no hay color de marca dominante — el negro y el
