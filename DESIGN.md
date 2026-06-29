@@ -2,188 +2,306 @@
 name: Referidoo
 description: Dashboard de referidos para asesores de seguros y planes financieros en México
 colors:
-  ink: "#0a0a0a"
+  ink: "#0B0B0C"
+  ink-variants: ["#10141B", "#1D2530"]
   paper: "#ffffff"
-  neutral-50: "#f9fafb"
-  neutral-100: "#f3f4f6"
-  neutral-200: "#e5e7eb"
-  neutral-400: "#9ca3af"
-  neutral-500: "#6b7280"
-  neutral-600: "#4b5563"
-  accent-blue: "#3b82f6"
+  surface: "#F4F5F7"
+  text-gray-1: "#3F4651"
+  text-gray-2: "#5A626E"
+  text-gray-3: "#6B727D"
+  text-gray-4: "#8A8F98"
+  text-gray-5: "#9098A2"
+  accent-blue: "#2563EB"
+  accent-blue-bg: "#EEF3FE"
+  accent-blue-on-blue-text: "#CFE0FF"
+  border-1: "#ECEDEF"
+  border-2: "#EFEFF1"
+  border-3: "#EAEBED"
+  border-4: "#DADCE0"
+  danger-bg: "#F0DDE2"
+  danger-ink: "#C2566B"
+  success-ink: "#1F9D5B"
   warning-bg: "#fffbeb"
   warning-ink: "#d97706"
-  danger-bg: "#fef2f2"
-  danger-ink: "#dc2626"
-  success-ink: "#16a34a"
 typography:
   body:
-    fontFamily: "Geist, -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif"
-    fontSize: "0.875rem"
+    fontFamily: "Hanken Grotesk, -apple-system, system-ui, sans-serif"
+    fontSize: "17-19px"
     fontWeight: 400
-    lineHeight: 1.5
-  title:
-    fontFamily: "Geist, -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif"
-    fontSize: "1.25rem"
-    fontWeight: 600
-    lineHeight: 1.3
+    lineHeight: 1.55-1.65
+  h1-hero:
+    fontFamily: "Hanken Grotesk"
+    fontSize: "60px"
+    fontWeight: 800
+    lineHeight: 1.04
+    letterSpacing: "-0.03em"
+  h2-section:
+    fontFamily: "Hanken Grotesk"
+    fontSize: "38-40px"
+    fontWeight: 800
+    letterSpacing: "-0.025 a -0.03em"
+  card-subtitle:
+    fontFamily: "Hanken Grotesk"
+    fontSize: "19-23px"
+    fontWeight: 700
   label:
-    fontFamily: "Geist, -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif"
-    fontSize: "0.75rem"
-    fontWeight: 400
-    letterSpacing: "normal"
+    fontFamily: "Hanken Grotesk"
+    fontSize: "12-14px"
+    fontWeight: 700
+    letterSpacing: "0.08-0.1em"
+    textTransform: "uppercase"
+  footer-wordmark:
+    fontFamily: "Hanken Grotesk"
+    fontSize: "24.2vw"
+    fontWeight: 700
+    lineHeight: 0.9
 rounded:
-  sm: "8px"
-  md: "12px"
-  lg: "16px"
-  full: "9999px"
+  card: "18-22px"
+  pill: "999px"
+  chip: "8-12px"
 spacing:
-  sm: "8px"
-  md: "12px"
-  lg: "16px"
+  container-max: "1180px"
+  container-padding: "32px"
+  hero-gap: "64px"
 components:
   button-primary:
     backgroundColor: "{colors.ink}"
+    backgroundColorHover: "#26262a"
     textColor: "{colors.paper}"
-    rounded: "{rounded.md}"
-    padding: "12px 16px"
-  badge-warning:
-    backgroundColor: "{colors.warning-bg}"
-    textColor: "{colors.warning-ink}"
-    rounded: "{rounded.full}"
-    padding: "4px 8px"
-  badge-danger:
-    backgroundColor: "{colors.danger-bg}"
-    textColor: "{colors.danger-ink}"
-    rounded: "{rounded.full}"
-    padding: "4px 8px"
+    rounded: "{rounded.pill}"
+  button-secondary:
+    backgroundColor: "{colors.paper}"
+    border: "{colors.border-4}"
+    borderHover: "{colors.ink}"
+    rounded: "{rounded.pill}"
   card:
     backgroundColor: "{colors.paper}"
-    rounded: "{rounded.lg}"
-    padding: "16px"
+    rounded: "{rounded.card}"
 ---
 
 # Design System: Referidoo
 
 ## 1. Overview
 
-**Creative North Star: "La Herramienta de Confianza"**
+**Dos sistemas conviven hoy, por diseño — no por inconsistencia.**
 
-Referidoo se siente como una herramienta de trabajo sólida, no como una pieza de marketing — en la línea de lo que Apple hace con sus apps de productividad: blanco y negro plano, sin decoración que compita con la tarea, cada pantalla resuelta con la mínima cantidad de elementos visuales necesarios. El asesor que la usa maneja dinero y datos de sus clientes; la interfaz transmite eso con quietud, no con personalidad. No hay sombras, no hay gradientes, no hay color de marca dominante — el negro y el blanco cargan toda la jerarquía visual, y el color (azul, ámbar, rojo, verde) aparece únicamente como señal funcional de estado, nunca como decoración.
+- **App de producto** (`/admin`, `/owner`, `/login`, `/registro`, `/c/[token]`):
+  el sistema "Herramienta de Confianza" original — Geist, blanco/negro plano,
+  azul `#3b82f6` solo como punto del logo, cero `box-shadow`. Ver sección 7.
+- **Landing pública** (`/`): sistema nuevo, confirmado explícitamente por
+  Patrick con spec exacto (tipografía, paleta, sombras, efecto de footer) el
+  29 de junio de 2026. Documentado en las secciones 2-6 de este archivo.
 
-Esto rechaza explícitamente la estética de SaaS genérico de 2024-2026: sin gradientes morado/azul, sin glassmorphism, sin "AI gradient" aesthetic, sin badges-pill como tendencia visual sino como código de estado real.
+**Por qué dos sistemas:** la landing es la primera impresión pública del
+producto — tiene permiso de ser más expresiva (tipografía con más peso,
+sombras deliberadas, una pieza de marca grande en el footer). La app de
+producto sigue la disciplina de herramienta de trabajo: el asesor maneja
+dinero real, la interfaz se queda quieta. **Plan:** propagar gradualmente el
+sistema nuevo (sección 2-6) al resto de la app — hasta que eso pase, tratar
+ambos sistemas como vigentes según la superficie.
 
-**Key Characteristics:**
-- Blanco y negro como base; el color es señal de estado, no decoración
-- Plano por completo — cero `box-shadow` en todo el proyecto
-- Border sutil (`border-gray-100`) en vez de sombra para separar superficies
-- Tipografía Geist en un solo peso por rol, sin jerarquía display dramática
-- Densidad de producto, no de marketing — espaciado funcional, no expansivo
+## 2. Colors (sistema nuevo — landing)
 
-## 2. Colors
+- **Ink** `#0B0B0C` (variantes `#10141B`, `#1D2530`): texto principal, fondo
+  de botón primario, base del wordmark del footer.
+- **Grises de texto** (de más oscuro a más claro): `#3F4651`, `#5A626E`,
+  `#6B727D`, `#8A8F98`, `#9098A2` — body copy, labels, captions, según
+  jerarquía de énfasis.
+- **Superficies:** blanco `#ffffff`, gris claro de tarjeta `#F4F5F7`.
+- **Bordes:** `#ECEDEF`, `#EFEFF1`, `#EAEBED`, `#DADCE0` — variantes sutiles
+  según contexto (separador de sección vs. borde de card vs. borde de input).
+- **Azul de marca** `#2563EB` — ya no es solo decoración del logo; en este
+  sistema carga: el banner de acceso anticipado, el borde + sombra de la
+  tarjeta "Con Referidoo", el número de cada feature, la barra/burbuja de
+  progreso, el botón "Recomendado", y el círculo del footer. Fondo claro
+  asociado `#EEF3FE`; texto sobre azul `#CFE0FF`.
+- **Estado en tabla "Antes":** ✕ con fondo `#F0DDE2` / texto `#C2566B`.
+- **Estado "✓" en plan free:** verde `#1F9D5B` (único uso de verde en este
+  sistema — Vida/PPR del bloque de premios usa azul, no verde).
 
-La paleta es deliberadamente mínima: dos primitivos (negro/blanco) cargan el 90% de cada pantalla; el color solo aparece para comunicar estado.
+## 3. Typography (sistema nuevo — landing)
 
-### Primary
-- **Ink** (`#0a0a0a`): texto principal y fondo de los elementos de mayor énfasis (botón primario, card de MRR, nav activo). Es el "acento" del sistema — no hay un color de marca separado.
+**Familia:** Hanken Grotesk (Google Fonts vía `next/font/google`), pesos
+400/500/600/700/800, fallback `-apple-system, system-ui, sans-serif`,
+antialiasing activado. Cargada con scope solo a la landing
+(`src/app/page.tsx`), no al resto de la app — `next/font/google` se aplica
+por archivo, así que esto no afecta a `/admin` ni `/owner`.
 
-### Neutral
-- **Paper** (`#ffffff`): fondo base de toda la app.
-- **Neutral 50** (`#f9fafb`): fondos secundarios sutiles (hover de filas, fondos de badge neutro).
-- **Neutral 100** (`#f3f4f6`): el border de las cards (`border-gray-100`) — la única forma de separación entre superficies.
-- **Neutral 200** (`#e5e7eb`): border de inputs y campos de formulario.
-- **Neutral 400** (`#9ca3af`): solo para usos no-textuales (líneas de datos en gráficas, números de índice decorativos) — nunca como color de texto, falla WCAG AA (~2.5:1 contra blanco).
-- **Neutral 500** (`#6b7280`): texto secundario / labels (`text-gray-500`) — captions de widgets, fechas, metadatos. Reemplazó a Neutral 400 como color de texto secundario en todo el proyecto (corrección de contraste, junio 2026).
-- **Neutral 600** (`#4b5563`): texto de nav inactivo.
+### Escala
+- **H1 hero:** 60px / line-height 1.04 / weight 800 / letter-spacing -0.03em.
+- **H2 de sección:** 38-40px / weight 800 / letter-spacing -0.025 a -0.03em.
+- **Subtítulo de tarjeta:** 19-23px / weight 700.
+- **Párrafo:** 17-19px / line-height 1.55-1.65 / color gris (nunca negro puro
+  para body copy largo).
+- **Label fino:** 12-14px, MAYÚSCULAS, weight 700, letter-spacing 0.08-0.1em.
+- **Wordmark del footer:** 24.2vw / weight 700 / line-height 0.9 — unidad
+  `vw` deliberada: escala proporcional al viewport en vez de un tamaño fijo,
+  así el efecto se ve igual de dramático en cualquier ancho de pantalla.
 
-### Semantic (estado, no decoración)
-- **Accent Blue** (`#3b82f6`): único uso decorativo permitido — el punto junto al wordmark "referidoo". No se usa en ningún otro lugar como acento de marca.
-- **Warning** (bg `#fffbeb` / ink `#d97706`): pago fallido dentro del periodo de gracia, referido sin confirmar, "pocos datos todavía".
-- **Danger** (bg `#fef2f2` / ink `#dc2626`): pago fallido fuera del periodo de gracia.
-- **Success** (`#16a34a`): línea de comisión en gráficas — único lugar donde verde aparece, nunca como botón de "éxito" genérico.
+## 4. Layout (sistema nuevo — landing)
 
-### Named Rules
-**The Two-Color Rule.** Negro y blanco resuelven la jerarquía visual de cualquier pantalla. Un color solo se introduce cuando comunica un estado real (advertencia, error, comisión) — nunca para diferenciar secciones o decorar.
+- **Contenedor base:** `max-width: 1180px`, `margin: 0 auto`, `padding: 0 32px`.
+- **Secciones internas** se angostan según densidad de contenido: 760px
+  ("Cobra automático", solo título+párrafo), 820px (comparación antes/después),
+  760px (pricing, 2 tarjetas).
+- **Hero:** grid de 2 columnas (`1fr 1fr`), `gap: 64px`.
+- **Separadores:** línea 1px `#EFEFF1` al ancho del contenedor (1180px),
+  entre cada sección.
+- **Radios:** tarjetas 18-22px, botones/pills `rounded-full` (completamente
+  redondeados — no `rounded-xl` como en el resto de la app), chips internas
+  8-12px.
 
-## 3. Typography
+## 5. Elevation (sistema nuevo — landing)
 
-**Body Font:** Geist (con fallback `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif`)
+A diferencia del resto de la app (sección 7, completamente plano), la
+landing usa sombra deliberada en dos lugares específicos, no como decoración
+genérica:
+- **Imagen/mockup del panel en el hero:** `box-shadow: 0 10px 40px rgba(15,23,42,.10)`
+  — simula profundidad de una captura de pantalla real.
+- **Tarjeta "Con Referidoo"** (comparación): `box-shadow: 0 10px 30px rgba(37,99,235,.12)`
+  — sombra tintada de azul, refuerza que esa tarjeta es la "ganadora".
+- **Burbuja de premios:** `box-shadow: 0 3px 10px rgba(37,99,235,.25)` —
+  mismo valor que usa el componente real de burbuja en el portal de cliente
+  (`src/app/c/[token]/page.tsx`), no inventado para la landing.
 
-**Character:** Una sola familia tipográfica en pesos moderados (400/500/600) — sin pairing serif/sans, sin display font dramático. La tipografía no es protagonista; es legible y se queda fuera del camino.
+Ningún otro elemento de la landing usa sombra — sigue siendo la excepción
+puntual, no el default.
 
-### Hierarchy
-- **Title** (600, 1.25rem / `text-xl font-semibold`, line-height 1.3): título de página (ej. "Resumen del negocio"). Aparece una vez por pantalla, nunca repetido como hero.
-- **Body** (400, 0.875rem / `text-sm`, line-height 1.5): texto de contenido general, nombres de asesores/leads, mensajes de estado.
-- **Label** (400, 0.75rem / `text-xs`): captions de widget, fechas, metadatos secundarios — siempre en Neutral 400.
-- **Emphasis** (600, varía según contexto / `font-medium` o `font-semibold`): montos de dinero, nombres en listas, valores que el asesor necesita escanear rápido.
+## 6. Componentes específicos de la landing
 
-### Named Rules
-**The No-Display Rule.** No existe un tamaño "hero" o `clamp()` dramático en todo el proyecto. El título más grande de cualquier pantalla es `text-xl`. Esto es producto, no landing page — el contenido es la jerarquía, no el tamaño de letra.
+### Header
+Sticky, fondo blanco translúcido (`bg-white/80 backdrop-blur-md`), sin
+borde hasta que el usuario hace scroll (`scrollY > 8`), entonces aparece
+`border-b border-[#ECEDEF]`. Implementado en
+`src/components/LandingHeader.tsx` (client component — necesita el
+listener de scroll).
 
-## 4. Elevation
+### Banner de acceso anticipado
+Barra de ancho completo, `bg-[#2563EB]`, texto blanco centrado, 11px de
+padding vertical. Mensaje honesto, nunca una cifra de adopción inventada
+(ver sección "Honestidad" más abajo).
 
-Sistema completamente plano. No existe un solo `box-shadow` en el proyecto — la separación entre superficies se logra con un border sutil de 1px (`border-gray-100`) o con el contraste fondo blanco / card blanca sin border en absoluto cuando no hace falta separación. Confirmado explícitamente como regla permanente, no como pendiente de pulir.
+### Mockup del hero
+Espejo fiel del dashboard real de `/admin` — mismas 4 etiquetas
+(`Clientes activos`, `Referidos totales`, `Convertidos`, `Pendientes`) y
+mismos 2 tiles de dinero (`Premios pagados` en fondo Ink, `Por pagar
+(aprobados)` en fondo gris) que usa `src/app/admin/page.tsx`. Marcado
+explícitamente como "ejemplo ilustrativo" — ver Honestidad.
 
-### Named Rules
-**The Flat-By-Default Rule.** Las superficies nunca usan sombra. Si una card necesita separarse del fondo, usa `border border-gray-100`. Si no necesita separarse, no lleva border. Nunca sombra como sustituto de jerarquía.
+### Features (lista, no tarjetas)
+`grid-template-columns: 64px 1fr` por fila — número azul en formato `01`,
+`02`... + título + descripción. Separador `border-t` entre filas (no la
+primera). Sin iconos, sin fondo de card — reemplaza el patrón de tarjeta-
+con-icono del resto de la app.
 
-## 5. Components
+### Comparación Antes/Después
+Dos tarjetas lado a lado (no una tabla ancha): tarjeta gris "Antes" con ✕
+en círculo rosa, tarjeta blanca con borde azul de 2px + sombra azul y ✓ en
+círculo azul. Badge circular negro "vs" centrado, superpuesto entre ambas
+(`absolute`, `-translate-x-1/2 -translate-y-1/2`).
 
-Personalidad: **utilitarios y directos.** Cada componente existe únicamente para cumplir su función — sin estado decorativo, sin variantes "bonitas" que no comuniquen algo.
+### Burbuja de premios
+Visual real de burbuja (círculo con relleno líquido de abajo hacia arriba +
+clase `.bubble-shine` ya existente en `globals.css`), no una barra de
+progreso genérica — mismo lenguaje visual que el portal de cliente real.
 
-### Buttons
-- **Shape:** `rounded-xl` (12px) para botones de acción; `rounded-full` solo en pills/badges de estado.
-- **Primary:** fondo Ink, texto Paper, `padding: 12px 16px`.
-- **Ghost / Texto:** texto Ink, sin fondo, `hover:underline` (ej. "Reintentar" en estados de error).
-- **Hover / Focus:** los inputs usan `focus:ring-2 focus:ring-black` (no glow, no color secundario). Los botones de acción usan `active:scale-95` con `transition-transform` como única respuesta táctil al press — sin cambio de color en hover salvo el subrayado en los ghost.
+### Footer — wordmark gigante con máscara
+Tres capas superpuestas dentro de un contenedor con `overflow: hidden`:
+1. Texto negro base ("referidoo", 24.2vw, weight 700).
+2. Círculo azul absoluto, `width/height: 34vw`, posicionado en
+   `right: -7vw; bottom: -11vw` (entra desde la esquina inferior derecha).
+3. Copia blanca del mismo texto, recortada con
+   `mask-image: radial-gradient(17vw 17vw at calc(100% - 10vw) calc(100% - 6vw), #000 99.5%, transparent 100%)`
+   — el centro y radio del gradiente coinciden exactamente con el círculo de
+   la capa 2, así que el texto "se vuelve blanco" justo donde cruza el azul.
 
-### Cards / Containers
-- **Corner Style:** `rounded-2xl` (16px) para contenedores de página; `rounded-xl` (12px) para elementos internos (nav links, inputs).
-- **Background:** Paper sobre fondo `gray-50` de página, o Ink para el único elemento de máximo énfasis (card de MRR).
-- **Shadow Strategy:** ninguna — ver Elevation.
-- **Border:** `border border-gray-100`, siempre 1px, nunca como acento de color (ver Don'ts).
-- **Internal Padding:** `p-4` (16px) estándar para todas las cards de widget.
+Implementado directamente en `src/app/page.tsx` (footer) — no es un
+componente reusable todavía porque solo se usa una vez.
 
-### Inputs / Fields
-- **Style:** `border-gray-200`, `rounded-xl`.
-- **Focus:** `focus:outline-none focus:ring-2 focus:ring-black` — el anillo de foco reemplaza el outline nativo, nunca lo elimina sin sustituto.
+### Honestidad (aplica a ambos sistemas)
+Cualquier dato ilustrativo en la landing (mockup del hero, "$2,500 en
+premios", etc.) debe estar etiquetado como ejemplo — nunca presentado como
+real. Ningún número de adopción ("X asesores ya lo usan") se muestra sin
+evidencia real; mientras no exista, se usa lenguaje de acceso anticipado
+("sé de los primeros en usarlo") en vez de inventar una cifra. Confirmado
+explícitamente con Patrick el 29 de junio de 2026 — ver
+`~/.gstack/projects/patrickmontiel-Referidoo/patri-master-design-20260629-013637.md`.
 
-### Badges (estado)
-- **Style:** `rounded-full`, `px-2 py-1`, `text-xs` — siempre par fondo-claro/texto-oscuro del mismo color semántico (warning, danger), nunca un color sólido saturado de fondo.
+## 7. Sistema original — app de producto (`/admin`, `/owner`, `/login`, `/registro`, `/c/[token]`)
 
-### Navigation
-- **Sidebar (desktop):** link activo = fondo Ink, texto Paper, `font-medium`; inactivo = Neutral 600, `hover:bg-gray-100`.
-- **Bottom nav (mobile):** mismo lenguaje de color, ícono + label de 10px, activo = Ink, inactivo = Neutral 400.
+**Creative North Star: "La Herramienta de Confianza"** — vigente en estas
+superficies hasta que se propague el sistema nuevo.
+
+Blanco y negro plano, sin decoración que compita con la tarea. No hay
+sombras, no hay gradientes, no hay color de marca dominante — el negro y el
+blanco cargan toda la jerarquía visual, y el color (azul, ámbar, rojo,
+verde) aparece únicamente como señal funcional de estado, nunca como
+decoración.
+
+### Colors
+- **Ink** `#0a0a0a`, **Paper** `#ffffff`.
+- **Neutrales:** `#f9fafb`, `#f3f4f6` (border de cards), `#e5e7eb` (border de
+  inputs), `#9ca3af` (solo no-textual), `#6b7280` (texto secundario),
+  `#4b5563` (nav inactivo).
+- **Accent Blue** `#3b82f6`: único uso decorativo permitido — el punto del
+  wordmark. También usado como excepción documentada en gráficas (ver
+  Charts).
+- **Warning** `#fffbeb` / `#d97706`. **Danger** `#fef2f2` / `#dc2626`.
+  **Success** `#16a34a`.
+
+**The Two-Color Rule:** negro y blanco resuelven la jerarquía; un color solo
+se introduce para comunicar un estado real.
+
+### Typography
+Geist, pesos 400/500/600. **Title** 1.25rem/600. **Body** 0.875rem/400.
+**Label** 0.75rem/400, siempre gris. **The No-Display Rule:** el título más
+grande de cualquier pantalla de producto es `text-xl` — sin hero, sin
+`clamp()` dramático.
+
+### Elevation
+**The Flat-By-Default Rule:** cero `box-shadow`. Separación entre
+superficies vía `border border-gray-100` de 1px, o sin border si no hace
+falta separar.
+
+### Components
+- **Buttons:** `rounded-xl` (12px), `rounded-full` solo en pills/badges.
+  Primary = Ink/Paper. Ghost = texto Ink sin fondo. `active:scale-95` +
+  `transition-transform` como única respuesta táctil.
+- **Cards:** `rounded-2xl` contenedores de página, `rounded-xl` elementos
+  internos. `border border-gray-100`, nunca color. `p-4` interno estándar.
+- **Inputs:** `border-gray-200`, `rounded-xl`, `focus:ring-2 focus:ring-black`.
+- **Badges:** `rounded-full`, `px-2 py-1`, `text-xs`, par fondo-claro/texto-
+  oscuro del color semántico.
+- **Navigation:** activo = Ink/Paper; inactivo = Neutral 600/400.
 
 ### Charts
+`shadcn/ui` chart (`src/components/ui/chart.tsx`) — `ChartContainer` +
+`ChartTooltip`/`ChartTooltipContent`. Paleta fija: `#3b82f6` → `#0a0a0a` →
+`#9ca3af` → `#93c5fd` → `#d4d4d8`. Referencia canónica:
+`TrendsWidget.tsx` / `BreakdownWidget.tsx` en `src/app/owner/_widgets/`.
 
-- **Componente:** `shadcn/ui` chart (`src/components/ui/chart.tsx`, wrapper sobre Recharts) — `ChartContainer` + `ChartTooltip`/`ChartTooltipContent`. Toda gráfica nueva usa este componente, no Recharts directo.
-- **Paleta:** orden fijo, azul de marca primero, después negro/grises de apoyo — única excepción documentada al "Two-Color Rule" porque una gráfica de múltiples series necesita distinguir datos, no decorar:
-  - `#3b82f6` (Accent Blue — mismo azul del punto del wordmark)
-  - `#0a0a0a` (Ink)
-  - `#9ca3af` (Neutral 400)
-  - `#93c5fd` (azul claro, cuarta serie si hace falta)
-  - `#d4d4d8` (gris claro, quinta serie)
-- **Referencia:** `src/app/owner/_widgets/TrendsWidget.tsx` (líneas, vía `ChartConfig`) y `BreakdownWidget.tsx` (dona, vía array `COLORS` en el mismo orden) — ambas son la implementación canónica; cualquier gráfica futura (landing, admin, owner) sigue este mismo patrón y orden de color.
+### Loading / Empty / Error
+Skeletons con forma real del contenido. Empty state específico al widget,
+nunca genérico. Error = mensaje directo + "Reintentar" inline, nunca
+`window.alert` ni "Oops!".
 
-### Loading / Empty / Error states
-- **Loading:** skeletons que imitan la forma real del contenido (barras para gráficas de línea, dona+leyenda para gráficas circulares, filas para listas) — nunca solo un spinner genérico cuando el contenido tiene una forma reconocible.
-- **Empty:** mensaje compuesto en Neutral 400, específico al widget (ej. "Sin problemas operativos pendientes. 🎉"), nunca un estado vacío sin contexto.
-- **Error:** mensaje directo + botón "Reintentar" inline, nunca `window.alert` ni mensaje genérico tipo "Oops!".
+## 8. Do's and Don'ts
 
-## 6. Do's and Don'ts
+### Do (ambos sistemas):
+- Dar feedback táctil (`active:scale-95` o equivalente) en elementos presionables.
+- Dar alternativa `prefers-reduced-motion: reduce` a toda animación.
+- Etiquetar como ilustrativo cualquier dato de ejemplo — nunca presentarlo como real.
+- Usar skeletons con la forma real del contenido, no un spinner genérico.
 
-### Do:
-- **Do** usar negro/blanco para resolver jerarquía antes de introducir color.
-- **Do** usar `border-gray-100` (1px) como única forma de separar superficies.
-- **Do** dar feedback táctil con `active:scale-95` + `transition-transform` en cualquier elemento presionable.
-- **Do** dar a cada animación (`animate-spin`, `animate-pulse`) una alternativa bajo `prefers-reduced-motion: reduce` (WCAG AA, confirmado como requisito del proyecto).
-- **Do** usar skeletons con la forma real del contenido para estados de carga, no solo un spinner circular genérico.
+### Don't (app de producto, sección 7):
+- No usar `box-shadow` — sigue siendo plano por decisión ahí.
+- No introducir un segundo color de acento de marca distinto a Ink/Blue.
+- No cambiar Geist por otra tipografía en `/admin`, `/owner`, `/login`, etc.
+- No usar `window.alert()` ni copy genérico tipo "Oops!".
 
-### Don't:
-- **Don't** usar `box-shadow` en ningún componente — el sistema es plano por decisión, no por descuido.
-- **Don't** introducir gradientes morado/azul, glassmorphism, o la estética "AI SaaS" genérica de 2024-2026.
-- **Don't** usar `border-left`/`border-right` de color como acento decorativo (side-stripe) en cards, badges o alerts.
-- **Don't** introducir un segundo color de acento de marca — Ink ya es el acento; el color adicional es siempre semántico (warning/danger/success), nunca decorativo.
-- **Don't** cambiar la tipografía base (Geist) ni introducir un display font — confirmado explícitamente: pulir dentro del sistema existente, no rediseñar.
-- **Don't** usar `window.alert()` o copy genérico tipo "Oops!" en estados de error — siempre mensaje directo + acción de recuperación.
+### Don't (landing, sección 2-6):
+- No usar sombra fuera de los 3 casos documentados en la sección 5 — sigue
+  siendo la excepción, no el default nuevo.
+- No inventar cifras de adopción o testimonios — ver Honestidad.
+- No usar `rounded-xl` en botones — esta superficie usa pills (`rounded-full`)
+  en todos los CTAs.
