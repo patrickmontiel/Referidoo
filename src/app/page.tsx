@@ -44,9 +44,9 @@ const FEATURES = [
 ];
 
 const COMPARISON = [
-  { antes: "Cuentas referidos a mano en WhatsApp o una hoja de Excel", despues: "Cada referido se registra solo, con su estatus siempre a la vista" },
-  { antes: "Se te olvida quién te refirió a quién, o cuánto le debes", despues: "El premio se calcula solo según tus reglas — sin hacer cuentas" },
-  { antes: "Persigues pagos de tu suscripción manualmente cada mes", despues: "Cobro automático, sin que tengas que acordarte" },
+  { antes: "Cuentas tus referidos a mano, en un chat de WhatsApp que ya nadie revisa", despues: "Cada referido se registra solo — su estatus siempre a la vista, sin perseguir a nadie" },
+  { antes: "Se te olvida quién te refirió a quién, o cuánto le debes", despues: "El premio se calcula solo, con tus propias reglas. Cero cuentas a mano" },
+  { antes: "Persigues el pago de tu propia suscripción cada mes", despues: "Se cobra sola. Tú ya no tienes que acordarte de nada" },
 ];
 
 export default async function Home() {
@@ -73,15 +73,19 @@ export default async function Home() {
       {/* Hero */}
       <section className="max-w-5xl mx-auto px-5 pt-16 pb-12 grid md:grid-cols-2 gap-10 items-center">
         <div className="landing-stagger">
+          <p className="inline-flex items-center gap-2 text-xs font-medium text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full mb-5">
+            <span className="w-1.5 h-1.5 rounded-full bg-black" />
+            Acceso anticipado — sé de los primeros asesores en usarlo
+          </p>
           <h1 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight mb-5 text-balance">
-            Tus referidos, organizados.
+            El sistema de referidos
             <br />
-            Tus premios, automáticos.
+            que no existía. Hasta ahora.
           </h1>
           <p className="text-gray-500 text-lg leading-relaxed mb-8 max-w-md">
-            Referidoo es el panel de referidos para asesores de seguros en México —
-            reemplaza el WhatsApp y el Excel con un sistema que cuenta, calcula y
-            paga por ti.
+            Referidoo es para asesores de seguros y planes financieros en México.
+            Antes, cada referido vivía en un chat de WhatsApp o una fila de Excel.
+            Ahora se registra solo, se calcula solo, y se paga solo.
           </p>
           <div className="flex items-center gap-3">
             <Link href="/registro" className="text-sm font-medium bg-black text-white px-5 py-3 rounded-xl transition-[background-color,transform] duration-150 hover:bg-gray-900 active:scale-[0.97]">
@@ -120,12 +124,73 @@ export default async function Home() {
             Cobra automático, sin perseguir pagos
           </h2>
           <p className="text-gray-500 leading-relaxed">
-            Tu suscripción se cobra sola cada mes vía Mercado Pago. Y cuando un
-            cliente te refiere a alguien que cierra, el premio se calcula con tus
-            propias reglas — escalera para Vida y PPR, premios burbuja para Auto
-            y Gastos Médicos Mayores. Tú decides los montos, Referidoo hace las cuentas.
+            Tu suscripción se cobra sola, cada mes, vía Mercado Pago — sin que
+            tengas que acordarte. Y cuando un referido cierra, Referidoo ya sabe
+            cuánto te toca: escalera para Vida y PPR, premios burbuja para Auto
+            y Gastos Médicos Mayores. Configura tus reglas una vez; el sistema
+            hace las cuentas para siempre.
           </p>
         </ScrollReveal>
+      </section>
+
+      {/* Cómo se calculan los premios */}
+      <section className="max-w-5xl mx-auto px-5 py-16 border-t border-gray-100">
+        <ScrollReveal className="text-center mb-10">
+          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-4 max-w-xl mx-auto text-balance">
+            Tú pones los montos. Referidoo hace las cuentas.
+          </h2>
+          <p className="text-gray-500 max-w-md mx-auto leading-relaxed">
+            Dos formas de premiar, según el producto — tú decides los números,
+            el sistema nunca se equivoca.
+          </p>
+        </ScrollReveal>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <ScrollReveal className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Vida y PPR</p>
+            <h3 className="font-medium mb-4">Escalera de premios</h3>
+            <div className="space-y-2 mb-4">
+              {[
+                { label: "1er referido convertido", amount: "$1,500" },
+                { label: "2do referido convertido", amount: "$1,500" },
+                { label: "3er referido convertido", amount: "$2,500" },
+              ].map((step, i) => (
+                <div key={step.label} className="flex items-center justify-between bg-white rounded-xl border border-gray-100 px-4 py-2.5">
+                  <span className="text-sm text-gray-600 flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-black text-white text-xs flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                    {step.label}
+                  </span>
+                  <span className="text-sm font-semibold">{step.amount}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              Cada venta sube un nivel. Tú eliges qué pasa después del último —
+              ¿vuelve a empezar, se queda fijo, o paga un monto plano? Los montos
+              de ejemplo son los que trae el sistema por default; tú los cambias
+              cuando quieras desde tu panel.
+            </p>
+          </ScrollReveal>
+
+          <ScrollReveal delayMs={60} className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Auto y Gastos Médicos Mayores</p>
+            <h3 className="font-medium mb-4">Premios burbuja</h3>
+            <div className="bg-white rounded-xl border border-gray-100 p-4 mb-4">
+              <div className="flex items-center justify-between text-sm mb-2">
+                <span className="text-gray-600">Auto = 150 pts · GMM = 300 pts</span>
+                <span className="font-semibold">350 / 500 pts</span>
+              </div>
+              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-500 rounded-full" style={{ width: "70%" }} />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              Cada venta suma puntos a un mismo fondo. Al llegar al umbral que tú
+              definas, tu cliente ve el premio listo para reclamar directamente
+              desde su portal — sin que tengas que avisarle.
+            </p>
+          </ScrollReveal>
+        </div>
       </section>
 
       {/* Feature grid */}
@@ -197,7 +262,7 @@ export default async function Home() {
             <div className="rounded-2xl border border-gray-200 bg-gray-50 p-7">
               <p className="text-sm font-medium text-gray-600 uppercase tracking-wider mb-2">Freemium</p>
               <p className="text-3xl font-semibold mb-1">Gratis</p>
-              <p className="text-sm text-gray-500 mb-6">Hasta 2 clientes</p>
+              <p className="text-sm text-gray-500 mb-6">Hasta 2 clientes — perfecto para probarlo</p>
               <ul className="text-sm text-gray-600 space-y-2.5 mb-7">
                 {["Seguimiento de referidos", "Premios automáticos", "Portal para tus clientes"].map((item) => (
                   <li key={item} className="flex items-center gap-2">
@@ -220,7 +285,11 @@ export default async function Home() {
               <p className="text-3xl font-semibold mb-1">$539 MXN<span className="text-base font-normal text-gray-500">/mes</span></p>
               <p className="text-sm text-gray-500 mb-6">Clientes ilimitados</p>
               <ul className="text-sm text-gray-700 space-y-2.5 mb-7">
-                {["Todo lo del plan freemium", "Clientes ilimitados", "Cobro automático vía Mercado Pago"].map((item) => (
+                {[
+                  "Sin límite de clientes — la mayoría de los asesores activos ya tienen más de 2",
+                  "Tu suscripción se cobra sola cada mes, sin transferencias manuales",
+                  "Todo lo del plan freemium, ya sin restricciones",
+                ].map((item) => (
                   <li key={item} className="flex items-center gap-2">
                     <CheckIcon className="text-blue-500" />
                     {item}
