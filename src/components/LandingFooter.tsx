@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export function LandingFooter() {
   return (
     <footer className="border-t border-[#EFEFF1] overflow-hidden">
@@ -25,12 +23,8 @@ export function LandingFooter() {
           </span>
         </div>
       </div>
-      <div className="max-w-[1180px] mx-auto px-8 py-6 flex items-center justify-between border-t border-[#EFEFF1] text-xs text-[#8A8F98]">
+      <div className="max-w-[1180px] mx-auto px-8 py-6 border-t border-[#EFEFF1] text-xs text-[#8A8F98] text-center">
         <p>© 2026 Referidoo. Todos los derechos reservados.</p>
-        <div className="flex items-center gap-5">
-          <Link href="/login" className="hover:text-[#0B0B0C] transition">Iniciar sesión</Link>
-          <Link href="/registro" className="hover:text-[#0B0B0C] transition">Crear cuenta</Link>
-        </div>
       </div>
     </footer>
   );
