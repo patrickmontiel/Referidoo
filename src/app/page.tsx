@@ -46,7 +46,7 @@ const FEATURES = [
 const COMPARISON = [
   { antes: "Cuentas tus referidos a mano, en un chat de WhatsApp que ya nadie revisa", despues: "Cada referido se registra solo — su estatus siempre a la vista, sin perseguir a nadie" },
   { antes: "Se te olvida quién te refirió a quién, o cuánto le debes", despues: "El premio se calcula solo, con tus propias reglas. Cero cuentas a mano" },
-  { antes: "Persigues el pago de tu propia suscripción cada mes", despues: "Se cobra sola. Tú ya no tienes que acordarte de nada" },
+  { antes: "Tu cliente no tiene idea de cuánto le falta para su premio, ni cómo reclamarlo", despues: "Tu cliente ve su progreso y reclama su premio solo, desde su propio portal" },
 ];
 
 export default async function Home() {
