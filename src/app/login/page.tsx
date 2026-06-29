@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Hanken_Grotesk } from "next/font/google";
 import { Logo } from "@/components/Logo";
+
+const hankenGrotesk = Hanken_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 export default function LoginPage() {
   const router = useRouter();
@@ -48,18 +54,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4">
+    <div className={`min-h-screen bg-white flex items-center justify-center px-4 ${hankenGrotesk.className}`}>
       <div className="w-full max-w-sm">
         <div className="mb-10 text-center flex flex-col items-center">
           <div className="mb-4">
             <Logo size="md" />
           </div>
-          <p className="text-sm text-gray-500">Panel del asesor</p>
+          <p className="text-sm text-brand-gray-4">Panel del asesor</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
               Correo electrónico
             </label>
             <input
@@ -68,13 +74,13 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full min-h-11 px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+              className="w-full min-h-11 px-4 py-3 rounded-2xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink focus:border-transparent transition"
               placeholder="tu@correo.com"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
               Contraseña
             </label>
             <input
@@ -83,13 +89,13 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full min-h-11 px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+              className="w-full min-h-11 px-4 py-3 rounded-2xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink focus:border-transparent transition"
               placeholder="••••••••"
             />
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-xl">
+            <div className="bg-brand-danger-bg text-brand-danger-ink text-sm px-4 py-3 rounded-2xl">
               {error}
             </div>
           )}
@@ -97,7 +103,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full min-h-11 bg-black text-white text-sm font-medium py-3 rounded-xl hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-[background-color,transform,opacity] duration-150 active:scale-[0.98]"
+            className="w-full min-h-11 bg-brand-ink text-white text-sm font-medium py-3 rounded-full hover:bg-[#26262a] disabled:opacity-50 disabled:cursor-not-allowed transition-[background-color,transform,opacity] duration-150 active:scale-[0.98]"
           >
             {loading ? "Verificando..." : "Entrar"}
           </button>

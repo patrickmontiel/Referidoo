@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Hanken_Grotesk } from "next/font/google";
 import { Logo } from "@/components/Logo";
+
+const hankenGrotesk = Hanken_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 export default function RegistroPage() {
   const router = useRouter();
@@ -38,18 +44,18 @@ export default function RegistroPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4">
+    <div className={`min-h-screen bg-white flex items-center justify-center px-4 ${hankenGrotesk.className}`}>
       <div className="w-full max-w-sm">
         <div className="mb-10 text-center flex flex-col items-center">
           <div className="mb-4">
             <Logo size="md" />
           </div>
-          <p className="text-sm text-gray-500">Crea tu cuenta de asesor</p>
+          <p className="text-sm text-brand-gray-4">Crea tu cuenta de asesor</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="reg-name" className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+            <label htmlFor="reg-name" className="block text-xs font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
               Nombre completo
             </label>
             <input
@@ -59,13 +65,13 @@ export default function RegistroPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full min-h-11 px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+              className="w-full min-h-11 px-4 py-3 rounded-2xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink focus:border-transparent transition"
               placeholder="Eduardo Neri"
             />
           </div>
 
           <div>
-            <label htmlFor="reg-email" className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+            <label htmlFor="reg-email" className="block text-xs font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
               Correo electrónico
             </label>
             <input
@@ -75,13 +81,13 @@ export default function RegistroPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full min-h-11 px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+              className="w-full min-h-11 px-4 py-3 rounded-2xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink focus:border-transparent transition"
               placeholder="tu@correo.com"
             />
           </div>
 
           <div>
-            <label htmlFor="reg-password" className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+            <label htmlFor="reg-password" className="block text-xs font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
               Contraseña
             </label>
             <input
@@ -92,15 +98,15 @@ export default function RegistroPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
-              className="w-full min-h-11 px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+              className="w-full min-h-11 px-4 py-3 rounded-2xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink focus:border-transparent transition"
               placeholder="••••••••"
             />
-            <p className="text-xs text-gray-500 mt-1">Mínimo 8 caracteres</p>
+            <p className="text-xs text-brand-gray-4 mt-1">Mínimo 8 caracteres</p>
           </div>
 
           <div>
-            <label htmlFor="reg-company" className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-              Despacho / empresa <span className="text-gray-500 font-normal normal-case tracking-normal">(opcional)</span>
+            <label htmlFor="reg-company" className="block text-xs font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
+              Despacho / empresa <span className="text-brand-gray-4 font-normal normal-case tracking-normal">(opcional)</span>
             </label>
             <input
               id="reg-company"
@@ -108,13 +114,13 @@ export default function RegistroPage() {
               autoComplete="organization"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              className="w-full min-h-11 px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+              className="w-full min-h-11 px-4 py-3 rounded-2xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink focus:border-transparent transition"
               placeholder="Eduardo Neri — Asesor Financiero"
             />
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-xl">
+            <div className="bg-brand-danger-bg text-brand-danger-ink text-sm px-4 py-3 rounded-2xl">
               {error}
             </div>
           )}
@@ -122,14 +128,14 @@ export default function RegistroPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full min-h-11 bg-black text-white text-sm font-medium py-3 rounded-xl hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-[background-color,transform,opacity] duration-150 active:scale-[0.98]"
+            className="w-full min-h-11 bg-brand-ink text-white text-sm font-medium py-3 rounded-full hover:bg-[#26262a] disabled:opacity-50 disabled:cursor-not-allowed transition-[background-color,transform,opacity] duration-150 active:scale-[0.98]"
           >
             {loading ? "Creando cuenta..." : "Crear cuenta"}
           </button>
         </form>
 
-        <div className="text-center mt-5 text-sm text-gray-600">
-          Ya tengo cuenta — <Link href="/login" className="text-black font-medium hover:underline">Iniciar sesión</Link>
+        <div className="text-center mt-5 text-sm text-brand-gray-2">
+          Ya tengo cuenta — <Link href="/login" className="text-brand-ink font-medium hover:underline">Iniciar sesión</Link>
         </div>
       </div>
     </div>

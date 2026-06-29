@@ -32,12 +32,49 @@
   --chart-4: #93c5fd;
   --chart-5: #d4d4d8;
   --radius: 0.625rem;
+
+  /* Sistema nuevo (Hanken Grotesk + #2563EB) — landing y superficies en
+     migración. Prefijo brand-* deliberado: no reemplaza --primary/--border/
+     etc. de arriba, que siguen usando los componentes shadcn (button, card,
+     chart) del sistema viejo. Ver DESIGN.md secciones 2-6. */
+  --brand-ink: #0B0B0C;
+  --brand-blue: #2563EB;
+  --brand-blue-bg: #EEF3FE;
+  --brand-surface: #F4F5F7;
+  --brand-gray-1: #3F4651;
+  --brand-gray-2: #5A626E;
+  --brand-gray-3: #6B727D;
+  --brand-gray-4: #8A8F98;
+  --brand-gray-5: #9098A2;
+  --brand-border-1: #ECEDEF;
+  --brand-border-2: #EFEFF1;
+  --brand-border-3: #EAEBED;
+  --brand-border-4: #DADCE0;
+  --brand-danger-bg: #F0DDE2;
+  --brand-danger-ink: #C2566B;
+  --brand-success-ink: #1F9D5B;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-blue-bg: var(--brand-blue-bg);
+  --color-brand-surface: var(--brand-surface);
+  --color-brand-gray-1: var(--brand-gray-1);
+  --color-brand-gray-2: var(--brand-gray-2);
+  --color-brand-gray-3: var(--brand-gray-3);
+  --color-brand-gray-4: var(--brand-gray-4);
+  --color-brand-gray-5: var(--brand-gray-5);
+  --color-brand-border-1: var(--brand-border-1);
+  --color-brand-border-2: var(--brand-border-2);
+  --color-brand-border-3: var(--brand-border-3);
+  --color-brand-border-4: var(--brand-border-4);
+  --color-brand-danger-bg: var(--brand-danger-bg);
+  --color-brand-danger-ink: var(--brand-danger-ink);
+  --color-brand-success-ink: var(--brand-success-ink);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
