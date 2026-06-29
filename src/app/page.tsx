@@ -115,7 +115,7 @@ export default async function Home() {
 
       {/* Feature highlight */}
       <section className="max-w-5xl mx-auto px-5 py-16 border-t border-gray-100">
-        <ScrollReveal className="max-w-2xl">
+        <ScrollReveal className="max-w-2xl mx-auto text-center">
           <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-4 text-balance">
             Cobra automático, sin perseguir pagos
           </h2>
@@ -130,8 +130,8 @@ export default async function Home() {
 
       {/* Feature grid */}
       <section className="max-w-5xl mx-auto px-5 py-16 border-t border-gray-100">
-        <ScrollReveal>
-          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-10 max-w-xl text-balance">
+        <ScrollReveal className="text-center">
+          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-10 max-w-xl mx-auto text-balance">
             Todo lo que necesitas para no perder ni un referido
           </h2>
         </ScrollReveal>

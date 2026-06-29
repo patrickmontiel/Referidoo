@@ -36,7 +36,7 @@ describe("PerfilPage", () => {
     render(React.createElement(PerfilPage));
 
     expect(await screen.findByText(/hasta 2 clientes/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /actualizar a pagado/i })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /subir de plan/i })).toBeEnabled();
   });
 
   it("disables the upgrade CTA when the email is not verified", async () => {
@@ -48,7 +48,35 @@ describe("PerfilPage", () => {
     render(React.createElement(PerfilPage));
 
     expect(await screen.findByText(/verifica tu correo/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /actualizar a pagado/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /subir de plan/i })).toBeDisabled();
+  });
+
+  // Regresión: no había ningún indicador permanente del estado de verificación
+  // de correo — solo un banner temporal de 5s tras el link de verificación.
+  // Un asesor que vuelve más tarde a /admin/perfil no tenía forma de confirmar
+  // si su correo quedó verificado o no.
+  it("shows a permanent 'Verificado' badge next to the email when verified", async () => {
+    mockAdvisorFetch({
+      name: "Ana", email: "ana@x.com", phone: null, companyName: null,
+      createdAt: "2026-06-01", plan: "freemium", emailVerified: true, paidUntil: null,
+    });
+
+    render(React.createElement(PerfilPage));
+
+    expect(await screen.findByText("Verificado")).toBeInTheDocument();
+    expect(screen.queryByText("Sin verificar")).not.toBeInTheDocument();
+  });
+
+  it("shows a 'Sin verificar' badge next to the email when not verified", async () => {
+    mockAdvisorFetch({
+      name: "Ana", email: "ana@x.com", phone: null, companyName: null,
+      createdAt: "2026-06-01", plan: "freemium", emailVerified: false, paidUntil: null,
+    });
+
+    render(React.createElement(PerfilPage));
+
+    expect(await screen.findByText("Sin verificar")).toBeInTheDocument();
+    expect(screen.queryByText("Verificado")).not.toBeInTheDocument();
   });
 
   it("shows the paid plan with next billing date and a cancel button", async () => {

@@ -84,7 +84,18 @@ export default function PerfilPage() {
           </div>
           <div>
             <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Correo</dt>
-            <dd className="text-sm mt-0.5">{advisor.email}</dd>
+            <dd className="text-sm mt-0.5 flex items-center gap-2">
+              {advisor.email}
+              {advisor.emailVerified ? (
+                <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+                  Verificado
+                </span>
+              ) : (
+                <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+                  Sin verificar
+                </span>
+              )}
+            </dd>
           </div>
           <div>
             <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Despacho / empresa</dt>
@@ -197,7 +208,7 @@ export default function PerfilPage() {
               disabled={!advisor.emailVerified}
               className="text-xs font-medium px-4 py-2 rounded-xl bg-black text-white hover:bg-gray-900 disabled:opacity-50 transition self-start sm:flex-shrink-0"
             >
-              Actualizar a pagado
+              Subir de plan
             </button>
           </div>
         ) : (
