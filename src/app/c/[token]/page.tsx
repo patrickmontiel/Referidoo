@@ -2,8 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { Hanken_Grotesk } from "next/font/google";
 import { formatCurrency, formatDate, getStatusLabel, getRewardStatusLabel } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
+
+const hankenGrotesk = Hanken_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 type RewardTier = { position: number; amount: number; label: string | null };
 
@@ -130,19 +136,19 @@ export default function ClientPortalPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+      <div className={`min-h-screen bg-white flex items-center justify-center ${hankenGrotesk.className}`}>
+        <div className="w-6 h-6 border-2 border-brand-ink border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center text-center px-6">
+      <div className={`min-h-screen bg-white flex items-center justify-center text-center px-6 ${hankenGrotesk.className}`}>
         <div>
           <p className="text-4xl mb-4">🔒</p>
-          <h1 className="text-xl font-semibold mb-2">Acceso no encontrado</h1>
-          <p className="text-gray-500 text-sm">Este enlace no es válido o ya no está activo.</p>
+          <h1 className="text-xl font-bold mb-2 text-brand-ink">Acceso no encontrado</h1>
+          <p className="text-brand-gray-4 text-sm">Este enlace no es válido o ya no está activo.</p>
         </div>
       </div>
     );
@@ -206,42 +212,42 @@ export default function ClientPortalPage() {
     const isLast = onboardingStep === steps.length - 1;
 
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-5"
+      <div className={`min-h-screen bg-white flex flex-col items-center justify-center px-5 ${hankenGrotesk.className}`}
            style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="w-full max-w-sm">
           <div className="flex justify-center gap-2 mb-10">
             {steps.map((_, i) => (
               <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === onboardingStep ? "w-8 bg-black" : i < onboardingStep ? "w-4 bg-gray-300" : "w-4 bg-gray-100"
+                i === onboardingStep ? "w-8 bg-brand-ink" : i < onboardingStep ? "w-4 bg-brand-border-4" : "w-4 bg-brand-border-1"
               }`} />
             ))}
           </div>
-          <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mb-8 shadow-[0_8px_20px_rgba(0,0,0,0.12)]">
+          <div className="w-16 h-16 bg-brand-ink rounded-2xl flex items-center justify-center mb-8 shadow-[0_8px_20px_rgba(11,11,12,0.12)]">
             {step.icon}
           </div>
-          <h1 className="text-2xl font-semibold mb-3 leading-snug tracking-tight">{step.title}</h1>
-          <p className="text-gray-500 text-sm leading-relaxed">{step.body}</p>
+          <h1 className="text-2xl font-bold mb-3 leading-snug tracking-[-0.02em] text-brand-ink">{step.title}</h1>
+          <p className="text-brand-gray-4 text-sm leading-relaxed">{step.body}</p>
           {onboardingStep === 1 && tiers.length > 0 && (
             <div className="mt-5 space-y-2">
               {tiers.map((t, i) => (
-                <div key={i} className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
+                <div key={i} className="flex items-center justify-between bg-brand-surface rounded-xl px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-black text-white rounded-full flex items-center justify-center text-xs font-bold">{i + 1}</div>
-                    <span className="text-sm text-gray-700">{t.label || `Referido #${i + 1}`}</span>
+                    <div className="w-6 h-6 bg-brand-ink text-white rounded-full flex items-center justify-center text-xs font-bold">{i + 1}</div>
+                    <span className="text-sm text-brand-gray-1">{t.label || `Referido #${i + 1}`}</span>
                   </div>
-                  <span className="font-semibold text-sm">{formatCurrency(t.amount)}</span>
+                  <span className="font-bold text-sm text-brand-ink">{formatCurrency(t.amount)}</span>
                 </div>
               ))}
             </div>
           )}
           <button
             onClick={() => { if (isLast) finishOnboarding(); else setOnboardingStep(onboardingStep + 1); }}
-            className="w-full mt-10 bg-black text-white text-sm font-medium py-4 rounded-2xl hover:bg-gray-900 transition"
+            className="w-full mt-10 bg-brand-ink text-white text-sm font-medium py-4 rounded-full hover:bg-[#26262a] transition"
           >
             {isLast ? "Ir a mi dashboard →" : "Siguiente"}
           </button>
           {!isLast && (
-            <button onClick={finishOnboarding} className="w-full mt-2 text-gray-500 text-xs py-2 hover:text-gray-600 transition">
+            <button onClick={finishOnboarding} className="w-full mt-2 text-brand-gray-4 text-xs py-2 hover:text-brand-gray-2 transition">
               Saltar
             </button>
           )}
@@ -270,13 +276,13 @@ export default function ClientPortalPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className={`min-h-screen bg-brand-surface flex flex-col ${hankenGrotesk.className}`}>
       {/* Header — mismo estilo que admin */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-10"
+      <header className="bg-white border-b border-brand-border-1 sticky top-0 z-10"
               style={{ paddingTop: "env(safe-area-inset-top)" }}>
         <div className="max-w-md mx-auto px-5 h-14 flex items-center justify-between">
           <Logo size="sm" />
-          <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-xs font-semibold">
+          <div className="w-8 h-8 rounded-full bg-brand-ink text-white flex items-center justify-center text-xs font-semibold">
             {client.name.charAt(0).toUpperCase()}
           </div>
         </div>
@@ -285,13 +291,13 @@ export default function ClientPortalPage() {
       <div className="max-w-md mx-auto w-full px-5 flex-1"
            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.5rem)" }}>
         {/* Tabs */}
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mt-5 mb-5">
+        <div className="flex gap-1 bg-brand-border-1 rounded-xl p-1 mt-5 mb-5">
           {(["inicio", "historial"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 py-2 text-sm font-medium rounded-lg transition ${
-                tab === t ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"
+                tab === t ? "bg-white text-brand-ink shadow-sm" : "text-brand-gray-4"
               }`}
             >
               {t === "inicio" ? "Inicio" : "Mis Referidos"}
@@ -303,23 +309,23 @@ export default function ClientPortalPage() {
           <div className="space-y-3">
             {/* Launch bonus — activado */}
             {client.launchBonusUsed && (
-              <div className="bg-black text-white rounded-2xl p-4">
-                <p className="text-xs font-medium text-blue-400 mb-1">⚡ Bono de Inicio activado</p>
-                <p className="text-2xl font-semibold">{formatCurrency(bonusAmount)}</p>
-                <p className="text-xs text-gray-500 mt-0.5">Tu primer premio fue duplicado por referir en tu primera semana.</p>
+              <div className="bg-brand-ink text-white rounded-2xl p-4">
+                <p className="text-xs font-medium text-[#6EA1F5] mb-1">⚡ Bono de Inicio activado</p>
+                <p className="text-2xl font-bold">{formatCurrency(bonusAmount)}</p>
+                <p className="text-xs text-brand-gray-5 mt-0.5">Tu primer premio fue duplicado por referir en tu primera semana.</p>
               </div>
             )}
 
             {/* Launch bonus — activo en ventana */}
             {launchBonusActive && (
-              <div className="bg-black text-white rounded-2xl p-4 relative overflow-hidden">
-                <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl" />
+              <div className="bg-brand-ink text-white rounded-2xl p-4 relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-brand-blue/20 rounded-full blur-2xl" />
                 <div className="flex items-center justify-between mb-2 relative">
-                  <p className="text-xs font-medium text-blue-400">⚡ Bono de Inicio</p>
+                  <p className="text-xs font-medium text-[#6EA1F5]">⚡ Bono de Inicio</p>
                   <span
                     key={countdownLabel}
                     className={`countdown-tick text-xs font-medium px-2.5 py-1 rounded-full tabular-nums ${
-                      countdownUrgent ? "countdown-urgent bg-amber-400/15 text-amber-300" : "bg-white/10 text-gray-500"
+                      countdownUrgent ? "countdown-urgent bg-amber-400/15 text-amber-300" : "bg-white/10 text-brand-gray-5"
                     }`}
                   >
                     {countdownLabel} restantes
@@ -328,33 +334,33 @@ export default function ClientPortalPage() {
 
                 {referralsInWindow >= 3 ? (
                   <>
-                    <p className="text-sm text-gray-500 mb-1 relative">El primero de tus referidos en contratar PPR o Seguro de Vida te da</p>
+                    <p className="text-sm text-brand-gray-5 mb-1 relative">El primero de tus referidos en contratar PPR o Seguro de Vida te da</p>
                     <div className="flex items-baseline gap-2 relative">
-                      <span className="text-base text-gray-500 line-through">{formatCurrency(firstTierAmount)}</span>
-                      <span className="bonus-glow text-3xl font-bold text-blue-400">{formatCurrency(bonusAmount)}</span>
+                      <span className="text-base text-brand-gray-5 line-through">{formatCurrency(firstTierAmount)}</span>
+                      <span className="bonus-glow text-3xl font-bold text-[#6EA1F5]">{formatCurrency(bonusAmount)}</span>
                     </div>
                   </>
                 ) : (
                   <>
-                    <p className="text-sm text-gray-500 mb-1 relative">Tu primer premio puede subir de</p>
+                    <p className="text-sm text-brand-gray-5 mb-1 relative">Tu primer premio puede subir de</p>
                     <div className="flex items-baseline gap-2 mb-3 relative">
-                      <span className="text-base text-gray-500 line-through">{formatCurrency(firstTierAmount)}</span>
-                      <span className="text-3xl font-bold text-blue-400">{formatCurrency(bonusAmount)}</span>
+                      <span className="text-base text-brand-gray-5 line-through">{formatCurrency(firstTierAmount)}</span>
+                      <span className="text-3xl font-bold text-[#6EA1F5]">{formatCurrency(bonusAmount)}</span>
                     </div>
                     <p className="text-sm font-semibold mb-1 relative">
                       Invita a {3 - referralsInWindow} {3 - referralsInWindow === 1 ? "persona más" : "personas más"} esta semana
                     </p>
-                    <p className="text-xs text-gray-500 mb-3 relative">
+                    <p className="text-xs text-brand-gray-5 mb-3 relative">
                       Una vez un referido tuyo contrate Seguro de Vida o PPR te llevarás el bono.
                     </p>
                     <div className="flex gap-1.5 mb-2 relative">
                       {[1, 2, 3].map((i) => (
                         <div key={i} className={`flex-1 h-1.5 rounded-full transition-all ${
-                          i <= referralsInWindow ? "bg-blue-400" : "bg-white/10"
+                          i <= referralsInWindow ? "bg-[#6EA1F5]" : "bg-white/10"
                         }`} />
                       ))}
                     </div>
-                    <p className="text-xs text-gray-500 relative">{referralsInWindow}/3 contactos invitados</p>
+                    <p className="text-xs text-brand-gray-5 relative">{referralsInWindow}/3 contactos invitados</p>
                   </>
                 )}
               </div>
@@ -362,14 +368,14 @@ export default function ClientPortalPage() {
 
             {/* Confirmación pendiente */}
             {referrals.filter(r => r.rewardStatus === "paid" && r.tierPosition > 0 && !r.confirmedByReferrer && !confirmed.has(r.id)).map(r => (
-              <div key={r.id} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
-                <p className="text-xs font-medium text-gray-700 mb-0.5">Premio enviado — ¿Lo recibiste?</p>
-                <p className="text-2xl font-semibold mb-0.5">{formatCurrency(r.rewardAmount)}</p>
-                <p className="text-xs text-gray-500 mb-3">Por referir a {r.leadName}</p>
+              <div key={r.id} className="bg-white rounded-2xl border border-brand-border-1 shadow-sm p-4">
+                <p className="text-xs font-medium text-brand-gray-1 mb-0.5">Premio enviado — ¿Lo recibiste?</p>
+                <p className="text-2xl font-bold text-brand-ink mb-0.5">{formatCurrency(r.rewardAmount)}</p>
+                <p className="text-xs text-brand-gray-4 mb-3">Por referir a {r.leadName}</p>
                 <button
                   onClick={() => confirmReceipt(r.id)}
                   disabled={confirming === r.id}
-                  className="w-full bg-black text-white text-sm font-medium py-3 rounded-xl disabled:opacity-50 transition hover:bg-gray-900"
+                  className="w-full bg-brand-ink text-white text-sm font-medium py-3 rounded-full disabled:opacity-50 transition hover:bg-[#26262a]"
                 >
                   {confirming === r.id ? "Confirmando..." : "Sí, lo recibí ✓"}
                 </button>
@@ -378,40 +384,40 @@ export default function ClientPortalPage() {
 
             {/* Confirmados */}
             {referrals.filter(r => r.tierPosition > 0 && (r.confirmedByReferrer || confirmed.has(r.id))).map(r => (
-              <div key={`conf-${r.id}`} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex items-center gap-3">
+              <div key={`conf-${r.id}`} className="bg-white rounded-2xl border border-brand-border-1 shadow-sm p-4 flex items-center gap-3">
                 <div className="w-8 h-8 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                     <path d="M5 12L10 17L19 8" stroke="#16a34a" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-medium">Premio confirmado</p>
-                  <p className="text-xs text-gray-500">{formatCurrency(r.rewardAmount)} · {r.leadName}</p>
+                  <p className="text-sm font-medium text-brand-ink">Premio confirmado</p>
+                  <p className="text-xs text-brand-gray-4">{formatCurrency(r.rewardAmount)} · {r.leadName}</p>
                 </div>
               </div>
             ))}
 
             {/* Stats */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-black text-white rounded-2xl p-4">
-                <p className="text-xs text-gray-500 mb-1">Ganado</p>
-                <p className="text-2xl font-semibold">{formatCurrency(stats.totalEarned)}</p>
-                <p className="text-xs text-gray-500 mt-0.5">pagado</p>
+              <div className="bg-brand-ink text-white rounded-2xl p-4">
+                <p className="text-xs text-brand-gray-5 mb-1">Ganado</p>
+                <p className="text-2xl font-bold">{formatCurrency(stats.totalEarned)}</p>
+                <p className="text-xs text-brand-gray-5 mt-0.5">pagado</p>
               </div>
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
-                <p className="text-xs text-gray-500 mb-1">Por cobrar</p>
-                <p className="text-2xl font-semibold">{formatCurrency(stats.pendingEarnings)}</p>
-                <p className="text-xs text-gray-500 mt-0.5">aprobado</p>
+              <div className="bg-white rounded-2xl border border-brand-border-1 shadow-sm p-4">
+                <p className="text-xs text-brand-gray-4 mb-1">Por cobrar</p>
+                <p className="text-2xl font-bold text-brand-ink">{formatCurrency(stats.pendingEarnings)}</p>
+                <p className="text-xs text-brand-gray-4 mt-0.5">aprobado</p>
               </div>
             </div>
 
             {/* Niveles de premios */}
             {tiers.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
-                <div className="px-5 py-4 border-b border-gray-50">
-                  <h2 className="font-medium text-sm">Premios Seguro de Vida y PPRs</h2>
+              <div className="bg-white rounded-2xl border border-brand-border-1 shadow-sm">
+                <div className="px-5 py-4 border-b border-brand-border-2">
+                  <h2 className="font-bold text-sm text-brand-ink">Premios Seguro de Vida y PPRs</h2>
                 </div>
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-brand-border-2">
                   {tiers.map((tier) => {
                     // Si ya existe un referido convertido en esta posición, su rewardAmount
                     // refleja el monto real (incluyendo bonos ya aplicados) — más confiable
@@ -425,25 +431,25 @@ export default function ClientPortalPage() {
                     // esté pagado — no solo en la vista previa antes de asignarse.
                     const hasBonus = matchingReferral ? matchingReferral.rewardAmount > tier.amount : false;
                     const showBonusBadge = bonusHere || hasBonus;
-                    const amountColor = current ? "text-white" : done ? "text-green-600" : "text-gray-700";
-                    const strikeColor = current ? "text-white/40" : "text-gray-500";
+                    const amountColor = current ? "text-white" : done ? "text-green-600" : "text-brand-gray-1";
+                    const strikeColor = current ? "text-white/40" : "text-brand-gray-4";
                     return (
-                      <div key={tier.position} className={`flex items-center gap-3 px-5 py-3 ${current ? "bg-black" : ""}`}>
+                      <div key={tier.position} className={`flex items-center gap-3 px-5 py-3 ${current ? "bg-brand-ink" : ""}`}>
                         <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          done ? "bg-green-50" : current ? "bg-white/10" : "bg-gray-100"
+                          done ? "bg-green-50" : current ? "bg-white/10" : "bg-brand-border-1"
                         }`}>
                           {done ? (
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                               <path d="M5 12L10 17L19 8" stroke="#16a34a" strokeWidth="2" strokeLinecap="round"/>
                             </svg>
                           ) : (
-                            <span className={`text-xs font-semibold ${current ? "text-white" : "text-gray-500"}`}>
+                            <span className={`text-xs font-semibold ${current ? "text-white" : "text-brand-gray-4"}`}>
                               {tier.position}
                             </span>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium truncate ${current ? "text-white" : done ? "text-gray-500 line-through" : "text-gray-700"}`}>
+                          <p className={`text-sm font-medium truncate ${current ? "text-white" : done ? "text-brand-gray-4 line-through" : "text-brand-gray-1"}`}>
                             {tier.label || `Referido #${tier.position}`}
                           </p>
                           {showBonusBadge && (
@@ -461,7 +467,7 @@ export default function ClientPortalPage() {
                   })}
                 </div>
                 {settings.afterLastTier === "cycle" && (
-                  <p className="text-xs text-gray-500 text-center py-3 border-t border-gray-50">
+                  <p className="text-xs text-brand-gray-4 text-center py-3 border-t border-brand-border-2">
                     Los premios se repiten después del nivel {tiers.length}
                   </p>
                 )}
@@ -469,10 +475,10 @@ export default function ClientPortalPage() {
             )}
 
             {/* Premios burbuja — Auto, Otro + GMM */}
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
+            <div className="bg-white rounded-2xl border border-brand-border-1 shadow-sm p-4">
               <div className="flex items-center justify-between mb-1">
-                <h2 className="font-medium text-sm">Premios burbuja</h2>
-                <span className="text-xs text-gray-500">Auto, Otro + GMM</span>
+                <h2 className="font-bold text-sm text-brand-ink">Premios burbuja</h2>
+                <span className="text-xs text-brand-gray-4">Auto, Otro + GMM</span>
               </div>
               {pendingBubbleClaim ? (
                 <div className="flex items-center gap-3 mt-2">
@@ -482,68 +488,68 @@ export default function ClientPortalPage() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-medium">Reclamo en proceso</p>
-                    <p className="text-xs text-gray-500">{formatCurrency(pendingBubbleClaim.amount)} · tu asesor lo enviará pronto</p>
+                    <p className="text-sm font-medium text-brand-ink">Reclamo en proceso</p>
+                    <p className="text-xs text-brand-gray-4">{formatCurrency(pendingBubbleClaim.amount)} · tu asesor lo enviará pronto</p>
                   </div>
                 </div>
               ) : (
                 <>
-                  <p className="text-xs text-gray-500 mb-3">Se llena con cada venta de Auto, Otro o GMM. Cada burbuja completa vale {formatCurrency(bubbleThreshold)}.</p>
+                  <p className="text-xs text-brand-gray-4 mb-3">Se llena con cada venta de Auto, Otro o GMM. Cada burbuja completa vale {formatCurrency(bubbleThreshold)}.</p>
                   <div className="flex items-center justify-center gap-3 py-2 mb-3 flex-wrap">
                     {Array.from({ length: fullBubbles }, (_, i) => (
                       <div
                         key={`full-${i}`}
-                        className={`relative w-14 h-14 rounded-full border-2 overflow-hidden bg-blue-50/60 border-blue-400 shadow-[0_3px_10px_rgba(59,130,246,0.3)] ${
+                        className={`relative w-14 h-14 rounded-full border-2 overflow-hidden bg-brand-blue-bg/60 border-brand-blue shadow-[0_3px_10px_rgba(37,99,235,0.3)] ${
                           poppingBubbles ? "bubble-pop" : "bubble-ready"
                         }`}
                         style={poppingBubbles ? { animationDelay: `${i * 70}ms` } : undefined}
                       >
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-500 to-blue-300" style={{ height: "100%" }} />
+                        <div className="absolute bottom-0 left-0 right-0" style={{ height: "100%", background: "linear-gradient(to top, #2563EB, #6EA1F5)" }} />
                         <div className="absolute inset-0 rounded-full bubble-shine" />
                       </div>
                     ))}
-                    <div className="relative w-14 h-14 rounded-full border-2 overflow-hidden bg-blue-50/60 border-blue-100 shadow-[0_3px_10px_rgba(59,130,246,0.12)]">
+                    <div className="relative w-14 h-14 rounded-full border-2 overflow-hidden bg-brand-blue-bg/60 border-brand-border-1 shadow-[0_3px_10px_rgba(37,99,235,0.12)]">
                       <div
-                        className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-500 to-blue-300 transition-all duration-700 ease-out"
-                        style={{ height: `${bubbleRemainderFraction * 100}%` }}
+                        className="absolute bottom-0 left-0 right-0 transition-all duration-700 ease-out"
+                        style={{ height: `${bubbleRemainderFraction * 100}%`, background: "linear-gradient(to top, #2563EB, #6EA1F5)" }}
                       />
                       <div className="absolute inset-0 rounded-full bubble-shine" />
                     </div>
                   </div>
                   <div className="flex items-end justify-between mb-3">
-                    <p className="text-lg font-semibold">{formatCurrency(client.bubblePoints)}</p>
+                    <p className="text-lg font-bold text-brand-ink">{formatCurrency(client.bubblePoints)}</p>
                     {hasClaimableBubbles ? (
-                      <p className="text-xs text-blue-500 font-medium">{fullBubbles} burbuja{fullBubbles > 1 ? "s" : ""} lista{fullBubbles > 1 ? "s" : ""} para reclamar</p>
+                      <p className="text-xs text-brand-blue font-medium">{fullBubbles} burbuja{fullBubbles > 1 ? "s" : ""} lista{fullBubbles > 1 ? "s" : ""} para reclamar</p>
                     ) : (
-                      <p className="text-xs text-gray-500">Meta {formatCurrency(bubbleThreshold)}</p>
+                      <p className="text-xs text-brand-gray-4">Meta {formatCurrency(bubbleThreshold)}</p>
                     )}
                   </div>
                   {hasClaimableBubbles ? (
                     <button
                       onClick={claimBubble}
                       disabled={claimingBubble}
-                      className="w-full bg-black text-white text-sm font-medium py-3 rounded-xl disabled:opacity-50 transition hover:bg-gray-900"
+                      className="w-full bg-brand-ink text-white text-sm font-medium py-3 rounded-full disabled:opacity-50 transition hover:bg-[#26262a]"
                     >
                       {claimingBubble ? "Reclamando..." : `Reclamar ${formatCurrency(claimableBubbleAmount)}`}
                     </button>
                   ) : (
-                    <p className="text-xs text-gray-500 text-center">Te faltan {formatCurrency(bubbleThreshold - bubbleRemainder)} para tu próxima burbuja de {formatCurrency(bubbleThreshold)}.</p>
+                    <p className="text-xs text-brand-gray-4 text-center">Te faltan {formatCurrency(bubbleThreshold - bubbleRemainder)} para tu próxima burbuja de {formatCurrency(bubbleThreshold)}.</p>
                   )}
                 </>
               )}
             </div>
 
             {/* Share */}
-            <div className="bg-black rounded-2xl p-4 text-white">
+            <div className="bg-brand-ink rounded-2xl p-4 text-white">
               <h2 className="font-medium text-sm mb-0.5">Tu enlace personal</h2>
-              <p className="text-xs text-gray-500 mb-4">Quien entre y contrate, te genera un premio.</p>
+              <p className="text-xs text-brand-gray-5 mb-4">Quien entre y contrate, te genera un premio.</p>
               <div className="bg-white/10 rounded-xl px-4 py-3 mb-3 font-mono text-xs break-all">
                 {referralLink}
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={copyLink}
-                  className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white text-sm py-3 rounded-xl transition font-medium"
+                  className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white text-sm py-3 rounded-full transition font-medium"
                 >
                   {copied ? (
                     <><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12L10 17L19 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>Copiado</>
@@ -553,7 +559,7 @@ export default function ClientPortalPage() {
                 </button>
                 <button
                   onClick={shareWhatsApp}
-                  className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white text-sm py-3 rounded-xl transition font-medium"
+                  className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white text-sm py-3 rounded-full transition font-medium"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
@@ -565,13 +571,13 @@ export default function ClientPortalPage() {
 
             {/* Resumen */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 text-center">
-                <p className="text-2xl font-semibold">{stats.totalReferrals}</p>
-                <p className="text-xs text-gray-500 mt-1">Referidos enviados</p>
+              <div className="bg-white rounded-2xl border border-brand-border-1 shadow-sm p-4 text-center">
+                <p className="text-2xl font-bold text-brand-ink">{stats.totalReferrals}</p>
+                <p className="text-xs text-brand-gray-4 mt-1">Referidos enviados</p>
               </div>
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 text-center">
-                <p className="text-2xl font-semibold">{stats.convertedCount}</p>
-                <p className="text-xs text-gray-500 mt-1">Convertidos</p>
+              <div className="bg-white rounded-2xl border border-brand-border-1 shadow-sm p-4 text-center">
+                <p className="text-2xl font-bold text-brand-ink">{stats.convertedCount}</p>
+                <p className="text-xs text-brand-gray-4 mt-1">Convertidos</p>
               </div>
             </div>
           </div>
@@ -581,33 +587,33 @@ export default function ClientPortalPage() {
           <div>
             {referrals.length === 0 ? (
               <div className="text-center py-16 px-6">
-                <p className="text-gray-500 text-sm">Aún no has referido a nadie.</p>
+                <p className="text-brand-gray-4 text-sm">Aún no has referido a nadie.</p>
                 {launchBonusActive ? (
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-brand-gray-4 mt-1">
                     ⚡ Invita a 3 personas esta semana y tu primer premio sube de{" "}
                     {formatCurrency(firstTierAmount)} a{" "}
-                    <strong className="text-gray-700">{formatCurrency(bonusAmount)}</strong>.
+                    <strong className="text-brand-gray-1">{formatCurrency(bonusAmount)}</strong>.
                   </p>
                 ) : (
-                  <p className="text-xs text-gray-500 mt-1">Tu primer referido vale {formatCurrency(tiers[0]?.amount ?? 1500)}.</p>
+                  <p className="text-xs text-brand-gray-4 mt-1">Tu primer referido vale {formatCurrency(tiers[0]?.amount ?? 1500)}.</p>
                 )}
                 <button
                   onClick={() => setTab("inicio")}
-                  className="mt-5 px-5 py-2.5 bg-black text-white text-sm rounded-full font-medium"
+                  className="mt-5 px-5 py-2.5 bg-brand-ink text-white text-sm rounded-full font-medium"
                 >
                   Compartir ahora
                 </button>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm divide-y divide-gray-50">
+              <div className="bg-white rounded-2xl border border-brand-border-1 shadow-sm divide-y divide-brand-border-2">
                 {referrals.map((r) => {
                   const sc = statusConfig[r.status] ?? statusConfig.pending;
                   return (
                     <div key={r.id} className="flex items-start gap-4 px-5 py-4">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{r.leadName}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{r.leadPhone}</p>
-                        <p className="text-xs text-gray-500 mt-1">{formatDate(r.createdAt)}</p>
+                        <p className="text-sm font-medium text-brand-ink truncate">{r.leadName}</p>
+                        <p className="text-xs text-brand-gray-4 mt-0.5">{r.leadPhone}</p>
+                        <p className="text-xs text-brand-gray-4 mt-1">{formatDate(r.createdAt)}</p>
                         <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium mt-2 ${sc.bg} ${sc.text}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
                           {getStatusLabel(r.status)}
@@ -617,23 +623,23 @@ export default function ClientPortalPage() {
                         {r.status === "converted" && r.tierPosition === 0 ? (
                           r.productType === "Daños/Auto" || r.productType === "GMM" || r.productType === "Otro" ? (
                             <>
-                              <p className="text-sm font-semibold text-blue-600">
+                              <p className="text-sm font-semibold text-brand-blue">
                                 +{formatCurrency(r.productType === "GMM" ? settings.bubbleGmmPoints : settings.bubbleAutoPoints)}
                               </p>
-                              <p className="text-xs text-blue-500 font-medium mt-0.5">Premios burbuja</p>
+                              <p className="text-xs text-brand-blue font-medium mt-0.5">Premios burbuja</p>
                             </>
                           ) : (
                             <>
-                              <p className="text-sm font-semibold text-gray-500">—</p>
-                              <p className="text-xs text-gray-500 font-medium mt-0.5">Sin premio en efectivo</p>
+                              <p className="text-sm font-semibold text-brand-gray-4">—</p>
+                              <p className="text-xs text-brand-gray-4 font-medium mt-0.5">Sin premio en efectivo</p>
                             </>
                           )
                         ) : (
                           <>
-                            <p className={`text-sm font-semibold ${rewardConfig[r.rewardStatus] ?? "text-gray-500"}`}>
+                            <p className={`text-sm font-semibold ${rewardConfig[r.rewardStatus] ?? "text-brand-gray-4"}`}>
                               {formatCurrency(r.rewardAmount)}
                             </p>
-                            <p className="text-xs text-gray-500 mt-0.5">{getRewardStatusLabel(r.rewardStatus)}</p>
+                            <p className="text-xs text-brand-gray-4 mt-0.5">{getRewardStatusLabel(r.rewardStatus)}</p>
                           </>
                         )}
                       </div>
