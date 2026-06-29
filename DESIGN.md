@@ -85,20 +85,22 @@ components:
 
 **Dos sistemas conviven hoy, en propagación activa — no por inconsistencia.**
 
-- **Sistema nuevo** (sección 2-6): `/` (landing), `/login`, `/registro` — ya
-  migradas. Tipografía Hanken Grotesk, paleta `#0B0B0C`/`#2563EB`, botones
-  `rounded-full`, sombras puntuales documentadas.
+- **Sistema nuevo** (sección 2-6): `/` (landing), `/login`, `/registro`,
+  `/r/[code]` (landing pública de lead) — ya migradas. Tipografía Hanken
+  Grotesk, paleta `#0B0B0C`/`#2563EB`, botones `rounded-full`, sombras
+  puntuales documentadas.
 - **Sistema original "Herramienta de Confianza"** (sección 7): `/admin`,
   `/owner`, `/c/[token]` — todavía sin migrar. Geist, blanco/negro plano,
   azul `#3b82f6` solo como punto del logo, cero `box-shadow`.
 
 **Orden de propagación** (decidido el 29 de junio de 2026, ver
 `~/.gstack/projects/patrickmontiel-Referidoo/`): páginas públicas simples
-primero (`/login`, `/registro` ✅ → `/r/[code]` pendiente), luego `/c/[token]`
-(tiene su propio lenguaje visual de burbuja, requiere más cuidado), luego
-`/admin/*` (superficie de trabajo diaria del asesor — ahí entran los
-primeros asesores reales, se migra con cautela y no antes de que ese flujo
-esté estable), y `/owner/*` al final (la usa solo Patrick, menor urgencia).
+primero (`/login` ✅, `/registro` ✅, `/r/[code]` ✅), luego `/c/[token]`
+pendiente (tiene su propio lenguaje visual de burbuja, requiere más
+cuidado), luego `/admin/*` (superficie de trabajo diaria del asesor — ahí
+entran los primeros asesores reales, se migra con cautela y no antes de que
+ese flujo esté estable), y `/owner/*` al final (la usa solo Patrick, menor
+urgencia).
 
 **Por qué dos sistemas mientras dura la migración:** la landing es la
 primera impresión pública — tiene permiso de ser más expresiva (tipografía
