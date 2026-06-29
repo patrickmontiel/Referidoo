@@ -3,8 +3,14 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
+import { Hanken_Grotesk } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
+
+const hankenGrotesk = Hanken_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 // useSearchParams() forces a Suspense boundary in the App Router — isolated
 // here so it doesn't bail the rest of AdminLayout out of static rendering.
@@ -154,12 +160,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isLast = step === steps.length - 1;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className={`min-h-screen bg-brand-surface flex flex-col ${hankenGrotesk.className}`}>
       <Suspense fallback={null}>
         <VerifiedBannerWatcher onVerified={handleVerified} />
       </Suspense>
       {/* Top bar */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-20"
+      <header className="bg-white border-b border-brand-border-1 sticky top-0 z-20"
               style={{ paddingTop: "env(safe-area-inset-top)" }}>
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
           <Logo size="sm" />
@@ -167,11 +173,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <button
               onClick={() => window.dispatchEvent(new Event("referidoo:tour"))}
               title="Guía de la sección actual"
-              className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition text-xs font-semibold"
+              className="w-7 h-7 flex items-center justify-center rounded-full border border-brand-border-4 text-brand-gray-4 hover:bg-brand-surface hover:text-brand-gray-1 transition text-xs font-semibold"
             >
               ?
             </button>
-            <button onClick={logout} className="text-xs text-gray-500 hover:text-gray-700 transition py-2 px-1">
+            <button onClick={logout} className="text-xs text-brand-gray-4 hover:text-brand-gray-1 transition py-2 px-1">
               Salir
             </button>
           </div>
@@ -187,8 +193,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       )}
 
       {!emailVerified && !showVerifiedBanner && (
-        <div className="bg-sky-50 border-b border-sky-100">
-          <div className="max-w-5xl mx-auto px-5 py-2.5 text-sm text-sky-800">
+        <div className="bg-brand-blue-bg border-b border-brand-border-1">
+          <div className="max-w-5xl mx-auto px-5 py-2.5 text-sm text-brand-blue">
             Verifica tu correo para empezar a agregar clientes — revisa tu bandeja de entrada.
           </div>
         </div>
@@ -196,7 +202,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Side nav + content */}
       <div className="flex flex-1 max-w-5xl mx-auto w-full">
-        <aside className="hidden md:flex w-48 flex-col py-6 px-3 gap-1 border-r border-gray-100 bg-white">
+        <aside className="hidden md:flex w-48 flex-col py-6 px-3 gap-1 border-r border-brand-border-1 bg-white">
           {nav.map((item) => {
             const active = pathname === item.href;
             const highlighted = showOnboarding && current.highlight === item.href;
@@ -206,9 +212,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={item.href}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition",
-                  active ? "bg-black text-white font-medium" :
-                  highlighted ? "bg-gray-100 text-gray-900 font-medium ring-2 ring-black ring-offset-1" :
-                  "text-gray-600 hover:bg-gray-100"
+                  active ? "bg-brand-ink text-white font-medium" :
+                  highlighted ? "bg-brand-surface text-brand-ink font-medium ring-2 ring-brand-ink ring-offset-1" :
+                  "text-brand-gray-2 hover:bg-brand-surface"
                 )}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -220,11 +226,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
 
           {/* Demo reset — bottom of sidebar */}
-          <div className="mt-auto pt-4 border-t border-gray-100">
+          <div className="mt-auto pt-4 border-t border-brand-border-1">
             {resetState === null && (
               <button
                 onClick={() => setResetState("confirm")}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-gray-500 hover:text-gray-600 hover:bg-gray-50 transition"
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-brand-gray-4 hover:text-brand-gray-2 hover:bg-brand-surface transition"
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                   <path d="M1 4V10H7M23 20V14H17M20.49 9C19.9828 7.56678 19.1209 6.2854 17.9845 5.27542C16.8482 4.26543 15.4745 3.55976 13.9917 3.22426C12.5089 2.88875 10.9652 2.93434 9.50481 3.35677C8.04437 3.77921 6.71475 4.56471 5.64 5.64L1 10M23 14L18.36 18.36C17.2853 19.4353 15.9556 20.2208 14.4952 20.6432C13.0348 21.0657 11.4911 21.1113 10.0083 20.7757C8.52547 20.4402 7.1518 19.7346 6.01547 18.7246C4.87913 17.7146 4.01717 16.4332 3.51 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -234,17 +240,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             )}
             {resetState === "confirm" && (
               <div className="px-1">
-                <p className="text-[11px] text-gray-500 mb-2 leading-snug">¿Borrar todos los clientes y referidos?</p>
+                <p className="text-[11px] text-brand-gray-4 mb-2 leading-snug">¿Borrar todos los clientes y referidos?</p>
                 <div className="flex gap-1.5">
                   <button
                     onClick={doReset}
-                    className="flex-1 text-[11px] py-1.5 rounded-lg bg-black text-white font-medium hover:bg-gray-900 transition"
+                    className="flex-1 text-[11px] py-1.5 rounded-full bg-brand-ink text-white font-medium hover:bg-[#26262a] transition"
                   >
                     Sí, borrar
                   </button>
                   <button
                     onClick={() => setResetState(null)}
-                    className="flex-1 text-[11px] py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
+                    className="flex-1 text-[11px] py-1.5 rounded-full border border-brand-border-4 text-brand-gray-4 hover:bg-brand-surface transition"
                   >
                     Cancelar
                   </button>
@@ -252,7 +258,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
             )}
             {resetState === "busy" && (
-              <p className="text-[11px] text-gray-500 px-3 py-2">Reiniciando...</p>
+              <p className="text-[11px] text-brand-gray-4 px-3 py-2">Reiniciando...</p>
             )}
           </div>
         </aside>
@@ -264,7 +270,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       {/* Bottom nav — mobile only */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100"
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-brand-border-1"
            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="flex">
           {nav.map((item) => {
@@ -274,8 +280,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex-1 flex flex-col items-center pt-3 pb-2 gap-1 active:bg-gray-50 transition",
-                  active ? "text-black" : "text-gray-500"
+                  "flex-1 flex flex-col items-center pt-3 pb-2 gap-1 active:bg-brand-surface transition",
+                  active ? "text-brand-ink" : "text-brand-gray-4"
                 )}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -300,11 +306,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             {welcomeName && (
               <>
-                <p className="welcome-name text-[2.75rem] font-semibold tracking-tight text-black leading-none mb-2">
+                <p className="welcome-name text-[2.75rem] font-bold tracking-[-0.02em] text-brand-ink leading-none mb-2">
                   {welcomeName.split(" ")[0]}
-                  <span className="text-black/25"> {welcomeName.split(" ").slice(1).join(" ")}</span>
+                  <span className="text-brand-ink/25"> {welcomeName.split(" ").slice(1).join(" ")}</span>
                 </p>
-                <p className="welcome-sub text-sm text-black/30 font-normal tracking-wide">
+                <p className="welcome-sub text-sm text-brand-ink/30 font-normal tracking-wide">
                   Bienvenido de vuelta
                 </p>
               </>
@@ -320,9 +326,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="relative bg-white w-full max-w-md rounded-t-3xl md:rounded-2xl shadow-2xl overflow-hidden">
 
             {/* Progress bar */}
-            <div className="h-1 bg-gray-100">
+            <div className="h-1 bg-brand-border-1">
               <div
-                className="h-1 bg-black transition-all duration-500"
+                className="h-1 bg-brand-ink transition-all duration-500"
                 style={{ width: `${((step + 1) / steps.length) * 100}%` }}
               />
             </div>
@@ -333,19 +339,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="flex gap-1.5">
                   {steps.map((_, i) => (
                     <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i === step ? "w-6 bg-black" : i < step ? "w-3 bg-gray-300" : "w-3 bg-gray-100"
+                      i === step ? "w-6 bg-brand-ink" : i < step ? "w-3 bg-brand-border-4" : "w-3 bg-brand-border-1"
                     }`} />
                   ))}
                 </div>
                 {current.section && (
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
+                  <span className="text-xs font-bold text-brand-gray-4 uppercase tracking-[0.08em]">
                     {current.section}
                   </span>
                 )}
               </div>
 
               {/* Icon */}
-              <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center mb-5">
+              <div className="w-12 h-12 bg-brand-ink rounded-2xl flex items-center justify-center mb-5">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                   {current.icon.includes("M9 12") ? (
                     <>
@@ -359,21 +365,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
 
               {/* Content */}
-              <h2 className="text-xl font-semibold mb-3 leading-snug">{current.title}</h2>
-              <p className="text-sm text-gray-500 leading-relaxed mb-7">{current.body}</p>
+              <h2 className="text-xl font-bold mb-3 leading-snug text-brand-ink">{current.title}</h2>
+              <p className="text-sm text-brand-gray-4 leading-relaxed mb-7">{current.body}</p>
 
               {/* Actions */}
               <div className="flex gap-2">
                 <button
                   onClick={next}
-                  className="flex-1 bg-black text-white text-sm font-medium py-3.5 rounded-xl hover:bg-gray-900 transition"
+                  className="flex-1 bg-brand-ink text-white text-sm font-medium py-3.5 rounded-full hover:bg-[#26262a] transition"
                 >
                   {isLast ? "Empezar →" : "Siguiente"}
                 </button>
                 {!isLast && (
                   <button
                     onClick={finish}
-                    className="px-4 text-sm py-3.5 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
+                    className="px-4 text-sm py-3.5 rounded-full border border-brand-border-4 text-brand-gray-4 hover:bg-brand-surface transition"
                   >
                     Saltar
                   </button>

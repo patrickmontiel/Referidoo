@@ -61,13 +61,13 @@ export default function PerfilPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-brand-ink border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!advisor) {
-    return <p className="text-sm text-gray-500">No se pudo cargar tu perfil.</p>;
+    return <p className="text-sm text-brand-gray-4">No se pudo cargar tu perfil.</p>;
   }
 
   return (
@@ -75,15 +75,15 @@ export default function PerfilPage() {
       <h1 className="text-xl font-semibold mb-6">Tu perfil</h1>
 
       {/* Datos de la cuenta */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
+      <div className="bg-white rounded-2xl border border-brand-border-1 p-5 mb-6">
         <h2 className="text-sm font-medium mb-4">Datos de la cuenta</h2>
         <dl className="space-y-3">
           <div>
-            <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</dt>
+            <dt className="text-xs font-medium text-brand-gray-4 uppercase tracking-wider">Nombre</dt>
             <dd className="text-sm mt-0.5">{advisor.name}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Correo</dt>
+            <dt className="text-xs font-medium text-brand-gray-4 uppercase tracking-wider">Correo</dt>
             <dd className="text-sm mt-0.5 flex items-center gap-2">
               {advisor.email}
               {advisor.emailVerified ? (
@@ -98,22 +98,22 @@ export default function PerfilPage() {
             </dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Despacho / empresa</dt>
+            <dt className="text-xs font-medium text-brand-gray-4 uppercase tracking-wider">Despacho / empresa</dt>
             <dd className="text-sm mt-0.5">{advisor.companyName || "—"}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</dt>
+            <dt className="text-xs font-medium text-brand-gray-4 uppercase tracking-wider">Teléfono</dt>
             <dd className="text-sm mt-0.5">{advisor.phone || "—"}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Asesor desde</dt>
+            <dt className="text-xs font-medium text-brand-gray-4 uppercase tracking-wider">Asesor desde</dt>
             <dd className="text-sm mt-0.5">{formatDate(advisor.createdAt)}</dd>
           </div>
         </dl>
       </div>
 
       {/* Plan */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
+      <div className="bg-white rounded-2xl border border-brand-border-1 p-5 mb-6">
         <h2 className="text-sm font-medium mb-4">Tu plan</h2>
 
         {!advisor.emailVerified && (
@@ -128,7 +128,7 @@ export default function PerfilPage() {
               <div>
                 <p className="text-sm font-medium">Plan pagado — clientes ilimitados</p>
                 {advisor.paidUntil && (
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-brand-gray-4 mt-0.5">
                     Próximo cobro: {formatDate(advisor.paidUntil)} — $
                     {advisor.monthlyPriceMxn + advisor.pendingCommissionTotal} MXN
                   </p>
@@ -139,14 +139,14 @@ export default function PerfilPage() {
                   <button
                     onClick={handleCancel}
                     disabled={billingBusy}
-                    className="text-xs font-medium px-3 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 transition"
+                    className="text-xs font-medium px-3 py-2 rounded-full bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 transition"
                   >
                     {billingBusy ? "Cancelando..." : "Confirmar"}
                   </button>
                   <button
                     onClick={() => setConfirmingCancel(false)}
                     disabled={billingBusy}
-                    className="text-xs font-medium px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition"
+                    className="text-xs font-medium px-3 py-2 rounded-full text-brand-gray-2 hover:bg-brand-surface disabled:opacity-50 transition"
                   >
                     No, mantener plan
                   </button>
@@ -154,44 +154,44 @@ export default function PerfilPage() {
               ) : (
                 <button
                   onClick={() => setConfirmingCancel(true)}
-                  className="text-xs font-medium px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 transition self-start sm:flex-shrink-0"
+                  className="text-xs font-medium px-4 py-2 rounded-full border border-brand-border-4 hover:bg-brand-surface transition self-start sm:flex-shrink-0"
                 >
                   Cancelar plan
                 </button>
               )}
             </div>
 
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+            <div className="mt-4 pt-4 border-t border-brand-border-1">
+              <p className="text-xs font-medium text-brand-gray-4 uppercase tracking-wider mb-2">
                 Desglose del próximo cobro
               </p>
               <div className="flex items-center justify-between text-sm py-1">
-                <span className="text-gray-600">Mensualidad</span>
+                <span className="text-brand-gray-2">Mensualidad</span>
                 <span>${advisor.monthlyPriceMxn} MXN</span>
               </div>
               {advisor.pendingCommissions.length === 0 ? (
                 <div className="flex items-center justify-between text-sm py-1">
-                  <span className="text-gray-600">Comisión Referidoo</span>
+                  <span className="text-brand-gray-2">Comisión Referidoo</span>
                   <span>$0 MXN</span>
                 </div>
               ) : (
                 <>
                   {advisor.pendingCommissions.map((c) => (
                     <div key={c.id} className="flex items-center justify-between text-sm py-1">
-                      <span className="text-gray-600">
+                      <span className="text-brand-gray-2">
                         Comisión por {c.leadName}
                         {c.productType ? ` (${c.productType})` : ""}
                       </span>
                       <span>${c.lessioCommission} MXN</span>
                     </div>
                   ))}
-                  <div className="flex items-center justify-between text-sm py-1 font-medium border-t border-gray-50 mt-1 pt-1">
+                  <div className="flex items-center justify-between text-sm py-1 font-medium border-t border-brand-border-2 mt-1 pt-1">
                     <span>Comisión Referidoo</span>
                     <span>${advisor.pendingCommissionTotal} MXN</span>
                   </div>
                 </>
               )}
-              <div className="flex items-center justify-between text-sm py-1 font-medium mt-1 pt-1 border-t border-gray-100">
+              <div className="flex items-center justify-between text-sm py-1 font-medium mt-1 pt-1 border-t border-brand-border-1">
                 <span>Total</span>
                 <span>${advisor.monthlyPriceMxn + advisor.pendingCommissionTotal} MXN</span>
               </div>
@@ -201,12 +201,12 @@ export default function PerfilPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
             <div>
               <p className="text-sm font-medium">Plan freemium — hasta 2 clientes</p>
-              <p className="text-xs text-gray-500 mt-0.5">Actualiza a pagado ($539/mes) para clientes ilimitados.</p>
+              <p className="text-xs text-brand-gray-4 mt-0.5">Actualiza a pagado ($539/mes) para clientes ilimitados.</p>
             </div>
             <button
               onClick={() => setShowUpgradeForm(true)}
               disabled={!advisor.emailVerified}
-              className="text-xs font-medium px-4 py-2 rounded-xl bg-black text-white hover:bg-gray-900 disabled:opacity-50 transition self-start sm:flex-shrink-0"
+              className="text-xs font-medium px-4 py-2 rounded-full bg-brand-ink text-white hover:bg-[#26262a] disabled:opacity-50 transition self-start sm:flex-shrink-0"
             >
               Subir de plan
             </button>

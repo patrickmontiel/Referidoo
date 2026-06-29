@@ -73,7 +73,7 @@ export default function AdminOverviewPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-brand-ink border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -87,7 +87,7 @@ export default function AdminOverviewPage() {
     pending: "bg-amber-50 text-amber-700",
     contacted: "bg-blue-50 text-blue-700",
     converted: "bg-green-50 text-green-700",
-    rejected: "bg-gray-100 text-gray-500",
+    rejected: "bg-gray-100 text-brand-gray-4",
   };
 
   return (
@@ -96,15 +96,15 @@ export default function AdminOverviewPage() {
 
       <div data-tour="greeting" className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold">
+          <h1 className="text-xl font-bold text-brand-ink">
             {advisor ? `Hola, ${advisor.name.split(" ")[0]}` : "Resumen"}
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">{advisor?.companyName ?? "Panel de referidos"}</p>
+          <p className="text-sm text-brand-gray-4 mt-0.5">{advisor?.companyName ?? "Panel de referidos"}</p>
         </div>
         {advisor?.plan && (
           <Link
             href="/admin/perfil"
-            className="text-xs font-medium px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition flex-shrink-0"
+            className="text-xs font-medium px-3 py-1.5 rounded-full bg-brand-border-1 text-brand-gray-2 hover:bg-brand-border-4 transition flex-shrink-0"
           >
             {advisor.plan === "paid" ? "Plan pagado" : "Plan freemium"} →
           </Link>
@@ -119,54 +119,54 @@ export default function AdminOverviewPage() {
           { label: "Convertidos", value: converted, sub: "clientes cerrados" },
           { label: "Pendientes", value: pending, sub: "por contactar" },
         ].map((s) => (
-          <div key={s.label} className="bg-white rounded-2xl border border-gray-100 p-4">
+          <div key={s.label} className="bg-white rounded-2xl border border-brand-border-1 p-4">
             <p className="text-2xl font-semibold">{s.value}</p>
-            <p className="text-xs font-medium text-gray-700 mt-1">{s.label}</p>
-            <p className="text-xs text-gray-500">{s.sub}</p>
+            <p className="text-xs font-medium text-brand-gray-1 mt-1">{s.label}</p>
+            <p className="text-xs text-brand-gray-4">{s.sub}</p>
           </div>
         ))}
       </div>
 
       {/* Money */}
       <div data-tour="money" className="grid grid-cols-2 gap-3 mb-6">
-        <div className="bg-black text-white rounded-2xl p-4">
-          <p className="text-xs text-gray-500 mb-1">Premios pagados</p>
+        <div className="bg-brand-ink text-white rounded-2xl p-4">
+          <p className="text-xs text-brand-gray-4 mb-1">Premios pagados</p>
           <p className="text-xl font-semibold">{formatCurrency(totalPaid)}</p>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 p-4">
-          <p className="text-xs text-gray-500 mb-1">Por pagar (aprobados)</p>
+        <div className="bg-white rounded-2xl border border-brand-border-1 p-4">
+          <p className="text-xs text-brand-gray-4 mb-1">Por pagar (aprobados)</p>
           <p className="text-xl font-semibold">{formatCurrency(totalApproved)}</p>
         </div>
       </div>
 
       {/* Recent */}
-      <div data-tour="recent" className="bg-white rounded-2xl border border-gray-100">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+      <div data-tour="recent" className="bg-white rounded-2xl border border-brand-border-1">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-brand-border-2">
           <h2 className="font-medium text-sm">Últimos referidos</h2>
-          <Link href="/admin/referidos" className="text-xs text-gray-500 hover:text-black transition">
+          <Link href="/admin/referidos" className="text-xs text-brand-gray-4 hover:text-brand-ink transition">
             Ver todos →
           </Link>
         </div>
         {referrals.length === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-gray-500 text-sm">Aún no hay referidos.</p>
-            <Link href="/admin/clientes" className="text-xs text-black underline mt-2 inline-block">
+            <p className="text-brand-gray-4 text-sm">Aún no hay referidos.</p>
+            <Link href="/admin/clientes" className="text-xs text-brand-ink underline mt-2 inline-block">
               Agrega tu primer cliente
             </Link>
           </div>
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-brand-border-2">
             {referrals.slice(0, 5).map((r) => (
               <div key={r.id} className="flex items-center gap-4 px-5 py-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{r.leadName}</p>
-                  <p className="text-xs text-gray-500 truncate">Vía {r.referrer.name} · {formatDate(r.createdAt)}</p>
+                  <p className="text-xs text-brand-gray-4 truncate">Vía {r.referrer.name} · {formatDate(r.createdAt)}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusConfig[r.status]}`}>
                     {getStatusLabel(r.status)}
                   </span>
-                  <p className="text-xs text-gray-500 mt-1">{formatCurrency(r.rewardAmount)}</p>
+                  <p className="text-xs text-brand-gray-4 mt-1">{formatCurrency(r.rewardAmount)}</p>
                 </div>
               </div>
             ))}

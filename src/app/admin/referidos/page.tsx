@@ -57,11 +57,11 @@ const statusBg: Record<string, string> = {
   pending:   "bg-amber-50 text-amber-700 border-amber-100",
   contacted: "bg-blue-50 text-blue-700 border-blue-100",
   converted: "bg-green-50 text-green-700 border-green-100",
-  rejected:  "bg-gray-100 text-gray-500 border-gray-200",
+  rejected:  "bg-brand-border-1 text-brand-gray-4 border-brand-border-4",
 };
 
 const rewardBg: Record<string, string> = {
-  pending:  "bg-gray-100 text-gray-500",
+  pending:  "bg-brand-border-1 text-brand-gray-4",
   approved: "bg-amber-50 text-amber-700",
   paid:     "bg-green-50 text-green-700",
 };
@@ -201,7 +201,7 @@ export default function ReferidosPage() {
 
       <div data-tour="header" className="mb-6">
         <h1 className="text-xl font-semibold">Referidos</h1>
-        <p className="text-sm text-gray-500 mt-0.5">{referrals.length} en total</p>
+        <p className="text-sm text-brand-gray-4 mt-0.5">{referrals.length} en total</p>
       </div>
 
       {/* Filters */}
@@ -212,8 +212,8 @@ export default function ReferidosPage() {
             onClick={() => setFilter(opt.value)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition border ${
               filter === opt.value
-                ? "bg-black text-white border-black"
-                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                ? "bg-brand-ink text-white border-brand-ink"
+                : "bg-white text-brand-gray-2 border-brand-border-4 hover:bg-brand-surface"
             }`}
           >
             {opt.label}
@@ -228,10 +228,10 @@ export default function ReferidosPage() {
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-brand-ink border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-gray-500 text-sm">Sin referidos en esta categoría.</div>
+        <div className="text-center py-16 text-brand-gray-4 text-sm">Sin referidos en esta categoría.</div>
       ) : (
         <div data-tour="list" className="space-y-3">
           {filtered.map((r) => {
@@ -245,27 +245,27 @@ export default function ReferidosPage() {
             return (
               <div
                 key={r.id}
-                className="bg-white rounded-2xl border border-gray-100 p-4 cursor-pointer hover:border-gray-200 transition"
+                className="bg-white rounded-2xl border border-brand-border-1 p-4 cursor-pointer hover:border-brand-border-4 transition"
                 onClick={() => setSelected(r)}
               >
                 <div className="flex items-start gap-4">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{r.leadName}</p>
-                    <p className="text-xs text-gray-500">{r.leadPhone}</p>
-                    <p className="text-xs text-gray-500 mt-0.5 truncate">
-                      Vía <span className="text-gray-500">{r.referrer.name}</span> · {formatDate(r.createdAt)}
+                    <p className="text-xs text-brand-gray-4">{r.leadPhone}</p>
+                    <p className="text-xs text-brand-gray-4 mt-0.5 truncate">
+                      Vía <span className="text-brand-gray-4">{r.referrer.name}</span> · {formatDate(r.createdAt)}
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <div>
                       {isConverted ? (
                         noEscaleraReward ? (
-                          <p className="text-sm font-semibold text-gray-500">—</p>
+                          <p className="text-sm font-semibold text-brand-gray-4">—</p>
                         ) : (
                           <p className="text-sm font-semibold">{formatCurrency(r.rewardAmount)}</p>
                         )
                       ) : r.interestProductType ? (
-                        <p className="text-xs font-medium text-gray-500">Interés: {r.interestProductType}</p>
+                        <p className="text-xs font-medium text-brand-gray-4">Interés: {r.interestProductType}</p>
                       ) : null}
                       {noEscaleraReward && (
                         <p className="text-[10px] text-blue-500 font-medium">
@@ -276,7 +276,7 @@ export default function ReferidosPage() {
                         <p className="text-[10px] text-amber-600 font-medium">⚡ Incluye bono</p>
                       )}
                       {r.saleAmount ? (
-                        <p className="text-[11px] text-gray-500 mt-0.5">Venta: {formatCurrency(r.saleAmount)}</p>
+                        <p className="text-[11px] text-brand-gray-4 mt-0.5">Venta: {formatCurrency(r.saleAmount)}</p>
                       ) : null}
                     </div>
                     <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium border ${statusBg[r.status]}`}>
@@ -286,11 +286,11 @@ export default function ReferidosPage() {
                 </div>
 
                 {/* Quick actions */}
-                <div className="flex gap-2 mt-4 pt-3 border-t border-gray-50">
+                <div className="flex gap-2 mt-4 pt-3 border-t border-brand-border-2">
                   {r.status === "pending" && (
                     <button
                       onClick={(e) => { e.stopPropagation(); update(r.id, { status: "contacted" }); }}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition font-medium"
+                      className="text-xs px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 transition font-medium"
                     >
                       Marcar contactado
                     </button>
@@ -299,13 +299,13 @@ export default function ReferidosPage() {
                     <>
                       <button
                         onClick={(e) => startConvert(r.id, r.leadName, e)}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition font-medium"
+                        className="text-xs px-3 py-1.5 rounded-full bg-green-50 text-green-700 hover:bg-green-100 transition font-medium"
                       >
                         Convertido ✓
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); update(r.id, { status: "rejected" }); }}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition font-medium"
+                        className="text-xs px-3 py-1.5 rounded-full bg-brand-border-1 text-brand-gray-4 hover:bg-brand-border-4 transition font-medium"
                       >
                         Rechazar
                       </button>
@@ -314,7 +314,7 @@ export default function ReferidosPage() {
                   {r.status === "converted" && r.rewardStatus === "approved" && r.tierPosition > 0 && (
                     <button
                       onClick={(e) => startPay(r.id, r.referrer.name, r.rewardAmount, e)}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-black text-white hover:bg-gray-800 transition font-medium"
+                      className="text-xs px-3 py-1.5 rounded-full bg-brand-ink text-white hover:bg-[#26262a] transition font-medium"
                     >
                       Enviar Premio →
                     </button>
@@ -350,10 +350,10 @@ export default function ReferidosPage() {
             <div className="absolute inset-0 bg-black/25" onClick={() => setConvertTarget(null)} />
             <div className="relative bg-white w-full max-w-sm rounded-t-3xl md:rounded-2xl p-6 shadow-2xl">
               <h2 className="font-semibold mb-1">Marcar como convertido</h2>
-              <p className="text-sm text-gray-500 mb-5">{convertTarget.name}</p>
+              <p className="text-sm text-brand-gray-4 mb-5">{convertTarget.name}</p>
 
               {/* Product type selector */}
-              <label className="block text-xs text-gray-500 uppercase tracking-wide mb-2">
+              <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">
                 Producto contratado
               </label>
               <div className="flex flex-wrap gap-2 mb-5">
@@ -364,8 +364,8 @@ export default function ReferidosPage() {
                     onClick={() => setProductType(type === productType ? "" : type)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition border ${
                       productType === type
-                        ? "bg-black text-white border-black"
-                        : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                        ? "bg-brand-ink text-white border-brand-ink"
+                        : "bg-white text-brand-gray-2 border-brand-border-4 hover:bg-brand-surface"
                     }`}
                   >
                     {type}
@@ -373,11 +373,11 @@ export default function ReferidosPage() {
                 ))}
               </div>
 
-              <label className="block text-xs text-gray-500 uppercase tracking-wide mb-2">
+              <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">
                 {valueLabel}
               </label>
               <div className="relative mb-5">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">$</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-gray-4 text-sm font-medium">$</span>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -385,7 +385,7 @@ export default function ReferidosPage() {
                   value={saleInput}
                   onChange={(e) => setSaleInput(formatNumberWithCommas(e.target.value))}
                   required
-                  className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+                  className="w-full pl-8 pr-4 py-3 border border-brand-border-4 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition"
                   autoFocus
                 />
               </div>
@@ -393,13 +393,13 @@ export default function ReferidosPage() {
                 <button
                   onClick={confirmConvert}
                   disabled={updating}
-                  className="flex-1 bg-black text-white text-sm py-3 rounded-xl font-medium hover:bg-gray-900 disabled:opacity-50 transition"
+                  className="flex-1 bg-brand-ink text-white text-sm py-3 rounded-full font-medium hover:bg-[#26262a] disabled:opacity-50 transition"
                 >
                   {updating ? "Guardando..." : "Confirmar conversión"}
                 </button>
                 <button
                   onClick={() => setConvertTarget(null)}
-                  className="px-4 text-sm py-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                  className="px-4 text-sm py-3 rounded-full border border-brand-border-4 text-brand-gray-2 hover:bg-brand-surface transition"
                 >
                   Cancelar
                 </button>
@@ -415,10 +415,10 @@ export default function ReferidosPage() {
           <div className="absolute inset-0 bg-black/25" onClick={() => setPayTarget(null)} />
           <div className="relative bg-white w-full max-w-sm rounded-t-3xl md:rounded-2xl p-6 shadow-2xl">
             <h2 className="font-semibold mb-1">Enviar premio</h2>
-            <p className="text-sm text-gray-500 mb-5">
-              Confirma que enviaste <span className="font-semibold text-black">{formatCurrency(payTarget.amount)}</span> a {payTarget.referrerName}
+            <p className="text-sm text-brand-gray-4 mb-5">
+              Confirma que enviaste <span className="font-semibold text-brand-ink">{formatCurrency(payTarget.amount)}</span> a {payTarget.referrerName}
             </p>
-            <label className="block text-xs text-gray-500 uppercase tracking-wide mb-2">
+            <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">
               Referencia del pago (opcional)
             </label>
             <input
@@ -426,21 +426,21 @@ export default function ReferidosPage() {
               placeholder="Ej. SPEI 12345 / Efectivo / CLIP"
               value={payNote}
               onChange={(e) => setPayNote(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black transition mb-5"
+              className="w-full px-4 py-3 border border-brand-border-4 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition mb-5"
               autoFocus
             />
-            <p className="text-xs text-gray-500 mb-5">
+            <p className="text-xs text-brand-gray-4 mb-5">
               Al confirmar, {payTarget.referrerName} recibirá un correo con el detalle del premio y un botón para confirmar recibo.
             </p>
             <div className="flex gap-2">
               <button
                 onClick={confirmPay}
                 disabled={updating}
-                className="flex-1 bg-black text-white text-sm py-3 rounded-xl font-medium hover:bg-gray-900 disabled:opacity-50 transition"
+                className="flex-1 bg-brand-ink text-white text-sm py-3 rounded-full font-medium hover:bg-[#26262a] disabled:opacity-50 transition"
               >
                 {updating ? "Guardando..." : "Confirmar envío"}
               </button>
-              <button onClick={() => setPayTarget(null)} className="px-4 text-sm py-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition">
+              <button onClick={() => setPayTarget(null)} className="px-4 text-sm py-3 rounded-full border border-brand-border-4 text-brand-gray-2 hover:bg-brand-surface transition">
                 Cancelar
               </button>
             </div>
@@ -457,7 +457,7 @@ export default function ReferidosPage() {
               <h2 className="font-semibold">Detalle del referido</h2>
               <button
                 onClick={() => { setSelected(null); setEditingSale(false); setEditingProductType(false); }}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-brand-border-1 text-brand-gray-4 hover:bg-brand-border-4 transition"
               >
                 ×
               </button>
@@ -465,19 +465,19 @@ export default function ReferidosPage() {
 
             <div className="space-y-4">
               <div>
-                <p className="text-xs text-gray-500 mb-1">Lead</p>
+                <p className="text-xs text-brand-gray-4 mb-1">Lead</p>
                 <p className="font-medium">{selected.leadName}</p>
-                <p className="text-sm text-gray-500">{selected.leadPhone}</p>
-                {selected.leadEmail && <p className="text-sm text-gray-500">{selected.leadEmail}</p>}
+                <p className="text-sm text-brand-gray-4">{selected.leadPhone}</p>
+                {selected.leadEmail && <p className="text-sm text-brand-gray-4">{selected.leadEmail}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-xs text-gray-500 mb-1">Referido por</p>
+                  <p className="text-xs text-brand-gray-4 mb-1">Referido por</p>
                   <p className="text-sm font-medium">{selected.referrer.name}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 mb-1">Referido #</p>
+                  <p className="text-xs text-brand-gray-4 mb-1">Referido #</p>
                   <p className="text-sm font-medium">
                     {referrals
                       .filter((r) => r.referrer.id === selected.referrer.id)
@@ -488,7 +488,7 @@ export default function ReferidosPage() {
                 {selected.status === "converted" ? (
                   <>
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Premio al cliente</p>
+                      <p className="text-xs text-brand-gray-4 mb-1">Premio al cliente</p>
                       {selected.tierPosition === 0 ? (
                         selected.productType === "Daños/Auto" || selected.productType === "GMM" || selected.productType === "Otro" ? (
                           <div>
@@ -501,8 +501,8 @@ export default function ReferidosPage() {
                           </div>
                         ) : (
                           <div>
-                            <p className="text-sm font-semibold text-gray-500">—</p>
-                            <p className="text-[10px] text-gray-500 font-medium">Sin premio en efectivo</p>
+                            <p className="text-sm font-semibold text-brand-gray-4">—</p>
+                            <p className="text-[10px] text-brand-gray-4 font-medium">Sin premio en efectivo</p>
                           </div>
                         )
                       ) : (
@@ -518,13 +518,13 @@ export default function ReferidosPage() {
                       {selected.saleAmount ? (
                         <>
                           <div className="flex items-center gap-1 mb-1">
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-brand-gray-4">
                               {selected.productType ? selected.productType : "Valor del plan"}
                             </p>
                             {selected.rewardStatus !== "paid" && (
                               <button
                                 onClick={() => setEditingProductType((v) => !v)}
-                                className="text-gray-500 hover:text-gray-700 transition"
+                                className="text-brand-gray-4 hover:text-brand-gray-1 transition"
                                 title="Editar producto contratado"
                               >
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
@@ -536,26 +536,26 @@ export default function ReferidosPage() {
                           {editingSale ? (
                             <div className="flex items-center gap-1.5">
                               <div className="relative flex-1">
-                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-brand-gray-4 text-xs">$</span>
                                 <input
                                   type="text"
                                   inputMode="numeric"
                                   value={editSaleInput}
                                   onChange={(e) => setEditSaleInput(formatNumberWithCommas(e.target.value))}
-                                  className="w-full pl-5 pr-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+                                  className="w-full pl-5 pr-2 py-1.5 border border-brand-border-4 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition"
                                   autoFocus
                                 />
                               </div>
                               <button
                                 onClick={saveEditedSale}
                                 disabled={updating}
-                                className="text-xs px-2 py-1.5 bg-black text-white rounded-lg disabled:opacity-50"
+                                className="text-xs px-2 py-1.5 bg-brand-ink text-white rounded-lg disabled:opacity-50"
                               >
                                 ✓
                               </button>
                               <button
                                 onClick={() => setEditingSale(false)}
-                                className="text-xs px-2 py-1.5 border border-gray-200 rounded-lg text-gray-500"
+                                className="text-xs px-2 py-1.5 border border-brand-border-4 rounded-lg text-brand-gray-4"
                               >
                                 ✕
                               </button>
@@ -565,7 +565,7 @@ export default function ReferidosPage() {
                               <p className="text-sm font-bold text-green-700">{formatCurrency(selected.saleAmount)}</p>
                               <button
                                 onClick={() => { setEditSaleInput(formatNumberWithCommas(String(selected.saleAmount))); setEditingSale(true); }}
-                                className="text-gray-500 hover:text-gray-700 transition"
+                                className="text-brand-gray-4 hover:text-brand-gray-1 transition"
                                 title="Editar valor"
                               >
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
@@ -577,7 +577,7 @@ export default function ReferidosPage() {
                         </>
                       ) : (
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Fecha</p>
+                          <p className="text-xs text-brand-gray-4 mb-1">Fecha</p>
                           <p className="text-sm">{formatDate(selected.createdAt)}</p>
                         </div>
                       )}
@@ -585,7 +585,7 @@ export default function ReferidosPage() {
                   </>
                 ) : (
                   <div className="col-span-2">
-                    <p className="text-xs text-gray-500 mb-1">Fecha</p>
+                    <p className="text-xs text-brand-gray-4 mb-1">Fecha</p>
                     <p className="text-sm">{formatDate(selected.createdAt)}</p>
                   </div>
                 )}
@@ -595,7 +595,7 @@ export default function ReferidosPage() {
                   y puntos burbuja si cambia entre escalera y burbuja. */}
               {selected.status === "converted" && selected.rewardStatus !== "paid" && editingProductType && (
                 <div>
-                  <p className="text-xs text-gray-500 mb-2">Producto contratado</p>
+                  <p className="text-xs text-brand-gray-4 mb-2">Producto contratado</p>
                   <div className="flex gap-2 flex-wrap">
                     {["PPR", "Vida", "Daños/Auto", "GMM", "Otro"].map((type) => (
                       <button
@@ -604,8 +604,8 @@ export default function ReferidosPage() {
                         onClick={() => { setEditingProductType(false); if (type !== selected.productType) update(selected.id, { productType: type }); }}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
                           selected.productType === type
-                            ? "bg-black text-white border-black"
-                            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                            ? "bg-brand-ink text-white border-brand-ink"
+                            : "bg-white border-brand-border-4 text-brand-gray-2 hover:bg-brand-surface"
                         }`}
                       >
                         {type}
@@ -619,7 +619,7 @@ export default function ReferidosPage() {
                   solo se sabrá qué se contrató realmente al marcar como convertido */}
               {selected.status !== "converted" && (
                 <div>
-                  <p className="text-xs text-gray-500 mb-2">Interesado en</p>
+                  <p className="text-xs text-brand-gray-4 mb-2">Interesado en</p>
                   <div className="flex gap-2 flex-wrap">
                     {["Daños/Auto", "GMM", "Vida", "PPR", "Otro"].map((type) => (
                       <button
@@ -629,7 +629,7 @@ export default function ReferidosPage() {
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
                           selected.interestProductType === type
                             ? "bg-blue-50 text-blue-700 border-blue-200"
-                            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                            : "bg-white border-brand-border-4 text-brand-gray-2 hover:bg-brand-surface"
                         }`}
                       >
                         {type}
@@ -640,7 +640,7 @@ export default function ReferidosPage() {
               )}
 
               <div>
-                <p className="text-xs text-gray-500 mb-2">Estado del lead</p>
+                <p className="text-xs text-brand-gray-4 mb-2">Estado del lead</p>
                 <div className="flex gap-2 flex-wrap">
                   {(["pending", "contacted", "rejected"] as const).map((s) => (
                     <button
@@ -649,8 +649,8 @@ export default function ReferidosPage() {
                       onClick={() => update(selected.id, { status: s })}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
                         selected.status === s
-                          ? "bg-black text-white border-black"
-                          : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                          ? "bg-brand-ink text-white border-brand-ink"
+                          : "bg-white border-brand-border-4 text-brand-gray-2 hover:bg-brand-surface"
                       }`}
                     >
                       {getStatusLabel(s)}
@@ -661,8 +661,8 @@ export default function ReferidosPage() {
                     onClick={() => { setSelected(null); startConvert(selected.id, selected.leadName); }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
                       selected.status === "converted"
-                        ? "bg-black text-white border-black"
-                        : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                        ? "bg-brand-ink text-white border-brand-ink"
+                        : "bg-white border-brand-border-4 text-brand-gray-2 hover:bg-brand-surface"
                     }`}
                   >
                     {getStatusLabel("converted")}
@@ -673,7 +673,7 @@ export default function ReferidosPage() {
               {/* Estado del premio — solo visible cuando está convertido y entra a la escalera */}
               {selected.status === "converted" && selected.tierPosition > 0 && (
                 <div>
-                  <p className="text-xs text-gray-500 mb-2">Estado del premio</p>
+                  <p className="text-xs text-brand-gray-4 mb-2">Estado del premio</p>
                   <div className="flex gap-2 flex-wrap">
                     {["pending", "approved", "paid"].map((s) => (
                       <button
@@ -682,8 +682,8 @@ export default function ReferidosPage() {
                         onClick={() => update(selected.id, { rewardStatus: s })}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
                           selected.rewardStatus === s
-                            ? "bg-black text-white border-black"
-                            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                            ? "bg-brand-ink text-white border-brand-ink"
+                            : "bg-white border-brand-border-4 text-brand-gray-2 hover:bg-brand-surface"
                         }`}
                       >
                         {getRewardStatusLabel(s)}
@@ -697,7 +697,7 @@ export default function ReferidosPage() {
               <div className="flex gap-2">
                 <a
                   href={`tel:${selected.leadPhone}`}
-                  className="flex-1 flex items-center justify-center gap-2 bg-gray-100 text-gray-800 text-sm py-3 rounded-xl font-medium hover:bg-gray-200 transition"
+                  className="flex-1 flex items-center justify-center gap-2 bg-brand-border-1 text-brand-gray-1 text-sm py-3 rounded-full font-medium hover:bg-brand-border-4 transition"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                     <path d="M6.62 10.79C8.06 13.62 10.38 15.93 13.21 17.38L15.41 15.18C15.68 14.91 16.08 14.82 16.43 14.94C17.55 15.31 18.76 15.51 20 15.51C20.55 15.51 21 15.96 21 16.51V20C21 20.55 20.55 21 20 21C10.61 21 3 13.39 3 4C3 3.45 3.45 3 4 3H7.5C8.05 3 8.5 3.45 8.5 4C8.5 5.25 8.7 6.45 9.07 7.57C9.18 7.92 9.1 8.31 8.82 8.59L6.62 10.79Z" fill="currentColor"/>
@@ -706,7 +706,7 @@ export default function ReferidosPage() {
                 </a>
                 <button
                   onClick={() => openCalendar(selected)}
-                  className="flex-1 flex items-center justify-center gap-2 bg-black text-white text-sm py-3 rounded-xl font-medium hover:bg-gray-800 transition"
+                  className="flex-1 flex items-center justify-center gap-2 bg-brand-ink text-white text-sm py-3 rounded-full font-medium hover:bg-[#26262a] transition"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                     <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/>
@@ -717,19 +717,19 @@ export default function ReferidosPage() {
               </div>
 
               {/* Delete referral */}
-              <div className="pt-2 border-t border-gray-100">
+              <div className="pt-2 border-t border-brand-border-1">
                 {deleteId === selected.id ? (
                   <div className="flex items-center gap-2">
-                    <p className="text-xs text-gray-500 flex-1">¿Eliminar este referido?</p>
+                    <p className="text-xs text-brand-gray-4 flex-1">¿Eliminar este referido?</p>
                     <button
                       onClick={() => deleteReferral(selected.id)}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition font-medium"
+                      className="text-xs px-3 py-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition font-medium"
                     >
                       Eliminar
                     </button>
                     <button
                       onClick={() => setDeleteId(null)}
-                      className="text-xs text-gray-500 hover:text-gray-600 transition"
+                      className="text-xs text-brand-gray-4 hover:text-brand-gray-2 transition"
                     >
                       Cancelar
                     </button>
@@ -737,7 +737,7 @@ export default function ReferidosPage() {
                 ) : (
                   <button
                     onClick={() => setDeleteId(selected.id)}
-                    className="text-xs text-gray-500 hover:text-red-500 transition"
+                    className="text-xs text-brand-gray-4 hover:text-red-500 transition"
                   >
                     Eliminar referido
                   </button>
