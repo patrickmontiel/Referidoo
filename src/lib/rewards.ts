@@ -32,21 +32,27 @@ export function invalidateAdvisorConfigCache(advisorId: string) {
   revalidateTag(advisorConfigTag(advisorId), { expire: 0 });
 }
 
-// Comisión de Lessio sobre el valor del plan/prima, pagada una sola vez (primer año)
-const LESSIO_COMMISSION_RATES: Record<string, number> = {
-  PPR: 0.0015,
-  Vida: 0.0015,
-  "Daños/Auto": 0.0008,
-  GMM: 0.0008,
+// Comisión de Lessio sobre el valor del plan/prima, pagada una sola vez (primer
+// año). Freemium paga casi el doble que pagado — no es solo el tope de 2
+// clientes lo que empuja el upgrade, también el costo por conversión baja al
+// pagar. Decidido en /office-hours 2026-06-29, ver
+// ~/.gstack/projects/patrickmontiel-Referidoo/patri-master-design-20260629-013637.md
+const LESSIO_COMMISSION_RATES: Record<string, { freemium: number; paid: number }> = {
+  PPR: { freemium: 0.0025, paid: 0.0015 },
+  Vida: { freemium: 0.0025, paid: 0.0015 },
+  "Daños/Auto": { freemium: 0.0015, paid: 0.0008 },
+  GMM: { freemium: 0.0015, paid: 0.0008 },
 };
 
 export function calculateLessioCommission(
   productType: string | null | undefined,
-  saleAmount: number | null | undefined
+  saleAmount: number | null | undefined,
+  plan: string | null | undefined
 ): number | null {
   if (!productType || !saleAmount) return null;
-  const rate = LESSIO_COMMISSION_RATES[productType];
-  if (!rate) return null;
+  const rates = LESSIO_COMMISSION_RATES[productType];
+  if (!rates) return null;
+  const rate = plan === "paid" ? rates.paid : rates.freemium;
   return Math.round(saleAmount * rate);
 }
 

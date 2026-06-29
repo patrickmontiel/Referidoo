@@ -13,7 +13,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     where: { id },
     include: {
       referrer: { select: { name: true } },
-      advisor: { select: { name: true, email: true } },
+      advisor: { select: { name: true, email: true, plan: true } },
     },
   });
   if (!referral || referral.advisorId !== session.advisorId) {
@@ -114,7 +114,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   // si no, quedaría con el valor del producto viejo después de una corrección.
   // null si el producto no tiene tasa definida o no hay saleAmount (nunca 0).
   const lessioCommission = (isConverting || isProductTypeEdit)
-    ? calculateLessioCommission(productTypeForConversion, saleAmount)
+    ? calculateLessioCommission(productTypeForConversion, saleAmount, referral.advisor.plan)
     : undefined;
 
   // Check launch bonus (3+ referrals in first 7 days → bonus on first prize only)

@@ -72,7 +72,7 @@ function baseReferral(overrides: Record<string, unknown> = {}) {
     interestProductType: null,
     lessioCommission: null,
     referrer: { name: "Ana" },
-    advisor: { name: "Eduardo", email: "eduardo@referidoo.mx" },
+    advisor: { name: "Eduardo", email: "eduardo@referidoo.mx", plan: "paid" },
     ...overrides,
   };
 }
@@ -204,6 +204,17 @@ describe("PATCH /api/referrals/[id] — persistencia de lessioCommission", () =>
     await PATCH(patchRequest({ status: "converted", productType: "Daños/Auto", saleAmount: 100000 }), { params: Promise.resolve({ id: "r1" }) });
     // Daños/Auto rate = 0.0008 -> 100000 * 0.0008 = 80
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ lessioCommission: 80 }) }));
+  });
+
+  // Regresión: freemium paga casi el doble de comisión que pagado, decidido
+  // en /office-hours 2026-06-29 — verifica que el endpoint real lea el plan
+  // del asesor, no solo la función pura en rewards.ts.
+  it("usa la tasa freemium (más alta) cuando el asesor está en plan freemium", async () => {
+    mockFindUnique.mockResolvedValue(baseReferral({ advisor: { name: "Eduardo", email: "eduardo@referidoo.mx", plan: "freemium" } }));
+
+    await PATCH(patchRequest({ status: "converted", productType: "Daños/Auto", saleAmount: 100000 }), { params: Promise.resolve({ id: "r1" }) });
+    // Daños/Auto freemium rate = 0.0015 -> 100000 * 0.0015 = 150 (vs. 80 en pagado)
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ lessioCommission: 150 }) }));
   });
 
   it("persiste null cuando el producto no tiene tasa definida (ej. Otro)", async () => {
