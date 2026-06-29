@@ -83,26 +83,30 @@ components:
 
 ## 1. Overview
 
-**Dos sistemas conviven hoy, en propagación activa — no por inconsistencia.**
+**Un solo sistema en toda la app — la propagación terminó.**
 
-- **Sistema nuevo** (sección 2-6): `/` (landing), `/login`, `/registro`,
-  `/r/[code]` (landing pública de lead), `/c/[token]` (portal del cliente) —
-  ya migradas. Tipografía Hanken Grotesk, paleta `#0B0B0C`/`#2563EB`, botones
-  `rounded-full`, sombras puntuales documentadas. En `/c/[token]`, los
-  colores semánticos de estado (pendiente=amber, convertido=green,
-  contactado=blue, rechazado=gray en `statusConfig`/`rewardConfig`) se
-  dejaron sin tocar a propósito — son significado, no decoración de marca.
-- **Sistema original "Herramienta de Confianza"** (sección 7): `/admin`,
-  `/owner` — todavía sin migrar. Geist, blanco/negro plano, azul `#3b82f6`
-  solo como punto del logo, cero `box-shadow`.
+- **Sistema nuevo** (sección 2-6): `/` (landing), `/como-funciona`, `/login`,
+  `/registro`, `/r/[code]` (landing pública de lead), `/c/[token]` (portal
+  del cliente), `/admin/*` (dashboard del asesor), `/owner/*` (dashboard del
+  dueño) — todas migradas. Tipografía Hanken Grotesk, paleta
+  `#0B0B0C`/`#2563EB`, botones `rounded-full`, sombras puntuales
+  documentadas. En `/c/[token]`, `/admin/*` y `/owner/*`, los colores
+  semánticos de estado (pendiente=amber, convertido=green, contactado=blue,
+  rechazado=gray) se dejaron sin tocar a propósito — son significado, no
+  decoración de marca. Igual con los grupos de chips de selección múltiple
+  en `/admin/referidos` (filtros de status/producto/interés): se quedaron en
+  su radio original (`rounded-lg`), distinto de los botones de acción
+  primaria (`rounded-full`) — ver sección 4.
+- **Sistema original "Herramienta de Confianza"** (sección 7): histórico,
+  ya no vigente en ninguna superficie — se conserva como referencia de lo
+  que existía antes de la migración.
 
 **Orden de propagación** (decidido el 29 de junio de 2026, ver
 `~/.gstack/projects/patrickmontiel-Referidoo/`): páginas públicas simples
 primero (`/login` ✅, `/registro` ✅, `/r/[code]` ✅), luego `/c/[token]` ✅,
-luego `/admin/*` pendiente (superficie de trabajo diaria del asesor — ahí
-entran los primeros asesores reales, se migra con cautela y no antes de que
-ese flujo esté estable), y `/owner/*` al final (la usa solo Patrick, menor
-urgencia).
+luego `/owner/*` ✅, luego `/admin/*` ✅ (superficie de trabajo diaria del
+asesor — migrada con cautela, archivo por archivo, verificada con
+`tsc`/tests/build en cada paso).
 
 **Por qué dos sistemas mientras dura la migración:** la landing es la
 primera impresión pública — tiene permiso de ser más expresiva (tipografía
@@ -239,11 +243,12 @@ evidencia real; mientras no exista, se usa lenguaje de acceso anticipado
 explícitamente con Patrick el 29 de junio de 2026 — ver
 `~/.gstack/projects/patrickmontiel-Referidoo/patri-master-design-20260629-013637.md`.
 
-## 7. Sistema original — app de producto (`/admin`, `/owner`)
+## 7. Sistema original — app de producto (histórico, ya no vigente)
 
-**Creative North Star: "La Herramienta de Confianza"** — vigente en estas
-superficies hasta que se propague el sistema nuevo. (`/login`, `/registro`,
-`/r/[code]` y `/c/[token]` ya migraron a la sección 2-6.)
+**Creative North Star: "La Herramienta de Confianza"** — usado en `/admin`
+y `/owner` hasta el 29 de junio de 2026, cuando se migraron ambas
+superficies a la sección 2-6. Se conserva esta sección como referencia
+histórica, no como spec activa.
 
 Blanco y negro plano, sin decoración que compita con la tarea. No hay
 sombras, no hay gradientes, no hay color de marca dominante — el negro y el
