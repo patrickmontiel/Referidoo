@@ -1,45 +1,51 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Hanken_Grotesk } from "next/font/google";
 import { getAdvisorSession } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
+import { LandingHeader } from "@/components/LandingHeader";
 import { ScrollReveal } from "@/components/ScrollReveal";
+
+const hankenGrotesk = Hanken_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+});
 
 function CheckIcon({ className = "" }: { className?: string }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className={`flex-shrink-0 ${className}`}>
-      <path d="M5 13L9 17L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className={`flex-shrink-0 ${className}`}>
+      <path d="M5 13L9 17L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
 function XIcon({ className = "" }: { className?: string }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className={`flex-shrink-0 ${className}`}>
-      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className={`flex-shrink-0 ${className}`}>
+      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
+
+const SECTION_HEADING = "font-extrabold tracking-[-0.028em] text-[#0B0B0C]";
+const SECTION_HEADING_SIZE = { fontSize: "clamp(1.75rem, 4vw, 39px)" };
 
 const FEATURES = [
   {
     title: "Seguimiento de referidos",
     body: "Cada referido que llega por el link de un cliente aparece en tu pipeline — quién lo mandó, cuándo, y en qué etapa está.",
-    icon: "M3 4H21L14 12.5V19L10 21V12.5L3 4Z",
   },
   {
     title: "Premios automáticos",
     body: "Escalera de premios para Vida y PPR, premios burbuja para Auto y GMM. Tú configuras los montos, Referidoo hace las cuentas.",
-    icon: "M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z",
   },
   {
     title: "Portal para tus clientes",
     body: "Cada cliente recibe su propio link de referidos y un portal donde ve su progreso y reclama premios — sin que tú tengas que estar checando WhatsApp.",
-    icon: "M17 21V19C17 17.9 16.1 17 15 17H9C7.9 17 7 17.9 7 19V21M12 13C14.2 13 16 11.2 16 9C16 6.8 14.2 5 12 5C9.8 5 8 6.8 8 9C8 11.2 9.8 13 12 13Z",
   },
   {
     title: "Cobros y planes seguros",
     body: "Suscripción mensual cobrada automáticamente vía Mercado Pago. Sin transferencias manuales, sin recordatorios de pago.",
-    icon: "M12 8a4 4 0 100 8 4 4 0 000-8zM19.4 13a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33 1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82 1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z",
   },
 ];
 
@@ -54,76 +60,82 @@ export default async function Home() {
   if (session) redirect("/admin");
 
   return (
-    <div className="bg-white">
-      {/* Header */}
-      <header className="border-b border-gray-100">
-        <div className="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between">
-          <Logo size="md" />
-          <div className="hidden sm:flex items-center gap-3">
-            <Link href="/login" className="text-sm text-gray-500 hover:text-black transition px-3 py-2">
-              Iniciar sesión
-            </Link>
-            <Link href="/registro" className="text-sm font-medium bg-black text-white px-4 py-2 rounded-xl transition-[background-color,transform] duration-150 hover:bg-gray-900 active:scale-[0.97] whitespace-nowrap">
-              Crear cuenta gratis
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className={`bg-white ${hankenGrotesk.className}`} style={{ WebkitFontSmoothing: "antialiased" }}>
+      <LandingHeader />
+
+      {/* Acceso anticipado */}
+      <div className="bg-[#2563EB] text-white text-center text-xs font-medium" style={{ paddingTop: 11, paddingBottom: 11 }}>
+        Acceso anticipado — sé de los primeros asesores en usarlo
+      </div>
 
       {/* Hero */}
-      <section className="max-w-5xl mx-auto px-5 pt-16 pb-12 grid md:grid-cols-2 gap-10 items-center">
+      <section className="max-w-[1180px] mx-auto px-8 pt-16 pb-12 grid md:grid-cols-2 gap-16 items-center">
         <div className="landing-stagger">
-          <p className="inline-flex items-center gap-2 text-xs font-medium text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full mb-5">
-            <span className="w-1.5 h-1.5 rounded-full bg-black" />
-            Acceso anticipado — sé de los primeros asesores en usarlo
-          </p>
-          <h1 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight mb-5 text-balance">
+          <h1 className="font-extrabold tracking-[-0.03em] leading-[1.04] mb-5 text-[#0B0B0C] text-balance" style={{ fontSize: "clamp(2.5rem, 5.5vw, 60px)" }}>
             El sistema de referidos
             <br />
             que no existía. Hasta ahora.
           </h1>
-          <p className="text-gray-500 text-lg leading-relaxed mb-8 max-w-md">
+          <p className="text-[#5A626E] leading-[1.6] mb-8 max-w-md" style={{ fontSize: 18 }}>
             Referidoo es para asesores de seguros y planes financieros en México.
             Antes, cada referido vivía en un chat de WhatsApp o una fila de Excel.
             Ahora se registra solo, se calcula solo, y se paga solo.
           </p>
           <div className="flex items-center gap-3">
-            <Link href="/registro" className="text-sm font-medium bg-black text-white px-5 py-3 rounded-xl transition-[background-color,transform] duration-150 hover:bg-gray-900 active:scale-[0.97]">
+            <Link href="/registro" className="text-sm font-medium bg-[#0B0B0C] text-white px-5 py-3 rounded-full transition-[background-color,transform] duration-150 hover:bg-[#26262a] active:scale-[0.97]">
               Crear cuenta gratis
             </Link>
-            <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-black px-5 py-3 rounded-xl border border-gray-200 transition-[background-color,transform] duration-150 hover:bg-gray-50 active:scale-[0.97]">
+            <Link href="/login" className="text-sm font-medium text-[#3F4651] hover:text-[#0B0B0C] px-5 py-3 rounded-full border border-[#DADCE0] hover:border-[#0B0B0C] transition-[background-color,transform,border-color] duration-150 active:scale-[0.97]">
               Ya tengo cuenta
             </Link>
           </div>
-          <p className="text-xs text-gray-500 mt-4">Gratis hasta 2 clientes. Sin tarjeta para empezar.</p>
+          <p className="text-xs text-[#8A8F98] mt-4">Gratis hasta 2 clientes. Sin tarjeta para empezar.</p>
         </div>
 
-        <div className="landing-cta bg-gray-100 rounded-3xl p-6 border border-gray-200">
-          <p className="text-xs font-medium text-gray-600 uppercase tracking-wider mb-3">Así se ve tu panel</p>
-          <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-3">
-            <p className="text-xs text-gray-600 mb-1">Premios pagados</p>
-            <p className="text-2xl font-semibold">$2,500</p>
+        <div
+          className="landing-cta bg-white rounded-[22px] border border-[#EAEBED] p-5"
+          style={{ boxShadow: "0 10px 40px rgba(15,23,42,.10)" }}
+        >
+          <p className="text-[11px] font-bold text-[#8A8F98] uppercase tracking-[0.08em] mb-3">
+            Así se ve tu panel — ejemplo ilustrativo
+          </p>
+          <div className="mb-4">
+            <p className="font-bold text-lg text-[#0B0B0C]">Hola, Eduardo</p>
+            <p className="text-sm text-[#8A8F98]">Panel de referidos</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            {[
+              { label: "Clientes activos", value: 5 },
+              { label: "Referidos totales", value: 7 },
+              { label: "Convertidos", value: 3 },
+              { label: "Pendientes", value: 2 },
+            ].map((s) => (
+              <div key={s.label} className="bg-[#F4F5F7] rounded-[14px] p-3">
+                <p className="text-xl font-bold text-[#0B0B0C]">{s.value}</p>
+                <p className="text-xs text-[#6B727D] mt-0.5">{s.label}</p>
+              </div>
+            ))}
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white rounded-2xl border border-gray-200 p-4">
-              <p className="text-xl font-semibold">4</p>
-              <p className="text-xs text-gray-600 mt-1">Clientes activos</p>
+            <div className="bg-[#0B0B0C] text-white rounded-[14px] p-3">
+              <p className="text-xs text-[#9098A2] mb-1">Premios pagados</p>
+              <p className="text-lg font-bold">$2,500</p>
             </div>
-            <div className="bg-blue-500 text-white rounded-2xl p-4">
-              <p className="text-xl font-semibold">8</p>
-              <p className="text-xs text-blue-100 mt-1">Convertidos</p>
+            <div className="bg-[#F4F5F7] rounded-[14px] p-3">
+              <p className="text-xs text-[#6B727D] mb-1">Por pagar (aprobados)</p>
+              <p className="text-lg font-bold text-[#0B0B0C]">$0</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Feature highlight */}
-      <section className="max-w-5xl mx-auto px-5 py-16 border-t border-gray-100">
-        <ScrollReveal className="max-w-2xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-4 text-balance">
+      <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
+        <ScrollReveal className="max-w-[760px] mx-auto text-center">
+          <h2 className={`${SECTION_HEADING} mb-4 text-balance`} style={SECTION_HEADING_SIZE}>
             Cobra automático, sin perseguir pagos
           </h2>
-          <p className="text-gray-500 leading-relaxed">
+          <p className="text-[#5A626E] leading-[1.6]" style={{ fontSize: 18 }}>
             Tu suscripción se cobra sola, cada mes, vía Mercado Pago — sin que
             tengas que acordarte. Y cuando un referido cierra, Referidoo ya sabe
             cuánto te toca: escalera para Vida y PPR, premios burbuja para Auto
@@ -134,37 +146,37 @@ export default async function Home() {
       </section>
 
       {/* Cómo se calculan los premios */}
-      <section className="max-w-5xl mx-auto px-5 py-16 border-t border-gray-100">
+      <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal className="text-center mb-10">
-          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-4 max-w-xl mx-auto text-balance">
+          <h2 className={`${SECTION_HEADING} mb-4 max-w-xl mx-auto text-balance`} style={SECTION_HEADING_SIZE}>
             Tú pones los montos. Referidoo hace las cuentas.
           </h2>
-          <p className="text-gray-500 max-w-md mx-auto leading-relaxed">
+          <p className="text-[#5A626E] max-w-md mx-auto leading-[1.6]" style={{ fontSize: 18 }}>
             Dos formas de premiar, según el producto — tú decides los números,
             el sistema nunca se equivoca.
           </p>
         </ScrollReveal>
 
         <div className="grid md:grid-cols-2 gap-4">
-          <ScrollReveal className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Vida y PPR</p>
-            <h3 className="font-medium mb-4">Escalera de premios</h3>
+          <ScrollReveal className="bg-[#F4F5F7] rounded-[20px] p-6 border border-[#ECEDEF]">
+            <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-1">Vida y PPR</p>
+            <h3 className="font-bold text-[20px] text-[#0B0B0C] mb-4">Escalera de premios</h3>
             <div className="space-y-2 mb-4">
               {[
                 { label: "1er referido convertido", amount: "$1,500" },
                 { label: "2do referido convertido", amount: "$1,500" },
                 { label: "3er referido convertido", amount: "$2,500" },
               ].map((step, i) => (
-                <div key={step.label} className="flex items-center justify-between bg-white rounded-xl border border-gray-100 px-4 py-2.5">
-                  <span className="text-sm text-gray-600 flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-black text-white text-xs flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                <div key={step.label} className="flex items-center justify-between bg-white rounded-[12px] border border-[#ECEDEF] px-4 py-2.5">
+                  <span className="text-sm text-[#3F4651] flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-[#0B0B0C] text-white text-xs flex items-center justify-center flex-shrink-0">{i + 1}</span>
                     {step.label}
                   </span>
-                  <span className="text-sm font-semibold">{step.amount}</span>
+                  <span className="text-sm font-bold text-[#0B0B0C]">{step.amount}</span>
                 </div>
               ))}
             </div>
-            <p className="text-xs text-gray-500 leading-relaxed">
+            <p className="text-xs text-[#8A8F98] leading-relaxed">
               Cada venta sube un nivel. Tú eliges qué pasa después del último —
               ¿vuelve a empezar, se queda fijo, o paga un monto plano? Los montos
               de ejemplo son los que trae el sistema por default; tú los cambias
@@ -172,19 +184,28 @@ export default async function Home() {
             </p>
           </ScrollReveal>
 
-          <ScrollReveal delayMs={60} className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Auto y Gastos Médicos Mayores</p>
-            <h3 className="font-medium mb-4">Premios burbuja</h3>
-            <div className="bg-white rounded-xl border border-gray-100 p-4 mb-4">
-              <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-gray-600">Auto = 150 pts · GMM = 300 pts</span>
-                <span className="font-semibold">350 / 500 pts</span>
+          <ScrollReveal delayMs={60} className="bg-[#F4F5F7] rounded-[20px] p-6 border border-[#ECEDEF]">
+            <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-1">Auto y Gastos Médicos Mayores</p>
+            <h3 className="font-bold text-[20px] text-[#0B0B0C] mb-4">Premios burbuja</h3>
+            <div className="bg-white rounded-[12px] border border-[#ECEDEF] p-4 mb-4">
+              <div className="flex items-center justify-center py-1 mb-3">
+                <div
+                  className="relative w-16 h-16 rounded-full border-2 overflow-hidden bg-[#EEF3FE]"
+                  style={{ borderColor: "#2563EB", boxShadow: "0 3px 10px rgba(37,99,235,.25)" }}
+                >
+                  <div
+                    className="absolute bottom-0 left-0 right-0"
+                    style={{ height: "70%", background: "linear-gradient(to top, #2563EB, #6EA1F5)" }}
+                  />
+                  <div className="bubble-shine absolute inset-0 rounded-full" />
+                </div>
               </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-500 rounded-full" style={{ width: "70%" }} />
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[#6B727D]">Auto = 150 pts · GMM = 300 pts</span>
+                <span className="font-bold text-[#0B0B0C]">350 / 500 pts</span>
               </div>
             </div>
-            <p className="text-xs text-gray-500 leading-relaxed">
+            <p className="text-xs text-[#8A8F98] leading-relaxed">
               Cada venta suma puntos a un mismo fondo. Al llegar al umbral que tú
               definas, tu cliente ve el premio listo para reclamar directamente
               desde su portal — sin que tengas que avisarle.
@@ -193,24 +214,25 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Feature grid */}
-      <section className="max-w-5xl mx-auto px-5 py-16 border-t border-gray-100">
+      {/* Features */}
+      <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal className="text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-10 max-w-xl mx-auto text-balance">
+          <h2 className={`${SECTION_HEADING} mb-10 max-w-xl mx-auto text-balance`} style={SECTION_HEADING_SIZE}>
             Todo lo que necesitas para no perder ni un referido
           </h2>
         </ScrollReveal>
-        <div className="grid md:grid-cols-2 gap-4">
+        <div>
           {FEATURES.map((f, i) => (
             <ScrollReveal key={f.title} delayMs={i * 60}>
-              <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
-                <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center mb-4">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d={f.icon} stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+              <div
+                className={`grid gap-4 py-6 px-3 -mx-3 rounded-[12px] hover:bg-[#FAFAFB] transition-colors ${i > 0 ? "border-t border-[#EFEFF1]" : ""}`}
+                style={{ gridTemplateColumns: "64px 1fr" }}
+              >
+                <span className="text-[#2563EB] font-extrabold text-2xl">{String(i + 1).padStart(2, "0")}</span>
+                <div>
+                  <h3 className="font-bold text-[20px] text-[#0B0B0C] mb-1.5">{f.title}</h3>
+                  <p className="text-[#5A626E] leading-[1.6]" style={{ fontSize: 16 }}>{f.body}</p>
                 </div>
-                <h3 className="font-medium mb-2">{f.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{f.body}</p>
               </div>
             </ScrollReveal>
           ))}
@@ -218,85 +240,101 @@ export default async function Home() {
       </section>
 
       {/* Comparison */}
-      <section className="max-w-5xl mx-auto px-5 py-16 border-t border-gray-100">
+      <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal>
-          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-10 text-center text-balance">
+          <h2 className={`${SECTION_HEADING} mb-10 text-center text-balance`} style={SECTION_HEADING_SIZE}>
             Antes vs. con Referidoo
           </h2>
         </ScrollReveal>
-        <ScrollReveal delayMs={60} className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
-          <div className="hidden sm:grid grid-cols-2 text-xs font-medium uppercase tracking-wider px-6 py-3 border-b border-gray-100">
-            <span className="text-gray-500">Antes</span>
-            <span className="text-blue-600">Con Referidoo</span>
-          </div>
-          {COMPARISON.map((row, i) => (
-            <div key={i} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-0 px-6 py-4 text-sm ${i > 0 ? "border-t border-gray-100" : ""}`}>
-              <div className="flex items-start gap-2 text-gray-500 sm:pr-4">
-                <XIcon className="text-gray-400 mt-0.5" />
-                <p>
-                  <span className="sm:hidden block text-xs font-medium uppercase tracking-wider text-gray-500 mb-1">Antes</span>
-                  {row.antes}
-                </p>
+        <div className="relative grid md:grid-cols-2 gap-6 max-w-[820px] mx-auto">
+          <ScrollReveal className="bg-[#F4F5F7] rounded-[20px] p-6">
+            <p className="text-xs font-bold text-[#8A8F98] uppercase tracking-[0.08em] mb-4">Antes</p>
+            <div className="space-y-4">
+              {COMPARISON.map((row, i) => (
+                <div key={i} className={`flex items-start gap-3 ${i > 0 ? "pt-4 border-t border-[#EAEBED]" : ""}`}>
+                  <span className="w-5 h-5 rounded-full bg-[#F0DDE2] text-[#C2566B] flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <XIcon />
+                  </span>
+                  <p className="text-sm text-[#5A626E]">{row.antes}</p>
+                </div>
+              ))}
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal delayMs={60}>
+            <div
+              className="bg-white rounded-[20px] p-6 border-2 border-[#2563EB]"
+              style={{ boxShadow: "0 10px 30px rgba(37,99,235,.12)" }}
+            >
+              <div className="text-xs font-bold text-[#2563EB] uppercase tracking-[0.08em] mb-4 flex items-center gap-1.5">
+                Con <Logo size="sm" />
               </div>
-              <div className="flex items-start gap-2 font-medium sm:pr-4">
-                <CheckIcon className="text-green-600 mt-0.5" />
-                <p>
-                  <span className="sm:hidden block text-xs font-medium uppercase tracking-wider text-blue-600 mb-1">Con Referidoo</span>
-                  {row.despues}
-                </p>
+              <div className="space-y-4">
+                {COMPARISON.map((row, i) => (
+                  <div key={i} className={`flex items-start gap-3 ${i > 0 ? "pt-4 border-t border-[#EAEBED]" : ""}`}>
+                    <span className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <CheckIcon />
+                    </span>
+                    <p className="text-sm font-medium text-[#0B0B0C]">{row.despues}</p>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </ScrollReveal>
+          </ScrollReveal>
+
+          <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-[#0B0B0C] text-white text-xs font-bold items-center justify-center z-10">
+            vs
+          </div>
+        </div>
       </section>
 
       {/* Pricing */}
-      <section className="max-w-5xl mx-auto px-5 py-16 border-t border-gray-100">
+      <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal>
-          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-10 text-center text-balance">
+          <h2 className={`${SECTION_HEADING} mb-10 text-center text-balance`} style={SECTION_HEADING_SIZE}>
             Simple y transparente
           </h2>
         </ScrollReveal>
-        <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-4 max-w-[760px] mx-auto">
           <ScrollReveal>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-7">
-              <p className="text-sm font-medium text-gray-600 uppercase tracking-wider mb-2">Freemium</p>
-              <p className="text-3xl font-semibold mb-1">Gratis</p>
-              <p className="text-sm text-gray-500 mb-6">Hasta 2 clientes — perfecto para probarlo</p>
-              <ul className="text-sm text-gray-600 space-y-2.5 mb-7">
+            <div className="rounded-[20px] border border-[#ECEDEF] bg-[#F4F5F7] p-7">
+              <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-2">Freemium</p>
+              <p className="text-3xl font-extrabold text-[#0B0B0C] mb-1">Gratis</p>
+              <p className="text-sm text-[#8A8F98] mb-6">Hasta 2 clientes — perfecto para probarlo</p>
+              <ul className="text-sm text-[#3F4651] space-y-2.5 mb-7">
                 {["Seguimiento de referidos", "Premios automáticos", "Portal para tus clientes"].map((item) => (
                   <li key={item} className="flex items-center gap-2">
-                    <CheckIcon className="text-gray-400" />
+                    <CheckIcon className="text-[#1F9D5B]" />
                     {item}
                   </li>
                 ))}
               </ul>
-              <Link href="/registro" className="block text-center text-sm font-medium bg-white border border-gray-200 px-4 py-3 rounded-xl transition-[background-color,transform] duration-150 hover:bg-gray-100 active:scale-[0.97]">
+              <Link href="/registro" className="block text-center text-sm font-medium bg-white border border-[#DADCE0] px-4 py-3 rounded-full transition-[background-color,border-color,transform] duration-150 hover:border-[#0B0B0C] active:scale-[0.97]">
                 Crear cuenta gratis
               </Link>
             </div>
           </ScrollReveal>
           <ScrollReveal delayMs={60}>
-            <div className="relative rounded-2xl border-2 border-blue-500 p-7">
-              <span className="absolute -top-3 left-7 bg-blue-500 text-white text-xs font-medium px-3 py-1 rounded-full">
+            <div className="relative rounded-[20px] border-2 border-[#2563EB] bg-white p-7">
+              <span className="absolute -top-3 left-7 bg-[#2563EB] text-white text-xs font-medium px-3 py-1 rounded-full">
                 Recomendado
               </span>
-              <p className="text-sm font-medium text-blue-600 uppercase tracking-wider mb-2">Pagado</p>
-              <p className="text-3xl font-semibold mb-1">$539 MXN<span className="text-base font-normal text-gray-500">/mes</span></p>
-              <p className="text-sm text-gray-500 mb-6">Clientes ilimitados</p>
-              <ul className="text-sm text-gray-700 space-y-2.5 mb-7">
+              <p className="text-xs font-bold text-[#2563EB] uppercase tracking-[0.08em] mb-2">Pagado</p>
+              <p className="text-3xl font-extrabold text-[#0B0B0C] mb-1">$539 MXN<span className="text-base font-normal text-[#8A8F98]">/mes</span></p>
+              <p className="text-sm text-[#8A8F98] mb-6">Clientes ilimitados</p>
+              <ul className="text-sm text-[#3F4651] space-y-2.5 mb-7">
                 {[
                   "Sin límite de clientes — la mayoría de los asesores activos ya tienen más de 2",
                   "Tu suscripción se cobra sola cada mes, sin transferencias manuales",
                   "Todo lo del plan freemium, ya sin restricciones",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-2">
-                    <CheckIcon className="text-blue-500" />
+                    <CheckIcon className="text-[#2563EB]" />
                     {item}
                   </li>
                 ))}
               </ul>
-              <Link href="/registro" className="block text-center text-sm font-medium bg-black text-white px-4 py-3 rounded-xl transition-[background-color,transform] duration-150 hover:bg-gray-900 active:scale-[0.97]">
+              <Link href="/registro" className="block text-center text-sm font-medium bg-[#0B0B0C] text-white px-4 py-3 rounded-full transition-[background-color,transform] duration-150 hover:bg-[#26262a] active:scale-[0.97]">
                 Empezar
               </Link>
             </div>
@@ -305,12 +343,34 @@ export default async function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100">
-        <div className="max-w-5xl mx-auto px-5 py-8 flex items-center justify-between">
-          <Logo size="sm" />
-          <div className="flex items-center gap-5 text-sm text-gray-500">
-            <Link href="/login" className="hover:text-black transition">Iniciar sesión</Link>
-            <Link href="/registro" className="hover:text-black transition">Crear cuenta</Link>
+      <footer className="border-t border-[#EFEFF1] overflow-hidden">
+        <div className="relative" style={{ height: "21.8vw", minHeight: 130 }}>
+          <div className="absolute inset-0 flex items-end overflow-hidden whitespace-nowrap pl-8">
+            <span className="font-bold text-[#0B0B0C]" style={{ fontSize: "24.2vw", lineHeight: 0.9 }}>
+              referidoo
+            </span>
+          </div>
+          <div
+            className="absolute rounded-full bg-[#2563EB]"
+            style={{ width: "34vw", height: "34vw", right: "-7vw", bottom: "-11vw" }}
+          />
+          <div
+            className="absolute inset-0 flex items-end overflow-hidden whitespace-nowrap pl-8"
+            style={{
+              WebkitMaskImage: "radial-gradient(17vw 17vw at calc(100% - 10vw) calc(100% - 6vw), #000 99.5%, transparent 100%)",
+              maskImage: "radial-gradient(17vw 17vw at calc(100% - 10vw) calc(100% - 6vw), #000 99.5%, transparent 100%)",
+            }}
+          >
+            <span className="font-bold text-white" style={{ fontSize: "24.2vw", lineHeight: 0.9 }}>
+              referidoo
+            </span>
+          </div>
+        </div>
+        <div className="max-w-[1180px] mx-auto px-8 py-6 flex items-center justify-between border-t border-[#EFEFF1] text-xs text-[#8A8F98]">
+          <p>© 2026 Referidoo. Todos los derechos reservados.</p>
+          <div className="flex items-center gap-5">
+            <Link href="/login" className="hover:text-[#0B0B0C] transition">Iniciar sesión</Link>
+            <Link href="/registro" className="hover:text-[#0B0B0C] transition">Crear cuenta</Link>
           </div>
         </div>
       </footer>
