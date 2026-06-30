@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatCurrency, formatDate, formatNumberWithCommas, getStatusLabel, getRewardStatusLabel } from "@/lib/utils";
+import { formatCurrency, formatDate, formatNumberWithCommas, getRewardStatusLabel } from "@/lib/utils";
 import { Tour, type TourStep } from "@/components/Tour";
 
 const TOUR_STEPS: TourStep[] = [
@@ -14,13 +14,13 @@ const TOUR_STEPS: TourStep[] = [
   {
     selector: '[data-tour="filters"]',
     title: "Filtra por etapa",
-    body: "Ve solo los pendientes por contactar, los que ya abordaste, o los que ya cerraron. Útil cuando tienes varios en proceso al mismo tiempo.",
+    body: "Ve solo los nuevos, los que ya contactaste, o los que ya cerraron. Útil cuando tienes varios en proceso al mismo tiempo.",
     placement: "bottom",
   },
   {
     selector: '[data-tour="list"]',
     title: "Tarjetas de leads",
-    body: "Cada tarjeta muestra el nombre, quién lo refirió, la fecha y el estado. Haz clic en cualquiera para ver el detalle y cambiar el estado manualmente.",
+    body: "Cada tarjeta muestra el nombre, quién lo refirió, el producto, la fecha y el estado. Haz clic en cualquiera para cambiar el estado o enviar el premio.",
     placement: "top",
   },
 ];
@@ -45,19 +45,49 @@ type Referral = {
   referrer: { id: string; name: string; createdAt: string; launchBonusUsed: boolean; bubblePoints: number };
 };
 
-const STATUS_OPTIONS = [
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
+}
+
+function shortDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("es-MX", { day: "numeric", month: "short" }).replace(".", "");
+}
+
+const FILTER_OPTIONS = [
   { value: "", label: "Todos" },
-  { value: "pending", label: "Pendientes" },
-  { value: "contacted", label: "Contactados" },
+  { value: "pending", label: "Nuevos" },
+  { value: "contacted", label: "En proceso" },
   { value: "converted", label: "Convertidos" },
   { value: "rejected", label: "Rechazados" },
 ];
 
-const statusBg: Record<string, string> = {
-  pending:   "bg-amber-50 text-amber-700 border-amber-100",
-  contacted: "bg-blue-50 text-blue-700 border-blue-100",
-  converted: "bg-green-50 text-green-700 border-green-100",
-  rejected:  "bg-brand-border-1 text-brand-gray-4 border-brand-border-4",
+const statusStyle: Record<string, string> = {
+  pending:   "bg-[#F4F5F7] text-[#6B727D]",
+  contacted: "bg-amber-50 text-amber-700",
+  converted: "bg-green-50 text-green-700",
+  rejected:  "bg-[#F4F5F7] text-[#6B727D]",
+};
+
+const statusLabel: Record<string, string> = {
+  pending:   "Nuevo",
+  contacted: "En proceso",
+  converted: "Convertido",
+  rejected:  "Rechazado",
+};
+
+const productShort: Record<string, string> = {
+  "Daños/Auto": "Auto",
+  GMM: "GMM",
+  Vida: "Vida",
+  PPR: "PPR",
+  Otro: "Otro",
 };
 
 const rewardBg: Record<string, string> = {
@@ -72,21 +102,16 @@ export default function ReferidosPage() {
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState<Referral | null>(null);
   const [updating, setUpdating] = useState(false);
-  // Convert modal
   const [convertTarget, setConvertTarget] = useState<{ id: string; name: string } | null>(null);
   const [saleInput, setSaleInput] = useState("");
   const [productType, setProductType] = useState("");
-  // Pay modal
   const [payTarget, setPayTarget] = useState<{ id: string; referrerName: string; amount: number } | null>(null);
   const [payNote, setPayNote] = useState("");
   const [showTour, setShowTour] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  // Edit saleAmount
   const [editingSale, setEditingSale] = useState(false);
   const [editSaleInput, setEditSaleInput] = useState("");
-  // Edit productType (post-conversion)
   const [editingProductType, setEditingProductType] = useState(false);
-  // Puntos burbuja por producto, para mostrar cuánto aportó cada referido al pool
   const [bubblePointsByProduct, setBubblePointsByProduct] = useState({ autoPoints: 150, gmmPoints: 300 });
 
   function load() {
@@ -119,8 +144,6 @@ export default function ReferidosPage() {
       body: JSON.stringify(data),
     });
     const list = await load();
-    // Mantiene la tarjeta abierta y la refresca con los datos nuevos — el asesor decide
-    // cuándo cerrarla (tocando afuera o la X), no se cierra sola por seleccionar una opción.
     if (selected?.id === id) {
       const fresh = list.find((r) => r.id === id);
       if (fresh) setSelected(fresh);
@@ -193,6 +216,13 @@ export default function ReferidosPage() {
     window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}${emailParam}`, "_blank");
   }
 
+  const now = new Date();
+  const thisMonthConverted = referrals.filter(
+    (r) => r.status === "converted" &&
+    new Date(r.createdAt).getMonth() === now.getMonth() &&
+    new Date(r.createdAt).getFullYear() === now.getFullYear()
+  ).length;
+
   const filtered = referrals.filter((r) => !filter || r.status === filter);
 
   return (
@@ -200,30 +230,32 @@ export default function ReferidosPage() {
       {showTour && <Tour steps={TOUR_STEPS} onDone={() => setShowTour(false)} />}
 
       <div data-tour="header" className="mb-6">
-        <h1 className="text-xl font-semibold">Referidos</h1>
-        <p className="text-sm text-brand-gray-4 mt-0.5">{referrals.length} en total</p>
+        <h1 className="text-2xl font-bold text-brand-ink">Referidos</h1>
+        <p className="text-sm text-brand-gray-4 mt-0.5">
+          {referrals.length} referidos en tu pipeline
+          {thisMonthConverted > 0 && ` · ${thisMonthConverted} convertidos este mes`}
+        </p>
       </div>
 
       {/* Filters */}
       <div data-tour="filters" className="flex gap-2 flex-wrap mb-5">
-        {STATUS_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => setFilter(opt.value)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition border ${
-              filter === opt.value
-                ? "bg-brand-ink text-white border-brand-ink"
-                : "bg-white text-brand-gray-2 border-brand-border-4 hover:bg-brand-surface"
-            }`}
-          >
-            {opt.label}
-            {opt.value && (
-              <span className="ml-1.5 text-[10px] opacity-60">
-                {referrals.filter((r) => r.status === opt.value).length}
-              </span>
-            )}
-          </button>
-        ))}
+        {FILTER_OPTIONS.map((opt) => {
+          const count = opt.value ? referrals.filter((r) => r.status === opt.value).length : referrals.length;
+          if (opt.value === "rejected" && count === 0) return null;
+          return (
+            <button
+              key={opt.value}
+              onClick={() => setFilter(opt.value)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+                filter === opt.value
+                  ? "bg-[#0B0B0C] text-white"
+                  : "bg-white text-[#3F4651] border border-brand-border-4 hover:bg-brand-surface"
+              }`}
+            >
+              {opt.label}{" · "}{count}
+            </button>
+          );
+        })}
       </div>
 
       {loading ? (
@@ -233,108 +265,65 @@ export default function ReferidosPage() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 text-brand-gray-4 text-sm">Sin referidos en esta categoría.</div>
       ) : (
-        <div data-tour="list" className="space-y-3">
+        <div data-tour="list" className="space-y-2">
           {filtered.map((r) => {
             const isConverted = r.status === "converted";
-            const includesBonus = isConverted && r.tierPosition === 1 && r.referrer.launchBonusUsed;
-            // Daños/Auto, GMM y Otro no consumen escalón de premio — van a premios
-            // burbuja en su lugar. Quedan con tierPosition 0.
-            const isBubbleProduct = r.productType === "Daños/Auto" || r.productType === "GMM" || r.productType === "Otro";
+            const isBubble = r.productType === "Daños/Auto" || r.productType === "GMM" || r.productType === "Otro";
             const noEscaleraReward = isConverted && r.tierPosition === 0;
+            const displayProduct = r.productType
+              ? (productShort[r.productType] ?? r.productType)
+              : r.interestProductType
+              ? (productShort[r.interestProductType] ?? r.interestProductType)
+              : null;
+
+            let amountNode: React.ReactNode;
+            if (isConverted) {
+              if (noEscaleraReward && isBubble) {
+                const pts = r.productType === "GMM" ? bubblePointsByProduct.gmmPoints : bubblePointsByProduct.autoPoints;
+                amountNode = <span className="text-xs font-semibold text-blue-600">+{pts} pts</span>;
+              } else if (!noEscaleraReward) {
+                amountNode = <span className="text-sm font-bold text-[#0B0B0C]">{formatCurrency(r.rewardAmount)}</span>;
+              } else {
+                amountNode = <span className="text-sm text-brand-gray-4">—</span>;
+              }
+            } else {
+              amountNode = <span className="text-sm text-brand-gray-4">—</span>;
+            }
 
             return (
               <div
                 key={r.id}
-                className="bg-white rounded-2xl border border-brand-border-1 p-4 cursor-pointer hover:border-brand-border-4 transition"
+                className="bg-white rounded-2xl border border-brand-border-1 px-4 py-3.5 cursor-pointer hover:border-[#C8CDD5] transition flex items-center gap-3"
                 onClick={() => setSelected(r)}
               >
-                <div className="flex items-start gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{r.leadName}</p>
-                    <p className="text-xs text-brand-gray-4">{r.leadPhone}</p>
-                    <p className="text-xs text-brand-gray-4 mt-0.5 truncate">
-                      Vía <span className="text-brand-gray-4">{r.referrer.name}</span> · {formatDate(r.createdAt)}
-                    </p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <div>
-                      {isConverted ? (
-                        noEscaleraReward ? (
-                          <p className="text-sm font-semibold text-brand-gray-4">—</p>
-                        ) : (
-                          <p className="text-sm font-semibold">{formatCurrency(r.rewardAmount)}</p>
-                        )
-                      ) : r.interestProductType ? (
-                        <p className="text-xs font-medium text-brand-gray-4">Interés: {r.interestProductType}</p>
-                      ) : null}
-                      {noEscaleraReward && (
-                        <p className="text-[10px] text-blue-500 font-medium">
-                          {isBubbleProduct ? "Suma a premios burbuja" : "Sin premio en efectivo"}
-                        </p>
-                      )}
-                      {includesBonus && (
-                        <p className="text-[10px] text-amber-600 font-medium">⚡ Incluye bono</p>
-                      )}
-                      {r.saleAmount ? (
-                        <p className="text-[11px] text-brand-gray-4 mt-0.5">Venta: {formatCurrency(r.saleAmount)}</p>
-                      ) : null}
-                    </div>
-                    <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium border ${statusBg[r.status]}`}>
-                      {getStatusLabel(r.status)}
-                    </span>
-                  </div>
+                {/* Avatar */}
+                <div className="w-10 h-10 rounded-full bg-[#F4F5F7] flex items-center justify-center text-[13px] font-semibold text-[#3F4651] flex-shrink-0">
+                  {getInitials(r.leadName)}
                 </div>
 
-                {/* Quick actions */}
-                <div className="flex gap-2 mt-4 pt-3 border-t border-brand-border-2">
-                  {r.status === "pending" && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); update(r.id, { status: "contacted" }); }}
-                      className="text-xs px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 transition font-medium"
-                    >
-                      Marcar contactado
-                    </button>
-                  )}
-                  {r.status === "contacted" && (
-                    <>
-                      <button
-                        onClick={(e) => startConvert(r.id, r.leadName, e)}
-                        className="text-xs px-3 py-1.5 rounded-full bg-green-50 text-green-700 hover:bg-green-100 transition font-medium"
-                      >
-                        Convertido ✓
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); update(r.id, { status: "rejected" }); }}
-                        className="text-xs px-3 py-1.5 rounded-full bg-brand-border-1 text-brand-gray-4 hover:bg-brand-border-4 transition font-medium"
-                      >
-                        Rechazar
-                      </button>
-                    </>
-                  )}
-                  {r.status === "converted" && r.rewardStatus === "approved" && r.tierPosition > 0 && (
-                    <button
-                      onClick={(e) => startPay(r.id, r.referrer.name, r.rewardAmount, e)}
-                      className="text-xs px-3 py-1.5 rounded-full bg-brand-ink text-white hover:bg-[#26262a] transition font-medium"
-                    >
-                      Enviar Premio →
-                    </button>
-                  )}
-                  {r.status === "converted" && r.rewardStatus === "paid" && r.tierPosition > 0 && (
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${r.confirmedByReferrer ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>
-                      {r.confirmedByReferrer ? "✓ Confirmado" : "Pendiente confirm."}
-                    </span>
-                  )}
-                  {r.status === "converted" && r.rewardStatus !== "paid" && r.tierPosition > 0 && (
-                    <span className={`ml-auto text-xs px-2.5 py-1 rounded-full font-medium ${rewardBg[r.rewardStatus]}`}>
-                      {getRewardStatusLabel(r.rewardStatus)}
-                    </span>
-                  )}
-                  {r.status === "converted" && r.tierPosition === 0 && (
-                    <span className="ml-auto text-xs px-2.5 py-1 rounded-full font-medium bg-blue-50 text-blue-600">
-                      {isBubbleProduct ? "Premios burbuja" : "Sin premio en efectivo"}
-                    </span>
-                  )}
+                {/* Name + referrer */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-[#0B0B0C] truncate">{r.leadName}</p>
+                  <p className="text-xs text-brand-gray-4 truncate">Referido por {r.referrer.name}</p>
                 </div>
+
+                {/* Product pill */}
+                {displayProduct && (
+                  <span className="hidden sm:inline-flex text-xs font-medium px-3 py-1 rounded-full border border-brand-border-4 text-[#3F4651] flex-shrink-0">
+                    {displayProduct}
+                  </span>
+                )}
+
+                {/* Amount + date */}
+                <div className="text-right flex-shrink-0 min-w-[56px]">
+                  {amountNode}
+                  <p className="text-xs text-brand-gray-4">{shortDate(r.createdAt)}</p>
+                </div>
+
+                {/* Status */}
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${statusStyle[r.status] ?? "bg-[#F4F5F7] text-[#6B727D]"}`}>
+                  {statusLabel[r.status] ?? r.status}
+                </span>
               </div>
             );
           })}
@@ -351,11 +340,7 @@ export default function ReferidosPage() {
             <div className="relative bg-white w-full max-w-sm rounded-t-3xl md:rounded-2xl p-6 shadow-2xl">
               <h2 className="font-semibold mb-1">Marcar como convertido</h2>
               <p className="text-sm text-brand-gray-4 mb-5">{convertTarget.name}</p>
-
-              {/* Product type selector */}
-              <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">
-                Producto contratado
-              </label>
+              <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">Producto contratado</label>
               <div className="flex flex-wrap gap-2 mb-5">
                 {["PPR", "Vida", "Daños/Auto", "GMM", "Otro"].map((type) => (
                   <button
@@ -372,10 +357,7 @@ export default function ReferidosPage() {
                   </button>
                 ))}
               </div>
-
-              <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">
-                {valueLabel}
-              </label>
+              <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">{valueLabel}</label>
               <div className="relative mb-5">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-gray-4 text-sm font-medium">$</span>
                 <input
@@ -397,10 +379,7 @@ export default function ReferidosPage() {
                 >
                   {updating ? "Guardando..." : "Confirmar conversión"}
                 </button>
-                <button
-                  onClick={() => setConvertTarget(null)}
-                  className="px-4 text-sm py-3 rounded-full border border-brand-border-4 text-brand-gray-2 hover:bg-brand-surface transition"
-                >
+                <button onClick={() => setConvertTarget(null)} className="px-4 text-sm py-3 rounded-full border border-brand-border-4 text-brand-gray-2 hover:bg-brand-surface transition">
                   Cancelar
                 </button>
               </div>
@@ -418,9 +397,7 @@ export default function ReferidosPage() {
             <p className="text-sm text-brand-gray-4 mb-5">
               Confirma que enviaste <span className="font-semibold text-brand-ink">{formatCurrency(payTarget.amount)}</span> a {payTarget.referrerName}
             </p>
-            <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">
-              Referencia del pago (opcional)
-            </label>
+            <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">Referencia del pago (opcional)</label>
             <input
               type="text"
               placeholder="Ej. SPEI 12345 / Efectivo / CLIP"
@@ -433,11 +410,7 @@ export default function ReferidosPage() {
               Al confirmar, {payTarget.referrerName} recibirá un correo con el detalle del premio y un botón para confirmar recibo.
             </p>
             <div className="flex gap-2">
-              <button
-                onClick={confirmPay}
-                disabled={updating}
-                className="flex-1 bg-brand-ink text-white text-sm py-3 rounded-full font-medium hover:bg-[#26262a] disabled:opacity-50 transition"
-              >
+              <button onClick={confirmPay} disabled={updating} className="flex-1 bg-brand-ink text-white text-sm py-3 rounded-full font-medium hover:bg-[#26262a] disabled:opacity-50 transition">
                 {updating ? "Guardando..." : "Confirmar envío"}
               </button>
               <button onClick={() => setPayTarget(null)} className="px-4 text-sm py-3 rounded-full border border-brand-border-4 text-brand-gray-2 hover:bg-brand-surface transition">
@@ -493,16 +466,16 @@ export default function ReferidosPage() {
                         selected.productType === "Daños/Auto" || selected.productType === "GMM" || selected.productType === "Otro" ? (
                           <div>
                             <p className="text-sm font-semibold text-blue-600">
-                              +{formatCurrency(selected.productType === "GMM" ? bubblePointsByProduct.gmmPoints : bubblePointsByProduct.autoPoints)}
+                              +{selected.productType === "GMM" ? bubblePointsByProduct.gmmPoints : bubblePointsByProduct.autoPoints} pts
                             </p>
                             <p className="text-[10px] text-blue-500 font-medium">
-                              Sumó esto a premios burbuja · acumulado actual: {formatCurrency(selected.referrer.bubblePoints)}
+                              Sumó esto a premios burbuja · acumulado: {selected.referrer.bubblePoints} pts
                             </p>
                           </div>
                         ) : (
                           <div>
                             <p className="text-sm font-semibold text-brand-gray-4">—</p>
-                            <p className="text-[10px] text-brand-gray-4 font-medium">Sin premio en efectivo</p>
+                            <p className="text-[10px] text-brand-gray-4">Sin premio en efectivo</p>
                           </div>
                         )
                       ) : (
@@ -518,18 +491,10 @@ export default function ReferidosPage() {
                       {selected.saleAmount ? (
                         <>
                           <div className="flex items-center gap-1 mb-1">
-                            <p className="text-xs text-brand-gray-4">
-                              {selected.productType ? selected.productType : "Valor del plan"}
-                            </p>
+                            <p className="text-xs text-brand-gray-4">{selected.productType ?? "Valor del plan"}</p>
                             {selected.rewardStatus !== "paid" && (
-                              <button
-                                onClick={() => setEditingProductType((v) => !v)}
-                                className="text-brand-gray-4 hover:text-brand-gray-1 transition"
-                                title="Editar producto contratado"
-                              >
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                                  <path d="M11 4H4C3.44772 4 3 4.44772 3 5V20C3 20.5523 3.44772 21 4 21H19C19.5523 21 20 20.5523 20 20V13M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
+                              <button onClick={() => setEditingProductType((v) => !v)} className="text-brand-gray-4 hover:text-brand-gray-1 transition" title="Editar producto">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M11 4H4C3.44772 4 3 4.44772 3 5V20C3 20.5523 3.44772 21 4 21H19C19.5523 21 20 20.5523 20 20V13M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                               </button>
                             )}
                           </div>
@@ -546,31 +511,14 @@ export default function ReferidosPage() {
                                   autoFocus
                                 />
                               </div>
-                              <button
-                                onClick={saveEditedSale}
-                                disabled={updating}
-                                className="text-xs px-2 py-1.5 bg-brand-ink text-white rounded-lg disabled:opacity-50"
-                              >
-                                ✓
-                              </button>
-                              <button
-                                onClick={() => setEditingSale(false)}
-                                className="text-xs px-2 py-1.5 border border-brand-border-4 rounded-lg text-brand-gray-4"
-                              >
-                                ✕
-                              </button>
+                              <button onClick={saveEditedSale} disabled={updating} className="text-xs px-2 py-1.5 bg-brand-ink text-white rounded-lg disabled:opacity-50">✓</button>
+                              <button onClick={() => setEditingSale(false)} className="text-xs px-2 py-1.5 border border-brand-border-4 rounded-lg text-brand-gray-4">✕</button>
                             </div>
                           ) : (
                             <div className="flex items-center gap-1.5">
                               <p className="text-sm font-bold text-green-700">{formatCurrency(selected.saleAmount)}</p>
-                              <button
-                                onClick={() => { setEditSaleInput(formatNumberWithCommas(String(selected.saleAmount))); setEditingSale(true); }}
-                                className="text-brand-gray-4 hover:text-brand-gray-1 transition"
-                                title="Editar valor"
-                              >
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                                  <path d="M11 4H4C3.44772 4 3 4.44772 3 5V20C3 20.5523 3.44772 21 4 21H19C19.5523 21 20 20.5523 20 20V13M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
+                              <button onClick={() => { setEditSaleInput(formatNumberWithCommas(String(selected.saleAmount))); setEditingSale(true); }} className="text-brand-gray-4 hover:text-brand-gray-1 transition" title="Editar valor">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M11 4H4C3.44772 4 3 4.44772 3 5V20C3 20.5523 3.44772 21 4 21H19C19.5523 21 20 20.5523 20 20V13M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                               </button>
                             </div>
                           )}
@@ -591,8 +539,6 @@ export default function ReferidosPage() {
                 )}
               </div>
 
-              {/* Corregir producto contratado tras la conversión — recalcula premio
-                  y puntos burbuja si cambia entre escalera y burbuja. */}
               {selected.status === "converted" && selected.rewardStatus !== "paid" && editingProductType && (
                 <div>
                   <p className="text-xs text-brand-gray-4 mb-2">Producto contratado</p>
@@ -615,8 +561,6 @@ export default function ReferidosPage() {
                 </div>
               )}
 
-              {/* Interés del lead — antes de convertir aún no se conoce el premio;
-                  solo se sabrá qué se contrató realmente al marcar como convertido */}
               {selected.status !== "converted" && (
                 <div>
                   <p className="text-xs text-brand-gray-4 mb-2">Interesado en</p>
@@ -653,7 +597,7 @@ export default function ReferidosPage() {
                           : "bg-white border-brand-border-4 text-brand-gray-2 hover:bg-brand-surface"
                       }`}
                     >
-                      {getStatusLabel(s)}
+                      {statusLabel[s] ?? s}
                     </button>
                   ))}
                   <button
@@ -665,12 +609,11 @@ export default function ReferidosPage() {
                         : "bg-white border-brand-border-4 text-brand-gray-2 hover:bg-brand-surface"
                     }`}
                   >
-                    {getStatusLabel("converted")}
+                    Convertido
                   </button>
                 </div>
               </div>
 
-              {/* Estado del premio — solo visible cuando está convertido y entra a la escalera */}
               {selected.status === "converted" && selected.tierPosition > 0 && (
                 <div>
                   <p className="text-xs text-brand-gray-4 mb-2">Estado del premio</p>
@@ -693,52 +636,51 @@ export default function ReferidosPage() {
                 </div>
               )}
 
-              {/* Botones de acción — Llamar y Agendar */}
+              {selected.status === "converted" && selected.rewardStatus === "approved" && selected.tierPosition > 0 && (
+                <button
+                  onClick={() => { setSelected(null); startPay(selected.id, selected.referrer.name, selected.rewardAmount); }}
+                  className="w-full bg-brand-ink text-white text-sm py-3 rounded-full font-medium hover:bg-[#26262a] transition"
+                >
+                  Enviar premio →
+                </button>
+              )}
+
+              {selected.status === "converted" && selected.rewardStatus === "paid" && selected.tierPosition > 0 && (
+                <div className={`text-center text-xs px-3 py-2 rounded-full font-medium ${
+                  selected.confirmedByReferrer
+                    ? "bg-green-50 text-green-700"
+                    : "bg-amber-50 text-amber-700"
+                }`}>
+                  {selected.confirmedByReferrer ? "✓ Premio confirmado por el cliente" : "Premio enviado · pendiente de confirmar"}
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <a
                   href={`tel:${selected.leadPhone}`}
                   className="flex-1 flex items-center justify-center gap-2 bg-brand-border-1 text-brand-gray-1 text-sm py-3 rounded-full font-medium hover:bg-brand-border-4 transition"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M6.62 10.79C8.06 13.62 10.38 15.93 13.21 17.38L15.41 15.18C15.68 14.91 16.08 14.82 16.43 14.94C17.55 15.31 18.76 15.51 20 15.51C20.55 15.51 21 15.96 21 16.51V20C21 20.55 20.55 21 20 21C10.61 21 3 13.39 3 4C3 3.45 3.45 3 4 3H7.5C8.05 3 8.5 3.45 8.5 4C8.5 5.25 8.7 6.45 9.07 7.57C9.18 7.92 9.1 8.31 8.82 8.59L6.62 10.79Z" fill="currentColor"/>
-                  </svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6.62 10.79C8.06 13.62 10.38 15.93 13.21 17.38L15.41 15.18C15.68 14.91 16.08 14.82 16.43 14.94C17.55 15.31 18.76 15.51 20 15.51C20.55 15.51 21 15.96 21 16.51V20C21 20.55 20.55 21 20 21C10.61 21 3 13.39 3 4C3 3.45 3.45 3 4 3H7.5C8.05 3 8.5 3.45 8.5 4C8.5 5.25 8.7 6.45 9.07 7.57C9.18 7.92 9.1 8.31 8.82 8.59L6.62 10.79Z" fill="currentColor"/></svg>
                   Llamar
                 </a>
                 <button
                   onClick={() => openCalendar(selected)}
                   className="flex-1 flex items-center justify-center gap-2 bg-brand-ink text-white text-sm py-3 rounded-full font-medium hover:bg-[#26262a] transition"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-                    <path d="M16 2V6M8 2V6M3 10H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M16 2V6M8 2V6M3 10H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
                   Agendar
                 </button>
               </div>
 
-              {/* Delete referral */}
               <div className="pt-2 border-t border-brand-border-1">
                 {deleteId === selected.id ? (
                   <div className="flex items-center gap-2">
                     <p className="text-xs text-brand-gray-4 flex-1">¿Eliminar este referido?</p>
-                    <button
-                      onClick={() => deleteReferral(selected.id)}
-                      className="text-xs px-3 py-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition font-medium"
-                    >
-                      Eliminar
-                    </button>
-                    <button
-                      onClick={() => setDeleteId(null)}
-                      className="text-xs text-brand-gray-4 hover:text-brand-gray-2 transition"
-                    >
-                      Cancelar
-                    </button>
+                    <button onClick={() => deleteReferral(selected.id)} className="text-xs px-3 py-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition font-medium">Eliminar</button>
+                    <button onClick={() => setDeleteId(null)} className="text-xs text-brand-gray-4 hover:text-brand-gray-2 transition">Cancelar</button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => setDeleteId(selected.id)}
-                    className="text-xs text-brand-gray-4 hover:text-red-500 transition"
-                  >
+                  <button onClick={() => setDeleteId(selected.id)} className="text-xs text-brand-gray-4 hover:text-red-500 transition">
                     Eliminar referido
                   </button>
                 )}
