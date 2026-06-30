@@ -37,6 +37,7 @@ const nav = [
 
 type TourStepDef = {
   intro?: boolean;
+  outro?: boolean;
   target?: string;
   page?: string;
   tap?: boolean;
@@ -137,6 +138,11 @@ const TOUR: TourStepDef[] = [
     title: "Tu cuenta",
     body: "Aquí ves tu plan, correo, clientes activos y gestionas tu suscripción. ¡Eso es todo el recorrido!",
   },
+  {
+    outro: true,
+    title: "¡Todo listo!",
+    body: "Estás listo para que tus clientes refieran a todos sus amigos y familiares.",
+  },
 ];
 
 function getInitials(name: string) {
@@ -165,6 +171,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [tourTip, setTourTip] = useState<{ top: number; left: number } | null>(null);
   const tourStepRef = useRef(0);
   const lockedElsRef = useRef<Array<[HTMLElement, string]>>([]);
+  const confettiRef = useRef<React.CSSProperties[]>([]);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+  }, []);
+
+  if (confettiRef.current.length === 0) {
+    const CONFETTI_COLORS = ["#2B57F0", "#0B0B0C", "#1FAE54", "#F5B53F", "#5B86F7", "#E7395A"];
+    confettiRef.current = Array.from({ length: 80 }, (_, k) => ({
+      position: "absolute",
+      top: 0,
+      left: Math.random() * 100 + "vw",
+      width: 6 + Math.random() * 7 + "px",
+      height: 9 + Math.random() * 9 + "px",
+      background: CONFETTI_COLORS[k % CONFETTI_COLORS.length],
+      borderRadius: Math.random() > 0.6 ? "50%" : "2px",
+      animation: `confettiFall ${(2.6 + Math.random() * 2.2).toFixed(2)}s linear ${(Math.random() * 2.2).toFixed(2)}s infinite`,
+    }));
+  }
 
   function unlockScroll() {
     lockedElsRef.current.forEach(([el, ov]) => { el.style.overflow = ov; });
@@ -238,7 +265,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setTimeout(() => window.dispatchEvent(new Event("referidoo:openFirstReferido")), 300);
     }
 
-    if (step.intro) return;
+    if (step.intro || step.outro) return;
 
     setTimeout(() => {
       unlockScroll();
@@ -339,7 +366,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const curStep = TOUR[tourStep];
-  const isLastStep = tourStep === TOUR.length - 1;
+  const isLastStep = tourStep === TOUR.length - 2;
 
   return (
     <div className={`min-h-screen bg-brand-surface flex flex-col ${hankenGrotesk.className}`}>
@@ -612,6 +639,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               90%  { transform: scale(1.9);  opacity: .08; }
               100% { transform: scale(1.9);  opacity: 0; }
             }
+            @keyframes confettiFall {
+              0%   { transform: translateY(-12vh) rotate(0deg); }
+              100% { transform: translateY(108vh) rotate(720deg); }
+            }
+            @keyframes popIn {
+              0%   { transform: scale(.5); opacity: 0; }
+              60%  { transform: scale(1.08); }
+              100% { transform: scale(1); opacity: 1; }
+            }
           `}</style>
 
           {/* Step 0: intro welcome card */}
@@ -734,6 +770,72 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 )}
               </div>
             </div>
+          )}
+
+          {/* Outro: pantalla de cierre con festejo */}
+          {curStep?.outro && (
+            <>
+              <div
+                className="fixed inset-0 z-[70]"
+                style={{ background: "rgba(13,13,15,.82)", backdropFilter: "blur(4px)" }}
+              />
+
+              {!reducedMotion && (
+                <div style={{ position: "fixed", inset: 0, zIndex: 71, pointerEvents: "none", overflow: "hidden" }}>
+                  {confettiRef.current.map((s, i) => (
+                    <div key={i} style={s} />
+                  ))}
+                </div>
+              )}
+
+              <div
+                className="fixed text-center"
+                style={{
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  width: 440,
+                  maxWidth: "calc(100vw - 40px)",
+                  background: "#fff",
+                  borderRadius: 26,
+                  padding: "40px 36px 32px",
+                  boxShadow: "0 40px 100px -24px rgba(0,0,0,.6)",
+                  zIndex: 72,
+                  boxSizing: "border-box",
+                }}
+              >
+                <div
+                  className="flex items-center justify-center mx-auto"
+                  style={{
+                    width: 74,
+                    height: 74,
+                    borderRadius: "50%",
+                    background: "#2B57F0",
+                    marginBottom: 22,
+                    animation: reducedMotion ? undefined : "popIn .5s cubic-bezier(.34,1.3,.5,1) both",
+                  }}
+                >
+                  <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                </div>
+
+                <div className="font-extrabold text-[27px] tracking-[-0.02em] text-[#0B0B0C]" style={{ marginBottom: 12 }}>
+                  {curStep.title}
+                </div>
+                <div className="font-medium text-base leading-relaxed text-[#52525b]" style={{ marginBottom: 28 }}>
+                  {curStep.body}
+                </div>
+
+                <button
+                  onClick={endTour}
+                  className="w-full text-white font-bold text-[15px]"
+                  style={{ border: "none", background: "#2B57F0", cursor: "pointer", padding: "15px 0", borderRadius: 14 }}
+                >
+                  Empezar a referir
+                </button>
+              </div>
+            </>
           )}
         </>
       )}
