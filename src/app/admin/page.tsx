@@ -162,14 +162,14 @@ export default function AdminOverviewPage() {
           {statCards.map((s) => (
             <div key={s.label} className="bg-[#F4F5F7] rounded-2xl p-5">
               <p className="text-[38px] font-bold text-[#0B0B0C] leading-none">{s.value}</p>
-              <p className="text-sm text-brand-gray-4 mt-2">{s.label}</p>
+              <p className="text-sm mt-2" style={{ color: "#6B727D" }}>{s.label}</p>
             </div>
           ))}
         </div>
         <div className="w-1/3 pr-1.5">
           <div className="bg-[#F4F5F7] rounded-2xl p-5">
             <p className="text-[38px] font-bold text-[#0B0B0C] leading-none">{pending}</p>
-            <p className="text-sm text-brand-gray-4 mt-2">Pendientes</p>
+            <p className="text-sm mt-2" style={{ color: "#6B727D" }}>Pendientes</p>
           </div>
         </div>
       </div>

@@ -12,8 +12,6 @@ const hankenGrotesk = Hanken_Grotesk({
   weight: ["400", "500", "600", "700"],
 });
 
-// useSearchParams() forces a Suspense boundary in the App Router — isolated
-// here so it doesn't bail the rest of AdminLayout out of static rendering.
 function VerifiedBannerWatcher({ onVerified }: { onVerified: () => void }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -30,11 +28,11 @@ function VerifiedBannerWatcher({ onVerified }: { onVerified: () => void }) {
 }
 
 const nav = [
-  { href: "/admin", label: "Resumen", icon: "M3 12L12 3L21 12V20C21 20.6 20.6 21 20 21H15V16H9V21H4C3.4 21 3 20.6 3 20V12Z" },
+  { href: "/admin",          label: "Resumen",  icon: "M3 12L12 3L21 12V20C21 20.6 20.6 21 20 21H15V16H9V21H4C3.4 21 3 20.6 3 20V12Z" },
   { href: "/admin/clientes", label: "Clientes", icon: "M17 21V19C17 17.9 16.1 17 15 17H9C7.9 17 7 17.9 7 19V21M12 13C14.2 13 16 11.2 16 9C16 6.8 14.2 5 12 5C9.8 5 8 6.8 8 9C8 11.2 9.8 13 12 13Z" },
   { href: "/admin/referidos", label: "Referidos", icon: "M3 4H21L14 12.5V19L10 21V12.5L3 4Z" },
-  { href: "/admin/niveles", label: "Premios", icon: "M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" },
-  { href: "/admin/perfil", label: "Perfil", icon: "M12 8a4 4 0 100 8 4 4 0 000-8zM19.4 13a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33 1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82 1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" },
+  { href: "/admin/niveles",  label: "Premios",  icon: "M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" },
+  { href: "/admin/perfil",   label: "Perfil",   icon: "M12 8a4 4 0 100 8 4 4 0 000-8zM19.4 13a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33 1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82 1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" },
 ];
 
 const steps = [
@@ -73,6 +71,10 @@ const steps = [
   },
 ];
 
+function getInitials(name: string) {
+  return name.split(" ").filter(Boolean).slice(0, 2).map((n) => n[0]).join("").toUpperCase();
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -85,7 +87,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [advisorPlan, setAdvisorPlan] = useState("");
   const [emailVerified, setEmailVerified] = useState(true);
   const [showVerifiedBanner, setShowVerifiedBanner] = useState(false);
+  const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const consumedWelcomeFlag = useRef(false);
+  const avatarRef = useRef<HTMLDivElement>(null);
 
   function handleVerified() {
     setShowVerifiedBanner(true);
@@ -93,13 +97,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   useEffect(() => {
-    // sessionStorage is a one-time external resource: React's dev Strict Mode
-    // double-invokes this effect AND runs the first invocation's cleanup
-    // synchronously. The ref guard stops the second invocation from re-reading
-    // the already-consumed flag — but the timers must NOT be returned from a
-    // cleanup function, or Strict Mode's synthetic cleanup cancels them before
-    // they ever fire, leaving showWelcome stuck true forever. This effect is a
-    // one-time initialization, not a synchronized resource, so no cleanup.
+    function handleClickOutside(e: MouseEvent) {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) {
+        setShowAvatarMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    // See CLAUDE.md: Strict Mode + sessionStorage + timer pattern.
+    // Do NOT add a cleanup return — Strict Mode would cancel the timers.
     if (consumedWelcomeFlag.current) return;
     consumedWelcomeFlag.current = true;
 
@@ -107,20 +116,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (hasWelcome) sessionStorage.removeItem("referidoo_welcome");
     if (hasWelcome) setShowWelcome(true);
 
-    // Onboarding-seen state lives on the Advisor record (onboardedAt), not in
-    // localStorage — a browser-local flag doesn't follow the account across
-    // devices/browsers, so the tour kept re-appearing for anyone who switched
-    // browsers or cleared site data. Fetch once and use it as the single
-    // source of truth for whether to show the tour. Runs in parallel with the
-    // welcome screen (not blocking it) — by the time the welcome timers below
-    // finish (4s), this has long resolved.
     const advisorPromise = fetch("/api/advisor/me")
       .then((r) => r.json())
       .then((adv) => {
         if (typeof adv?.emailVerified === "boolean") setEmailVerified(adv.emailVerified);
         if (adv?.name) setWelcomeName(adv.name);
         if (adv?.plan) setAdvisorPlan(adv.plan === "paid" ? "Plan Pro" : "Plan Gratis");
-        return !adv?.onboardedAt; // needsOnboarding
+        return !adv?.onboardedAt;
       })
       .catch(() => false);
 
@@ -166,28 +168,95 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <Suspense fallback={null}>
         <VerifiedBannerWatcher onVerified={handleVerified} />
       </Suspense>
-      {/* Top bar */}
-      <header className="bg-white border-b border-brand-border-1 sticky top-0 z-20"
-              style={{ paddingTop: "env(safe-area-inset-top)" }}>
-        <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
-          <Logo size="sm" />
-          <div className="flex items-center gap-3">
+
+      {/* ── Top bar ── */}
+      <header
+        className="bg-white border-b border-brand-border-1 sticky top-0 z-20 flex-shrink-0"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
+        <div className="flex items-center h-14">
+          {/* Logo section — same width as sidebar */}
+          <div className="hidden md:flex w-52 flex-shrink-0 items-center px-5 h-full border-r border-brand-border-1">
+            <Logo size="sm" />
+          </div>
+
+          {/* Mobile logo */}
+          <div className="flex md:hidden items-center px-4 h-full">
+            <Logo size="sm" />
+          </div>
+
+          {/* Search bar */}
+          <div className="hidden md:flex flex-1 items-center px-6">
+            <div className="relative w-full max-w-sm">
+              <svg
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                width="14" height="14" viewBox="0 0 24 24" fill="none"
+              >
+                <path d="M21 21L16.514 16.506M19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z"
+                  stroke="#9098A2" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <input
+                type="text"
+                placeholder="Buscar cliente o referido"
+                className="w-full pl-9 pr-4 py-2 bg-[#F4F5F7] rounded-full text-sm text-[#0B0B0C] placeholder-[#9098A2] focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Right: bell + avatar */}
+          <div className="flex items-center gap-2.5 px-5 ml-auto">
+            {/* Bell */}
             <button
-              onClick={() => window.dispatchEvent(new Event("referidoo:tour"))}
-              title="Guía de la sección actual"
-              className="w-7 h-7 flex items-center justify-center rounded-full border border-brand-border-4 text-brand-gray-4 hover:bg-brand-surface hover:text-brand-gray-1 transition text-xs font-semibold"
+              className="w-9 h-9 rounded-full border border-[#ECEDEF] flex items-center justify-center text-[#6B727D] hover:bg-[#F4F5F7] transition"
+              title="Notificaciones"
             >
-              ?
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"
+                  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
-            <button onClick={logout} className="text-xs text-brand-gray-4 hover:text-brand-gray-1 transition py-2 px-1">
-              Salir
-            </button>
+
+            {/* Avatar + dropdown */}
+            <div className="relative" ref={avatarRef}>
+              <button
+                onClick={() => setShowAvatarMenu((v) => !v)}
+                className="w-9 h-9 rounded-full bg-[#0B0B0C] flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                title={welcomeName || "Perfil"}
+              >
+                {welcomeName ? getInitials(welcomeName) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M20 21V19C20 17.9 19.1 17 18 17H6C4.9 17 4 17.9 4 19V21M12 13C14.2 13 16 11.2 16 9C16 6.8 14.2 5 12 5C9.8 5 8 6.8 8 9C8 11.2 9.8 13 12 13Z"
+                      stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                )}
+              </button>
+
+              {showAvatarMenu && (
+                <div className="absolute right-0 top-11 bg-white border border-[#ECEDEF] rounded-xl shadow-lg p-1 min-w-[160px] z-50">
+                  {welcomeName && (
+                    <div className="px-3 py-2.5 border-b border-[#ECEDEF] mb-1">
+                      <p className="text-sm font-semibold text-[#0B0B0C] truncate">{welcomeName.split(" ").slice(0, 2).join(" ")}</p>
+                      <p className="text-xs text-[#9098A2]">{advisorPlan || ""}</p>
+                    </div>
+                  )}
+                  <button
+                    onClick={logout}
+                    className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-sm text-[#0B0B0C] hover:bg-[#F4F5F7] rounded-lg transition"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Cerrar sesión
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
       {showVerifiedBanner && (
-        <div className="bg-green-50 border-b border-green-100">
+        <div className="bg-green-50 border-b border-green-100 flex-shrink-0">
           <div className="max-w-5xl mx-auto px-5 py-2.5 text-sm text-green-800">
             ✓ Tu correo quedó verificado. Ya puedes agregar clientes.
           </div>
@@ -195,16 +264,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       )}
 
       {!emailVerified && !showVerifiedBanner && (
-        <div className="bg-brand-blue-bg border-b border-brand-border-1">
+        <div className="bg-brand-blue-bg border-b border-brand-border-1 flex-shrink-0">
           <div className="max-w-5xl mx-auto px-5 py-2.5 text-sm text-brand-blue">
             Verifica tu correo para empezar a agregar clientes — revisa tu bandeja de entrada.
           </div>
         </div>
       )}
 
-      {/* Side nav + content */}
-      <div className="flex flex-1 max-w-5xl mx-auto w-full">
-        <aside className="hidden md:flex w-48 flex-col py-6 px-3 gap-1 border-r border-brand-border-1 bg-white">
+      {/* ── Body: sidebar + main ── */}
+      <div className="flex flex-1 min-h-0">
+        {/* Sidebar — desktop */}
+        <aside className="hidden md:flex w-52 flex-shrink-0 flex-col py-5 px-3 gap-1 border-r border-brand-border-1 bg-white">
           {nav.map((item) => {
             const active = pathname === item.href;
             const highlighted = showOnboarding && current.highlight === item.href;
@@ -214,9 +284,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={item.href}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition",
-                  active ? "bg-brand-ink text-white font-medium" :
-                  highlighted ? "bg-brand-surface text-brand-ink font-medium ring-2 ring-brand-ink ring-offset-1" :
-                  "text-brand-gray-2 hover:bg-brand-surface"
+                  active
+                    ? "bg-[#0B0B0C] text-white font-semibold"
+                    : highlighted
+                    ? "bg-brand-surface text-brand-ink font-medium ring-2 ring-brand-ink ring-offset-1"
+                    : "text-[#5A626E] hover:bg-[#F4F5F7] hover:text-[#0B0B0C]"
                 )}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -232,65 +304,65 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="mt-auto mb-3">
               <div className="flex items-center gap-3 p-3 bg-[#F4F5F7] rounded-xl">
                 <div className="w-9 h-9 rounded-full bg-[#0B0B0C] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                  {welcomeName.split(" ").filter(Boolean).slice(0, 2).map((n: string) => n[0]).join("").toUpperCase()}
+                  {getInitials(welcomeName)}
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-[#0B0B0C] truncate leading-tight">
                     {welcomeName.split(" ").slice(0, 2).join(" ")}
                   </p>
-                  <p className="text-xs text-brand-gray-4 leading-tight">{advisorPlan || "—"}</p>
+                  <p className="text-xs text-[#9098A2] leading-tight">{advisorPlan || "—"}</p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Demo reset — bottom of sidebar */}
+          {/* Reiniciar demo */}
           <div className={welcomeName ? "pt-3 border-t border-brand-border-1" : "mt-auto pt-4 border-t border-brand-border-1"}>
             {resetState === null && (
               <button
                 onClick={() => setResetState("confirm")}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-brand-gray-4 hover:text-brand-gray-2 hover:bg-brand-surface transition"
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-[#9098A2] hover:text-[#6B727D] hover:bg-[#F4F5F7] transition"
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                  <path d="M1 4V10H7M23 20V14H17M20.49 9C19.9828 7.56678 19.1209 6.2854 17.9845 5.27542C16.8482 4.26543 15.4745 3.55976 13.9917 3.22426C12.5089 2.88875 10.9652 2.93434 9.50481 3.35677C8.04437 3.77921 6.71475 4.56471 5.64 5.64L1 10M23 14L18.36 18.36C17.2853 19.4353 15.9556 20.2208 14.4952 20.6432C13.0348 21.0657 11.4911 21.1113 10.0083 20.7757C8.52547 20.4402 7.1518 19.7346 6.01547 18.7246C4.87913 17.7146 4.01717 16.4332 3.51 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M1 4V10H7M23 20V14H17M20.49 9C19.9828 7.56678 19.1209 6.2854 17.9845 5.27542C16.8482 4.26543 15.4745 3.55976 13.9917 3.22426C12.5089 2.88875 10.9652 2.93434 9.50481 3.35677C8.04437 3.77921 6.71475 4.56471 5.64 5.64L1 10M23 14L18.36 18.36C17.2853 19.4353 15.9556 20.2208 14.4952 20.6432C13.0348 21.0657 11.4911 21.1113 10.0083 20.7757C8.52547 20.4402 7.1518 19.7346 6.01547 18.7246C4.87913 17.7146 4.01717 16.4332 3.51 15"
+                    stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 Reiniciar demo
               </button>
             )}
             {resetState === "confirm" && (
               <div className="px-1">
-                <p className="text-[11px] text-brand-gray-4 mb-2 leading-snug">¿Borrar todos los clientes y referidos?</p>
+                <p className="text-[11px] text-[#9098A2] mb-2 leading-snug">¿Borrar todos los clientes y referidos?</p>
                 <div className="flex gap-1.5">
-                  <button
-                    onClick={doReset}
-                    className="flex-1 text-[11px] py-1.5 rounded-full bg-brand-ink text-white font-medium hover:bg-[#26262a] transition"
-                  >
+                  <button onClick={doReset} className="flex-1 text-[11px] py-1.5 rounded-full bg-[#0B0B0C] text-white font-medium hover:bg-[#26262a] transition">
                     Sí, borrar
                   </button>
-                  <button
-                    onClick={() => setResetState(null)}
-                    className="flex-1 text-[11px] py-1.5 rounded-full border border-brand-border-4 text-brand-gray-4 hover:bg-brand-surface transition"
-                  >
+                  <button onClick={() => setResetState(null)} className="flex-1 text-[11px] py-1.5 rounded-full border border-brand-border-4 text-[#9098A2] hover:bg-[#F4F5F7] transition">
                     Cancelar
                   </button>
                 </div>
               </div>
             )}
             {resetState === "busy" && (
-              <p className="text-[11px] text-brand-gray-4 px-3 py-2">Reiniciando...</p>
+              <p className="text-[11px] text-[#9098A2] px-3 py-2">Reiniciando...</p>
             )}
           </div>
         </aside>
 
-        <main className="flex-1 px-5 py-6 overflow-auto"
-              style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 4.5rem)" }}>
+        {/* Main content */}
+        <main
+          className="flex-1 bg-white px-6 py-6 overflow-auto"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 4.5rem)" }}
+        >
           {children}
         </main>
       </div>
 
-      {/* Bottom nav — mobile only */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-brand-border-1"
-           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      {/* Bottom nav — mobile */}
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-brand-border-1 z-20"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         <div className="flex">
           {nav.map((item) => {
             const active = pathname === item.href;
@@ -299,8 +371,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex-1 flex flex-col items-center pt-3 pb-2 gap-1 active:bg-brand-surface transition",
-                  active ? "text-brand-ink" : "text-brand-gray-4"
+                  "flex-1 flex flex-col items-center pt-3 pb-2 gap-1 transition",
+                  active ? "text-[#0B0B0C]" : "text-[#9098A2]"
                 )}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -325,11 +397,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             {welcomeName && (
               <>
-                <p className="welcome-name text-[2.75rem] font-bold tracking-[-0.02em] text-brand-ink leading-none mb-2">
+                <p className="welcome-name text-[2.75rem] font-bold tracking-[-0.02em] text-[#0B0B0C] leading-none mb-2">
                   {welcomeName.split(" ")[0]}
-                  <span className="text-brand-ink/25"> {welcomeName.split(" ").slice(1).join(" ")}</span>
+                  <span className="opacity-25"> {welcomeName.split(" ").slice(1).join(" ")}</span>
                 </p>
-                <p className="welcome-sub text-sm text-brand-ink/30 font-normal tracking-wide">
+                <p className="welcome-sub text-sm text-[#0B0B0C]/30 font-normal tracking-wide">
                   Bienvenido de vuelta
                 </p>
               </>
@@ -343,34 +415,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
           <div className="absolute inset-0 bg-black/30" />
           <div className="relative bg-white w-full max-w-md rounded-t-3xl md:rounded-2xl shadow-2xl overflow-hidden">
-
-            {/* Progress bar */}
-            <div className="h-1 bg-brand-border-1">
+            <div className="h-1 bg-[#ECEDEF]">
               <div
-                className="h-1 bg-brand-ink transition-all duration-500"
+                className="h-1 bg-[#0B0B0C] transition-all duration-500"
                 style={{ width: `${((step + 1) / steps.length) * 100}%` }}
               />
             </div>
-
             <div className="p-7">
-              {/* Step indicator */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex gap-1.5">
                   {steps.map((_, i) => (
                     <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i === step ? "w-6 bg-brand-ink" : i < step ? "w-3 bg-brand-border-4" : "w-3 bg-brand-border-1"
+                      i === step ? "w-6 bg-[#0B0B0C]" : i < step ? "w-3 bg-[#DADCE0]" : "w-3 bg-[#ECEDEF]"
                     }`} />
                   ))}
                 </div>
                 {current.section && (
-                  <span className="text-xs font-bold text-brand-gray-4 uppercase tracking-[0.08em]">
+                  <span className="text-xs font-bold text-[#9098A2] uppercase tracking-[0.08em]">
                     {current.section}
                   </span>
                 )}
               </div>
-
-              {/* Icon */}
-              <div className="w-12 h-12 bg-brand-ink rounded-2xl flex items-center justify-center mb-5">
+              <div className="w-12 h-12 bg-[#0B0B0C] rounded-2xl flex items-center justify-center mb-5">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                   {current.icon.includes("M9 12") ? (
                     <>
@@ -382,23 +448,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   )}
                 </svg>
               </div>
-
-              {/* Content */}
-              <h2 className="text-xl font-bold mb-3 leading-snug text-brand-ink">{current.title}</h2>
-              <p className="text-sm text-brand-gray-4 leading-relaxed mb-7">{current.body}</p>
-
-              {/* Actions */}
+              <h2 className="text-xl font-bold mb-3 leading-snug text-[#0B0B0C]">{current.title}</h2>
+              <p className="text-sm text-[#6B727D] leading-relaxed mb-7">{current.body}</p>
               <div className="flex gap-2">
                 <button
                   onClick={next}
-                  className="flex-1 bg-brand-ink text-white text-sm font-medium py-3.5 rounded-full hover:bg-[#26262a] transition"
+                  className="flex-1 bg-[#0B0B0C] text-white text-sm font-medium py-3.5 rounded-full hover:bg-[#26262a] transition"
                 >
                   {isLast ? "Empezar →" : "Siguiente"}
                 </button>
                 {!isLast && (
                   <button
                     onClick={finish}
-                    className="px-4 text-sm py-3.5 rounded-full border border-brand-border-4 text-brand-gray-4 hover:bg-brand-surface transition"
+                    className="px-4 text-sm py-3.5 rounded-full border border-[#DADCE0] text-[#9098A2] hover:bg-[#F4F5F7] transition"
                   >
                     Saltar
                   </button>
