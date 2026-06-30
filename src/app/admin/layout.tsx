@@ -68,7 +68,7 @@ const TOUR: TourStepDef[] = [
     target: '[data-tour="link"]',
     page: "/admin",
     title: "Tu link de referidos",
-    body: "Este es el link que compartes con tus clientes. Con él traen más leads directo a tu pipeline.",
+    body: "Este es tu link personal para invitar a otros asesores a unirse a Referidoo. Compártelo y gana cuando se registren.",
   },
   {
     target: '[data-tour="nav-referidos"]',
