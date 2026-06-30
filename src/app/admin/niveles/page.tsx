@@ -233,7 +233,7 @@ export default function PremiosPage() {
         <div className="space-y-3">
           {tiers.map((tier, i) => (
             <div key={i} className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-brand-border-1 rounded-full flex items-center justify-center text-xs font-semibold text-brand-gray-2 flex-shrink-0">
+              <div className="w-8 h-8 bg-[#0B0B0C] rounded-full flex items-center justify-center text-xs font-semibold text-white flex-shrink-0">
                 {i + 1}
               </div>
               <div className="flex-1">
@@ -488,25 +488,44 @@ export default function PremiosPage() {
       </div>
 
       {/* Preview */}
-      <div data-tour="preview" className="bg-brand-surface rounded-2xl p-5 mb-6 border border-brand-border-1">
-        <h2 className="font-medium text-sm mb-3">Vista previa de premios</h2>
+      <div data-tour="preview" className="bg-[#F4F5F7] rounded-2xl p-5 mb-6 border border-[#ECEDEF]">
+        <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-1">Vida y PPR</p>
+        <h2 className="font-bold text-[18px] text-[#0B0B0C] mb-4">Escalera de premios</h2>
         <div className="space-y-2">
           {tiers.map((t, i) => (
-            <div key={i} className="flex justify-between items-center text-sm">
-              <span className="text-brand-gray-2">{t.label || `Referido #${i + 1}`}</span>
-              <span className="font-semibold">{formatCurrency(t.amount)}</span>
+            <div key={i} className="flex items-center justify-between bg-white rounded-[12px] border border-[#ECEDEF] px-4 py-2.5">
+              <span className="text-sm text-[#3F4651] flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-[#0B0B0C] text-white text-xs flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                {t.label || `${i === 0 ? "1er" : i === 1 ? "2do" : `${i + 1}er`} referido convertido`}
+              </span>
+              <span className="text-sm font-bold text-[#0B0B0C]">{formatCurrency(t.amount)}</span>
             </div>
           ))}
           {afterLastTier === "cycle" && (
-            <div className="flex justify-between items-center text-sm opacity-50">
-              <span className="text-brand-gray-2">Referido #{tiers.length + 1} (ciclo)</span>
-              <span className="font-semibold">{tiers[0] ? formatCurrency(tiers[0].amount) : "—"}</span>
+            <div className="flex items-center justify-between bg-white rounded-[12px] border border-[#ECEDEF] px-4 py-2.5 opacity-50">
+              <span className="text-sm text-[#3F4651] flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-[#0B0B0C] text-white text-xs flex items-center justify-center flex-shrink-0">↩</span>
+                Referido #{tiers.length + 1} (ciclo)
+              </span>
+              <span className="text-sm font-bold text-[#0B0B0C]">{tiers[0] ? formatCurrency(tiers[0].amount) : "—"}</span>
             </div>
           )}
           {afterLastTier === "flat" && (
-            <div className="flex justify-between items-center text-sm opacity-50">
-              <span className="text-brand-gray-2">Referidos adicionales</span>
-              <span className="font-semibold">{formatCurrency(flatAmount)}</span>
+            <div className="flex items-center justify-between bg-white rounded-[12px] border border-[#ECEDEF] px-4 py-2.5 opacity-50">
+              <span className="text-sm text-[#3F4651] flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-[#0B0B0C] text-white text-xs flex items-center justify-center flex-shrink-0">∞</span>
+                Referidos adicionales
+              </span>
+              <span className="text-sm font-bold text-[#0B0B0C]">{formatCurrency(flatAmount)}</span>
+            </div>
+          )}
+          {afterLastTier === "stop" && (
+            <div className="flex items-center justify-between bg-white rounded-[12px] border border-[#ECEDEF] px-4 py-2.5 opacity-50">
+              <span className="text-sm text-[#3F4651] flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-[#0B0B0C] text-white text-xs flex items-center justify-center flex-shrink-0">→</span>
+                Referidos adicionales
+              </span>
+              <span className="text-sm font-bold text-[#0B0B0C]">{tiers[tiers.length - 1] ? formatCurrency(tiers[tiers.length - 1].amount) : "—"}</span>
             </div>
           )}
         </div>
