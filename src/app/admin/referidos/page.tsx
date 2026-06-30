@@ -1,29 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatCurrency, formatDate, formatNumberWithCommas } from "@/lib/utils";
-import { Tour, type TourStep } from "@/components/Tour";
-
-const TOUR_STEPS: TourStep[] = [
-  {
-    selector: '[data-tour="header"]',
-    title: "Tu pipeline de referidos",
-    body: "Cada persona que alguien te mandó aparece aquí. Tú llevas el control: contactas, conviertes, pagas el premio.",
-    placement: "bottom",
-  },
-  {
-    selector: '[data-tour="filters"]',
-    title: "Filtra por etapa",
-    body: "Ve solo los nuevos, los que ya contactaste, o los que ya cerraron. Útil cuando tienes varios en proceso al mismo tiempo.",
-    placement: "bottom",
-  },
-  {
-    selector: '[data-tour="list"]',
-    title: "Tarjetas de leads",
-    body: "Cada tarjeta muestra el nombre, quién lo refirió, el producto, la fecha y el estado. Haz clic en cualquiera para ver el detalle.",
-    placement: "top",
-  },
-];
 
 type Referral = {
   id: string;
@@ -99,6 +77,7 @@ const FILTER_OPTIONS = [
 
 export default function ReferidosPage() {
   const [referrals, setReferrals] = useState<Referral[]>([]);
+  const referralsRef = useRef<Referral[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState<Referral | null>(null);
@@ -108,7 +87,6 @@ export default function ReferidosPage() {
   const [productType, setProductType] = useState("");
   const [payTarget, setPayTarget] = useState<{ id: string; referrerName: string; amount: number } | null>(null);
   const [payNote, setPayNote] = useState("");
-  const [showTour, setShowTour] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingSale, setEditingSale] = useState(false);
   const [editSaleInput, setEditSaleInput] = useState("");
@@ -121,6 +99,7 @@ export default function ReferidosPage() {
       .then((d) => {
         const list: Referral[] = Array.isArray(d) ? d : [];
         setReferrals(list);
+        referralsRef.current = list;
         setLoading(false);
         return list;
       });
@@ -131,9 +110,6 @@ export default function ReferidosPage() {
     fetch("/api/bubble-settings")
       .then((r) => r.json())
       .then((d) => setBubblePointsByProduct({ autoPoints: d.bubbleAutoPoints ?? 150, gmmPoints: d.bubbleGmmPoints ?? 300 }));
-    const handler = () => setShowTour(true);
-    window.addEventListener("referidoo:tour", handler);
-    return () => window.removeEventListener("referidoo:tour", handler);
   }, []);
 
   async function update(id: string, data: Record<string, unknown>) {
@@ -220,6 +196,20 @@ export default function ReferidosPage() {
     setDeleteId(null);
   }
 
+  useEffect(() => {
+    const openFirst = () => {
+      const first = referralsRef.current[0];
+      if (first) setSelected(first);
+    };
+    const closeModal = () => closeDrawer();
+    window.addEventListener("referidoo:openFirstReferido", openFirst);
+    window.addEventListener("referidoo:closeModal", closeModal);
+    return () => {
+      window.removeEventListener("referidoo:openFirstReferido", openFirst);
+      window.removeEventListener("referidoo:closeModal", closeModal);
+    };
+  }, []);
+
   const now = new Date();
   const thisMonthConverted = referrals.filter(
     (r) =>
@@ -232,7 +222,6 @@ export default function ReferidosPage() {
 
   return (
     <div className="max-w-2xl">
-      {showTour && <Tour steps={TOUR_STEPS} onDone={() => setShowTour(false)} />}
 
       <div data-tour="header" className="mb-6">
         <h1 className="text-2xl font-bold text-brand-ink">Referidos</h1>
@@ -243,7 +232,7 @@ export default function ReferidosPage() {
       </div>
 
       {/* Filters */}
-      <div data-tour="filters" className="flex gap-2 flex-wrap mb-5">
+      <div data-tour="filtros" className="flex gap-2 flex-wrap mb-5">
         {FILTER_OPTIONS.map((opt) => {
           const count = countFilter(referrals, opt.value);
           if (opt.value === "rejected" && count === 0) return null;
@@ -270,7 +259,7 @@ export default function ReferidosPage() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 text-brand-gray-4 text-sm">Sin referidos en esta categoría.</div>
       ) : (
-        <div data-tour="list" className="space-y-2">
+        <div data-tour="lista-referidos" className="space-y-2">
           {filtered.map((r) => {
             const isConverted = r.status === "converted";
             const isBubble = r.productType === "Daños/Auto" || r.productType === "GMM" || r.productType === "Otro";
@@ -421,7 +410,7 @@ export default function ReferidosPage() {
       {selected && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
           <div className="absolute inset-0 bg-black/25" onClick={closeDrawer} />
-          <div className="relative bg-white w-full max-w-md rounded-t-3xl md:rounded-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div data-tour="modal" className="relative bg-white w-full max-w-md rounded-t-3xl md:rounded-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
 
             {/* Header */}
             <div className="flex items-start gap-4 px-6 pt-6 pb-4">
@@ -728,3 +717,6 @@ export default function ReferidosPage() {
     </div>
   );
 }
+
+
+

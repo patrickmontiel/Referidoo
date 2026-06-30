@@ -2,22 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { formatCurrency } from "@/lib/utils";
-import { Tour, type TourStep } from "@/components/Tour";
-
-const TOUR_STEPS: TourStep[] = [
-  {
-    selector: '[data-tour="actions"]',
-    title: "Agrega tus clientes",
-    body: "Un cliente a la vez con el botón negro, o importa un CSV completo de golpe.",
-    placement: "bottom",
-  },
-  {
-    selector: '[data-tour="client-list"]',
-    title: "Tus clientes activos",
-    body: "Cada tarjeta muestra cuántos referidos ha mandado y cuántos convirtieron. Dale WhatsApp para recordarle su link.",
-    placement: "top",
-  },
-];
 
 type Client = {
   id: string;
@@ -106,7 +90,6 @@ export default function ClientesPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", policyNumber: "" });
   const [submitting, setSubmitting] = useState(false);
-  const [showTour, setShowTour] = useState(false);
   const [createError, setCreateError] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deactivateId, setDeactivateId] = useState<string | null>(null);
@@ -135,9 +118,6 @@ export default function ClientesPage() {
 
   useEffect(() => {
     load();
-    const handler = () => setShowTour(true);
-    window.addEventListener("referidoo:tour", handler);
-    return () => window.removeEventListener("referidoo:tour", handler);
   }, []);
 
   async function handleCreate(e: React.FormEvent) {
@@ -243,7 +223,6 @@ export default function ClientesPage() {
 
   return (
     <div className="max-w-3xl">
-      {showTour && <Tour steps={TOUR_STEPS} onDone={() => setShowTour(false)} />}
       <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleFileChange} />
 
       {/* ── Mobile header ── */}
@@ -254,6 +233,7 @@ export default function ClientesPage() {
         </p>
         <div data-tour="actions" className="flex items-center gap-3 mt-4">
           <button
+            data-tour="sort"
             onClick={cycleSortMode}
             className="flex-1 flex items-center gap-2 px-4 py-3 rounded-full border border-[#DADCE0] text-[#0B0B0C] text-sm font-medium"
           >
@@ -280,6 +260,7 @@ export default function ClientesPage() {
         </div>
         <div data-tour="actions" className="flex items-center gap-3 flex-shrink-0">
           <button
+            data-tour="sort"
             onClick={cycleSortMode}
             className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-[#DADCE0] text-[#0B0B0C] text-sm font-medium hover:bg-[#F4F5F7] transition whitespace-nowrap"
           >
@@ -531,3 +512,4 @@ export default function ClientesPage() {
     </div>
   );
 }
+

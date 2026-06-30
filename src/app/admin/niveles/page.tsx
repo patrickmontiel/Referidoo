@@ -2,28 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { formatCurrency, formatDate, formatNumberWithCommas } from "@/lib/utils";
-import { Tour, type TourStep } from "@/components/Tour";
-
-const TOUR_STEPS: TourStep[] = [
-  {
-    selector: '[data-tour="tiers"]',
-    title: "Estructura de premios",
-    body: "Define cuánto gana tu cliente por cada referido que convierte. Por defecto: $1,500 · $1,500 · $3,500. Cambia los montos como quieras.",
-    placement: "bottom",
-  },
-  {
-    selector: '[data-tour="after-last"]',
-    title: "Más allá del último nivel",
-    body: "Si un cliente supera el último nivel, elige qué pasa: ¿reinicia el ciclo? ¿monto fijo? ¿siempre el mismo máximo?",
-    placement: "bottom",
-  },
-  {
-    selector: '[data-tour="bubble"]',
-    title: "Premios burbuja",
-    body: "Auto y GMM suman puntos a un fondo compartido del cliente. Define cuánto vale cada venta y el premio al llegar al umbral.",
-    placement: "bottom",
-  },
-];
 
 type Tier = { amount: number; label: string };
 
@@ -102,14 +80,6 @@ export default function PremiosPage() {
   const [bubbleAutoPoints, setBubbleAutoPoints] = useState(150);
   const [bubbleGmmPoints, setBubbleGmmPoints] = useState(300);
   const [bubbleClaimThreshold, setBubbleClaimThreshold] = useState(500);
-
-  const [showTour, setShowTour] = useState(false);
-
-  useEffect(() => {
-    const handler = () => setShowTour(true);
-    window.addEventListener("referidoo:tour", handler);
-    return () => window.removeEventListener("referidoo:tour", handler);
-  }, []);
 
   useEffect(() => {
     fetch("/api/tiers")
@@ -221,8 +191,6 @@ export default function PremiosPage() {
 
   return (
     <div className="max-w-2xl pb-10">
-      {showTour && <Tour steps={TOUR_STEPS} onDone={() => setShowTour(false)} />}
-
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-xl font-bold text-brand-ink">Premios</h1>
@@ -232,7 +200,7 @@ export default function PremiosPage() {
       </div>
 
       {/* ESCALERA */}
-      <div data-tour="tiers" className="bg-white rounded-2xl border border-brand-border-1 p-6 mb-4">
+      <div data-tour="premios" className="bg-white rounded-2xl border border-brand-border-1 p-6 mb-4">
         <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-0.5">Vida y PPR</p>
         <h2 className="font-bold text-[18px] text-[#0B0B0C] mb-1">Escalera de premios</h2>
         <p className="text-xs text-brand-gray-4 mb-5">
@@ -502,3 +470,4 @@ export default function PremiosPage() {
     </div>
   );
 }
+

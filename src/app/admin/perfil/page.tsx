@@ -188,7 +188,7 @@ export default function PerfilPage() {
       </div>
 
       {/* Plan */}
-      <div className="bg-white rounded-2xl border border-brand-border-1 p-5 mb-4">
+      <div data-tour="perfil" className="bg-white rounded-2xl border border-brand-border-1 p-5 mb-4">
         {!advisor.emailVerified && (
           <div className="bg-sky-50 border border-sky-100 text-sky-800 text-sm px-4 py-3 rounded-xl mb-4">
             Verifica tu correo para empezar a agregar clientes — revisa tu bandeja de entrada.
@@ -313,3 +313,4 @@ export default function PerfilPage() {
     </div>
   );
 }
+

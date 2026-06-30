@@ -3,28 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
-import { Tour, type TourStep } from "@/components/Tour";
-
-const TOUR_STEPS: TourStep[] = [
-  {
-    selector: '[data-tour="greeting"]',
-    title: "Tu resumen de un vistazo",
-    body: "Aquí ves el estado general de tu programa: clientes activos, referidos recibidos y cuánto dinero se ha movido.",
-    placement: "bottom",
-  },
-  {
-    selector: '[data-tour="stats"]',
-    title: "Métricas del programa",
-    body: "Clientes activos, referidos totales, convertidos y pendientes. Todo en tiempo real.",
-    placement: "bottom",
-  },
-  {
-    selector: '[data-tour="recent"]',
-    title: "Últimos referidos",
-    body: "Los más recientes — quién los mandó y en qué etapa están. Haz clic en 'Ver todos' para gestionarlos.",
-    placement: "top",
-  },
-];
 
 type Referral = {
   id: string;
@@ -75,14 +53,7 @@ export default function AdminOverviewPage() {
   const [advisor, setAdvisor] = useState<Advisor | null>(null);
   const [loading, setLoading] = useState(true);
   const [clientCount, setClientCount] = useState(0);
-  const [showTour, setShowTour] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
-
-  useEffect(() => {
-    const handler = () => setShowTour(true);
-    window.addEventListener("referidoo:tour", handler);
-    return () => window.removeEventListener("referidoo:tour", handler);
-  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -130,7 +101,7 @@ export default function AdminOverviewPage() {
   function shareRecruiterLink() {
     const url = `https://${recruiterLink}`;
     if (navigator.share) {
-      navigator.share({ url, title: "Únete a Referidoo", text: `Usa mi link para crear tu cuenta en Referidoo: ${url}` }).catch(() => {});
+      navigator.share({ url, title: "Unete a Referidoo", text: `Usa mi link para crear tu cuenta en Referidoo: ${url}` }).catch(() => {});
     } else {
       navigator.clipboard.writeText(url).catch(() => {});
       setCopiedLink(true);
@@ -146,8 +117,6 @@ export default function AdminOverviewPage() {
 
   return (
     <div className="max-w-2xl">
-      {showTour && <Tour steps={TOUR_STEPS} onDone={() => setShowTour(false)} />}
-
       {/* Greeting */}
       <div data-tour="greeting" className="mb-6">
         <h1 className="text-[28px] font-bold text-brand-ink leading-tight">
@@ -184,7 +153,7 @@ export default function AdminOverviewPage() {
         </div>
         {referrals.length === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-brand-gray-4 text-sm">Aún no hay referidos.</p>
+            <p className="text-brand-gray-4 text-sm">Aun no hay referidos.</p>
             <Link href="/admin/clientes" className="text-xs text-brand-ink underline mt-2 inline-block">
               Agrega tu primer cliente
             </Link>
@@ -216,7 +185,7 @@ export default function AdminOverviewPage() {
 
       {/* Recruiter link blue card */}
       {advisor && (
-        <div className="bg-[#2563EB] rounded-2xl p-5 mb-5">
+        <div data-tour="link" className="bg-[#2563EB] rounded-2xl p-5 mb-5">
           <p className="text-xs font-bold text-white/60 uppercase tracking-[0.08em] mb-1.5">Tu link de referidos</p>
           <p className="font-bold text-white text-[15px] mb-4 break-all">{recruiterLink}</p>
           <div className="flex gap-2">
@@ -224,7 +193,7 @@ export default function AdminOverviewPage() {
               onClick={copyRecruiterLink}
               className="bg-white text-[#0B0B0C] text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-white/90 active:scale-95 transition"
             >
-              {copiedLink ? "¡Copiado ✓" : "Copiar link"}
+              {copiedLink ? "Copiado" : "Copiar link"}
             </button>
             <button
               onClick={shareRecruiterLink}
@@ -236,7 +205,7 @@ export default function AdminOverviewPage() {
         </div>
       )}
 
-      {/* Premios summary — black card */}
+      {/* Premios summary */}
       <div className="bg-[#0B0B0C] rounded-2xl p-5 flex items-center justify-between">
         <div>
           <p className="text-xs text-[#9098A2] mb-1">Premios pagados</p>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Hanken_Grotesk } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
@@ -28,46 +28,114 @@ function VerifiedBannerWatcher({ onVerified }: { onVerified: () => void }) {
 }
 
 const nav = [
-  { href: "/admin",          label: "Resumen",  icon: "M3 12L12 3L21 12V20C21 20.6 20.6 21 20 21H15V16H9V21H4C3.4 21 3 20.6 3 20V12Z" },
-  { href: "/admin/clientes", label: "Clientes", icon: "M17 21V19C17 17.9 16.1 17 15 17H9C7.9 17 7 17.9 7 19V21M12 13C14.2 13 16 11.2 16 9C16 6.8 14.2 5 12 5C9.8 5 8 6.8 8 9C8 11.2 9.8 13 12 13Z" },
-  { href: "/admin/referidos", label: "Referidos", icon: "M3 4H21L14 12.5V19L10 21V12.5L3 4Z" },
-  { href: "/admin/niveles",  label: "Premios",  icon: "M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" },
-  { href: "/admin/perfil",   label: "Perfil",   icon: "M12 8a4 4 0 100 8 4 4 0 000-8zM19.4 13a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33 1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82 1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" },
+  { href: "/admin",           label: "Resumen",   tourId: "nav-resumen",   icon: "M3 12L12 3L21 12V20C21 20.6 20.6 21 20 21H15V16H9V21H4C3.4 21 3 20.6 3 20V12Z" },
+  { href: "/admin/clientes",  label: "Clientes",  tourId: "nav-clientes",  icon: "M17 21V19C17 17.9 16.1 17 15 17H9C7.9 17 7 17.9 7 19V21M12 13C14.2 13 16 11.2 16 9C16 6.8 14.2 5 12 5C9.8 5 8 6.8 8 9C8 11.2 9.8 13 12 13Z" },
+  { href: "/admin/referidos", label: "Referidos", tourId: "nav-referidos", icon: "M3 4H21L14 12.5V19L10 21V12.5L3 4Z" },
+  { href: "/admin/niveles",   label: "Premios",   tourId: "nav-premios",   icon: "M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" },
+  { href: "/admin/perfil",    label: "Perfil",    tourId: "nav-perfil",    icon: "M12 8a4 4 0 100 8 4 4 0 000-8zM19.4 13a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33 1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82 1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" },
 ];
 
-const steps = [
+type TourStepDef = {
+  intro?: boolean;
+  target?: string;
+  page?: string;
+  tap?: boolean;
+  modal?: boolean;
+  closeModal?: boolean;
+  title: string;
+  body: string;
+};
+
+const TOUR: TourStepDef[] = [
   {
-    icon: "M17 20H7C5.9 20 5 19.1 5 18V6C5 4.9 5.9 4 7 4H17C18.1 4 19 4.9 19 6V18C19 19.1 18.1 20 17 20ZM9 12L11 14L15 10",
-    section: null,
-    title: "Bienvenido a Referidoo",
-    body: "Este es tu panel de asesor. Desde aquí gestionas todo tu programa de referidos — qué clientes están activos, qué leads han llegado, y cuántos premios has enviado. Te explico cómo funciona cada sección.",
+    intro: true,
+    title: "Te damos la bienvenida",
+    body: "En 2 minutos te mostramos todo lo que puedes hacer desde tu panel. Puedes saltar en cualquier momento.",
   },
   {
-    icon: "M17 21V19C17 17.9 16.1 17 15 17H9C7.9 17 7 17.9 7 19V21M12 13C14.2 13 16 11.2 16 9C16 6.8 14.2 5 12 5C9.8 5 8 6.8 8 9C8 11.2 9.8 13 12 13Z",
-    section: "Clientes",
-    title: "Empieza por tus clientes",
-    body: "Agrega a cada cliente con plan activo. Puedes hacerlo uno a uno o importar un CSV. Cada cliente recibe un portal personal con su link de referidos — se lo mandas con un botón de WhatsApp directo desde aquí.",
-    highlight: "/admin/clientes",
+    target: '[data-tour="nav"]',
+    page: "/admin",
+    title: "Tu menú principal",
+    body: "Desde aquí navegas entre todas las secciones de tu panel. Te explicamos cada una.",
   },
   {
-    icon: "M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z",
-    section: "Premios",
-    title: "Configura cuánto gana cada quien",
-    body: "En Premios defines la escalera de premios para PPR y Vida (por defecto $1,500 · $1,500 · $3,500), y los premios burbuja para Auto y Gastos Médicos Mayores. También editas los mensajes que ven tus clientes.",
-    highlight: "/admin/niveles",
+    target: '[data-tour="stats"]',
+    page: "/admin",
+    title: "Resumen de actividad",
+    body: "De un vistazo: clientes activos, referidos totales, convertidos y pendientes — en tiempo real.",
   },
   {
-    icon: "M3 4H21L14 12.5V19L10 21V12.5L3 4Z",
-    section: "Referidos",
-    title: "Tu pipeline de ventas por referido",
-    body: "Cada vez que alguien llene el formulario de un cliente tuyo, aparece aquí. Tú marcas si lo contactaste, si convirtió, y cuánto valió el plan. Al enviar el premio, el cliente recibe un email y puede confirmarlo desde su portal.",
-    highlight: "/admin/referidos",
+    target: '[data-tour="link"]',
+    page: "/admin",
+    title: "Tu link de referidos",
+    body: "Este es el link que compartes con tus clientes. Con él traen más leads directo a tu pipeline.",
   },
   {
-    icon: "M5 12L10 17L19 8",
-    section: null,
-    title: "Todo listo",
-    body: "Agrega a tu primer cliente y mándale su link por WhatsApp. En cuanto comparta su link y alguien llene el formulario, te llegará una notificación y el referido aparecerá aquí.",
+    target: '[data-tour="nav-referidos"]',
+    page: "/admin",
+    tap: true,
+    title: "Vamos a Referidos",
+    body: "En Referidos ves todo tu pipeline de leads. Toca el menú para ir ahí.",
+  },
+  {
+    target: '[data-tour="filtros"]',
+    page: "/admin/referidos",
+    title: "Filtra tu pipeline",
+    body: "Ve solo los nuevos, los que ya contactaste o los que ya cerraron. Ideal cuando tienes varios al mismo tiempo.",
+  },
+  {
+    target: '[data-tour="lista-referidos"]',
+    page: "/admin/referidos",
+    tap: true,
+    title: "Tus leads",
+    body: "Cada tarjeta muestra nombre, quién lo refirió y su estado. Toca cualquiera para ver el detalle.",
+  },
+  {
+    target: '[data-tour="modal"]',
+    page: "/admin/referidos",
+    modal: true,
+    title: "Detalle del referido",
+    body: "Aquí ves el contacto, puedes llamar, mandar WhatsApp, cambiar el estado o marcar la conversión.",
+  },
+  {
+    target: '[data-tour="nav-clientes"]',
+    page: "/admin/referidos",
+    tap: true,
+    closeModal: true,
+    title: "Vamos a Clientes",
+    body: "En Clientes gestionas quiénes participan en tu programa. Toca para ir ahí.",
+  },
+  {
+    target: '[data-tour="sort"]',
+    page: "/admin/clientes",
+    title: "Tus clientes",
+    body: "Ordénalos como quieras. Desde cada tarjeta puedes copiar su link o contactarlos por WhatsApp.",
+  },
+  {
+    target: '[data-tour="nav-premios"]',
+    page: "/admin/clientes",
+    tap: true,
+    title: "Vamos a Premios",
+    body: "En Premios defines cuánto gana cada cliente por sus referidos. Toca para ir ahí.",
+  },
+  {
+    target: '[data-tour="premios"]',
+    page: "/admin/niveles",
+    title: "Escalera de premios",
+    body: "Define el monto de cada nivel. Por defecto $1,500 · $1,500 · $3,500. Cámbialo cuando quieras.",
+  },
+  {
+    target: '[data-tour="nav-perfil"]',
+    page: "/admin/niveles",
+    tap: true,
+    title: "Por último: Perfil",
+    body: "Tu cuenta y suscripción están aquí. Toca para ver.",
+  },
+  {
+    target: '[data-tour="perfil"]',
+    page: "/admin/perfil",
+    title: "Tu cuenta",
+    body: "Aquí ves tu plan, correo, clientes activos y gestionas tu suscripción. ¡Eso es todo el recorrido!",
   },
 ];
 
@@ -78,9 +146,7 @@ function getInitials(name: string) {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [step, setStep] = useState(0);
-  const [resetState, setResetState] = useState<null | "confirm" | "busy">(null);
+
   const [showWelcome, setShowWelcome] = useState(false);
   const [fadingOut, setFadingOut] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
@@ -88,14 +154,131 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [emailVerified, setEmailVerified] = useState(true);
   const [showVerifiedBanner, setShowVerifiedBanner] = useState(false);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
+  const [resetState, setResetState] = useState<null | "confirm" | "busy">(null);
   const consumedWelcomeFlag = useRef(false);
   const avatarRef = useRef<HTMLDivElement>(null);
 
-  function handleVerified() {
-    setShowVerifiedBanner(true);
-    setTimeout(() => setShowVerifiedBanner(false), 5000);
+  // Tour state
+  const [tourActive, setTourActive] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
+  const [tourRect, setTourRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
+  const [tourTip, setTourTip] = useState<{ top: number; left: number } | null>(null);
+  const tourStepRef = useRef(0);
+  const lockedElsRef = useRef<Array<[HTMLElement, string]>>([]);
+
+  function unlockScroll() {
+    lockedElsRef.current.forEach(([el, ov]) => { el.style.overflow = ov; });
+    lockedElsRef.current = [];
   }
 
+  function lockScroll() {
+    unlockScroll();
+    const els = new Set<HTMLElement>([document.documentElement, document.body as HTMLElement]);
+    document.querySelectorAll<HTMLElement>("*").forEach((el) => {
+      const s = getComputedStyle(el);
+      if (/(auto|scroll)/.test(s.overflowY) && el.scrollHeight > el.clientHeight + 2) els.add(el);
+    });
+    els.forEach((el) => {
+      lockedElsRef.current.push([el, el.style.overflow]);
+      el.style.overflow = "hidden";
+    });
+  }
+
+  function scrollIntoCenter(el: HTMLElement) {
+    let p = el.parentElement;
+    while (p) {
+      const s = getComputedStyle(p);
+      if (/(auto|scroll)/.test(s.overflowY) && p.scrollHeight > p.clientHeight + 2) {
+        const er = el.getBoundingClientRect();
+        const pr = p.getBoundingClientRect();
+        p.scrollTop += er.top - pr.top - (pr.height - er.height) / 2;
+        return;
+      }
+      p = p.parentElement;
+    }
+    const r = el.getBoundingClientRect();
+    window.scrollTo({ top: Math.max(0, window.scrollY + r.top - (window.innerHeight - r.height) / 2) });
+  }
+
+  const measure = useCallback((s: number) => {
+    const step = TOUR[s];
+    if (!step?.target) return;
+    const el = document.querySelector<HTMLElement>(step.target);
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const P = 8;
+    setTourRect({ top: r.top - P, left: r.left - P, width: r.width + P * 2, height: r.height + P * 2 });
+    const TW = 320, TH = 190, G = 14, M = 12;
+    let top = 0, left = 0;
+    if (r.bottom + G + TH < window.innerHeight) {
+      top = r.bottom + G;
+      left = Math.max(M, Math.min(r.left + r.width / 2 - TW / 2, window.innerWidth - TW - M));
+    } else if (r.top - G - TH > 0) {
+      top = r.top - G - TH;
+      left = Math.max(M, Math.min(r.left + r.width / 2 - TW / 2, window.innerWidth - TW - M));
+    } else {
+      left = r.right + G + TW < window.innerWidth ? r.right + G : r.left - TW - G;
+      top = Math.max(M, Math.min(r.top + r.height / 2 - TH / 2, window.innerHeight - TH - M));
+    }
+    setTourTip({ top, left });
+  }, []);
+
+  function goStep(next: number) {
+    if (next >= TOUR.length) { endTour(); return; }
+    const step = TOUR[next];
+    tourStepRef.current = next;
+    setTourStep(next);
+    setTourRect(null);
+    setTourTip(null);
+
+    if (step.closeModal) window.dispatchEvent(new Event("referidoo:closeModal"));
+    if (step.page && step.page !== pathname) router.push(step.page);
+    if (step.modal) {
+      // Small delay so the page has settled before opening modal
+      setTimeout(() => window.dispatchEvent(new Event("referidoo:openFirstReferido")), 300);
+    }
+
+    if (step.intro) return;
+
+    setTimeout(() => {
+      unlockScroll();
+      const el = step.target ? document.querySelector<HTMLElement>(step.target) : null;
+      if (!el && step.target) {
+        // Element not found — skip this step
+        goStep(next + 1);
+        return;
+      }
+      if (el) scrollIntoCenter(el);
+      setTimeout(() => { measure(next); lockScroll(); }, el ? 470 : 80);
+    }, step.modal ? 500 : 130);
+  }
+
+  function startTour() {
+    setTourActive(true);
+    setTourRect(null);
+    setTourTip(null);
+    tourStepRef.current = 0;
+    setTourStep(0);
+    if (pathname !== "/admin") router.push("/admin");
+  }
+
+  function endTour() {
+    unlockScroll();
+    setTourActive(false);
+    setTourRect(null);
+    setTourTip(null);
+    fetch("/api/advisor/onboarded", { method: "POST" }).catch(() => {});
+  }
+
+  // Remeasure on resize during tour
+  useEffect(() => {
+    if (!tourActive || tourStep === 0) return;
+    const handler = () => measure(tourStepRef.current);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, [tourActive, tourStep, measure]);
+
+  // Avatar click outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) {
@@ -106,9 +289,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Welcome + onboarding — See CLAUDE.md: Strict Mode + sessionStorage + timer pattern.
+  // Do NOT add a cleanup return — Strict Mode would cancel the timers.
   useEffect(() => {
-    // See CLAUDE.md: Strict Mode + sessionStorage + timer pattern.
-    // Do NOT add a cleanup return — Strict Mode would cancel the timers.
     if (consumedWelcomeFlag.current) return;
     consumedWelcomeFlag.current = true;
 
@@ -131,22 +314,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setTimeout(() => {
         setShowWelcome(false);
         setFadingOut(false);
-        advisorPromise.then((needsOnboarding) => { if (needsOnboarding) setShowOnboarding(true); });
+        advisorPromise.then((needsOnboarding) => { if (needsOnboarding) startTour(); });
       }, 4000);
     } else {
-      advisorPromise.then((needsOnboarding) => { if (needsOnboarding) setShowOnboarding(true); });
+      advisorPromise.then((needsOnboarding) => { if (needsOnboarding) startTour(); });
     }
-  }, []);
-
-  function finish() {
-    setShowOnboarding(false);
-    fetch("/api/advisor/onboarded", { method: "POST" }).catch(() => {});
-  }
-
-  function next() {
-    if (step < steps.length - 1) setStep(step + 1);
-    else finish();
-  }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -160,8 +333,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.push("/login");
   }
 
-  const current = steps[step];
-  const isLast = step === steps.length - 1;
+  function handleVerified() {
+    setShowVerifiedBanner(true);
+    setTimeout(() => setShowVerifiedBanner(false), 5000);
+  }
+
+  const curStep = TOUR[tourStep];
+  const isLastStep = tourStep === TOUR.length - 1;
 
   return (
     <div className={`min-h-screen bg-brand-surface flex flex-col ${hankenGrotesk.className}`}>
@@ -175,7 +353,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="flex items-center h-14">
-          {/* Logo section — same width as sidebar */}
+          {/* Logo — same width as sidebar */}
           <div className="hidden md:flex w-52 flex-shrink-0 items-center px-5 h-full border-r border-brand-border-1">
             <Logo size="sm" />
           </div>
@@ -185,7 +363,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Logo size="sm" />
           </div>
 
-          {/* Search bar */}
+          {/* Search bar — desktop */}
           <div className="hidden md:flex flex-1 items-center px-6">
             <div className="relative w-full max-w-sm">
               <svg
@@ -203,8 +381,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
 
-          {/* Right: bell + avatar */}
+          {/* Right: "?" tour button + bell + avatar */}
           <div className="flex items-center gap-2.5 px-5 ml-auto">
+            {/* Tour help button */}
+            <button
+              onClick={startTour}
+              className="w-9 h-9 rounded-full border border-[#ECEDEF] flex items-center justify-center text-[#6B727D] hover:bg-[#F4F5F7] transition text-sm font-bold"
+              title="Iniciar recorrido guiado"
+            >
+              ?
+            </button>
+
             {/* Bell */}
             <button
               className="w-9 h-9 rounded-full border border-[#ECEDEF] flex items-center justify-center text-[#6B727D] hover:bg-[#F4F5F7] transition"
@@ -274,20 +461,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* ── Body: sidebar + main ── */}
       <div className="flex flex-1 min-h-0">
         {/* Sidebar — desktop */}
-        <aside className="hidden md:flex w-52 flex-shrink-0 flex-col py-5 px-3 gap-1 border-r border-brand-border-1 bg-white">
+        <aside
+          data-tour="nav"
+          className="hidden md:flex w-52 flex-shrink-0 flex-col py-5 px-3 gap-1 border-r border-brand-border-1 bg-white"
+        >
           {nav.map((item) => {
             const active = pathname === item.href;
-            const highlighted = showOnboarding && current.highlight === item.href;
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                data-tour={item.tourId}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition",
                   active
                     ? "bg-[#0B0B0C] text-white font-semibold"
-                    : highlighted
-                    ? "bg-brand-surface text-brand-ink font-medium ring-2 ring-brand-ink ring-offset-1"
                     : "text-[#5A626E] hover:bg-[#F4F5F7] hover:text-[#0B0B0C]"
                 )}
               >
@@ -410,65 +598,144 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       )}
 
-      {/* Onboarding modal */}
-      {showOnboarding && (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-          <div className="absolute inset-0 bg-black/30" />
-          <div className="relative bg-white w-full max-w-md rounded-t-3xl md:rounded-2xl shadow-2xl overflow-hidden">
-            <div className="h-1 bg-[#ECEDEF]">
-              <div
-                className="h-1 bg-[#0B0B0C] transition-all duration-500"
-                style={{ width: `${((step + 1) / steps.length) * 100}%` }}
-              />
-            </div>
-            <div className="p-7">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex gap-1.5">
-                  {steps.map((_, i) => (
-                    <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i === step ? "w-6 bg-[#0B0B0C]" : i < step ? "w-3 bg-[#DADCE0]" : "w-3 bg-[#ECEDEF]"
-                    }`} />
-                  ))}
+      {/* ── Tour ── */}
+      {tourActive && (
+        <>
+          <style>{`
+            @keyframes tourPulse {
+              0%   { box-shadow: 0 0 0 9999px rgba(13,13,15,.6), 0 0 0 0   rgba(43,87,240,.5); }
+              70%  { box-shadow: 0 0 0 9999px rgba(13,13,15,.6), 0 0 0 12px rgba(43,87,240,0); }
+              100% { box-shadow: 0 0 0 9999px rgba(13,13,15,.6), 0 0 0 0   rgba(43,87,240,0); }
+            }
+            @keyframes tapRing {
+              0%   { transform: scale(.55); opacity: 1; }
+              90%  { transform: scale(1.9);  opacity: .08; }
+              100% { transform: scale(1.9);  opacity: 0; }
+            }
+          `}</style>
+
+          {/* Step 0: intro welcome card */}
+          {tourStep === 0 && (
+            <div
+              className="fixed inset-0 z-[70] flex items-center justify-center"
+              style={{ background: "rgba(13,13,15,.82)", backdropFilter: "blur(4px)" }}
+            >
+              <div className="bg-white rounded-3xl p-8 max-w-sm w-full mx-5 text-center shadow-2xl">
+                <div className="flex justify-center mb-6">
+                  <Logo size="md" />
                 </div>
-                {current.section && (
-                  <span className="text-xs font-bold text-[#9098A2] uppercase tracking-[0.08em]">
-                    {current.section}
-                  </span>
-                )}
+                <h2 className="text-xl font-bold text-[#0B0B0C] mb-2.5">{TOUR[0].title}</h2>
+                <p className="text-sm text-[#6B727D] leading-relaxed mb-8">{TOUR[0].body}</p>
+                <button
+                  onClick={() => goStep(1)}
+                  className="w-full bg-[#2563EB] text-white text-sm font-semibold py-3.5 rounded-full hover:bg-blue-700 active:scale-[.98] transition mb-3"
+                >
+                  Comenzar recorrido
+                </button>
+                <button
+                  onClick={endTour}
+                  className="text-sm text-[#9098A2] hover:text-[#6B727D] transition"
+                >
+                  Saltar el recorrido
+                </button>
               </div>
-              <div className="w-12 h-12 bg-[#0B0B0C] rounded-2xl flex items-center justify-center mb-5">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                  {current.icon.includes("M9 12") ? (
-                    <>
-                      <path d="M17 20H7C5.9 20 5 19.1 5 18V6C5 4.9 5.9 4 7 4H17C18.1 4 19 4.9 19 6V18C19 19.1 18.1 20 17 20Z" stroke="white" strokeWidth="1.5"/>
-                      <path d="M9 12L11 14L15 10" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </>
-                  ) : (
-                    <path d={current.icon} stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  )}
-                </svg>
+            </div>
+          )}
+
+          {/* Steps 1–13: spotlight */}
+          {tourStep > 0 && tourRect && (
+            <>
+              {/* Spotlight (box-shadow as dim overlay) */}
+              <div
+                style={{
+                  position: "fixed",
+                  top: tourRect.top,
+                  left: tourRect.left,
+                  width: tourRect.width,
+                  height: tourRect.height,
+                  borderRadius: 14,
+                  boxShadow: "0 0 0 9999px rgba(13,13,15,.6)",
+                  border: "2.5px solid #2B57F0",
+                  zIndex: 70,
+                  pointerEvents: "none",
+                  animation: curStep?.tap ? "tourPulse 2s ease-in-out infinite" : undefined,
+                  transition: "top .3s cubic-bezier(.22,1,.36,1), left .3s cubic-bezier(.22,1,.36,1), width .3s cubic-bezier(.22,1,.36,1), height .3s cubic-bezier(.22,1,.36,1)",
+                }}
+              />
+
+              {/* Tap ring indicator */}
+              {curStep?.tap && (
+                <div
+                  style={{
+                    position: "fixed",
+                    top: tourRect.top + tourRect.height / 2 - 18,
+                    left: tourRect.left + tourRect.width / 2 - 18,
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    border: "2.5px solid #2B57F0",
+                    zIndex: 71,
+                    pointerEvents: "none",
+                    animation: "tapRing 1.6s ease-out infinite",
+                  }}
+                />
+              )}
+            </>
+          )}
+
+          {/* Tooltip (steps 1–13) */}
+          {tourStep > 0 && tourTip && (
+            <div
+              style={{
+                position: "fixed",
+                top: tourTip.top,
+                left: tourTip.left,
+                width: 320,
+                zIndex: 72,
+              }}
+              className="bg-white rounded-2xl p-5 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Progress dots (steps 1–13) */}
+              <div className="flex gap-1.5 mb-3 flex-wrap">
+                {TOUR.slice(1).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-1 rounded-full transition-all duration-300"
+                    style={{
+                      width: i + 1 === tourStep ? 20 : 8,
+                      background: i + 1 === tourStep ? "#0B0B0C" : i + 1 < tourStep ? "#DADCE0" : "#ECEDEF",
+                    }}
+                  />
+                ))}
               </div>
-              <h2 className="text-xl font-bold mb-3 leading-snug text-[#0B0B0C]">{current.title}</h2>
-              <p className="text-sm text-[#6B727D] leading-relaxed mb-7">{current.body}</p>
+
+              <h3 className="text-sm font-bold text-[#0B0B0C] mb-1.5 leading-snug">
+                {curStep?.title}
+              </h3>
+              <p className="text-xs text-[#6B727D] leading-relaxed mb-4">
+                {curStep?.body}
+              </p>
+
               <div className="flex gap-2">
                 <button
-                  onClick={next}
-                  className="flex-1 bg-[#0B0B0C] text-white text-sm font-medium py-3.5 rounded-full hover:bg-[#26262a] transition"
+                  onClick={() => goStep(tourStep + 1)}
+                  className="flex-1 bg-[#0B0B0C] text-white text-xs font-semibold py-2.5 rounded-full hover:bg-[#26262a] active:scale-[.98] transition"
                 >
-                  {isLast ? "Empezar →" : "Siguiente"}
+                  {isLastStep ? "¡Listo! ✓" : "Siguiente →"}
                 </button>
-                {!isLast && (
+                {!isLastStep && (
                   <button
-                    onClick={finish}
-                    className="px-4 text-sm py-3.5 rounded-full border border-[#DADCE0] text-[#9098A2] hover:bg-[#F4F5F7] transition"
+                    onClick={endTour}
+                    className="px-4 text-xs py-2.5 rounded-full border border-[#ECEDEF] text-[#9098A2] hover:bg-[#F4F5F7] transition"
                   >
                     Saltar
                   </button>
                 )}
               </div>
             </div>
-          </div>
-        </div>
+          )}
+        </>
       )}
     </div>
   );
