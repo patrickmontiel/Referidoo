@@ -14,20 +14,14 @@ const TOUR_STEPS: TourStep[] = [
   {
     selector: '[data-tour="after-last"]',
     title: "Más allá del último nivel",
-    body: "Si un cliente supera el nivel 3, elige qué pasa: ¿reinicia el ciclo? ¿monto fijo? ¿siempre el mismo máximo? Tú decides la regla.",
+    body: "Si un cliente supera el último nivel, elige qué pasa: ¿reinicia el ciclo? ¿monto fijo? ¿siempre el mismo máximo?",
     placement: "bottom",
   },
   {
     selector: '[data-tour="bubble"]',
-    title: "Premios burbuja de Auto, Otro y GMM",
-    body: "Auto, Otro y Gastos Médicos Mayores suman puntos a un pool compartido del cliente. Aquí defines cuántos puntos da cada producto y a partir de cuántos puntos se puede reclamar el premio.",
+    title: "Premios burbuja",
+    body: "Auto y GMM suman puntos a un fondo compartido del cliente. Define cuánto vale cada venta y el premio al llegar al umbral.",
     placement: "bottom",
-  },
-  {
-    selector: '[data-tour="preview"]',
-    title: "Vista previa instantánea",
-    body: "Así ve tu cliente cuánto gana en cada referido. Se actualiza en tiempo real mientras ajustas los montos arriba.",
-    placement: "top",
   },
 ];
 
@@ -43,32 +37,49 @@ type BubbleClaim = {
   client: { name: string; phone: string | null };
 };
 
-function CurrencyInput({
+function PillCurrencyInput({
   value,
   onChange,
-  placeholder,
 }: {
   value: number;
-  onChange: (value: number) => void;
-  placeholder?: string;
+  onChange: (v: number) => void;
 }) {
   return (
-    <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-gray-4 text-sm pointer-events-none">$</span>
+    <div className="flex items-center bg-[#F4F5F7] rounded-full px-3 py-1.5 gap-0.5">
+      <span className="text-[#8A8F98] text-sm select-none">$</span>
       <input
         type="text"
         inputMode="numeric"
         value={formatNumberWithCommas(String(value))}
         onChange={(e) => onChange(Number(e.target.value.replace(/[^\d]/g, "")) || 0)}
-        placeholder={placeholder}
-        className="w-full pl-7 pr-3 py-2 rounded-xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition"
+        className="bg-transparent text-sm font-semibold w-16 focus:outline-none text-[#0B0B0C] text-right"
       />
     </div>
   );
 }
 
+function PillPointsInput({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center bg-[#F4F5F7] rounded-full px-3 py-1.5 gap-1">
+      <input
+        type="text"
+        inputMode="numeric"
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value.replace(/[^\d]/g, "")) || 0)}
+        className="bg-transparent text-sm font-semibold w-10 focus:outline-none text-[#0B0B0C] text-right"
+      />
+      <span className="text-[#8A8F98] text-sm select-none">pts</span>
+    </div>
+  );
+}
+
 export default function PremiosPage() {
-  // Escalera de premios PPR y Vida
   const [tiers, setTiers] = useState<Tier[]>([
     { amount: 1500, label: "" },
     { amount: 1500, label: "" },
@@ -79,21 +90,18 @@ export default function PremiosPage() {
   const [whatsappMessage, setWhatsappMessage] = useState("");
   const [welcomeMessage, setWelcomeMessage] = useState("");
   const [loadingTiers, setLoadingTiers] = useState(true);
-  const [savingTiers, setSavingTiers] = useState(false);
-  const [savedTiers, setSavedTiers] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
-  // Premios burbuja de Auto y GMM
   const [claims, setClaims] = useState<BubbleClaim[]>([]);
   const [loadingClaims, setLoadingClaims] = useState(true);
   const [payTarget, setPayTarget] = useState<BubbleClaim | null>(null);
   const [payNote, setPayNote] = useState("");
   const [updating, setUpdating] = useState(false);
+
   const [bubbleAutoPoints, setBubbleAutoPoints] = useState(150);
   const [bubbleGmmPoints, setBubbleGmmPoints] = useState(300);
   const [bubbleClaimThreshold, setBubbleClaimThreshold] = useState(500);
-  const [loadingBubbleSettings, setLoadingBubbleSettings] = useState(true);
-  const [savingBubble, setSavingBubble] = useState(false);
-  const [savedBubble, setSavedBubble] = useState(false);
 
   const [showTour, setShowTour] = useState(false);
 
@@ -124,7 +132,10 @@ export default function PremiosPage() {
     setLoadingClaims(true);
     fetch("/api/bubble-claims")
       .then((r) => r.json())
-      .then((d) => { setClaims(Array.isArray(d.claims) ? d.claims : []); setLoadingClaims(false); });
+      .then((d) => {
+        setClaims(Array.isArray(d.claims) ? d.claims : []);
+        setLoadingClaims(false);
+      });
   }
 
   useEffect(() => {
@@ -135,7 +146,6 @@ export default function PremiosPage() {
         setBubbleAutoPoints(d.bubbleAutoPoints ?? 150);
         setBubbleGmmPoints(d.bubbleGmmPoints ?? 300);
         setBubbleClaimThreshold(d.bubbleClaimThreshold ?? 500);
-        setLoadingBubbleSettings(false);
       });
   }, []);
 
@@ -149,31 +159,26 @@ export default function PremiosPage() {
   }
 
   function updateTier(i: number, field: "amount" | "label", val: string | number) {
-    setTiers(tiers.map((t, idx) => idx === i ? { ...t, [field]: val } : t));
+    setTiers(tiers.map((t, idx) => (idx === i ? { ...t, [field]: val } : t)));
   }
 
-  async function saveTiers() {
-    setSavingTiers(true);
-    await fetch("/api/tiers", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tiers, afterLastTier, flatAmount, whatsappMessage, welcomeMessage }),
-    });
-    setSavingTiers(false);
-    setSavedTiers(true);
-    setTimeout(() => setSavedTiers(false), 2500);
-  }
-
-  async function saveBubbleSettings() {
-    setSavingBubble(true);
-    await fetch("/api/bubble-settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bubbleAutoPoints, bubbleGmmPoints, bubbleClaimThreshold }),
-    });
-    setSavingBubble(false);
-    setSavedBubble(true);
-    setTimeout(() => setSavedBubble(false), 2500);
+  async function saveAll() {
+    setSaving(true);
+    await Promise.all([
+      fetch("/api/tiers", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tiers, afterLastTier, flatAmount, whatsappMessage, welcomeMessage }),
+      }),
+      fetch("/api/bubble-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bubbleAutoPoints, bubbleGmmPoints, bubbleClaimThreshold }),
+      }),
+    ]);
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
   }
 
   async function confirmPay() {
@@ -193,6 +198,19 @@ export default function PremiosPage() {
   const pendingClaims = claims.filter((c) => c.status === "pending");
   const paidClaims = claims.filter((c) => c.status === "paid");
 
+  const now = new Date();
+  const paidThisMonth = paidClaims
+    .filter((c) => {
+      if (!c.paidAt) return false;
+      const d = new Date(c.paidAt);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    })
+    .reduce((s, c) => s + c.amount, 0);
+  const pendingTotal = pendingClaims.reduce((s, c) => s + c.amount, 0);
+
+  const ordinalLabel = (i: number) =>
+    i === 0 ? "1er referido convertido" : i === 1 ? "2do referido convertido" : `${i + 1}er referido convertido`;
+
   if (loadingTiers) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -202,218 +220,190 @@ export default function PremiosPage() {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl pb-10">
       {showTour && <Tour steps={TOUR_STEPS} onDone={() => setShowTour(false)} />}
 
+      {/* Header */}
       <div className="mb-6">
-        <h1 className="text-xl font-semibold">Premios</h1>
-        <p className="text-sm text-brand-gray-4 mt-0.5">Define cuánto gana cada cliente por referido y cómo funcionan los premios burbuja</p>
+        <h1 className="text-xl font-bold text-brand-ink">Premios</h1>
+        <p className="text-sm text-brand-gray-4 mt-0.5">
+          Configura los montos una vez. Referidoo hace las cuentas para siempre.
+        </p>
       </div>
 
-      {/* Escalera de premios PPR y Vida */}
-      <div className="flex items-center gap-2 mb-3">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="flex-shrink-0 text-brand-gray-4">
-          <path d="M4 20V16H8V12H12V8H16V4H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        <h2 className="text-xs font-semibold text-brand-gray-4 uppercase tracking-wide">Escalera de premios PPR y Vida</h2>
-      </div>
+      {/* ESCALERA */}
+      <div data-tour="tiers" className="bg-white rounded-2xl border border-brand-border-1 p-6 mb-4">
+        <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-0.5">Vida y PPR</p>
+        <h2 className="font-bold text-[18px] text-[#0B0B0C] mb-1">Escalera de premios</h2>
+        <p className="text-xs text-brand-gray-4 mb-5">
+          Cada venta sube un nivel. Define el monto de cada escalón.
+        </p>
 
-      {/* Tiers */}
-      <div data-tour="tiers" className="bg-white rounded-2xl border border-brand-border-1 p-5 mb-5">
-        <h2 className="font-medium text-sm mb-1">Estructura de premios</h2>
-        <p className="text-xs text-brand-gray-4 mb-4">Cuánto recibe tu cliente por cada referido (1º, 2º, 3º...) que llega a contratar Vida o PPR.</p>
-
-        <div className="hidden sm:flex items-center gap-3 mb-1.5 px-0">
-          <div className="w-8 flex-shrink-0" />
-          <span className="flex-1 text-xs text-brand-gray-4 uppercase tracking-wide">Monto</span>
-          <span className="flex-1 text-xs text-brand-gray-4 uppercase tracking-wide">Etiqueta (opcional)</span>
-          <div className="w-5 flex-shrink-0" />
-        </div>
-
-        <div className="space-y-3">
+        <div className="mb-4">
           {tiers.map((tier, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-[#0B0B0C] rounded-full flex items-center justify-center text-xs font-semibold text-white flex-shrink-0">
+            <div
+              key={i}
+              className="flex items-center gap-3 py-3 border-b border-[#F4F5F7] last:border-0"
+            >
+              <span className="w-6 h-6 rounded-full bg-[#0B0B0C] text-white text-xs flex items-center justify-center flex-shrink-0 font-semibold">
                 {i + 1}
+              </span>
+              <input
+                type="text"
+                value={tier.label}
+                onChange={(e) => updateTier(i, "label", e.target.value)}
+                placeholder={ordinalLabel(i)}
+                className="flex-1 text-sm text-[#3F4651] bg-transparent focus:outline-none placeholder:text-[#3F4651] min-w-0"
+              />
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <PillCurrencyInput value={tier.amount} onChange={(v) => updateTier(i, "amount", v)} />
+                {tiers.length > 1 && (
+                  <button
+                    onClick={() => removeTier(i)}
+                    className="p-1 text-brand-gray-4 hover:text-red-400 transition"
+                    aria-label="Eliminar nivel"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                )}
               </div>
-              <div className="flex-1">
-                <CurrencyInput
-                  value={tier.amount}
-                  onChange={(val) => updateTier(i, "amount", val)}
-                  placeholder="0"
-                />
-              </div>
-              <div className="flex-1">
-                <input
-                  type="text"
-                  value={tier.label}
-                  onChange={(e) => updateTier(i, "label", e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition"
-                  placeholder={`Ej: ¡Bono especial!`}
-                />
-              </div>
-              <button
-                onClick={() => removeTier(i)}
-                disabled={tiers.length <= 1}
-                className="p-1 text-brand-gray-4 hover:text-red-400 disabled:opacity-20 transition"
-                aria-label="Eliminar nivel"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-              </button>
             </div>
           ))}
         </div>
 
         <button
           onClick={addTier}
-          className="mt-4 flex items-center gap-2 text-xs text-brand-gray-4 hover:text-brand-ink transition font-medium"
+          className="flex items-center gap-1.5 text-xs text-brand-gray-4 hover:text-brand-ink transition font-medium mb-5"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-            <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
           Agregar nivel
         </button>
+
+        {/* After last tier */}
+        <div data-tour="after-last" className="pt-4 border-t border-[#F4F5F7]">
+          <p className="text-sm font-medium text-[#0B0B0C] mb-3">Después del último referido</p>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { value: "cycle", label: "Vuelve a empezar" },
+              { value: "stop", label: "Se queda fijo" },
+              { value: "flat", label: "Monto plano" },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setAfterLastTier(opt.value)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+                  afterLastTier === opt.value
+                    ? "bg-[#0B0B0C] text-white"
+                    : "bg-[#F4F5F7] text-[#3F4651] hover:bg-[#ECEDEF]"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {afterLastTier === "flat" && (
+            <div className="flex items-center gap-3 mt-4 pt-3 border-t border-[#F4F5F7]">
+              <span className="flex-1 text-sm text-[#3F4651]">Monto fijo por referido adicional</span>
+              <PillCurrencyInput value={flatAmount} onChange={setFlatAmount} />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* After last tier */}
-      <div data-tour="after-last" className="bg-white rounded-2xl border border-brand-border-1 p-5 mb-5">
-        <h2 className="font-medium text-sm mb-1">¿Qué pasa después del último nivel?</h2>
-        <p className="text-xs text-brand-gray-4 mb-4">
-          Si un cliente supera el nivel {tiers.length}, ¿qué premio recibe?
+      {/* BURBUJA */}
+      <div data-tour="bubble" className="bg-white rounded-2xl border border-brand-border-1 p-6 mb-4">
+        <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-0.5">
+          Auto y Gastos Médicos Mayores
         </p>
-        <div className="space-y-2">
+        <h2 className="font-bold text-[18px] text-[#0B0B0C] mb-1">Premios burbuja</h2>
+        <p className="text-xs text-brand-gray-4 mb-5">
+          Cada venta suma puntos a un mismo fondo. Al llegar al umbral, el cliente reclama el premio.
+        </p>
+
+        <div className="mb-5">
           {[
-            { value: "cycle", label: "Reiniciar ciclo", desc: `El 4º referido da ${tiers[0] ? formatCurrency(tiers[0].amount) : "$1,500"} de nuevo, y así.` },
-            { value: "flat", label: "Monto fijo", desc: "Todos los referidos adicionales dan el mismo monto." },
-            { value: "stop", label: "Premio del último nivel", desc: `Siempre da ${tiers[tiers.length - 1] ? formatCurrency(tiers[tiers.length - 1].amount) : "$3,500"} a partir de ahí.` },
-          ].map((opt) => (
-            <label
-              key={opt.value}
-              className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition ${
-                afterLastTier === opt.value ? "border-brand-ink bg-brand-surface" : "border-brand-border-1 hover:bg-brand-surface"
-              }`}
+            { label: "Puntos por venta de Auto", value: bubbleAutoPoints, onChange: setBubbleAutoPoints, type: "pts" as const },
+            { label: "Puntos por venta de GMM", value: bubbleGmmPoints, onChange: setBubbleGmmPoints, type: "pts" as const },
+            { label: "Premio al reclamar", value: bubbleClaimThreshold, onChange: setBubbleClaimThreshold, type: "mxn" as const },
+          ].map((row, i, arr) => (
+            <div
+              key={row.label}
+              className={`flex items-center gap-3 py-3 ${i < arr.length - 1 ? "border-b border-[#F4F5F7]" : ""}`}
             >
-              <input
-                type="radio"
-                name="afterLastTier"
-                value={opt.value}
-                checked={afterLastTier === opt.value}
-                onChange={(e) => setAfterLastTier(e.target.value)}
-                className="mt-0.5 accent-brand-ink"
-              />
-              <div>
-                <p className="text-sm font-medium">{opt.label}</p>
-                <p className="text-xs text-brand-gray-4 mt-0.5">{opt.desc}</p>
-              </div>
-            </label>
+              <span className="flex-1 text-sm text-[#3F4651]">{row.label}</span>
+              {row.type === "pts" ? (
+                <PillPointsInput value={row.value} onChange={row.onChange} />
+              ) : (
+                <PillCurrencyInput value={row.value} onChange={row.onChange} />
+              )}
+            </div>
           ))}
         </div>
 
-        {afterLastTier === "flat" && (
-          <div className="mt-3">
-            <label className="block text-xs text-brand-gray-4 mb-1.5 uppercase tracking-wide">Monto fijo</label>
-            <CurrencyInput value={flatAmount} onChange={setFlatAmount} placeholder="0" />
+        {/* Blue prize card */}
+        <div className="bg-[#2563EB] rounded-2xl px-5 py-4 flex items-center justify-between">
+          <div>
+            <p className="text-white/70 text-xs mb-0.5">Premio al llegar al umbral</p>
+            <p className="text-white text-2xl font-bold">{formatCurrency(bubbleClaimThreshold)}</p>
           </div>
-        )}
-      </div>
-
-      {/* Premios burbuja de Auto, Otro y GMM */}
-      <div className="flex items-center gap-2 mb-3 mt-2">
-        <div className="w-4 h-4 rounded-full border-2 border-brand-blue bg-brand-blue-bg flex-shrink-0" />
-        <h2 className="text-xs font-semibold text-brand-gray-4 uppercase tracking-wide">Premios burbuja de Auto, Otro y Gastos Médicos Mayores</h2>
-      </div>
-
-      <div data-tour="bubble" className="bg-white rounded-2xl border border-brand-border-1 p-5 mb-5">
-        <h2 className="font-medium text-sm mb-1">Configuración de puntos</h2>
-        <p className="text-xs text-brand-gray-4 mb-4">Cada vez que un referido contrata Auto, Otro tipo de seguro o GMM, se suman puntos a un fondo del cliente. Al llegar a la meta, sus burbujas explotan y reciben el premio.</p>
-
-        {loadingBubbleSettings ? (
-          <div className="flex justify-center py-6">
-            <div className="w-5 h-5 border-2 border-brand-ink border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-              <div>
-                <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">Por Auto / Otro</label>
-                <CurrencyInput value={bubbleAutoPoints} onChange={setBubbleAutoPoints} placeholder="0" />
-              </div>
-              <div>
-                <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">Por GMM</label>
-                <CurrencyInput value={bubbleGmmPoints} onChange={setBubbleGmmPoints} placeholder="0" />
-              </div>
-              <div>
-                <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">Meta para reclamar</label>
-                <CurrencyInput value={bubbleClaimThreshold} onChange={setBubbleClaimThreshold} placeholder="0" />
-              </div>
-            </div>
-
-            {/* Vista previa de burbujas */}
-            {(() => {
-              const BUBBLE_COUNT = 5;
-              const previewPoints = bubbleAutoPoints * 2 + bubbleGmmPoints;
-              const previewFraction = bubbleClaimThreshold > 0 ? Math.min(1, previewPoints / bubbleClaimThreshold) : 0;
-              const previewFills = Array.from({ length: BUBBLE_COUNT }, (_, i) => Math.max(0, Math.min(1, previewFraction * BUBBLE_COUNT - i)));
-              const previewReady = previewFraction >= 1;
-              return (
-                <div className="mb-4 p-4 rounded-xl bg-brand-blue-bg/50 border border-brand-border-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-medium text-brand-gray-2">Vista previa</p>
-                    <p className="text-xs text-brand-gray-4">2 referidos de Auto/Otro + 1 de GMM</p>
-                  </div>
-                  <div className="flex items-center justify-center gap-3 py-2 mb-2">
-                    {previewFills.map((fill, i) => (
-                      <div
-                        key={i}
-                        className={`relative w-14 h-14 rounded-full border-2 overflow-hidden bg-[#EEF3FE] ${previewReady ? "border-brand-blue bubble-ready" : "border-brand-blue"}`}
-                        style={{ boxShadow: "0 3px 10px rgba(37,99,235,0.25)" }}
-                      >
-                        <div
-                          className="absolute bottom-0 left-0 right-0 transition-all duration-700 ease-out"
-                          style={{ height: `${fill * 100}%`, background: "linear-gradient(to top, #2563EB, #6EA1F5)" }}
-                        />
-                        <div className="absolute inset-0 rounded-full bubble-shine" />
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-brand-gray-4 text-center">
-                    {previewReady
-                      ? `¡Listo! Tu cliente puede reclamar ${formatCurrency(bubbleClaimThreshold)}.`
-                      : `Suma ${formatCurrency(previewPoints)} de ${formatCurrency(bubbleClaimThreshold)} para reclamar el premio.`}
-                  </p>
-                </div>
-              );
-            })()}
-
-            <button
-              onClick={saveBubbleSettings}
-              disabled={savingBubble}
-              className="w-full bg-brand-ink text-white text-sm font-medium py-3 rounded-full hover:bg-[#26262a] disabled:opacity-50 transition"
-            >
-              {savingBubble ? "Guardando..." : savedBubble ? "¡Guardado ✓" : "Guardar premios burbuja"}
-            </button>
-          </>
-        )}
-      </div>
-
-      {loadingClaims ? (
-        <div className="flex justify-center py-8 mb-5">
-          <div className="w-5 h-5 border-2 border-brand-ink border-t-transparent rounded-full animate-spin" />
+          <span className="bg-white/20 text-white text-xs rounded-full px-3 py-1.5 font-medium">
+            Reclamable por el cliente
+          </span>
         </div>
-      ) : claims.length === 0 ? (
-        <div className="text-center py-8 mb-5 text-brand-gray-4 text-sm bg-white rounded-2xl border border-brand-border-1">Aún no hay reclamos de premios burbuja.</div>
-      ) : (
-        <div className="space-y-5 mb-5">
+      </div>
+
+      {/* MENSAJES */}
+      <div className="bg-white rounded-2xl border border-brand-border-1 p-6 mb-4">
+        <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-0.5">Comunicación</p>
+        <h2 className="font-bold text-[18px] text-[#0B0B0C] mb-5">Mensajes personalizados</h2>
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-[#0B0B0C] mb-2">
+              Bienvenida en el link de referido
+            </label>
+            <textarea
+              value={welcomeMessage}
+              onChange={(e) => setWelcomeMessage(e.target.value)}
+              rows={3}
+              placeholder="Ej: Tu amigo te recomienda conocer los beneficios de un seguro sin comprometerte a nada."
+              className="w-full px-4 py-3 rounded-2xl border border-brand-border-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition resize-none text-[#3F4651] placeholder:text-brand-gray-4"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-[#0B0B0C] mb-2">Mensaje de WhatsApp</label>
+            <textarea
+              value={whatsappMessage}
+              onChange={(e) => setWhatsappMessage(e.target.value)}
+              rows={4}
+              placeholder={`Ej: ¡Hola! {nombre} te recomienda cotizar un seguro sin compromiso. Entra aquí: {link}`}
+              className="w-full px-4 py-3 rounded-2xl border border-brand-border-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition resize-none text-[#3F4651] placeholder:text-brand-gray-4"
+            />
+            <p className="text-xs text-brand-gray-4 mt-2">
+              Usa{" "}
+              <code className="bg-[#F4F5F7] px-1.5 py-0.5 rounded-md">{"{link}"}</code> para el enlace y{" "}
+              <code className="bg-[#F4F5F7] px-1.5 py-0.5 rounded-md">{"{nombre}"}</code> para el nombre del cliente.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* CLAIMS */}
+      {!loadingClaims && claims.length > 0 && (
+        <div className="space-y-4 mb-4">
           {pendingClaims.length > 0 && (
-            <div>
-              <h2 className="text-xs font-semibold text-brand-gray-4 uppercase tracking-wide mb-2">Pendientes de pago</h2>
-              <div className="bg-white rounded-2xl border border-brand-border-1 divide-y divide-brand-border-2">
+            <div className="bg-white rounded-2xl border border-brand-border-1 overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-brand-border-1">
+                <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em]">Premios por pagar</p>
+              </div>
+              <div className="divide-y divide-brand-border-1">
                 {pendingClaims.map((c) => (
                   <div key={c.id} className="flex items-center justify-between px-5 py-4">
                     <div>
-                      <p className="text-sm font-medium">{c.client.name}</p>
+                      <p className="text-sm font-medium text-[#0B0B0C]">{c.client.name}</p>
                       <p className="text-xs text-brand-gray-4 mt-0.5">{formatDate(c.createdAt)}</p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -432,14 +422,18 @@ export default function PremiosPage() {
           )}
 
           {paidClaims.length > 0 && (
-            <div>
-              <h2 className="text-xs font-semibold text-brand-gray-4 uppercase tracking-wide mb-2">Pagados</h2>
-              <div className="bg-white rounded-2xl border border-brand-border-1 divide-y divide-brand-border-2">
+            <div className="bg-white rounded-2xl border border-brand-border-1 overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-brand-border-1">
+                <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em]">Premios pagados</p>
+              </div>
+              <div className="divide-y divide-brand-border-1">
                 {paidClaims.map((c) => (
                   <div key={c.id} className="flex items-center justify-between px-5 py-4">
                     <div>
-                      <p className="text-sm font-medium">{c.client.name}</p>
-                      <p className="text-xs text-brand-gray-4 mt-0.5">{c.paidAt ? formatDate(c.paidAt) : formatDate(c.createdAt)}</p>
+                      <p className="text-sm font-medium text-[#0B0B0C]">{c.client.name}</p>
+                      <p className="text-xs text-brand-gray-4 mt-0.5">
+                        {c.paidAt ? formatDate(c.paidAt) : formatDate(c.createdAt)}
+                      </p>
                     </div>
                     <span className="text-sm font-semibold text-green-600">{formatCurrency(c.amount)}</span>
                   </div>
@@ -450,96 +444,24 @@ export default function PremiosPage() {
         </div>
       )}
 
-      {/* Messages */}
-      <div className="bg-white rounded-2xl border border-brand-border-1 p-5 mb-6">
-        <h2 className="font-medium text-sm mb-4">Mensajes personalizados</h2>
-
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs text-brand-gray-4 mb-1.5 uppercase tracking-wide">
-              Mensaje de bienvenida (landing de referidos)
-            </label>
-            <textarea
-              value={welcomeMessage}
-              onChange={(e) => setWelcomeMessage(e.target.value)}
-              rows={3}
-              placeholder="Ej: Tu amigo te recomienda conocer los beneficios de un seguro sin comprometerte a nada."
-              className="w-full px-3 py-2.5 rounded-xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition resize-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-brand-gray-4 mb-1.5 uppercase tracking-wide">
-              Mensaje de WhatsApp
-            </label>
-            <textarea
-              value={whatsappMessage}
-              onChange={(e) => setWhatsappMessage(e.target.value)}
-              rows={4}
-              placeholder={`Ej: ¡Hola! {nombre} te recomienda cotizar un seguro sin compromiso. Entra aquí: {link}`}
-              className="w-full px-3 py-2.5 rounded-xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition resize-none"
-            />
-            <p className="text-xs text-brand-gray-4 mt-1.5">
-              Usa <code className="bg-brand-border-1 px-1 rounded">{"{link}"}</code> para el enlace y{" "}
-              <code className="bg-brand-border-1 px-1 rounded">{"{nombre}"}</code> para el nombre del cliente.
-            </p>
-          </div>
-        </div>
+      {/* SAVE FOOTER */}
+      <div className="bg-white rounded-2xl border border-brand-border-1 px-5 py-4 flex items-center justify-between gap-4">
+        <p className="text-sm text-brand-gray-4 min-w-0">
+          Pagado este mes{" "}
+          <span className="text-[#0B0B0C] font-semibold">{formatCurrency(paidThisMonth)}</span>
+          {" · "}Por pagar{" "}
+          <span className="text-amber-600 font-semibold">{formatCurrency(pendingTotal)}</span>
+        </p>
+        <button
+          onClick={saveAll}
+          disabled={saving}
+          className="flex-shrink-0 bg-brand-ink text-white text-sm font-medium px-6 py-2.5 rounded-full hover:bg-[#26262a] disabled:opacity-50 transition"
+        >
+          {saving ? "Guardando..." : saved ? "¡Guardado ✓" : "Guardar cambios"}
+        </button>
       </div>
 
-      {/* Preview */}
-      <div data-tour="preview" className="bg-[#F4F5F7] rounded-2xl p-5 mb-6 border border-[#ECEDEF]">
-        <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-1">Vida y PPR</p>
-        <h2 className="font-bold text-[18px] text-[#0B0B0C] mb-4">Escalera de premios</h2>
-        <div className="space-y-2">
-          {tiers.map((t, i) => (
-            <div key={i} className="flex items-center justify-between bg-white rounded-[12px] border border-[#ECEDEF] px-4 py-2.5">
-              <span className="text-sm text-[#3F4651] flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-[#0B0B0C] text-white text-xs flex items-center justify-center flex-shrink-0">{i + 1}</span>
-                {t.label || `${i === 0 ? "1er" : i === 1 ? "2do" : `${i + 1}er`} referido convertido`}
-              </span>
-              <span className="text-sm font-bold text-[#0B0B0C]">{formatCurrency(t.amount)}</span>
-            </div>
-          ))}
-          {afterLastTier === "cycle" && (
-            <div className="flex items-center justify-between bg-white rounded-[12px] border border-[#ECEDEF] px-4 py-2.5 opacity-50">
-              <span className="text-sm text-[#3F4651] flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-[#0B0B0C] text-white text-xs flex items-center justify-center flex-shrink-0">↩</span>
-                Referido #{tiers.length + 1} (ciclo)
-              </span>
-              <span className="text-sm font-bold text-[#0B0B0C]">{tiers[0] ? formatCurrency(tiers[0].amount) : "—"}</span>
-            </div>
-          )}
-          {afterLastTier === "flat" && (
-            <div className="flex items-center justify-between bg-white rounded-[12px] border border-[#ECEDEF] px-4 py-2.5 opacity-50">
-              <span className="text-sm text-[#3F4651] flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-[#0B0B0C] text-white text-xs flex items-center justify-center flex-shrink-0">∞</span>
-                Referidos adicionales
-              </span>
-              <span className="text-sm font-bold text-[#0B0B0C]">{formatCurrency(flatAmount)}</span>
-            </div>
-          )}
-          {afterLastTier === "stop" && (
-            <div className="flex items-center justify-between bg-white rounded-[12px] border border-[#ECEDEF] px-4 py-2.5 opacity-50">
-              <span className="text-sm text-[#3F4651] flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-[#0B0B0C] text-white text-xs flex items-center justify-center flex-shrink-0">→</span>
-                Referidos adicionales
-              </span>
-              <span className="text-sm font-bold text-[#0B0B0C]">{tiers[tiers.length - 1] ? formatCurrency(tiers[tiers.length - 1].amount) : "—"}</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <button
-        onClick={saveTiers}
-        disabled={savingTiers}
-        className="w-full bg-brand-ink text-white text-sm font-medium py-3.5 rounded-full hover:bg-[#26262a] disabled:opacity-50 transition"
-      >
-        {savingTiers ? "Guardando..." : savedTiers ? "¡Guardado ✓" : "Guardar escalera y mensajes"}
-      </button>
-
-      {/* Pay modal */}
+      {/* PAY MODAL */}
       {payTarget && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
           <div className="absolute inset-0 bg-black/25" onClick={() => setPayTarget(null)} />
