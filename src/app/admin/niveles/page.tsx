@@ -367,7 +367,8 @@ export default function PremiosPage() {
                     {previewFills.map((fill, i) => (
                       <div
                         key={i}
-                        className={`relative w-11 h-11 rounded-full border-2 overflow-hidden bg-white shadow-[0_3px_10px_rgba(37,99,235,0.18)] ${previewReady ? "border-brand-blue bubble-ready" : "border-brand-border-1"}`}
+                        className={`relative w-14 h-14 rounded-full border-2 overflow-hidden bg-[#EEF3FE] ${previewReady ? "border-brand-blue bubble-ready" : "border-brand-blue"}`}
+                        style={{ boxShadow: "0 3px 10px rgba(37,99,235,0.25)" }}
                       >
                         <div
                           className="absolute bottom-0 left-0 right-0 transition-all duration-700 ease-out"
