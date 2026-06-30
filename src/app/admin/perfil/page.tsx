@@ -123,7 +123,7 @@ export default function PerfilPage() {
     : `${clientCount ?? "—"} de 2`;
 
   return (
-    <div className="max-w-2xl pb-10">
+    <div className="w-full pb-10">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-brand-ink">Perfil</h1>
         <p className="text-sm text-brand-gray-4 mt-0.5">Tu cuenta y suscripción</p>

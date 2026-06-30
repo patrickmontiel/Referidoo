@@ -221,7 +221,7 @@ export default function ReferidosPage() {
   const filtered = referrals.filter((r) => matchesFilter(r, filter));
 
   return (
-    <div className="max-w-2xl">
+    <div className="w-full">
 
       <div data-tour="header" className="mb-6">
         <h1 className="text-2xl font-bold text-brand-ink">Referidos</h1>

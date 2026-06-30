@@ -222,7 +222,7 @@ export default function ClientesPage() {
   );
 
   return (
-    <div className="max-w-3xl">
+    <div className="w-full">
       <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleFileChange} />
 
       {/* ── Mobile header ── */}

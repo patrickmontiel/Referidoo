@@ -190,7 +190,7 @@ export default function PremiosPage() {
   }
 
   return (
-    <div className="max-w-2xl pb-10">
+    <div className="w-full pb-10">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-xl font-bold text-brand-ink">Premios</h1>

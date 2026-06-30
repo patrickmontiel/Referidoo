@@ -566,10 +566,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Main content */}
         <main
-          className="flex-1 bg-white px-6 py-6 overflow-auto"
+          className="flex-1 bg-white overflow-auto"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 4.5rem)" }}
         >
-          {children}
+          <div
+            className="w-full mx-auto box-border px-5 py-6 md:px-10 md:pt-9 md:pb-12"
+            style={{ maxWidth: 1180 }}
+          >
+            {children}
+          </div>
         </main>
       </div>
 

@@ -116,7 +116,7 @@ export default function AdminOverviewPage() {
   ];
 
   return (
-    <div className="max-w-2xl">
+    <div className="w-full">
       {/* Greeting */}
       <div data-tour="greeting" className="mb-6">
         <h1 className="text-[28px] font-bold text-brand-ink leading-tight">
