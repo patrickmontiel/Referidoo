@@ -450,7 +450,7 @@ export default function PremiosPage() {
           Pagado este mes{" "}
           <span className="text-[#0B0B0C] font-semibold">{formatCurrency(paidThisMonth)}</span>
           {" · "}Por pagar{" "}
-          <span className="text-amber-600 font-semibold">{formatCurrency(pendingTotal)}</span>
+          <span className="font-semibold" style={{ color: "#D97706" }}>{formatCurrency(pendingTotal)}</span>
         </p>
         <button
           onClick={saveAll}

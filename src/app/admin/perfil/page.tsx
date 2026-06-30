@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/utils";
 import { UpgradeCardForm } from "@/components/UpgradeCardForm";
 
@@ -27,21 +28,61 @@ type Advisor = {
   pendingCommissions: PendingCommission[];
 };
 
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
+}
+
+function nameToSlug(name: string) {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 export default function PerfilPage() {
+  const router = useRouter();
   const [advisor, setAdvisor] = useState<Advisor | null>(null);
+  const [clientCount, setClientCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [billingBusy, setBillingBusy] = useState(false);
   const [billingError, setBillingError] = useState("");
   const [showUpgradeForm, setShowUpgradeForm] = useState(false);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    fetch("/api/advisor/me")
-      .then((r) => r.json())
-      .then((adv) => setAdvisor(adv?.name ? adv : null))
+    Promise.all([
+      fetch("/api/advisor/me").then((r) => r.json()),
+      fetch("/api/clients").then((r) => r.json()),
+    ])
+      .then(([adv, clientsData]) => {
+        setAdvisor(adv?.name ? adv : null);
+        const list = Array.isArray(clientsData)
+          ? clientsData
+          : Array.isArray(clientsData?.clients)
+          ? clientsData.clients
+          : [];
+        setClientCount(list.length);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  function copyLink() {
+    if (!advisor) return;
+    const slug = nameToSlug(advisor.name);
+    navigator.clipboard.writeText(`https://referidoo.com/unete/${slug}`).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   function handleUpgradeSuccess() {
     setShowUpgradeForm(false);
@@ -58,10 +99,15 @@ export default function PerfilPage() {
     if (!res.ok) { setBillingError(data.error ?? "No se pudo cancelar"); return; }
   }
 
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-brand-ink border-t-transparent rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-brand-ink border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -70,146 +116,189 @@ export default function PerfilPage() {
     return <p className="text-sm text-brand-gray-4">No se pudo cargar tu perfil.</p>;
   }
 
-  return (
-    <div className="max-w-2xl">
-      <h1 className="text-xl font-semibold mb-6">Tu perfil</h1>
+  const isPaid = advisor.plan === "paid";
+  const slug = nameToSlug(advisor.name);
+  const clientsLabel = isPaid
+    ? `${clientCount ?? "—"} de ilimitados`
+    : `${clientCount ?? "—"} de 2`;
 
-      {/* Datos de la cuenta */}
-      <div className="bg-white rounded-2xl border border-brand-border-1 p-5 mb-6">
-        <h2 className="text-sm font-medium mb-4">Datos de la cuenta</h2>
-        <dl className="space-y-3">
-          <div>
-            <dt className="text-xs font-medium text-brand-gray-4 uppercase tracking-wider">Nombre</dt>
-            <dd className="text-sm mt-0.5">{advisor.name}</dd>
+  return (
+    <div className="max-w-2xl pb-10">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-brand-ink">Perfil</h1>
+        <p className="text-sm text-brand-gray-4 mt-0.5">Tu cuenta y suscripción</p>
+      </div>
+
+      {/* Identity */}
+      <div className="bg-white rounded-2xl border border-brand-border-1 p-6 mb-4 flex items-center gap-5">
+        <div className="w-16 h-16 rounded-full bg-[#0B0B0C] flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+          {getInitials(advisor.name)}
+        </div>
+        <div>
+          <p className="font-bold text-[20px] text-[#0B0B0C] leading-tight">{advisor.name}</p>
+          <p className="text-sm text-brand-gray-4 mt-0.5">
+            Asesor de seguros{advisor.companyName ? ` · ${advisor.companyName}` : ""}
+          </p>
+        </div>
+      </div>
+
+      {/* Data rows */}
+      <div className="bg-white rounded-2xl border border-brand-border-1 mb-4 overflow-hidden">
+        {[
+          {
+            label: "Correo",
+            value: (
+              <span className="flex items-center gap-2">
+                {advisor.email}
+                {advisor.emailVerified ? (
+                  <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+                    Verificado
+                  </span>
+                ) : (
+                  <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+                    Sin verificar
+                  </span>
+                )}
+              </span>
+            ),
+          },
+          { label: "Teléfono", value: advisor.phone || "—" },
+          { label: "Clientes", value: <span className="font-bold text-[#0B0B0C]">{clientsLabel}</span> },
+        ].map((row, i, arr) => (
+          <div
+            key={row.label}
+            className={`flex items-center justify-between px-5 py-4 ${i < arr.length - 1 ? "border-b border-brand-border-1" : ""}`}
+          >
+            <span className="text-sm text-brand-gray-4">{row.label}</span>
+            <span className="text-sm">{row.value}</span>
           </div>
-          <div>
-            <dt className="text-xs font-medium text-brand-gray-4 uppercase tracking-wider">Correo</dt>
-            <dd className="text-sm mt-0.5 flex items-center gap-2">
-              {advisor.email}
-              {advisor.emailVerified ? (
-                <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
-                  Verificado
-                </span>
-              ) : (
-                <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
-                  Sin verificar
-                </span>
-              )}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs font-medium text-brand-gray-4 uppercase tracking-wider">Despacho / empresa</dt>
-            <dd className="text-sm mt-0.5">{advisor.companyName || "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-xs font-medium text-brand-gray-4 uppercase tracking-wider">Teléfono</dt>
-            <dd className="text-sm mt-0.5">{advisor.phone || "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-xs font-medium text-brand-gray-4 uppercase tracking-wider">Asesor desde</dt>
-            <dd className="text-sm mt-0.5">{formatDate(advisor.createdAt)}</dd>
-          </div>
-        </dl>
+        ))}
+      </div>
+
+      {/* Asesor referral link */}
+      <div className="bg-[#2563EB] rounded-2xl p-5 mb-4">
+        <p className="text-xs font-bold text-white/70 uppercase tracking-[0.08em] mb-1.5">Tu link de referidos</p>
+        <p className="font-bold text-white text-[15px] mb-4 break-all">referidoo.com/unete/{slug}</p>
+        <button
+          onClick={copyLink}
+          className="bg-white text-[#0B0B0C] text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-white/90 active:scale-95 transition"
+        >
+          {copied ? "¡Copiado ✓" : "Copiar link"}
+        </button>
       </div>
 
       {/* Plan */}
-      <div className="bg-white rounded-2xl border border-brand-border-1 p-5 mb-6">
-        <h2 className="text-sm font-medium mb-4">Tu plan</h2>
-
+      <div className="bg-white rounded-2xl border border-brand-border-1 p-5 mb-4">
         {!advisor.emailVerified && (
           <div className="bg-sky-50 border border-sky-100 text-sky-800 text-sm px-4 py-3 rounded-xl mb-4">
             Verifica tu correo para empezar a agregar clientes — revisa tu bandeja de entrada.
           </div>
         )}
 
-        {advisor.plan === "paid" ? (
+        {isPaid ? (
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <div className="flex items-start justify-between mb-3">
               <div>
-                <p className="text-sm font-medium">Plan pagado — clientes ilimitados</p>
+                <p className="font-bold text-[#0B0B0C] text-[17px]">Plan Pro</p>
+                <p className="text-brand-gray-4 text-sm mt-0.5">
+                  <span className="text-[#0B0B0C] font-semibold text-xl">${advisor.monthlyPriceMxn}</span>
+                  <span className="text-brand-gray-4"> /mes</span>
+                </p>
                 {advisor.paidUntil && (
-                  <p className="text-xs text-brand-gray-4 mt-0.5">
-                    Próximo cobro: {formatDate(advisor.paidUntil)} — $
-                    {advisor.monthlyPriceMxn + advisor.pendingCommissionTotal} MXN
+                  <p className="text-xs text-brand-gray-4 mt-1">
+                    Se cobra solo vía Mercado Pago · próximo cobro {formatDate(advisor.paidUntil)}
                   </p>
                 )}
               </div>
-              {confirmingCancel ? (
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <button
-                    onClick={handleCancel}
-                    disabled={billingBusy}
-                    className="text-xs font-medium px-3 py-2 rounded-full bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 transition"
-                  >
-                    {billingBusy ? "Cancelando..." : "Confirmar"}
-                  </button>
-                  <button
-                    onClick={() => setConfirmingCancel(false)}
-                    disabled={billingBusy}
-                    className="text-xs font-medium px-3 py-2 rounded-full text-brand-gray-2 hover:bg-brand-surface disabled:opacity-50 transition"
-                  >
-                    No, mantener plan
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setConfirmingCancel(true)}
-                  className="text-xs font-medium px-4 py-2 rounded-full border border-brand-border-4 hover:bg-brand-surface transition self-start sm:flex-shrink-0"
-                >
-                  Cancelar plan
-                </button>
-              )}
+              <span className="text-xs font-semibold text-green-700 bg-green-50 px-2.5 py-1 rounded-full flex-shrink-0">
+                Activo
+              </span>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-brand-border-1">
-              <p className="text-xs font-medium text-brand-gray-4 uppercase tracking-wider mb-2">
-                Desglose del próximo cobro
-              </p>
-              <div className="flex items-center justify-between text-sm py-1">
-                <span className="text-brand-gray-2">Mensualidad</span>
-                <span>${advisor.monthlyPriceMxn} MXN</span>
-              </div>
-              {advisor.pendingCommissions.length === 0 ? (
-                <div className="flex items-center justify-between text-sm py-1">
-                  <span className="text-brand-gray-2">Comisión Referidoo</span>
-                  <span>$0 MXN</span>
-                </div>
-              ) : (
-                <>
+            {advisor.pendingCommissions.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-brand-border-1">
+                <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-2">
+                  Comisiones pendientes
+                </p>
+                <div className="space-y-1">
                   {advisor.pendingCommissions.map((c) => (
-                    <div key={c.id} className="flex items-center justify-between text-sm py-1">
-                      <span className="text-brand-gray-2">
-                        Comisión por {c.leadName}
-                        {c.productType ? ` (${c.productType})` : ""}
+                    <div key={c.id} className="flex items-center justify-between text-sm">
+                      <span className="text-brand-gray-4">
+                        {c.leadName}{c.productType ? ` (${c.productType})` : ""}
                       </span>
                       <span>${c.lessioCommission} MXN</span>
                     </div>
                   ))}
-                  <div className="flex items-center justify-between text-sm py-1 font-medium border-t border-brand-border-2 mt-1 pt-1">
-                    <span>Comisión Referidoo</span>
-                    <span>${advisor.pendingCommissionTotal} MXN</span>
+                  <div className="flex items-center justify-between text-sm font-semibold pt-1 border-t border-brand-border-1 mt-1">
+                    <span>Total próximo cobro</span>
+                    <span>${advisor.monthlyPriceMxn + advisor.pendingCommissionTotal} MXN</span>
                   </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2 mt-5">
+              {confirmingCancel ? (
+                <>
+                  <button
+                    onClick={handleCancel}
+                    disabled={billingBusy}
+                    className="flex-1 text-sm font-medium py-3 rounded-full bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition"
+                  >
+                    {billingBusy ? "Cancelando..." : "Confirmar cancelación"}
+                  </button>
+                  <button
+                    onClick={() => setConfirmingCancel(false)}
+                    disabled={billingBusy}
+                    className="text-sm font-medium px-4 py-3 rounded-full border border-brand-border-4 text-brand-gray-2 hover:bg-brand-surface disabled:opacity-50 transition"
+                  >
+                    Mantener
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setConfirmingCancel(true)}
+                    className="flex-1 bg-brand-ink text-white text-sm font-medium py-3 rounded-full hover:bg-[#26262a] transition"
+                  >
+                    Gestionar suscripción
+                  </button>
+                  <button
+                    onClick={logout}
+                    className="text-sm font-medium text-red-600 px-4 py-3 rounded-full border border-red-100 hover:bg-red-50 transition"
+                  >
+                    Cerrar sesión
+                  </button>
                 </>
               )}
-              <div className="flex items-center justify-between text-sm py-1 font-medium mt-1 pt-1 border-t border-brand-border-1">
-                <span>Total</span>
-                <span>${advisor.monthlyPriceMxn + advisor.pendingCommissionTotal} MXN</span>
-              </div>
             </div>
           </div>
         ) : !showUpgradeForm ? (
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-            <div>
-              <p className="text-sm font-medium">Plan freemium — hasta 2 clientes</p>
-              <p className="text-xs text-brand-gray-4 mt-0.5">Actualiza a pagado ($539/mes) para clientes ilimitados.</p>
+          <div>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="font-bold text-[#0B0B0C] text-[17px]">Plan Gratis</p>
+                <p className="text-sm text-brand-gray-4 mt-0.5">Hasta 2 clientes</p>
+              </div>
             </div>
-            <button
-              onClick={() => setShowUpgradeForm(true)}
-              disabled={!advisor.emailVerified}
-              className="text-xs font-medium px-4 py-2 rounded-full bg-brand-ink text-white hover:bg-[#26262a] disabled:opacity-50 transition self-start sm:flex-shrink-0"
-            >
-              Subir de plan
-            </button>
+            <p className="text-sm text-brand-gray-4 mb-4">
+              Actualiza a Plan Pro ($539/mes) para tener clientes ilimitados.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowUpgradeForm(true)}
+                disabled={!advisor.emailVerified}
+                className="flex-1 bg-brand-ink text-white text-sm font-medium py-3 rounded-full hover:bg-[#26262a] disabled:opacity-50 transition"
+              >
+                Subir a Plan Pro
+              </button>
+              <button
+                onClick={logout}
+                className="text-sm font-medium text-red-600 px-4 py-3 rounded-full border border-red-100 hover:bg-red-50 transition"
+              >
+                Cerrar sesión
+              </button>
+            </div>
           </div>
         ) : (
           <UpgradeCardForm onSuccess={handleUpgradeSuccess} onCancel={() => setShowUpgradeForm(false)} />

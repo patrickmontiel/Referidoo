@@ -82,6 +82,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [showWelcome, setShowWelcome] = useState(false);
   const [fadingOut, setFadingOut] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
+  const [advisorPlan, setAdvisorPlan] = useState("");
   const [emailVerified, setEmailVerified] = useState(true);
   const [showVerifiedBanner, setShowVerifiedBanner] = useState(false);
   const consumedWelcomeFlag = useRef(false);
@@ -118,6 +119,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       .then((adv) => {
         if (typeof adv?.emailVerified === "boolean") setEmailVerified(adv.emailVerified);
         if (adv?.name) setWelcomeName(adv.name);
+        if (adv?.plan) setAdvisorPlan(adv.plan === "paid" ? "Plan Pro" : "Plan Gratis");
         return !adv?.onboardedAt; // needsOnboarding
       })
       .catch(() => false);
@@ -225,8 +227,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             );
           })}
 
+          {/* Profile card */}
+          {welcomeName && (
+            <div className="mt-auto mb-3">
+              <div className="flex items-center gap-3 p-3 bg-[#F4F5F7] rounded-xl">
+                <div className="w-9 h-9 rounded-full bg-[#0B0B0C] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                  {welcomeName.split(" ").filter(Boolean).slice(0, 2).map((n: string) => n[0]).join("").toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#0B0B0C] truncate leading-tight">
+                    {welcomeName.split(" ").slice(0, 2).join(" ")}
+                  </p>
+                  <p className="text-xs text-brand-gray-4 leading-tight">{advisorPlan || "—"}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Demo reset — bottom of sidebar */}
-          <div className="mt-auto pt-4 border-t border-brand-border-1">
+          <div className={welcomeName ? "pt-3 border-t border-brand-border-1" : "mt-auto pt-4 border-t border-brand-border-1"}>
             {resetState === null && (
               <button
                 onClick={() => setResetState("confirm")}
