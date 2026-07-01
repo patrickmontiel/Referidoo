@@ -13,7 +13,7 @@ export async function GET() {
     include: {
       _count: { select: { referrals: true } },
       referrals: {
-        select: { rewardAmount: true, rewardStatus: true, status: true, tierPosition: true },
+        select: { rewardAmount: true, rewardStatus: true, status: true, tierPosition: true, productType: true, interestProductType: true },
       },
       bubbleClaims: {
         select: { amount: true, status: true },
@@ -22,7 +22,9 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json(clients);
+  const res = NextResponse.json(clients);
+  res.headers.set("Cache-Control", "private, max-age=10, stale-while-revalidate=30");
+  return res;
 }
 
 export async function POST(req: NextRequest) {
@@ -37,14 +39,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: gateErrorMessage(gate.reason) }, { status: 403 });
   }
 
-  let referralCode = generateReferralCode(name);
-  let attempts = 0;
-  while (attempts < 5) {
-    const existing = await db.client.findUnique({ where: { referralCode } });
-    if (!existing) break;
-    referralCode = generateReferralCode(name);
-    attempts++;
-  }
+  // Generate 5 candidates and pick first one not in use — one query instead of up to 5.
+  const candidates = Array.from({ length: 5 }, () => generateReferralCode(name));
+  const taken = await db.client.findMany({
+    where: { referralCode: { in: candidates } },
+    select: { referralCode: true },
+  });
+  const takenSet = new Set(taken.map((c) => c.referralCode));
+  const referralCode = candidates.find((c) => !takenSet.has(c)) ?? candidates[0];
 
   const client = await db.client.create({
     data: {
