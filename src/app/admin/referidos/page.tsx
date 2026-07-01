@@ -243,12 +243,12 @@ export default function ReferidosPage() {
   const filtered = referrals.filter((r) => matchesFilter(r, filter));
 
   const FREEMIUM_LEAD_LIMIT = 12;
-  const activeLeads = referrals
-    .filter((r) => r.status === "pending" || r.status === "contacted" || r.status === "in_process")
-    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  const allLeadsSorted = [...referrals].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
   const lockedLeadIds = new Set<string>(
-    advisorPlan === "freemium" && activeLeads.length > FREEMIUM_LEAD_LIMIT
-      ? activeLeads.slice(FREEMIUM_LEAD_LIMIT).map((r) => r.id)
+    advisorPlan === "freemium" && allLeadsSorted.length > FREEMIUM_LEAD_LIMIT
+      ? allLeadsSorted.slice(FREEMIUM_LEAD_LIMIT).map((r) => r.id)
       : []
   );
   const lockedCount = lockedLeadIds.size;
