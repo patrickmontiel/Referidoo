@@ -12,10 +12,21 @@ type Referral = {
   rewardAmount: number;
   rewardStatus: string;
   createdAt: string;
+  saleAmount?: number | null;
   productType?: string | null;
   interestProductType?: string | null;
   referrer: { id: string; name: string };
 };
+
+const COMMISSION_RATES: Record<string, { freemium: number; paid: number }> = {
+  PPR:          { freemium: 0.0025, paid: 0.0015 },
+  Vida:         { freemium: 0.0025, paid: 0.0015 },
+  "Daños/Auto": { freemium: 0.015,  paid: 0.008  },
+  GMM:          { freemium: 0.015,  paid: 0.008  },
+  Otro:         { freemium: 0.015,  paid: 0.008  },
+};
+
+const MEMBERSHIP_COST = 539;
 
 type Advisor = { name: string; companyName: string | null; plan?: string };
 
@@ -89,6 +100,27 @@ export default function AdminOverviewPage() {
       .replace(" de ", " ")
       .replace(/^\w/, (c) => c.toUpperCase());
 
+  const isFreemium = advisor?.plan !== "paid";
+  const thisMonthConverted = referrals.filter(
+    (r) =>
+      r.status === "converted" &&
+      new Date(r.createdAt).getMonth() === now.getMonth() &&
+      new Date(r.createdAt).getFullYear() === now.getFullYear() &&
+      r.saleAmount &&
+      r.productType
+  );
+  const freemiumCommission = thisMonthConverted.reduce((sum, r) => {
+    const rate = COMMISSION_RATES[r.productType!];
+    return sum + (rate ? Math.round(r.saleAmount! * rate.freemium) : 0);
+  }, 0);
+  const proCommission = thisMonthConverted.reduce((sum, r) => {
+    const rate = COMMISSION_RATES[r.productType!];
+    return sum + (rate ? Math.round(r.saleAmount! * rate.paid) : 0);
+  }, 0);
+  const commissionDiff = freemiumCommission - proCommission;
+  const netWithPro = commissionDiff - MEMBERSHIP_COST;
+  const showFreemiumCard = isFreemium && thisMonthConverted.length >= 1;
+
   const advisorSlug = advisor ? nameToSlug(advisor.name) : "";
   const recruiterLink = `referidoo.com/unete/${advisorSlug}`;
 
@@ -142,6 +174,46 @@ export default function AdminOverviewPage() {
           </div>
         </div>
       </div>
+
+      {/* Resumen mensual freemium */}
+      {showFreemiumCard && (
+        <div className="bg-[#0B0B0C] rounded-2xl p-5 mb-5">
+          <p className="text-xs font-bold text-[#9098A2] uppercase tracking-[0.08em] mb-4">
+            Este mes · plan gratuito
+          </p>
+          <div className="space-y-3 mb-5">
+            <div className="flex justify-between items-baseline">
+              <span className="text-sm text-[#9098A2]">{thisMonthConverted.length} conversión{thisMonthConverted.length !== 1 ? "es" : ""} registrada{thisMonthConverted.length !== 1 ? "s" : ""}</span>
+            </div>
+            <div className="flex justify-between items-baseline">
+              <span className="text-sm text-[#9098A2]">Comisión pagada a Lessio</span>
+              <span className="text-sm font-semibold text-white">{formatCurrency(freemiumCommission)}</span>
+            </div>
+            <div className="flex justify-between items-baseline">
+              <span className="text-sm text-[#9098A2]">Con plan Pro hubiera sido</span>
+              <span className="text-sm font-semibold text-green-400">{formatCurrency(proCommission)}</span>
+            </div>
+            <div className="border-t border-white/10 pt-3 flex justify-between items-baseline">
+              <span className="text-sm text-[#9098A2]">Diferencia</span>
+              <span className="text-sm font-bold text-amber-400">+{formatCurrency(commissionDiff)}</span>
+            </div>
+            <div className="flex justify-between items-baseline">
+              <span className="text-sm text-[#9098A2]">Membresía Pro</span>
+              <span className="text-sm text-[#9098A2]">−{formatCurrency(MEMBERSHIP_COST)}/mes</span>
+            </div>
+          </div>
+          <div className={`rounded-xl px-4 py-3 mb-4 ${netWithPro >= 0 ? "bg-green-500/15" : "bg-white/5"}`}>
+            <p className={`text-sm font-semibold ${netWithPro >= 0 ? "text-green-400" : "text-[#9098A2]"}`}>
+              {netWithPro >= 0
+                ? `Ya estarías ${formatCurrency(netWithPro)} a favor con Pro este mes.`
+                : `Te faltan ${formatCurrency(Math.abs(netWithPro))} en ahorro para cubrir Pro este mes.`}
+            </p>
+          </div>
+          <button className="w-full bg-white text-[#0B0B0C] text-sm font-semibold py-3 rounded-full hover:bg-white/90 active:scale-95 transition">
+            Actualizar a Pro · $539/mes
+          </button>
+        </div>
+      )}
 
       {/* Recent referrals */}
       <div data-tour="recent" className="bg-white rounded-2xl border border-brand-border-1 mb-5">
