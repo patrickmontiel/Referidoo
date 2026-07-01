@@ -168,15 +168,6 @@ export default function PremiosPage() {
   const pendingClaims = claims.filter((c) => c.status === "pending");
   const paidClaims = claims.filter((c) => c.status === "paid");
 
-  const now = new Date();
-  const paidThisMonth = paidClaims
-    .filter((c) => {
-      if (!c.paidAt) return false;
-      const d = new Date(c.paidAt);
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    })
-    .reduce((s, c) => s + c.amount, 0);
-  const pendingTotal = pendingClaims.reduce((s, c) => s + c.amount, 0);
 
   const ordinalLabel = (i: number) =>
     i === 0 ? "1er referido convertido" : i === 1 ? "2do referido convertido" : `${i + 1}er referido convertido`;
@@ -413,17 +404,11 @@ export default function PremiosPage() {
       )}
 
       {/* SAVE FOOTER */}
-      <div className="bg-white rounded-2xl border border-brand-border-1 px-5 py-4 flex items-center justify-between gap-4">
-        <p className="text-sm text-brand-gray-4 min-w-0">
-          Pagado este mes{" "}
-          <span className="text-[#0B0B0C] font-semibold">{formatCurrency(paidThisMonth)}</span>
-          {" · "}Por pagar{" "}
-          <span className="font-semibold" style={{ color: "#D97706" }}>{formatCurrency(pendingTotal)}</span>
-        </p>
+      <div className="bg-white rounded-2xl border border-brand-border-1 px-5 py-4 flex justify-end">
         <button
           onClick={saveAll}
           disabled={saving}
-          className="flex-shrink-0 bg-brand-ink text-white text-sm font-medium px-6 py-2.5 rounded-full hover:bg-[#26262a] disabled:opacity-50 transition"
+          className="bg-brand-ink text-white text-sm font-medium px-6 py-2.5 rounded-full hover:bg-[#26262a] disabled:opacity-50 transition"
         >
           {saving ? "Guardando..." : saved ? "¡Guardado ✓" : "Guardar cambios"}
         </button>

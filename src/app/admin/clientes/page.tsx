@@ -23,6 +23,7 @@ type Client = {
     interestProductType?: string | null;
   }[];
   bubbleClaims: { amount: number; status: string }[];
+  bubblePoints: number;
 };
 
 type Advisor = { name: string; companyName: string | null };
@@ -98,6 +99,7 @@ export default function ClientesPage() {
   const [csvRows, setCsvRows] = useState<CsvRow[] | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResults, setImportResults] = useState<ImportResult[] | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   function load() {
     Promise.all([
@@ -383,6 +385,21 @@ export default function ClientesPage() {
             const clientStatus: ClientStatus = conv > 0 ? "activo" : refCount > 0 ? "en_proceso" : "sin_referidos";
             const { label: statusLabel, style: statusStyle } = statusConfig[clientStatus];
             const waUrl = buildWhatsAppUrl(client);
+            const isExpanded = expandedId === client.id;
+            const pendingReward = client.referrals
+              .filter((r) => r.rewardStatus === "approved" && r.tierPosition > 0)
+              .reduce((s, r) => s + r.rewardAmount, 0);
+            const paidReward = client.referrals
+              .filter((r) => r.rewardStatus === "paid" && r.tierPosition > 0)
+              .reduce((s, r) => s + r.rewardAmount, 0);
+            const pendingBubble = client.bubbleClaims
+              .filter((c) => c.status === "pending")
+              .reduce((s, c) => s + c.amount, 0);
+            const paidBubble = client.bubbleClaims
+              .filter((c) => c.status === "paid")
+              .reduce((s, c) => s + c.amount, 0);
+            const totalOwed = pendingReward + pendingBubble;
+            const totalPaid = paidReward + paidBubble;
 
             const avatar = (
               <div className="w-11 h-11 rounded-full bg-[#F4F5F7] flex items-center justify-center text-sm font-semibold text-[#3F4651] flex-shrink-0">
@@ -447,35 +464,52 @@ export default function ClientesPage() {
                   {statusPill}
                   {waBtn}
                   {deactivateId === client.id ? deactivateRow : copyBtn}
+                  <button
+                    onClick={() => setExpandedId(isExpanded ? null : client.id)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F4F5F7] transition text-[#8A8F98] flex-shrink-0"
+                    aria-label="Ver detalle financiero"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path d={isExpanded ? "M18 15L12 9L6 15" : "M6 9L12 15L18 9"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
                 </div>
 
                 {/* ── MOBILE: stacked layout ── */}
                 <div className="md:hidden px-5 pt-4 pb-5">
-                  {/* Row 1: avatar + name/product */}
-                  <div className="flex items-center gap-3 mb-4">
-                    {avatar}
-                    <div className="min-w-0">
-                      <p className="font-bold text-[#0B0B0C] text-base leading-snug">{client.name}</p>
-                      {mainProduct && <p className="text-sm" style={{ color: "#9098A2" }}>{mainProduct}</p>}
+                  {/* Rows 1+2: tappable for expansion */}
+                  <div
+                    className="cursor-pointer"
+                    onClick={() => setExpandedId(isExpanded ? null : client.id)}
+                  >
+                    {/* Row 1: avatar + name/product + chevron */}
+                    <div className="flex items-center gap-3 mb-4">
+                      {avatar}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-[#0B0B0C] text-base leading-snug">{client.name}</p>
+                        {mainProduct && <p className="text-sm" style={{ color: "#9098A2" }}>{mainProduct}</p>}
+                      </div>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-[#8A8F98] flex-shrink-0">
+                        <path d={isExpanded ? "M18 15L12 9L6 15" : "M6 9L12 15L18 9"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    {/* Row 2: stats + status pill */}
+                    <div className="flex items-center gap-5 mb-4">
+                      <div>
+                        <p className="text-2xl font-bold text-[#0B0B0C] leading-none">{refCount}</p>
+                        <p className="text-[11px] mt-1" style={{ color: "#9098A2" }}>Referidos</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-[#0B0B0C] leading-none">{conv}</p>
+                        <p className="text-[11px] mt-1" style={{ color: "#9098A2" }}>Convertidos</p>
+                      </div>
+                      <div className="ml-auto">
+                        {statusPill}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Row 2: stats + status pill */}
-                  <div className="flex items-center gap-5 mb-4">
-                    <div>
-                      <p className="text-2xl font-bold text-[#0B0B0C] leading-none">{refCount}</p>
-                      <p className="text-[11px] mt-1" style={{ color: "#9098A2" }}>Referidos</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-[#0B0B0C] leading-none">{conv}</p>
-                      <p className="text-[11px] mt-1" style={{ color: "#9098A2" }}>Convertidos</p>
-                    </div>
-                    <div className="ml-auto">
-                      {statusPill}
-                    </div>
-                  </div>
-
-                  {/* Row 3: action buttons */}
+                  {/* Row 3: action buttons — not inside clickable area */}
                   {deactivateId === client.id ? (
                     <div className="flex gap-2">
                       <button onClick={() => deactivate(client.id)} className="flex-1 text-sm py-2.5 rounded-full bg-red-50 text-red-600 font-medium">
@@ -503,6 +537,30 @@ export default function ClientesPage() {
                     </div>
                   )}
                 </div>
+
+                {/* ── EXPANDED DETAIL ── */}
+                {isExpanded && (
+                  <div className="border-t border-[#ECEDEF] px-5 py-4 grid grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-xs text-[#8A8F98] mb-1.5">Se le debe</p>
+                      <p className={`text-[22px] font-bold leading-none ${totalOwed > 0 ? "text-amber-600" : "text-[#0B0B0C]"}`}>
+                        {formatCurrency(totalOwed)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#8A8F98] mb-1.5">Pagado total</p>
+                      <p className={`text-[22px] font-bold leading-none ${totalPaid > 0 ? "text-green-600" : "text-[#0B0B0C]"}`}>
+                        {formatCurrency(totalPaid)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#8A8F98] mb-1.5">Puntos burbuja</p>
+                      <p className={`text-[22px] font-bold leading-none ${client.bubblePoints > 0 ? "text-[#2563EB]" : "text-[#0B0B0C]"}`}>
+                        {client.bubblePoints} <span className="text-sm font-medium text-[#8A8F98]">pts</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
 
               </div>
             );
