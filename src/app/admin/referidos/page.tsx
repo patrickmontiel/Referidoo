@@ -91,6 +91,8 @@ export default function ReferidosPage() {
   const [editingSale, setEditingSale] = useState(false);
   const [editSaleInput, setEditSaleInput] = useState("");
   const [bubblePointsByProduct, setBubblePointsByProduct] = useState({ autoPoints: 150, gmmPoints: 300 });
+  const [advisorPlan, setAdvisorPlan] = useState<"freemium" | "paid">("freemium");
+  const [conversionUpsell, setConversionUpsell] = useState<{ freemiumCost: number; proCost: number; saved: number } | null>(null);
 
   function load() {
     setLoading(true);
@@ -110,6 +112,9 @@ export default function ReferidosPage() {
     fetch("/api/bubble-settings")
       .then((r) => r.json())
       .then((d) => setBubblePointsByProduct({ autoPoints: d.bubbleAutoPoints ?? 150, gmmPoints: d.bubbleGmmPoints ?? 300 }));
+    fetch("/api/advisor/me")
+      .then((r) => r.json())
+      .then((d) => { if (d?.plan) setAdvisorPlan(d.plan); });
   }, []);
 
   async function update(id: string, data: Record<string, unknown>) {
@@ -155,9 +160,26 @@ export default function ReferidosPage() {
     if (!convertTarget) return;
     const saleAmount = Number(saleInput.replace(/,/g, ""));
     if (!saleAmount) return;
+    const usedProduct = productType;
     await update(convertTarget.id, { status: "converted", rewardStatus: "approved", saleAmount, productType: productType || null });
     setConvertTarget(null);
     setProductType("");
+    if (advisorPlan === "freemium" && saleAmount && usedProduct) {
+      const rates: Record<string, { freemium: number; paid: number }> = {
+        PPR: { freemium: 0.0025, paid: 0.0015 },
+        Vida: { freemium: 0.0025, paid: 0.0015 },
+        "Daños/Auto": { freemium: 0.015, paid: 0.008 },
+        GMM: { freemium: 0.015, paid: 0.008 },
+        Otro: { freemium: 0.015, paid: 0.008 },
+      };
+      const r = rates[usedProduct];
+      if (r) {
+        const freemiumCost = Math.round(saleAmount * r.freemium);
+        const proCost = Math.round(saleAmount * r.paid);
+        setConversionUpsell({ freemiumCost, proCost, saved: freemiumCost - proCost });
+        setTimeout(() => setConversionUpsell(null), 9000);
+      }
+    }
   }
 
   async function saveEditedSale() {
@@ -220,6 +242,17 @@ export default function ReferidosPage() {
 
   const filtered = referrals.filter((r) => matchesFilter(r, filter));
 
+  const FREEMIUM_LEAD_LIMIT = 12;
+  const activeLeads = referrals
+    .filter((r) => r.status === "pending" || r.status === "contacted" || r.status === "in_process")
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  const lockedLeadIds = new Set<string>(
+    advisorPlan === "freemium" && activeLeads.length > FREEMIUM_LEAD_LIMIT
+      ? activeLeads.slice(FREEMIUM_LEAD_LIMIT).map((r) => r.id)
+      : []
+  );
+  const lockedCount = lockedLeadIds.size;
+
   return (
     <div className="w-full">
 
@@ -252,6 +285,20 @@ export default function ReferidosPage() {
         })}
       </div>
 
+      {/* Lead cap banner (freemium) */}
+      {lockedCount > 0 && (
+        <div className="mb-4 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-amber-600 flex-shrink-0">
+            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+          </svg>
+          <p className="text-xs text-amber-800 flex-1">
+            <span className="font-semibold">{lockedCount} lead{lockedCount > 1 ? "s bloqueados" : " bloqueado"}</span>
+            {` — superaste el límite de ${FREEMIUM_LEAD_LIMIT} leads activos del plan gratuito. `}
+            <span className="font-semibold underline cursor-pointer">Actualiza a Pro</span> para desbloquearlos.
+          </p>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-12">
           <div className="w-5 h-5 border-2 border-brand-ink border-t-transparent rounded-full animate-spin" />
@@ -261,6 +308,7 @@ export default function ReferidosPage() {
       ) : (
         <div data-tour="lista-referidos" className="space-y-2">
           {filtered.map((r) => {
+            const isLocked = lockedLeadIds.has(r.id);
             const isConverted = r.status === "converted";
             const isBubble = r.productType === "Daños/Auto" || r.productType === "GMM" || r.productType === "Otro";
             const noEscaleraReward = isConverted && r.tierPosition === 0;
@@ -284,28 +332,40 @@ export default function ReferidosPage() {
             return (
               <div
                 key={r.id}
-                className="bg-white rounded-2xl border border-brand-border-1 px-4 py-3.5 cursor-pointer hover:border-[#C8CDD5] transition flex items-center gap-3"
-                onClick={() => setSelected(r)}
+                className={`relative bg-white rounded-2xl border border-brand-border-1 px-4 py-3.5 transition flex items-center gap-3 ${isLocked ? "cursor-default select-none" : "cursor-pointer hover:border-[#C8CDD5]"}`}
+                onClick={isLocked ? undefined : () => setSelected(r)}
               >
-                <div className="w-10 h-10 rounded-full bg-[#F4F5F7] flex items-center justify-center text-[13px] font-semibold text-[#3F4651] flex-shrink-0">
-                  {getInitials(r.leadName)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[#0B0B0C] truncate">{r.leadName}</p>
-                  <p className="text-xs text-brand-gray-4 truncate">Referido por {r.referrer.name}</p>
-                </div>
-                {displayProduct && (
-                  <span className="hidden sm:inline-flex text-xs font-medium px-3 py-1 rounded-full border border-brand-border-4 text-[#3F4651] flex-shrink-0">
-                    {displayProduct}
+                <div className={isLocked ? "blur-sm pointer-events-none flex items-center gap-3 flex-1 min-w-0" : "contents"}>
+                  <div className="w-10 h-10 rounded-full bg-[#F4F5F7] flex items-center justify-center text-[13px] font-semibold text-[#3F4651] flex-shrink-0">
+                    {getInitials(r.leadName)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-[#0B0B0C] truncate">{r.leadName}</p>
+                    <p className="text-xs text-brand-gray-4 truncate">Referido por {r.referrer.name}</p>
+                  </div>
+                  {displayProduct && (
+                    <span className="hidden sm:inline-flex text-xs font-medium px-3 py-1 rounded-full border border-brand-border-4 text-[#3F4651] flex-shrink-0">
+                      {displayProduct}
+                    </span>
+                  )}
+                  <div className="text-right flex-shrink-0 min-w-[56px]">
+                    {amountNode}
+                    <p className="text-xs text-brand-gray-4">{shortDate(r.createdAt)}</p>
+                  </div>
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${statusStyle[r.status] ?? "bg-[#F4F5F7] text-[#6B727D]"}`}>
+                    {statusLabel[r.status] ?? r.status}
                   </span>
-                )}
-                <div className="text-right flex-shrink-0 min-w-[56px]">
-                  {amountNode}
-                  <p className="text-xs text-brand-gray-4">{shortDate(r.createdAt)}</p>
                 </div>
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${statusStyle[r.status] ?? "bg-[#F4F5F7] text-[#6B727D]"}`}>
-                  {statusLabel[r.status] ?? r.status}
-                </span>
+                {isLocked && (
+                  <div className="absolute inset-0 flex items-center justify-end pr-4 rounded-2xl">
+                    <div className="flex items-center gap-2">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className="text-[#6B727D]">
+                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                      </svg>
+                      <span className="text-xs font-semibold text-[#3F4651]">Actualiza a Pro</span>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -735,6 +795,28 @@ export default function ReferidosPage() {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Conversion upsell toast (freemium) ─── */}
+      {conversionUpsell && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm px-4">
+          <div className="bg-[#0B0B0C] text-white rounded-2xl px-5 py-4 shadow-2xl relative">
+            <button
+              onClick={() => setConversionUpsell(null)}
+              className="absolute top-3 right-4 text-white/40 hover:text-white text-xl leading-none transition"
+            >×</button>
+            <p className="text-sm font-semibold mb-1.5">¡Conversión registrada!</p>
+            <p className="text-xs text-white/70 leading-relaxed">
+              Comisión en plan gratuito:{" "}
+              <span className="text-white font-semibold">{formatCurrency(conversionUpsell.freemiumCost)}</span>
+              {"  ·  "}Con Pro hubiera sido:{" "}
+              <span className="text-green-400 font-semibold">{formatCurrency(conversionUpsell.proCost)}</span>
+            </p>
+            <p className="text-xs text-amber-400 font-semibold mt-1.5">
+              Pagaste {formatCurrency(conversionUpsell.saved)} extra por estar en plan gratuito.
+            </p>
           </div>
         </div>
       )}

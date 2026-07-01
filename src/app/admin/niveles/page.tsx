@@ -80,6 +80,7 @@ export default function PremiosPage() {
   const [bubbleAutoPoints, setBubbleAutoPoints] = useState(150);
   const [bubbleGmmPoints, setBubbleGmmPoints] = useState(300);
   const [bubbleClaimThreshold, setBubbleClaimThreshold] = useState(500);
+  const [advisorPlan, setAdvisorPlan] = useState<"freemium" | "paid">("freemium");
 
   useEffect(() => {
     fetch("/api/tiers")
@@ -117,6 +118,9 @@ export default function PremiosPage() {
         setBubbleGmmPoints(d.bubbleGmmPoints ?? 300);
         setBubbleClaimThreshold(d.bubbleClaimThreshold ?? 500);
       });
+    fetch("/api/advisor/me")
+      .then((r) => r.json())
+      .then((d) => { if (d?.plan) setAdvisorPlan(d.plan); });
   }, []);
 
   function addTier() {
@@ -274,7 +278,18 @@ export default function PremiosPage() {
       </div>
 
       {/* BURBUJA */}
-      <div data-tour="bubble" className="bg-white rounded-2xl border border-brand-border-1 p-6 mb-4">
+      <div data-tour="bubble" className="relative bg-white rounded-2xl border border-brand-border-1 p-6 mb-4 overflow-hidden">
+        {advisorPlan === "freemium" && (
+          <div className="absolute inset-0 z-10 backdrop-blur-[2px] bg-white/70 flex flex-col items-center justify-center rounded-2xl">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-[#6B727D] mb-3">
+              <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+            </svg>
+            <p className="text-sm font-bold text-[#0B0B0C] mb-1">Función exclusiva de Pro</p>
+            <p className="text-xs text-[#6B727D] text-center max-w-[200px]">
+              Configura los Premios Burbuja con el plan Pro por $539/mes.
+            </p>
+          </div>
+        )}
         <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-0.5">
           Auto y Gastos Médicos Mayores
         </p>
