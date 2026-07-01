@@ -57,6 +57,8 @@ export default function PerfilPage() {
   const [showUpgradeForm, setShowUpgradeForm] = useState(false);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -75,6 +77,15 @@ export default function PerfilPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  async function resendVerification() {
+    if (resending || resent) return;
+    setResending(true);
+    await fetch("/api/auth/resend-verification", { method: "POST" }).catch(() => {});
+    setResending(false);
+    setResent(true);
+    setTimeout(() => setResent(false), 2000);
+  }
 
   function copyLink() {
     if (!advisor) return;
@@ -190,8 +201,19 @@ export default function PerfilPage() {
       {/* Plan */}
       <div data-tour="perfil" className="bg-white rounded-2xl border border-brand-border-1 p-5 mb-4">
         {!advisor.emailVerified && (
-          <div className="bg-sky-50 border border-sky-100 text-sky-800 text-sm px-4 py-3 rounded-xl mb-4">
-            Verifica tu correo para empezar a agregar clientes — revisa tu bandeja de entrada.
+          <div className="bg-sky-50 border border-sky-100 text-sky-800 text-sm px-4 py-3 rounded-xl mb-4 flex items-center justify-between gap-3">
+            <span>Verifica tu correo para empezar a agregar clientes — revisa tu bandeja de entrada.</span>
+            {resent ? (
+              <span className="text-green-700 font-medium whitespace-nowrap flex-shrink-0">reenviado con éxito</span>
+            ) : (
+              <button
+                onClick={resendVerification}
+                disabled={resending}
+                className="underline whitespace-nowrap flex-shrink-0 disabled:opacity-50 cursor-pointer bg-transparent border-0 p-0 text-sky-800 text-sm"
+              >
+                {resending ? "enviando..." : "reenviar correo"}
+              </button>
+            )}
           </div>
         )}
 
@@ -287,8 +309,7 @@ export default function PerfilPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setShowUpgradeForm(true)}
-                disabled={!advisor.emailVerified}
-                className="flex-1 bg-brand-ink text-white text-sm font-medium py-3 rounded-full hover:bg-[#26262a] disabled:opacity-50 transition"
+                className="flex-1 bg-brand-ink text-white text-sm font-medium py-3 rounded-full hover:bg-[#26262a] transition"
               >
                 Subir a Plan Pro
               </button>
