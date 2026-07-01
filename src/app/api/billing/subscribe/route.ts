@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getAdvisorSession } from "@/lib/auth";
+import { getAdvisorSession, signToken } from "@/lib/auth";
 import { createSubscription, mercadoPagoErrorMessage } from "@/lib/mercadopago";
 
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
@@ -24,15 +24,36 @@ export async function POST(req: NextRequest) {
   try {
     const { preapprovalId, status } = await createSubscription(advisor, cardTokenId);
 
+    const isPaid = status === "authorized";
     await db.advisor.update({
       where: { id: advisor.id },
       data: {
         mpPreapprovalId: preapprovalId,
-        ...(status === "authorized" ? { plan: "paid", paidUntil: new Date(Date.now() + ONE_MONTH_MS) } : {}),
+        ...(isPaid ? { plan: "paid", paidUntil: new Date(Date.now() + ONE_MONTH_MS) } : {}),
       },
     });
 
-    return NextResponse.json({ ok: true, status });
+    const res = NextResponse.json({ ok: true, status });
+
+    if (isPaid) {
+      const newToken = signToken({
+        advisorId: advisor.id,
+        email: advisor.email,
+        name: advisor.name,
+        emailVerified: advisor.emailVerified,
+        plan: "paid",
+        onboardedAt: advisor.onboardedAt?.toISOString() ?? null,
+      });
+      res.cookies.set("advisor_token", newToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 30,
+        path: "/",
+      });
+    }
+
+    return res;
   } catch (err) {
     console.error("[billing] Error creando suscripción:", err);
     return NextResponse.json({ error: mercadoPagoErrorMessage(err) }, { status: 500 });

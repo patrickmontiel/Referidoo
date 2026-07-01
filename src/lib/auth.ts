@@ -12,19 +12,28 @@ export async function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
-export function signToken(payload: { advisorId: string; email: string }) {
+export type SessionPayload = {
+  advisorId: string;
+  email: string;
+  name?: string;
+  emailVerified?: boolean;
+  plan?: string;
+  onboardedAt?: string | null;
+};
+
+export function signToken(payload: SessionPayload) {
   return jwt.sign(payload, SECRET, { expiresIn: "30d" });
 }
 
-export function verifyToken(token: string): { advisorId: string; email: string } | null {
+export function verifyToken(token: string): SessionPayload | null {
   try {
-    return jwt.verify(token, SECRET) as { advisorId: string; email: string };
+    return jwt.verify(token, SECRET) as SessionPayload;
   } catch {
     return null;
   }
 }
 
-export async function getAdvisorSession(): Promise<{ advisorId: string; email: string } | null> {
+export async function getAdvisorSession(): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("advisor_token")?.value;
   if (!token) return null;

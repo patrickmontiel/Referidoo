@@ -1,35 +1,13 @@
-import { unstable_cache, revalidateTag } from "next/cache";
 import { db } from "./db";
 
-// Tiers y settings del asesor cambian solo cuando edita /admin/niveles o
-// /admin/burbuja, pero se leen en cada referido creado/convertido (incluyendo
-// los dos endpoints públicos sin auth). Cachear esto evita 2 queries por
-// llamada en el hot path más usado de toda la app.
-const ADVISOR_CONFIG_REVALIDATE_SECONDS = 60;
-
-function advisorConfigTag(advisorId: string) {
-  return `advisor-config-${advisorId}`;
-}
-
 const getCachedAdvisorSettings = (advisorId: string) =>
-  unstable_cache(
-    async () => db.advisorSettings.findUnique({ where: { advisorId } }),
-    ["advisor-settings", advisorId],
-    { tags: [advisorConfigTag(advisorId)], revalidate: ADVISOR_CONFIG_REVALIDATE_SECONDS }
-  )();
+  db.advisorSettings.findUnique({ where: { advisorId } });
 
 const getCachedAdvisorTiers = (advisorId: string) =>
-  unstable_cache(
-    async () =>
-      db.rewardTier.findMany({ where: { advisorId }, orderBy: { position: "asc" } }),
-    ["advisor-tiers", advisorId],
-    { tags: [advisorConfigTag(advisorId)], revalidate: ADVISOR_CONFIG_REVALIDATE_SECONDS }
-  )();
+  db.rewardTier.findMany({ where: { advisorId }, orderBy: { position: "asc" } });
 
-// Llamar después de escribir en /api/tiers o /api/bubble-settings para que el
-// cambio se vea de inmediato en vez de esperar el TTL de 60s.
-export function invalidateAdvisorConfigCache(advisorId: string) {
-  revalidateTag(advisorConfigTag(advisorId), { expire: 0 });
+export function invalidateAdvisorConfigCache(_advisorId: string) {
+  // no-op — kept for call-site compatibility
 }
 
 // Comisión de Lessio sobre el valor del plan/prima, pagada una sola vez (primer

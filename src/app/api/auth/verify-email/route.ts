@@ -21,7 +21,14 @@ export async function GET(req: NextRequest) {
     data: { emailVerified: true, verificationToken: null },
   });
 
-  const sessionToken = signToken({ advisorId: advisor.id, email: advisor.email });
+  const sessionToken = signToken({
+    advisorId: advisor.id,
+    email: advisor.email,
+    name: advisor.name,
+    emailVerified: true,
+    plan: advisor.plan,
+    onboardedAt: advisor.onboardedAt?.toISOString() ?? null,
+  });
   const res = NextResponse.redirect(new URL("/admin?verify=success", BASE_URL));
   res.cookies.set("advisor_token", sessionToken, {
     httpOnly: true,

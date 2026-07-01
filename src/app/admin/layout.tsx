@@ -7,19 +7,32 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await getAdvisorSession();
   if (!session) redirect("/login");
 
-  const advisor = await db.advisor.findUnique({
-    where: { id: session.advisorId },
-    select: { name: true, emailVerified: true, plan: true, onboardedAt: true },
-  });
+  // New JWTs carry advisor data — no DB query needed.
+  // Old JWTs (created before this deploy) fall back to one DB query; they are
+  // replaced the next time the advisor logs in or verifies email.
+  let name = session.name;
+  let emailVerified = session.emailVerified;
+  let plan = session.plan;
+  let onboardedAt = session.onboardedAt;
 
-  if (!advisor) redirect("/login");
+  if (!name) {
+    const advisor = await db.advisor.findUnique({
+      where: { id: session.advisorId },
+      select: { name: true, emailVerified: true, plan: true, onboardedAt: true },
+    });
+    if (!advisor) redirect("/login");
+    name = advisor.name;
+    emailVerified = advisor.emailVerified;
+    plan = advisor.plan;
+    onboardedAt = advisor.onboardedAt?.toISOString() ?? null;
+  }
 
   return (
     <AdminLayoutShell
-      initialAdvisorName={advisor.name}
-      initialEmailVerified={advisor.emailVerified}
-      initialPlan={advisor.plan}
-      initialOnboardedAt={advisor.onboardedAt?.toISOString() ?? null}
+      initialAdvisorName={name}
+      initialEmailVerified={emailVerified ?? false}
+      initialPlan={plan ?? "freemium"}
+      initialOnboardedAt={onboardedAt ?? null}
     >
       {children}
     </AdminLayoutShell>

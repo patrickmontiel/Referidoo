@@ -47,7 +47,14 @@ export async function POST(req: NextRequest) {
       verificationToken,
     }).catch((err) => console.error("[register] Error enviando verificación:", err));
 
-    const token = signToken({ advisorId: advisor.id, email: advisor.email });
+    const token = signToken({
+      advisorId: advisor.id,
+      email: advisor.email,
+      name: advisor.name,
+      emailVerified: advisor.emailVerified,
+      plan: advisor.plan,
+      onboardedAt: advisor.onboardedAt?.toISOString() ?? null,
+    });
 
     const res = NextResponse.json({ ok: true, advisorId: advisor.id }, { status: 201 });
     res.cookies.set("advisor_token", token, {

@@ -19,7 +19,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Credenciales incorrectas" }, { status: 401 });
   }
 
-  const token = signToken({ advisorId: advisor.id, email: advisor.email });
+  const token = signToken({
+    advisorId: advisor.id,
+    email: advisor.email,
+    name: advisor.name,
+    emailVerified: advisor.emailVerified,
+    plan: advisor.plan,
+    onboardedAt: advisor.onboardedAt?.toISOString() ?? null,
+  });
 
   const res = NextResponse.json({ ok: true, advisorId: advisor.id, isOwner: isPlatformOwner(advisor.email) });
   res.cookies.set("advisor_token", token, {
