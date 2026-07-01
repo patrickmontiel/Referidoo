@@ -118,7 +118,7 @@ export default async function Home() {
               Ya tengo cuenta
             </Link>
           </div>
-          <p className="text-xs text-[#8A8F98] mt-4">Gratis hasta 2 clientes. Sin tarjeta para empezar.</p>
+          <p className="text-xs text-[#8A8F98] mt-4">Plan gratis — clientes ilimitados. Sin tarjeta para empezar.</p>
         </div>
 
         <div
@@ -258,24 +258,42 @@ export default async function Home() {
           <ScrollReveal delayMs={60} className="bg-[#F4F5F7] rounded-[20px] p-6 border border-[#ECEDEF]">
             <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-1">Auto y Gastos Médicos Mayores</p>
             <h3 className="font-bold text-[20px] text-[#0B0B0C] mb-4">Premios burbuja</h3>
-            <div className="bg-white rounded-[12px] border border-[#ECEDEF] p-4 mb-4">
-              <div className="flex items-center justify-center py-1 mb-3">
-                <div
-                  className="relative w-16 h-16 rounded-full border-2 overflow-hidden bg-[#EEF3FE]"
-                  style={{ borderColor: "#2563EB", boxShadow: "0 3px 10px rgba(37,99,235,.25)" }}
-                >
-                  <div
-                    className="absolute bottom-0 left-0 right-0"
-                    style={{ height: "70%", background: "linear-gradient(to top, #2563EB, #6EA1F5)" }}
-                  />
-                  <div className="bubble-shine absolute inset-0 rounded-full" />
-                </div>
+
+            {/* Fondo + pts */}
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold text-[#8A8F98] uppercase tracking-[0.08em]">Fondo compartido</span>
+              <span className="text-sm font-bold text-[#0B0B0C]">450 / 500 pts</span>
+            </div>
+
+            {/* Bubble visualization */}
+            <div className="bg-white rounded-[12px] border border-[#ECEDEF] px-4 pt-4 pb-3 mb-3 relative overflow-hidden" style={{ minHeight: 110 }}>
+              {/* META dashed line */}
+              <div className="absolute left-0 right-0" style={{ top: 18 }}>
+                <div className="border-t border-dashed border-[#2563EB]/40 mx-4" />
+                <span className="absolute right-4 -top-2.5 text-[9px] font-bold text-[#2563EB] tracking-[0.06em]">META · 500</span>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-[#6B727D]">Auto = 150 pts · GMM = 300 pts</span>
-                <span className="font-bold text-[#0B0B0C]">350 / 500 pts</span>
+              {/* Circles */}
+              <div className="flex items-end gap-3 mt-3">
+                {/* GMM — largest, dark blue */}
+                <div className="flex flex-col items-center justify-center rounded-full bg-[#1D4ED8] text-white flex-shrink-0" style={{ width: 68, height: 68 }}>
+                  <span className="text-[11px] font-bold leading-tight">GMM</span>
+                  <span className="text-[10px] font-semibold text-white/80">+300</span>
+                </div>
+                {/* Auto — medium, lighter blue */}
+                <div className="flex flex-col items-center justify-center rounded-full bg-[#3B82F6] text-white flex-shrink-0" style={{ width: 50, height: 50 }}>
+                  <span className="text-[10px] font-bold leading-tight">Auto</span>
+                  <span className="text-[9px] font-semibold text-white/80">+150</span>
+                </div>
+                {/* Empty slots */}
+                <div className="rounded-full border-2 border-dashed border-[#DADCE0] flex-shrink-0" style={{ width: 40, height: 40 }} />
+                <div className="rounded-full border-2 border-dashed border-[#DADCE0] flex-shrink-0" style={{ width: 40, height: 40 }} />
               </div>
             </div>
+
+            <p className="text-xs text-[#8A8F98] leading-relaxed mb-3 flex items-start gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-[#2563EB] flex-shrink-0 mt-0.5" />
+              Auto y GMM suman al mismo fondo — montos y meta configurables.
+            </p>
             <p className="text-xs text-[#8A8F98] leading-relaxed">
               Cada venta suma puntos a un mismo fondo. Al llegar al umbral que tú
               definas, tu cliente ve el premio listo para reclamar directamente
@@ -380,49 +398,93 @@ export default async function Home() {
           </h2>
         </ScrollReveal>
         <div className="grid md:grid-cols-2 gap-4 max-w-[760px] mx-auto">
+
+          {/* Freemium */}
           <ScrollReveal>
-            <div className="rounded-[20px] border border-[#ECEDEF] bg-[#F4F5F7] p-7">
-              <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-2">Freemium</p>
-              <p className="text-3xl font-extrabold text-[#0B0B0C] mb-1">Gratis</p>
-              <p className="text-sm text-[#8A8F98] mb-6">Hasta 2 clientes — perfecto para probarlo</p>
-              <ul className="text-sm text-[#3F4651] space-y-2.5 mb-7">
-                {["Seguimiento de referidos", "Premios automáticos", "Portal para tus clientes"].map((item) => (
-                  <li key={item} className="flex items-center gap-2">
-                    <CheckIcon className="text-[#1F9D5B]" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/registro" className="block text-center text-sm font-medium bg-white border border-[#DADCE0] px-4 py-3 rounded-full transition-[background-color,border-color,transform] duration-150 hover:border-[#0B0B0C] active:scale-[0.97]">
+            <div className="rounded-[20px] border border-[#ECEDEF] bg-[#F4F5F7] p-7 flex flex-col h-full">
+              <div className="flex-1">
+                <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-2">Freemium</p>
+                <p className="text-[42px] font-extrabold text-[#0B0B0C] leading-none mb-1">Gratis</p>
+                <p className="text-sm text-[#8A8F98] mb-6">Clientes ilimitados — lleva tu cartera completa</p>
+                <ul className="text-sm text-[#3F4651] space-y-2.5 mb-6">
+                  {[
+                    "Clientes ilimitados",
+                    "Hasta 12 leads en tu pipeline",
+                    "Premios Escalera configurables (PPR/Vida)",
+                    "Portal para tus clientes",
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-2">
+                      <CheckIcon className="text-[#1F9D5B]" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-[10px] font-bold text-[#8A8F98] uppercase tracking-[0.08em] mb-2">Comisión por producto</p>
+                <div className="space-y-1.5 mb-6">
+                  {[
+                    { label: "PPR",         pct: "0.25%" },
+                    { label: "Vida",        pct: "0.25%" },
+                    { label: "Daños/Auto",  pct: "1.5%"  },
+                    { label: "GMM",         pct: "1.5%"  },
+                    { label: "Otro",        pct: "1.5%"  },
+                  ].map((r) => (
+                    <div key={r.label} className="flex items-center justify-between text-sm">
+                      <span className="text-[#5A626E]">{r.label}</span>
+                      <span className="font-bold text-[#0B0B0C]">{r.pct}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <Link href="/registro" className="block text-center text-sm font-semibold bg-white border border-[#DADCE0] px-4 py-3 rounded-full transition-[background-color,border-color,transform] duration-150 hover:border-[#0B0B0C] active:scale-[0.97]">
                 Crear cuenta gratis
               </Link>
             </div>
           </ScrollReveal>
+
+          {/* Pro */}
           <ScrollReveal delayMs={60}>
-            <div className="relative rounded-[20px] border-2 border-[#2563EB] bg-white p-7">
-              <span className="absolute -top-3 left-7 bg-[#2563EB] text-white text-xs font-medium px-3 py-1 rounded-full">
-                Recomendado
-              </span>
-              <p className="text-xs font-bold text-[#2563EB] uppercase tracking-[0.08em] mb-2">Pagado</p>
-              <p className="text-3xl font-extrabold text-[#0B0B0C] mb-1">$539 MXN<span className="text-base font-normal text-[#8A8F98]">/mes</span></p>
-              <p className="text-sm text-[#8A8F98] mb-6">Clientes ilimitados</p>
-              <ul className="text-sm text-[#3F4651] space-y-2.5 mb-7">
-                {[
-                  "Sin límite de clientes — la mayoría de los asesores activos ya tienen más de 2",
-                  "Tu suscripción se cobra sola cada mes, sin transferencias manuales",
-                  "Todo lo del plan freemium, ya sin restricciones",
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-2">
-                    <CheckIcon className="text-[#2563EB]" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/registro" className="block text-center text-sm font-medium bg-[#0B0B0C] text-white px-4 py-3 rounded-full transition-[background-color,transform] duration-150 hover:bg-[#26262a] active:scale-[0.97]">
+            <div className="relative rounded-[20px] border-2 border-[#2563EB] bg-white p-7 flex flex-col h-full">
+              <div className="flex-1">
+                <p className="text-xs font-bold text-[#2563EB] uppercase tracking-[0.08em] mb-2">Pagado</p>
+                <p className="text-[42px] font-extrabold text-[#0B0B0C] leading-none mb-1">
+                  $539 <span className="text-[22px] font-bold">MXN</span><span className="text-base font-normal text-[#8A8F98]">/mes</span>
+                </p>
+                <p className="text-sm text-[#8A8F98] mb-6">Clientes ilimitados</p>
+                <ul className="text-sm text-[#3F4651] space-y-2.5 mb-6">
+                  {[
+                    "Todo lo del plan gratis, y además:",
+                    "Leads ilimitados en el pipeline",
+                    "Premios Burbuja configurables (Auto y GMM)",
+                    "Comisiones más bajas en todos los productos",
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-2">
+                      <CheckIcon className="text-[#2563EB]" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-[10px] font-bold text-[#2563EB] uppercase tracking-[0.08em] mb-2">Comisión por producto</p>
+                <div className="space-y-1.5 mb-6">
+                  {[
+                    { label: "PPR",         pct: "0.15%" },
+                    { label: "Vida",        pct: "0.15%" },
+                    { label: "Daños/Auto",  pct: "0.80%" },
+                    { label: "GMM",         pct: "0.80%" },
+                    { label: "Otro",        pct: "0.80%" },
+                  ].map((r) => (
+                    <div key={r.label} className="flex items-center justify-between text-sm">
+                      <span className="text-[#5A626E]">{r.label}</span>
+                      <span className="font-bold text-[#2563EB]">{r.pct}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <Link href="/registro" className="block text-center text-sm font-semibold bg-[#0B0B0C] text-white px-4 py-3 rounded-full transition-[background-color,transform] duration-150 hover:bg-[#26262a] active:scale-[0.97]">
                 Empezar
               </Link>
             </div>
           </ScrollReveal>
+
         </div>
       </section>
 
