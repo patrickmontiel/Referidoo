@@ -452,7 +452,8 @@ export async function sendVerificationEmail(payload: { advisorEmail: string; adv
     return;
   }
 
-  await resend.emails.send({
+  console.log("[email] enviando verificación a:", payload.advisorEmail, "url:", verifyUrl);
+  const result = await resend.emails.send({
     from: FROM,
     to: [payload.advisorEmail],
     subject: "Confirma tu correo en Referidoo",
@@ -479,7 +480,12 @@ export async function sendVerificationEmail(payload: { advisorEmail: string; adv
   </table>
 </body>
 </html>`,
-  }).catch((err) => console.error("[email] Error enviando verificación:", err));
+  });
+  if (result.error) {
+    console.error("[email] Resend rechazó verificación:", JSON.stringify(result.error));
+  } else {
+    console.log("[email] verificación enviada OK. id:", result.data?.id);
+  }
 }
 
 export async function sendNewReferralNotification(payload: NewReferralPayload) {
