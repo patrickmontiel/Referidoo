@@ -30,11 +30,11 @@ export async function POST() {
     data: { verificationToken },
   });
 
-  sendVerificationEmail({
+  await sendVerificationEmail({
     advisorEmail: advisor.email,
     advisorName: advisor.name,
     verificationToken,
-  }).catch((err) => console.error("[resend-verification] error:", err));
+  });
 
   return NextResponse.json({ ok: true });
 }

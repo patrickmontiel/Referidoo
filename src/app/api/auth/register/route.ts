@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    sendVerificationEmail({
+    await sendVerificationEmail({
       advisorEmail: advisor.email,
       advisorName: advisor.name,
       verificationToken,
