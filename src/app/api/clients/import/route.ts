@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   const { remaining, reason } = await remainingClientQuota(session.advisorId);
   if (remaining !== null && validRows.length > remaining) {
     const blocked = validRows.slice(remaining);
-    const errorMsg = gateErrorMessage(reason ?? "plan_limit");
+    const errorMsg = gateErrorMessage(reason ?? "unverified");
     blocked.forEach((row) => results.push({ name: row.name, ok: false, error: errorMsg }));
     validRows = validRows.slice(0, remaining);
   }
