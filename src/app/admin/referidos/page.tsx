@@ -548,6 +548,33 @@ export default function ReferidosPage() {
                 })()}
               </div>
 
+              {/* Interés del lead */}
+              {(selected.status === "contacted" || selected.status === "in_process") && (
+                <div>
+                  <p className="text-xs font-medium text-[#6B727D] mb-2.5">¿En qué está interesado?</p>
+                  <div className="flex flex-wrap gap-2">
+                    {["PPR", "Vida", "Daños/Auto", "GMM", "Otro"].map((type) => (
+                      <button
+                        key={type}
+                        disabled={updating}
+                        onClick={() =>
+                          update(selected.id, {
+                            interestProductType: selected.interestProductType === type ? null : type,
+                          })
+                        }
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition border ${
+                          selected.interestProductType === type
+                            ? "bg-[#2563EB] text-white border-[#2563EB]"
+                            : "bg-white border-[#DADCE0] text-[#3F4651] hover:bg-[#F4F5F7]"
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Estado del lead */}
               <div>
                 <p className="text-xs font-medium text-[#6B727D] mb-2.5">Estado del lead</p>
