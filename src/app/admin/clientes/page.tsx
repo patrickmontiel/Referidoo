@@ -94,6 +94,11 @@ export default function ClientesPage() {
   const [createError, setCreateError] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deactivateId, setDeactivateId] = useState<string | null>(null);
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", policyNumber: "" });
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("converted");
   const fileRef = useRef<HTMLInputElement>(null);
   const [csvRows, setCsvRows] = useState<CsvRow[] | null>(null);
@@ -178,6 +183,38 @@ export default function ClientesPage() {
     await fetch(`/api/clients/${id}`, { method: "DELETE" });
     setDeactivateId(null);
     load();
+  }
+
+  function openEdit(client: Client) {
+    setEditingClient(client);
+    setEditForm({ name: client.name, email: client.email ?? "", phone: client.phone ?? "", policyNumber: client.policyNumber ?? "" });
+    setEditError("");
+    setMenuOpenId(null);
+  }
+
+  async function handleEditSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingClient) return;
+    setEditSubmitting(true);
+    setEditError("");
+    try {
+      const res = await fetch(`/api/clients/${editingClient.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+      if (res.ok) {
+        setEditingClient(null);
+        load();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setEditError(data.error ?? "Error al guardar");
+      }
+    } catch {
+      setEditError("Sin conexión. Intenta de nuevo.");
+    } finally {
+      setEditSubmitting(false);
+    }
   }
 
   function copyLink(client: Client) {
@@ -423,7 +460,6 @@ export default function ClientesPage() {
             const copyBtn = (
               <button
                 onClick={() => copyLink(client)}
-                onContextMenu={(e) => { e.preventDefault(); setDeactivateId(client.id); }}
                 className="text-sm px-4 py-2.5 rounded-full border border-[#DADCE0] text-[#0B0B0C] hover:bg-[#F4F5F7] transition font-medium"
               >
                 {copiedId === client.id ? "¡Copiado!" : "Copiar link"}
@@ -438,6 +474,37 @@ export default function ClientesPage() {
                 <button onClick={() => setDeactivateId(null)} className="text-xs" style={{ color: "#9098A2" }}>
                   Cancelar
                 </button>
+              </div>
+            );
+
+            const menuBtn = (
+              <div className="relative flex-shrink-0">
+                <button
+                  onClick={() => setMenuOpenId(menuOpenId === client.id ? null : client.id)}
+                  className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#F4F5F7] transition text-[#6B727D]"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                  </svg>
+                </button>
+                {menuOpenId === client.id && (
+                  <div className="absolute right-0 top-10 bg-white border border-[#ECEDEF] rounded-xl shadow-lg p-1 min-w-[140px] z-20">
+                    <button
+                      onClick={() => openEdit(client)}
+                      className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-sm text-[#0B0B0C] hover:bg-[#F4F5F7] rounded-lg transition"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => { setDeactivateId(client.id); setMenuOpenId(null); }}
+                      className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      Eliminar
+                    </button>
+                  </div>
+                )}
               </div>
             );
 
@@ -461,7 +528,12 @@ export default function ClientesPage() {
                   </div>
                   {statusPill}
                   {waBtn}
-                  {deactivateId === client.id ? deactivateRow : copyBtn}
+                  {deactivateId === client.id ? deactivateRow : (
+                    <>
+                      {copyBtn}
+                      {menuBtn}
+                    </>
+                  )}
                 </div>
 
                 {/* ── MOBILE: stacked layout ── */}
@@ -509,11 +581,11 @@ export default function ClientesPage() {
                       </button>
                       <button
                         onClick={() => copyLink(client)}
-                        onContextMenu={(e) => { e.preventDefault(); setDeactivateId(client.id); }}
                         className="flex-1 text-sm py-2.5 rounded-full border border-[#DADCE0] text-[#0B0B0C] hover:bg-[#F4F5F7] transition font-medium"
                       >
                         {copiedId === client.id ? "¡Copiado!" : "Copiar link"}
                       </button>
+                      {menuBtn}
                     </div>
                   )}
                 </div>
@@ -543,6 +615,88 @@ export default function ClientesPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Overlay to close menu on outside click */}
+      {menuOpenId && (
+        <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
+      )}
+
+      {/* Edit modal */}
+      {editingClient && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(11,11,12,0.6)", backdropFilter: "blur(4px)" }}
+          onClick={() => setEditingClient(null)}
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-sm shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-[#ECEDEF]">
+              <p className="font-bold text-[#0B0B0C] text-[17px]">Editar cliente</p>
+              <button
+                onClick={() => setEditingClient(null)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F4F5F7] transition text-[#9098A2]"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={handleEditSubmit} className="px-5 py-5 space-y-3">
+              <div>
+                <label className="block text-xs mb-1.5 uppercase tracking-wide text-[#9098A2]">Nombre *</label>
+                <input
+                  type="text" required value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#DADCE0] text-sm focus:outline-none focus:ring-2 focus:ring-[#0B0B0C] transition"
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1.5 uppercase tracking-wide text-[#9098A2]">Teléfono</label>
+                <input
+                  type="tel" value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#DADCE0] text-sm focus:outline-none focus:ring-2 focus:ring-[#0B0B0C] transition"
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1.5 uppercase tracking-wide text-[#9098A2]">Correo</label>
+                <input
+                  type="email" value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#DADCE0] text-sm focus:outline-none focus:ring-2 focus:ring-[#0B0B0C] transition"
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1.5 uppercase tracking-wide text-[#9098A2]">No. de póliza</label>
+                <input
+                  type="text" value={editForm.policyNumber}
+                  onChange={(e) => setEditForm({ ...editForm, policyNumber: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#DADCE0] text-sm focus:outline-none focus:ring-2 focus:ring-[#0B0B0C] transition"
+                />
+              </div>
+              {editError && (
+                <p className="text-red-500 text-xs">{editError}</p>
+              )}
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="submit" disabled={editSubmitting}
+                  className="flex-1 bg-[#0B0B0C] text-white text-sm py-2.5 rounded-full font-medium hover:bg-[#26262a] disabled:opacity-50 transition"
+                >
+                  {editSubmitting ? "Guardando..." : "Guardar cambios"}
+                </button>
+                <button
+                  type="button" onClick={() => setEditingClient(null)} disabled={editSubmitting}
+                  className="px-5 text-sm py-2.5 rounded-full border border-[#DADCE0] hover:bg-[#F4F5F7] transition text-[#6B727D]"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
