@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 const SECRET = process.env.JWT_SECRET ?? "dev-secret";
 
 export async function hashPassword(password: string) {
-  return bcrypt.hash(password, 12);
+  return bcrypt.hash(password, 10);
 }
 
 export async function verifyPassword(password: string, hash: string) {

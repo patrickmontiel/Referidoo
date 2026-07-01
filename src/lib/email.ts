@@ -4,7 +4,7 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 
 const FROM = process.env.EMAIL_FROM ?? "Referidoo <noreply@referidoo.com>";
 const CREATOR_EMAIL = process.env.EMAIL_NOTIFY_CREATOR ?? "patrick@referidoo.com";
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://referidoo.com";
 
 function formatMXN(amount: number) {
   return new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(amount);
