@@ -285,20 +285,6 @@ export default function ReferidosPage() {
         })}
       </div>
 
-      {/* Lead cap banner (freemium) */}
-      {lockedCount > 0 && (
-        <div className="mb-4 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-amber-600 flex-shrink-0">
-            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
-          </svg>
-          <p className="text-xs text-amber-800 flex-1">
-            <span className="font-semibold">{lockedCount} lead{lockedCount > 1 ? "s bloqueados" : " bloqueado"}</span>
-            {` — superaste el límite de ${FREEMIUM_LEAD_LIMIT} leads activos del plan gratuito. `}
-            <span className="font-semibold underline cursor-pointer">Actualiza a Pro</span> para desbloquearlos.
-          </p>
-        </div>
-      )}
-
       {loading ? (
         <div className="flex justify-center py-12">
           <div className="w-5 h-5 border-2 border-brand-ink border-t-transparent rounded-full animate-spin" />
@@ -307,68 +293,102 @@ export default function ReferidosPage() {
         <div className="text-center py-16 text-brand-gray-4 text-sm">Sin referidos en esta categoría.</div>
       ) : (
         <div data-tour="lista-referidos" className="space-y-2">
-          {filtered.map((r) => {
-            const isLocked = lockedLeadIds.has(r.id);
-            const isConverted = r.status === "converted";
-            const isBubble = r.productType === "Daños/Auto" || r.productType === "GMM" || r.productType === "Otro";
-            const noEscaleraReward = isConverted && r.tierPosition === 0;
-            const rawProduct = isConverted ? r.productType : r.interestProductType;
-            const displayProduct = rawProduct ? (productShort[rawProduct] ?? rawProduct) : null;
+          {(() => {
+            const lockedOrder = [...lockedLeadIds];
+            let separatorInserted = false;
+            const items: React.ReactNode[] = [];
 
-            let amountNode: React.ReactNode;
-            if (isConverted) {
-              if (noEscaleraReward && isBubble) {
-                const pts = r.productType === "GMM" ? bubblePointsByProduct.gmmPoints : bubblePointsByProduct.autoPoints;
-                amountNode = <span className="text-xs font-semibold text-blue-600">+{pts} pts</span>;
-              } else if (!noEscaleraReward) {
-                amountNode = <span className="text-sm font-bold text-[#0B0B0C]">{formatCurrency(r.rewardAmount)}</span>;
+            filtered.forEach((r) => {
+              const isLocked = lockedLeadIds.has(r.id);
+
+              // Separator — injected once, right before the first locked lead
+              if (isLocked && !separatorInserted && lockedCount > 0) {
+                separatorInserted = true;
+                items.push(
+                  <div key="__separator" className="flex items-center gap-3 py-1">
+                    <div className="flex-1 border-t border-dashed border-amber-300" />
+                    <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className="text-amber-600 flex-shrink-0">
+                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                      </svg>
+                      <span className="text-[10px] font-semibold text-amber-800">
+                        {lockedCount} lead{lockedCount !== 1 ? "s" : ""} bloqueado{lockedCount !== 1 ? "s" : ""} · Actualiza a Pro
+                      </span>
+                    </div>
+                    <div className="flex-1 border-t border-dashed border-amber-300" />
+                  </div>
+                );
+              }
+
+              // Progressive blur intensity by lock position
+              const lockIdx = isLocked ? lockedOrder.indexOf(r.id) : -1;
+              const blurClass = lockIdx === 0 ? "blur-[3px]" : lockIdx === 1 ? "blur-[6px]" : "blur-[10px]";
+              const dimClass  = lockIdx === 0 ? "opacity-90"  : lockIdx === 1 ? "opacity-70"  : "opacity-50";
+
+              const isConverted = r.status === "converted";
+              const isBubble = r.productType === "Daños/Auto" || r.productType === "GMM" || r.productType === "Otro";
+              const noEscaleraReward = isConverted && r.tierPosition === 0;
+              const rawProduct = isConverted ? r.productType : r.interestProductType;
+              const displayProduct = rawProduct ? (productShort[rawProduct] ?? rawProduct) : null;
+
+              let amountNode: React.ReactNode;
+              if (isConverted) {
+                if (noEscaleraReward && isBubble) {
+                  const pts = r.productType === "GMM" ? bubblePointsByProduct.gmmPoints : bubblePointsByProduct.autoPoints;
+                  amountNode = <span className="text-xs font-semibold text-blue-600">+{pts} pts</span>;
+                } else if (!noEscaleraReward) {
+                  amountNode = <span className="text-sm font-bold text-[#0B0B0C]">{formatCurrency(r.rewardAmount)}</span>;
+                } else {
+                  amountNode = <span className="text-sm text-brand-gray-4">—</span>;
+                }
               } else {
                 amountNode = <span className="text-sm text-brand-gray-4">—</span>;
               }
-            } else {
-              amountNode = <span className="text-sm text-brand-gray-4">—</span>;
-            }
 
-            return (
-              <div
-                key={r.id}
-                className={`relative bg-white rounded-2xl border border-brand-border-1 px-4 py-3.5 transition flex items-center gap-3 ${isLocked ? "cursor-default select-none" : "cursor-pointer hover:border-[#C8CDD5]"}`}
-                onClick={isLocked ? undefined : () => setSelected(r)}
-              >
-                <div className={isLocked ? "blur-sm pointer-events-none flex items-center gap-3 flex-1 min-w-0" : "contents"}>
-                  <div className="w-10 h-10 rounded-full bg-[#F4F5F7] flex items-center justify-center text-[13px] font-semibold text-[#3F4651] flex-shrink-0">
-                    {getInitials(r.leadName)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-[#0B0B0C] truncate">{r.leadName}</p>
-                    <p className="text-xs text-brand-gray-4 truncate">Referido por {r.referrer.name}</p>
-                  </div>
-                  {displayProduct && (
-                    <span className="hidden sm:inline-flex text-xs font-medium px-3 py-1 rounded-full border border-brand-border-4 text-[#3F4651] flex-shrink-0">
-                      {displayProduct}
+              items.push(
+                <div
+                  key={r.id}
+                  className={`relative bg-white rounded-2xl border border-brand-border-1 overflow-hidden transition ${isLocked ? "cursor-default select-none" : "cursor-pointer hover:border-[#C8CDD5]"}`}
+                  onClick={isLocked ? undefined : () => setSelected(r)}
+                >
+                  {/* Content — entirely inside one wrapper so blur covers everything */}
+                  <div className={`flex items-center gap-3 px-4 py-3.5 ${isLocked ? `${blurClass} ${dimClass} pointer-events-none` : ""}`}>
+                    <div className="w-10 h-10 rounded-full bg-[#F4F5F7] flex items-center justify-center text-[13px] font-semibold text-[#3F4651] flex-shrink-0">
+                      {getInitials(r.leadName)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-[#0B0B0C] truncate">{r.leadName}</p>
+                      <p className="text-xs text-brand-gray-4 truncate">Referido por {r.referrer.name}</p>
+                    </div>
+                    {displayProduct && (
+                      <span className="hidden sm:inline-flex text-xs font-medium px-3 py-1 rounded-full border border-brand-border-4 text-[#3F4651] flex-shrink-0">
+                        {displayProduct}
+                      </span>
+                    )}
+                    <div className="text-right flex-shrink-0 min-w-[56px]">
+                      {amountNode}
+                      <p className="text-xs text-brand-gray-4">{shortDate(r.createdAt)}</p>
+                    </div>
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${statusStyle[r.status] ?? "bg-[#F4F5F7] text-[#6B727D]"}`}>
+                      {statusLabel[r.status] ?? r.status}
                     </span>
-                  )}
-                  <div className="text-right flex-shrink-0 min-w-[56px]">
-                    {amountNode}
-                    <p className="text-xs text-brand-gray-4">{shortDate(r.createdAt)}</p>
                   </div>
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${statusStyle[r.status] ?? "bg-[#F4F5F7] text-[#6B727D]"}`}>
-                    {statusLabel[r.status] ?? r.status}
-                  </span>
-                </div>
-                {isLocked && (
-                  <div className="absolute inset-0 flex items-center justify-end pr-4 rounded-2xl">
-                    <div className="flex items-center gap-2">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className="text-[#6B727D]">
+
+                  {/* Lock overlay — centered, over the blurred content */}
+                  {isLocked && (
+                    <div className="absolute inset-0 flex items-center justify-center gap-2">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className="text-[#3F4651]">
                         <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
                       </svg>
-                      <span className="text-xs font-semibold text-[#3F4651]">Actualiza a Pro</span>
+                      <span className="text-xs font-semibold text-[#0B0B0C]">Lead bloqueado · Actualiza a Pro</span>
                     </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  )}
+                </div>
+              );
+            });
+
+            return items;
+          })()}
         </div>
       )}
 
