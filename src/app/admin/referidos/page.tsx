@@ -127,9 +127,9 @@ export default function ReferidosPage() {
     setUpdating(false);
   }
 
-  function startConvert(id: string, name: string) {
+  function startConvert(id: string, name: string, initialProductType?: string | null) {
     setSaleInput("");
-    setProductType("");
+    setProductType(initialProductType ?? "");
     setConvertTarget({ id, name });
   }
 
@@ -318,7 +318,7 @@ export default function ReferidosPage() {
       {/* ─── Convert modal ─── */}
       {convertTarget && (() => {
         const isPPRVida = productType === "PPR" || productType === "Vida";
-        const valueLabel = isPPRVida ? "Valor del plan (prima anual)" : productType ? "Prima" : "Valor contratado";
+        const valueLabel = isPPRVida ? "Valor plan" : productType ? "Prima" : "Valor contratado";
         return (
           <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
             <div className="absolute inset-0 bg-black/25" onClick={() => setConvertTarget(null)} />
@@ -602,7 +602,7 @@ export default function ReferidosPage() {
                     onClick={() => {
                       if (selected.status !== "converted") {
                         closeDrawer();
-                        startConvert(selected.id, selected.leadName);
+                        startConvert(selected.id, selected.leadName, selected.interestProductType);
                       }
                     }}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition border ${
