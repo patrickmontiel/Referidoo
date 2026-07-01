@@ -115,16 +115,13 @@ export default function ClientesPage() {
   const [importResults, setImportResults] = useState<ImportResult[] | null>(null);
 
   function load() {
-    Promise.all([
-      fetch("/api/clients").then((r) => r.json()),
-      fetch("/api/advisor/me").then((r) => r.json()),
-      fetch("/api/tiers").then((r) => r.json()),
-    ])
-      .then(([clientsData, advData, tiersData]) => {
-        setClients(Array.isArray(clientsData) ? clientsData : []);
-        if (advData?.name) setAdvisor(advData);
-        if (tiersData?.tiers?.length) {
-          setMaxTierAmount(Math.max(...tiersData.tiers.map((t: { amount: number }) => t.amount)));
+    fetch("/api/admin/clients-data")
+      .then((r) => r.json())
+      .then((data) => {
+        setClients(Array.isArray(data.clients) ? data.clients : []);
+        if (data.advisor?.name) setAdvisor(data.advisor);
+        if (Array.isArray(data.tiers) && data.tiers.length) {
+          setMaxTierAmount(Math.max(...data.tiers.map((t: { amount: number }) => t.amount)));
         }
       })
       .catch(console.error)

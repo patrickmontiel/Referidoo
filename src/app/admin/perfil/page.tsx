@@ -62,21 +62,12 @@ export default function PerfilPage() {
   const [resent, setResent] = useState(false);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/advisor/me").then((r) => r.json()),
-      fetch("/api/clients").then((r) => r.json()),
-      fetch("/api/referrals").then((r) => r.json()),
-    ])
-      .then(([adv, clientsData, referralsData]) => {
-        setAdvisor(adv?.name ? adv : null);
-        const list = Array.isArray(clientsData)
-          ? clientsData
-          : Array.isArray(clientsData?.clients)
-          ? clientsData.clients
-          : [];
-        setClientCount(list.length);
-        const refs = Array.isArray(referralsData) ? referralsData : [];
-        setLeadCount(refs.length);
+    fetch("/api/admin/profile-data")
+      .then((r) => r.json())
+      .then((data) => {
+        setAdvisor(data?.name ? data : null);
+        setClientCount(typeof data.clientCount === "number" ? data.clientCount : null);
+        setLeadCount(typeof data.leadCount === "number" ? data.leadCount : null);
       })
       .catch(console.error)
       .finally(() => setLoading(false));

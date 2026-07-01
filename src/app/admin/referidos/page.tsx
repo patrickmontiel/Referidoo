@@ -108,13 +108,18 @@ export default function ReferidosPage() {
   }
 
   useEffect(() => {
-    load();
-    fetch("/api/bubble-settings")
+    setLoading(true);
+    fetch("/api/admin/referidos-data")
       .then((r) => r.json())
-      .then((d) => setBubblePointsByProduct({ autoPoints: d.bubbleAutoPoints ?? 150, gmmPoints: d.bubbleGmmPoints ?? 300 }));
-    fetch("/api/advisor/me")
-      .then((r) => r.json())
-      .then((d) => { if (d?.plan) setAdvisorPlan(d.plan); });
+      .then((data) => {
+        const list: Referral[] = Array.isArray(data.referrals) ? data.referrals : [];
+        setReferrals(list);
+        referralsRef.current = list;
+        setBubblePointsByProduct({ autoPoints: data.bubbleAutoPoints ?? 150, gmmPoints: data.bubbleGmmPoints ?? 300 });
+        if (data.plan) setAdvisorPlan(data.plan);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
   async function update(id: string, data: Record<string, unknown>) {
