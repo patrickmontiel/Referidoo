@@ -264,11 +264,8 @@ export default function ReferidosPage() {
             const isConverted = r.status === "converted";
             const isBubble = r.productType === "Daños/Auto" || r.productType === "GMM" || r.productType === "Otro";
             const noEscaleraReward = isConverted && r.tierPosition === 0;
-            const displayProduct = r.productType
-              ? (productShort[r.productType] ?? r.productType)
-              : r.interestProductType
-              ? (productShort[r.interestProductType] ?? r.interestProductType)
-              : null;
+            const rawProduct = isConverted ? r.productType : r.interestProductType;
+            const displayProduct = rawProduct ? (productShort[rawProduct] ?? rawProduct) : null;
 
             let amountNode: React.ReactNode;
             if (isConverted) {
@@ -421,9 +418,9 @@ export default function ReferidosPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <h2 className="font-bold text-[19px] text-[#0B0B0C] leading-snug">{selected.leadName}</h2>
-                    {(selected.productType || selected.interestProductType) && (
+                    {(selected.status === "converted" ? selected.productType : selected.interestProductType) && (
                       <span className="inline-flex mt-1 text-xs font-medium px-2.5 py-0.5 rounded-full border border-brand-border-4 text-[#3F4651]">
-                        {selected.productType ?? selected.interestProductType}
+                        {selected.status === "converted" ? selected.productType : selected.interestProductType}
                       </span>
                     )}
                   </div>

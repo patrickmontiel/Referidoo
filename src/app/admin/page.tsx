@@ -161,7 +161,7 @@ export default function AdminOverviewPage() {
         ) : (
           <div className="divide-y divide-brand-border-1">
             {referrals.slice(0, 5).map((r) => {
-              const product = r.productType ?? r.interestProductType;
+              const product = r.status === "converted" ? r.productType : r.interestProductType;
               return (
                 <div key={r.id} className="flex items-center gap-3 px-5 py-3.5">
                   <div className="w-10 h-10 rounded-full bg-[#F4F5F7] flex items-center justify-center text-[13px] font-semibold text-[#3F4651] flex-shrink-0">
