@@ -50,26 +50,34 @@ function getInitials(name: string) {
   return name.split(" ").filter(Boolean).slice(0, 2).map((n) => n[0]).join("").toUpperCase();
 }
 
+function normHeader(h: string) {
+  return h.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
 function parseCsv(text: string): CsvRow[] {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
-  const header = lines[0].split(",").map((h) => h.trim().toLowerCase().replace(/[^a-záéíóúñ]/gi, ""));
+  // Detect delimiter: semicolon (common in Spanish Excel) or comma
+  const delimiter = lines[0].includes(";") ? ";" : ",";
+  const rawHeaders = lines[0].split(delimiter).map((h) => h.trim().replace(/^"|"$/g, ""));
+  const headers = rawHeaders.map(normHeader);
   const colMap: Record<string, number> = {};
-  header.forEach((h, i) => {
-    if (/nombre|name/.test(h)) colMap.name = i;
-    else if (/tel|phone|celular|movil|móvil/.test(h)) colMap.phone = i;
-    else if (/correo|email|mail/.test(h)) colMap.email = i;
-    else if (/poliz|policy/.test(h)) colMap.policyNumber = i;
+  headers.forEach((h, i) => {
+    if (!colMap.name         && /(nombre|name|cliente|contacto)/.test(h)) colMap.name = i;
+    else if (!colMap.phone   && /(tel|phone|celular|movil|cel|numero)/.test(h)) colMap.phone = i;
+    else if (!colMap.email   && /(correo|email|mail)/.test(h)) colMap.email = i;
+    else if (!colMap.policyNumber && /(poliz|poliza|policy|numpol|nopdliza|ndpoliza|poliza|polz)/.test(h)) colMap.policyNumber = i;
   });
   return lines
     .slice(1)
+    .filter((line) => line.trim())
     .map((line) => {
-      const cols = line.split(",").map((c) => c.trim().replace(/^"|"$/g, ""));
+      const cols = line.split(delimiter).map((c) => c.trim().replace(/^"|"$/g, ""));
       return {
         name:         cols[colMap.name ?? 0] ?? "",
-        phone:        cols[colMap.phone ?? -1] ?? "",
-        email:        cols[colMap.email ?? -1] ?? "",
-        policyNumber: cols[colMap.policyNumber ?? -1] ?? "",
+        phone:        colMap.phone    != null ? (cols[colMap.phone]    ?? "") : "",
+        email:        colMap.email    != null ? (cols[colMap.email]    ?? "") : "",
+        policyNumber: colMap.policyNumber != null ? (cols[colMap.policyNumber] ?? "") : "",
       };
     })
     .filter((r) => r.name);
@@ -99,6 +107,7 @@ export default function ClientesPage() {
   const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", policyNumber: "" });
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editError, setEditError] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>("converted");
   const fileRef = useRef<HTMLInputElement>(null);
   const [csvRows, setCsvRows] = useState<CsvRow[] | null>(null);
@@ -508,11 +517,27 @@ export default function ClientesPage() {
               </div>
             );
 
+            const isExpanded = expandedId === client.id;
+            function toggleExpand() { setExpandedId(isExpanded ? null : client.id); }
+
+            const chevron = (
+              <svg
+                width="16" height="16" viewBox="0 0 24 24" fill="none"
+                className={`flex-shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                style={{ color: "#9098A2" }}
+              >
+                <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            );
+
             return (
               <div key={client.id} className="bg-white rounded-2xl border border-[#ECEDEF]">
 
                 {/* ── DESKTOP: single horizontal row ── */}
-                <div className="hidden md:flex items-center gap-4 px-5 py-4">
+                <div
+                  className="hidden md:flex items-center gap-4 px-5 py-4 cursor-pointer select-none"
+                  onClick={toggleExpand}
+                >
                   {avatar}
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-[#0B0B0C] text-[15px] leading-tight truncate">{client.name}</p>
@@ -527,27 +552,31 @@ export default function ClientesPage() {
                     <p className="text-[10px] mt-1" style={{ color: "#9098A2" }}>Convertidos</p>
                   </div>
                   {statusPill}
-                  {waBtn}
-                  {deactivateId === client.id ? deactivateRow : (
-                    <>
-                      {copyBtn}
-                      {menuBtn}
-                    </>
-                  )}
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    {waBtn}
+                    {deactivateId === client.id ? deactivateRow : (
+                      <>
+                        {copyBtn}
+                        {menuBtn}
+                      </>
+                    )}
+                  </div>
+                  {chevron}
                 </div>
 
                 {/* ── MOBILE: stacked layout ── */}
                 <div className="md:hidden px-5 pt-4 pb-5">
-                  {/* Row 1: avatar + name/product */}
-                  <div className="flex items-center gap-3 mb-4">
+                  {/* Row 1: avatar + name/product — clickable */}
+                  <div className="flex items-center gap-3 mb-4 cursor-pointer select-none" onClick={toggleExpand}>
                     {avatar}
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-[#0B0B0C] text-base leading-snug">{client.name}</p>
                       {mainProduct && <p className="text-sm" style={{ color: "#9098A2" }}>{mainProduct}</p>}
                     </div>
+                    {chevron}
                   </div>
-                  {/* Row 2: stats + status pill */}
-                  <div className="flex items-center gap-5 mb-4">
+                  {/* Row 2: stats + status pill — clickable */}
+                  <div className="flex items-center gap-5 mb-4 cursor-pointer select-none" onClick={toggleExpand}>
                     <div>
                       <p className="text-2xl font-bold text-[#0B0B0C] leading-none">{refCount}</p>
                       <p className="text-[11px] mt-1" style={{ color: "#9098A2" }}>Referidos</p>
@@ -561,7 +590,7 @@ export default function ClientesPage() {
                     </div>
                   </div>
 
-                  {/* Row 3: action buttons — not inside clickable area */}
+                  {/* Row 3: action buttons */}
                   {deactivateId === client.id ? (
                     <div className="flex gap-2">
                       <button onClick={() => deactivate(client.id)} className="flex-1 text-sm py-2.5 rounded-full bg-red-50 text-red-600 font-medium">
@@ -590,27 +619,55 @@ export default function ClientesPage() {
                   )}
                 </div>
 
-                {/* ── FINANCIAL DETAIL ── */}
-                <div className="border-t border-[#ECEDEF] px-5 py-4 grid grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-xs text-[#8A8F98] mb-1.5">Se le debe</p>
-                      <p className={`text-[22px] font-bold leading-none ${totalOwed > 0 ? "text-amber-600" : "text-[#0B0B0C]"}`}>
-                        {formatCurrency(totalOwed)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[#8A8F98] mb-1.5">Pagado total</p>
-                      <p className={`text-[22px] font-bold leading-none ${totalPaid > 0 ? "text-green-600" : "text-[#0B0B0C]"}`}>
-                        {formatCurrency(totalPaid)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[#8A8F98] mb-1.5">Puntos burbuja</p>
-                      <p className={`text-[22px] font-bold leading-none ${client.bubblePoints > 0 ? "text-[#2563EB]" : "text-[#0B0B0C]"}`}>
-                        {client.bubblePoints} <span className="text-sm font-medium text-[#8A8F98]">pts</span>
-                      </p>
+                {/* ── EXPANDED DETAIL ── */}
+                {isExpanded && (
+                  <div className="border-t border-[#ECEDEF]">
+                    {/* Contact info */}
+                    {(client.phone || client.email) && (
+                      <div className="px-5 py-3 flex flex-wrap gap-x-6 gap-y-1 border-b border-[#ECEDEF]">
+                        {client.phone && (
+                          <span className="text-sm text-[#3F4651] flex items-center gap-1.5">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.01 2.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                            {client.phone}
+                          </span>
+                        )}
+                        {client.email && (
+                          <span className="text-sm text-[#3F4651] flex items-center gap-1.5">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="1.5"/><path d="M22 6l-10 7L2 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                            {client.email}
+                          </span>
+                        )}
+                        {client.policyNumber && (
+                          <span className="text-sm text-[#3F4651] flex items-center gap-1.5">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="1.5"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                            {client.policyNumber}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {/* Financial grid */}
+                    <div className="px-5 py-4 grid grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-xs text-[#8A8F98] mb-1.5">Se le debe</p>
+                        <p className={`text-[22px] font-bold leading-none ${totalOwed > 0 ? "text-amber-600" : "text-[#0B0B0C]"}`}>
+                          {formatCurrency(totalOwed)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-[#8A8F98] mb-1.5">Pagado total</p>
+                        <p className={`text-[22px] font-bold leading-none ${totalPaid > 0 ? "text-green-600" : "text-[#0B0B0C]"}`}>
+                          {formatCurrency(totalPaid)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-[#8A8F98] mb-1.5">Puntos burbuja</p>
+                        <p className={`text-[22px] font-bold leading-none ${client.bubblePoints > 0 ? "text-[#2563EB]" : "text-[#0B0B0C]"}`}>
+                          {client.bubblePoints} <span className="text-sm font-medium text-[#8A8F98]">pts</span>
+                        </p>
+                      </div>
                     </div>
                   </div>
+                )}
 
               </div>
             );
