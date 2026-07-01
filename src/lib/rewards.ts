@@ -40,8 +40,9 @@ export function invalidateAdvisorConfigCache(advisorId: string) {
 const LESSIO_COMMISSION_RATES: Record<string, { freemium: number; paid: number }> = {
   PPR: { freemium: 0.0025, paid: 0.0015 },
   Vida: { freemium: 0.0025, paid: 0.0015 },
-  "Daños/Auto": { freemium: 0.0015, paid: 0.0008 },
-  GMM: { freemium: 0.0015, paid: 0.0008 },
+  "Daños/Auto": { freemium: 0.015, paid: 0.008 },
+  GMM: { freemium: 0.015, paid: 0.008 },
+  Otro: { freemium: 0.015, paid: 0.008 },
 };
 
 export function calculateLessioCommission(
