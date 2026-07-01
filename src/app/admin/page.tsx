@@ -42,7 +42,7 @@ const statusLabel: Record<string, string> = {
 
 const statusStyle: Record<string, string> = {
   pending:    "bg-[#F4F5F7] text-[#6B727D]",
-  contacted:  "bg-amber-50 text-amber-700",
+  contacted:  "bg-[#EBF2FF] text-[#2563EB]",
   in_process: "bg-amber-50 text-amber-700",
   converted:  "bg-green-50 text-green-700",
   rejected:   "bg-[#F4F5F7] text-[#6B727D]",

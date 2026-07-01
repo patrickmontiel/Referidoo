@@ -571,7 +571,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         >
           <div
             className="w-full mx-auto box-border px-5 py-6 md:px-10 md:pt-9 md:pb-12"
-            style={{ maxWidth: 1180 }}
+            style={{ maxWidth: 960 }}
           >
             {children}
           </div>
