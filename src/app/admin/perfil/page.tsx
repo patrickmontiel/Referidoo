@@ -51,6 +51,7 @@ export default function PerfilPage() {
   const router = useRouter();
   const [advisor, setAdvisor] = useState<Advisor | null>(null);
   const [clientCount, setClientCount] = useState<number | null>(null);
+  const [leadCount, setLeadCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [billingBusy, setBillingBusy] = useState(false);
   const [billingError, setBillingError] = useState("");
@@ -64,8 +65,9 @@ export default function PerfilPage() {
     Promise.all([
       fetch("/api/advisor/me").then((r) => r.json()),
       fetch("/api/clients").then((r) => r.json()),
+      fetch("/api/referrals").then((r) => r.json()),
     ])
-      .then(([adv, clientsData]) => {
+      .then(([adv, clientsData, referralsData]) => {
         setAdvisor(adv?.name ? adv : null);
         const list = Array.isArray(clientsData)
           ? clientsData
@@ -73,6 +75,8 @@ export default function PerfilPage() {
           ? clientsData.clients
           : [];
         setClientCount(list.length);
+        const refs = Array.isArray(referralsData) ? referralsData : [];
+        setLeadCount(refs.length);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -129,9 +133,6 @@ export default function PerfilPage() {
 
   const isPaid = advisor.plan === "paid";
   const slug = nameToSlug(advisor.name);
-  const clientsLabel = isPaid
-    ? `${clientCount ?? "—"} de ilimitados`
-    : `${clientCount ?? "—"} de 2`;
 
   return (
     <div className="w-full pb-10">
@@ -174,7 +175,22 @@ export default function PerfilPage() {
             ),
           },
           { label: "Teléfono", value: advisor.phone || "—" },
-          { label: "Clientes", value: <span className="font-bold text-[#0B0B0C]">{clientsLabel}</span> },
+          {
+            label: "Clientes",
+            value: (
+              <span className="font-bold text-[#0B0B0C]">
+                {clientCount ?? "—"} <span className="font-normal text-brand-gray-4">· Ilimitados</span>
+              </span>
+            ),
+          },
+          {
+            label: "Leads",
+            value: (
+              <span className="font-bold text-[#0B0B0C]">
+                {leadCount ?? "—"}<span className="font-normal text-brand-gray-4">/12</span>
+              </span>
+            ),
+          },
         ].map((row, i, arr) => (
           <div
             key={row.label}
@@ -295,16 +311,16 @@ export default function PerfilPage() {
               )}
             </div>
           </div>
-        ) : !showUpgradeForm ? (
+        ) : (
           <div>
             <div className="flex items-start justify-between mb-4">
               <div>
                 <p className="font-bold text-[#0B0B0C] text-[17px]">Plan Gratis</p>
-                <p className="text-sm text-brand-gray-4 mt-0.5">Hasta 2 clientes</p>
+                <p className="text-sm text-brand-gray-4 mt-0.5">Clientes ilimitados · hasta 12 leads</p>
               </div>
             </div>
             <p className="text-sm text-brand-gray-4 mb-4">
-              Actualiza a Plan Pro ($539/mes) para tener clientes ilimitados.
+              Actualiza a Plan Pro ($539/mes) para desbloquear leads ilimitados y comisiones reducidas.
             </p>
             <div className="flex gap-2">
               <button
@@ -321,8 +337,6 @@ export default function PerfilPage() {
               </button>
             </div>
           </div>
-        ) : (
-          <UpgradeCardForm onSuccess={handleUpgradeSuccess} onCancel={() => setShowUpgradeForm(false)} />
         )}
 
         {billingError && (
@@ -331,6 +345,38 @@ export default function PerfilPage() {
           </div>
         )}
       </div>
+
+      {/* Upgrade modal */}
+      {showUpgradeForm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(11,11,12,0.6)", backdropFilter: "blur(4px)" }}
+          onClick={() => setShowUpgradeForm(false)}
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-brand-border-1">
+              <div>
+                <p className="font-bold text-[#0B0B0C] text-[17px]">Subir a Plan Pro</p>
+                <p className="text-sm text-brand-gray-4 mt-0.5">$539 / mes · cancela cuando quieras</p>
+              </div>
+              <button
+                onClick={() => setShowUpgradeForm(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-brand-surface transition text-brand-gray-4"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="px-6 py-5">
+              <UpgradeCardForm onSuccess={handleUpgradeSuccess} onCancel={() => setShowUpgradeForm(false)} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

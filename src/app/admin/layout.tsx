@@ -160,6 +160,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [emailVerified, setEmailVerified] = useState(true);
   const [showVerifiedBanner, setShowVerifiedBanner] = useState(false);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
+  const [resendingVerif, setResendingVerif] = useState(false);
+  const [resentVerif, setResentVerif] = useState(false);
   const [resetState, setResetState] = useState<null | "confirm" | "busy">(null);
   const consumedWelcomeFlag = useRef(false);
   const avatarRef = useRef<HTMLDivElement>(null);
@@ -348,6 +350,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  async function resendVerification() {
+    if (resendingVerif || resentVerif) return;
+    setResendingVerif(true);
+    await fetch("/api/auth/resend-verification", { method: "POST" }).catch(() => {});
+    setResendingVerif(false);
+    setResentVerif(true);
+    setTimeout(() => setResentVerif(false), 2000);
+  }
+
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
@@ -479,8 +490,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {!emailVerified && !showVerifiedBanner && (
         <div className="bg-brand-blue-bg border-b border-brand-border-1 flex-shrink-0">
-          <div className="max-w-5xl mx-auto px-5 py-2.5 text-sm text-brand-blue">
-            Verifica tu correo para empezar a agregar clientes — revisa tu bandeja de entrada.
+          <div className="max-w-5xl mx-auto px-5 py-2.5 text-sm text-brand-blue flex items-center justify-between gap-3">
+            <span>Verifica tu correo para empezar a agregar clientes — revisa tu bandeja de entrada.</span>
+            {resentVerif ? (
+              <span className="text-green-700 font-medium whitespace-nowrap flex-shrink-0">reenviado con éxito</span>
+            ) : (
+              <button
+                onClick={resendVerification}
+                disabled={resendingVerif}
+                className="underline whitespace-nowrap flex-shrink-0 disabled:opacity-50 bg-transparent border-0 p-0 text-brand-blue text-sm cursor-pointer"
+              >
+                {resendingVerif ? "enviando..." : "reenviar correo"}
+              </button>
+            )}
           </div>
         </div>
       )}
