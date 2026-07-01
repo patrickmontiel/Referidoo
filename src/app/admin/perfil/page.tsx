@@ -354,24 +354,25 @@ export default function PerfilPage() {
           onClick={() => setShowUpgradeForm(false)}
         >
           <div
-            className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden"
+            className="bg-white rounded-2xl w-full max-w-sm shadow-2xl flex flex-col"
+            style={{ maxHeight: "calc(100dvh - 48px)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-brand-border-1">
+            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-brand-border-1 flex-shrink-0">
               <div>
                 <p className="font-bold text-[#0B0B0C] text-[17px]">Subir a Plan Pro</p>
                 <p className="text-sm text-brand-gray-4 mt-0.5">$539 / mes · cancela cuando quieras</p>
               </div>
               <button
                 onClick={() => setShowUpgradeForm(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-brand-surface transition text-brand-gray-4"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-brand-surface transition text-brand-gray-4 flex-shrink-0"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
               </button>
             </div>
-            <div className="px-6 py-5">
+            <div className="px-5 py-5 overflow-y-auto">
               <UpgradeCardForm onSuccess={handleUpgradeSuccess} onCancel={() => setShowUpgradeForm(false)} />
             </div>
           </div>
