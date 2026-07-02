@@ -297,32 +297,9 @@ export default function ReferidosClient({
         <div data-tour="lista-referidos" className="space-y-2">
           {(() => {
             const lockedOrder = [...lockedLeadIds];
-            let separatorInserted = false;
-            const items: React.ReactNode[] = [];
 
-            filtered.forEach((r) => {
+            const renderCard = (r: Referral) => {
               const isLocked = lockedLeadIds.has(r.id);
-
-              // Separator — injected once, right before the first locked lead
-              if (isLocked && !separatorInserted && lockedCount > 0) {
-                separatorInserted = true;
-                items.push(
-                  <div key="__separator" className="flex items-center gap-3 py-1">
-                    <div className="flex-1 border-t border-dashed border-amber-300" />
-                    <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className="text-amber-600 flex-shrink-0">
-                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
-                      </svg>
-                      <span className="text-[10px] font-semibold text-amber-800">
-                        {lockedCount} lead{lockedCount !== 1 ? "s" : ""} bloqueado{lockedCount !== 1 ? "s" : ""} · Actualiza a Pro
-                      </span>
-                    </div>
-                    <div className="flex-1 border-t border-dashed border-amber-300" />
-                  </div>
-                );
-              }
-
-              // Progressive blur intensity by lock position
               const lockIdx = isLocked ? lockedOrder.indexOf(r.id) : -1;
               const blurClass = lockIdx === 0 ? "blur-[3px]" : lockIdx === 1 ? "blur-[6px]" : "blur-[10px]";
               const dimClass  = lockIdx === 0 ? "opacity-90"  : lockIdx === 1 ? "opacity-70"  : "opacity-50";
@@ -347,7 +324,7 @@ export default function ReferidosClient({
                 amountNode = <span className="text-sm text-brand-gray-4">—</span>;
               }
 
-              items.push(
+              return (
                 <div
                   key={r.id}
                   className={`relative bg-white rounded-2xl border border-brand-border-1 overflow-hidden transition ${isLocked ? "cursor-default select-none" : "cursor-pointer hover:border-[#C8CDD5]"}`}
@@ -387,9 +364,12 @@ export default function ReferidosClient({
                   )}
                 </div>
               );
-            });
+            };
 
-            return items;
+            const unlocked = filtered.filter((r) => !lockedLeadIds.has(r.id));
+            const locked   = filtered.filter((r) =>  lockedLeadIds.has(r.id));
+
+            return [...unlocked.map(renderCard), ...locked.map(renderCard)];
           })()}
         </div>
       )}
