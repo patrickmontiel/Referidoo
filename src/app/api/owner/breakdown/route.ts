@@ -11,13 +11,8 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
-  // Only include referrals from active (non-deleted) advisors
   const referrals = await db.referral.findMany({
-    where: {
-      status: "converted",
-      lessioCommission: { not: null },
-      advisor: { deletedAt: null },
-    },
+    where: { status: "converted", lessioCommission: { not: null } },
     select: { productType: true, lessioCommission: true },
   });
 
