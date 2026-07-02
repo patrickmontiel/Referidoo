@@ -5,18 +5,19 @@ import { LESSIO_COMMISSION_SINCE } from "@/app/api/owner/summary/route";
 
 const UNCLASSIFIED = "sin clasificar";
 
-// Comisión por tipo de producto (productType real con el que se convirtió,
-// no interestProductType que es la intención pre-conversión). Las filas con
-// lessioCommission null (pre-backfill / sin tasa definida) se agrupan en
-// "sin clasificar" en vez de descartarse.
 export async function GET() {
   const session = await getAdvisorSession();
   if (!session || !isPlatformOwner(session.email)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
+  // Only include referrals from active (non-deleted) advisors
   const referrals = await db.referral.findMany({
-    where: { status: "converted", lessioCommission: { not: null } },
+    where: {
+      status: "converted",
+      lessioCommission: { not: null },
+      advisor: { deletedAt: null },
+    },
     select: { productType: true, lessioCommission: true },
   });
 
