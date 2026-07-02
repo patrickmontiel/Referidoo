@@ -7,8 +7,73 @@ const CREATOR_EMAIL = process.env.EMAIL_NOTIFY_CREATOR ?? "patrick@referidoo.com
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://referidoo.com";
 
 function formatMXN(amount: number) {
-  return new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(amount);
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    maximumFractionDigits: 0,
+  }).format(amount);
 }
+
+// ─── Shared primitives ────────────────────────────────────────────────────────
+
+function emailShell(body: string) {
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+</head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #ECEDEF">
+        ${body}
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+function header(sublabel?: string) {
+  return `<tr>
+    <td style="background:#0B0B0C;padding:22px 32px">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td>
+            <span style="font-size:17px;font-weight:700;letter-spacing:-0.025em;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">referidoo</span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#2563EB;margin-left:2px;vertical-align:top;margin-top:5px"></span>
+          </td>
+          ${sublabel ? `<td align="right"><span style="font-size:11px;color:#6B727D;font-weight:500;letter-spacing:0.04em">${sublabel}</span></td>` : ""}
+        </tr>
+      </table>
+    </td>
+  </tr>`;
+}
+
+function footer(text: string) {
+  return `<tr>
+    <td style="padding:0 32px 28px">
+      <p style="margin:0;font-size:12px;color:#9098A2;text-align:center;line-height:1.6">${text}</p>
+    </td>
+  </tr>`;
+}
+
+function pill(href: string, label: string, bg = "#0B0B0C") {
+  return `<a href="${href}" style="display:block;background:${bg};color:#ffffff;text-align:center;padding:15px 24px;border-radius:999px;font-size:15px;font-weight:600;text-decoration:none;letter-spacing:-0.01em">${label}</a>`;
+}
+
+function metaChip(label: string, value: string) {
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F7;border-radius:10px">
+    <tr><td style="padding:14px 16px">
+      <p style="margin:0 0 2px;font-size:11px;color:#9098A2;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">${label}</p>
+      <p style="margin:0;font-size:14px;font-weight:600;color:#0B0B0C">${value}</p>
+    </td></tr>
+  </table>`;
+}
+
+// ─── 1. Nuevo referido ────────────────────────────────────────────────────────
 
 type NewReferralPayload = {
   advisorName: string;
@@ -23,84 +88,93 @@ type NewReferralPayload = {
 
 function newReferralHtml(p: NewReferralPayload, isCreator = false) {
   const adminUrl = `${BASE_URL}/admin/referidos`;
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
-    <tr><td align="center">
-      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden">
-        <!-- Header -->
+  const eyebrow = isCreator
+    ? `Sistema · ${p.advisorName}`
+    : `Programa de referidos`;
+
+  return emailShell(`
+    ${header(eyebrow)}
+    <tr><td style="padding:32px 32px 20px">
+      <p style="margin:0 0 8px;font-size:13px;color:#6B727D;font-weight:500">Nueva oportunidad</p>
+      <h1 style="margin:0 0 6px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">${p.leadName} quiere saber más</h1>
+      <p style="margin:0 0 28px;font-size:14px;color:#6B727D;line-height:1.6">${p.referrerName} acaba de referir a un contacto interesado. Comunícate pronto — los leads frescos convierten mejor.</p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F7;border-radius:12px;margin-bottom:20px">
+        <tr><td style="padding:20px 24px">
+          <p style="margin:0 0 2px;font-size:11px;color:#9098A2;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">Contacto</p>
+          <p style="margin:0 0 14px;font-size:19px;font-weight:700;color:#0B0B0C;letter-spacing:-0.01em">${p.leadName}</p>
+          <table cellpadding="0" cellspacing="0">
+            <tr><td style="padding:3px 0">
+              <a href="tel:${p.leadPhone}" style="font-size:14px;color:#0B0B0C;font-weight:600;text-decoration:none">📱 ${p.leadPhone}</a>
+            </td></tr>
+            ${p.leadEmail ? `<tr><td style="padding:3px 0"><span style="font-size:14px;color:#5A626E">✉️ ${p.leadEmail}</span></td></tr>` : ""}
+          </table>
+        </td></tr>
+      </table>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px">
         <tr>
-          <td style="background:#000;padding:24px 32px">
-            <p style="margin:0;color:#fff;font-size:12px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo</p>
-          </td>
-        </tr>
-        <!-- Body -->
-        <tr>
-          <td style="padding:32px">
-            <p style="margin:0 0 4px;font-size:13px;color:#6b7280;font-weight:500">
-              ${isCreator ? `Notificación del sistema · ${p.advisorName}` : "Nuevo referido recibido"}
-            </p>
-            <h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#0a0a0a;line-height:1.3">
-              ${p.leadName} quiere conocer más
-            </h1>
-
-            <!-- Lead card -->
-            <table width="100%" style="background:#f9fafb;border-radius:12px;margin-bottom:24px">
-              <tr><td style="padding:20px">
-                <p style="margin:0 0 4px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:2px;text-transform:uppercase">Nuevo contacto</p>
-                <p style="margin:0 0 16px;font-size:18px;font-weight:700;color:#0a0a0a">${p.leadName}</p>
-                <table>
-                  <tr>
-                    <td style="padding:2px 0">
-                      <span style="font-size:13px;color:#6b7280">📱 </span>
-                      <a href="tel:${p.leadPhone}" style="font-size:13px;color:#0a0a0a;font-weight:600;text-decoration:none">${p.leadPhone}</a>
-                    </td>
-                  </tr>
-                  ${p.leadEmail ? `<tr><td style="padding:2px 0"><span style="font-size:13px;color:#6b7280">✉️ </span><span style="font-size:13px;color:#0a0a0a">${p.leadEmail}</span></td></tr>` : ""}
-                </table>
-              </td></tr>
-            </table>
-
-            <!-- Meta -->
-            <table width="100%" style="margin-bottom:28px">
-              <tr>
-                <td width="50%" style="padding:0 8px 0 0">
-                  <table width="100%" style="background:#f9fafb;border-radius:10px">
-                    <tr><td style="padding:14px 16px">
-                      <p style="margin:0 0 2px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:1px;text-transform:uppercase">Referido por</p>
-                      <p style="margin:0;font-size:14px;font-weight:600;color:#0a0a0a">${p.referrerName}</p>
-                    </td></tr>
-                  </table>
-                </td>
-                <td width="50%" style="padding:0 0 0 8px">
-                  <table width="100%" style="background:#f9fafb;border-radius:10px">
-                    <tr><td style="padding:14px 16px">
-                      <p style="margin:0 0 2px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:1px;text-transform:uppercase">Premio #${p.tierPosition}</p>
-                      <p style="margin:0;font-size:14px;font-weight:700;color:#0a0a0a">${formatMXN(p.rewardAmount)}</p>
-                    </td></tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-
-            <!-- CTA -->
-            <a href="${adminUrl}" style="display:block;background:#000;color:#fff;text-align:center;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none">
-              Ver en el panel →
-            </a>
-
-            <p style="margin:20px 0 0;font-size:12px;color:#d1d5db;text-align:center">
-              ${isCreator ? `Notificación automática de Referidoo · Asesor: ${p.advisorName}` : "Este correo es automático de Referidoo"}
-            </p>
-          </td>
+          <td width="50%" style="padding-right:8px">${metaChip("Referido por", p.referrerName)}</td>
+          <td width="50%" style="padding-left:8px">${metaChip(`Premio #${p.tierPosition}`, formatMXN(p.rewardAmount))}</td>
         </tr>
       </table>
+
+      ${pill(adminUrl, "Abrir en el panel →")}
     </td></tr>
-  </table>
-</body>
-</html>`;
+    ${footer(`Referidoo — programa de referidos para asesores de seguros`)}
+  `);
 }
+
+// ─── 2. Límite freemium ───────────────────────────────────────────────────────
+
+type FreemiumLimitPayload = {
+  advisorName: string;
+  advisorEmail: string;
+  referrerName: string;
+  leadName: string;
+  totalLeads: number;
+};
+
+function freemiumLimitHtml(p: FreemiumLimitPayload) {
+  const upgradeUrl = `${BASE_URL}/admin/perfil`;
+
+  return emailShell(`
+    ${header("Plan Gratis")}
+    <tr><td style="padding:32px 32px 20px">
+      <p style="margin:0 0 8px;font-size:13px;color:#6B727D;font-weight:500">Límite de leads alcanzado</p>
+      <h1 style="margin:0 0 10px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">Tienes un lead esperando — y no puedes verlo</h1>
+      <p style="margin:0 0 28px;font-size:14px;color:#6B727D;line-height:1.6"><strong style="color:#0B0B0C">${p.referrerName}</strong> acaba de referirte un contacto, pero ya alcanzaste los 12 leads del Plan Gratis. Necesitas Plan Pro para desbloquear sus datos y seguir recibiendo referidos.</p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F7;border-radius:12px;margin-bottom:20px;border:2px dashed #DADCE0">
+        <tr><td style="padding:24px;text-align:center">
+          <p style="margin:0 0 8px;font-size:28px;line-height:1">🔒</p>
+          <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#0B0B0C">Contacto bloqueado</p>
+          <p style="margin:0;font-size:13px;color:#9098A2">Referido por ${p.referrerName} — se desbloquea al activar Pro</p>
+        </td></tr>
+      </table>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#0B0B0C;border-radius:12px;margin-bottom:24px">
+        <tr><td style="padding:24px">
+          <p style="margin:0 0 4px;font-size:11px;color:#6B727D;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">Plan Pro</p>
+          <p style="margin:0 0 18px;font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.02em">$539 <span style="font-size:14px;font-weight:400;color:#6B727D">MXN/mes</span></p>
+          <table cellpadding="0" cellspacing="0">
+            <tr><td style="padding:5px 0"><span style="font-size:14px;color:#ffffff">✓&nbsp; Leads ilimitados, sin tope</span></td></tr>
+            <tr><td style="padding:5px 0"><span style="font-size:14px;color:#ffffff">✓&nbsp; Datos completos de cada contacto</span></td></tr>
+            <tr><td style="padding:5px 0"><span style="font-size:14px;color:#ffffff">✓&nbsp; Comisiones escaladas y premios burbuja</span></td></tr>
+            <tr><td style="padding:5px 0"><span style="font-size:14px;color:#ffffff">✓&nbsp; Cartera de clientes ilimitada</span></td></tr>
+            <tr><td style="padding:5px 0"><span style="font-size:14px;color:#2563EB;font-weight:600">✓&nbsp; Desbloquea el lead que acaba de llegar</span></td></tr>
+          </table>
+        </td></tr>
+      </table>
+
+      ${pill(upgradeUrl, "Activar Plan Pro →", "#2563EB")}
+      <p style="margin:12px 0 0;font-size:13px;color:#9098A2;text-align:center">Perfil → Actualizar plan · Solo toma un minuto</p>
+    </td></tr>
+    ${footer("Este correo es automático de Referidoo")}
+  `);
+}
+
+// ─── 3. Conversión cerrada ────────────────────────────────────────────────────
 
 type ApprovedPayload = NewReferralPayload & {
   saleAmount?: number | null;
@@ -111,86 +185,56 @@ type ApprovedPayload = NewReferralPayload & {
 
 function referralApprovedHtml(p: ApprovedPayload, isCreator = false) {
   const adminUrl = `${BASE_URL}/admin/referidos`;
+
   const saleRow = p.saleAmount
-    ? `<tr><td style="padding:2px 0"><span style="font-size:13px;color:#6b7280">💼 Valor del plan: </span><span style="font-size:13px;font-weight:700;color:#0a0a0a">${formatMXN(p.saleAmount)}</span></td></tr>`
+    ? `<tr><td style="padding:3px 0"><span style="font-size:14px;color:#5A626E">💼&nbsp; Valor del plan: <strong style="color:#0B0B0C">${formatMXN(p.saleAmount)}</strong></span></td></tr>`
     : "";
+
   const commissionBlock = isCreator && p.lessioCommission
-    ? `<table width="100%" style="background:#000;border-radius:12px;margin-bottom:20px">
-        <tr><td style="padding:16px 20px">
-          <p style="margin:0 0 2px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:2px;text-transform:uppercase">Tu comisión Lessio${p.productType ? ` · ${p.productType}` : ""}</p>
-          <p style="margin:0;font-size:20px;font-weight:800;color:#fff">${formatMXN(p.lessioCommission)}</p>
+    ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F7;border-radius:12px;margin-bottom:20px">
+        <tr><td style="padding:20px 24px">
+          <p style="margin:0 0 2px;font-size:11px;color:#9098A2;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">Tu comisión Lessio${p.productType ? ` · ${p.productType}` : ""}</p>
+          <p style="margin:0;font-size:22px;font-weight:800;color:#0B0B0C;letter-spacing:-0.02em">${formatMXN(p.lessioCommission)}</p>
         </td></tr>
       </table>`
     : "";
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
-    <tr><td align="center">
-      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden">
+
+  const eyebrow = isCreator ? `Sistema · ${p.advisorName}` : `Notificación de conversión`;
+
+  return emailShell(`
+    ${header(eyebrow)}
+    <tr><td style="padding:32px 32px 20px">
+      <p style="margin:0 0 8px;font-size:13px;color:#6B727D;font-weight:500">Venta cerrada${p.launchBonusApplied ? " · Bono de lanzamiento aplicado" : ""}</p>
+      <h1 style="margin:0 0 6px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">${p.leadName} contrató un plan</h1>
+      <p style="margin:0 0 28px;font-size:14px;color:#6B727D;line-height:1.6">El referido de <strong style="color:#0B0B0C">${p.referrerName}</strong> se convirtió en cliente. El Premio #${p.tierPosition} quedó registrado y listo para pagarse.</p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F7;border-radius:12px;margin-bottom:20px">
+        <tr><td style="padding:20px 24px">
+          <p style="margin:0 0 2px;font-size:11px;color:#9098A2;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">Cliente convertido</p>
+          <p style="margin:0 0 14px;font-size:19px;font-weight:700;color:#0B0B0C;letter-spacing:-0.01em">${p.leadName}</p>
+          <table cellpadding="0" cellspacing="0">
+            <tr><td style="padding:3px 0">
+              <a href="tel:${p.leadPhone}" style="font-size:14px;color:#0B0B0C;font-weight:600;text-decoration:none">📱 ${p.leadPhone}</a>
+            </td></tr>
+            ${p.leadEmail ? `<tr><td style="padding:3px 0"><span style="font-size:14px;color:#5A626E">✉️ ${p.leadEmail}</span></td></tr>` : ""}
+            ${saleRow}
+          </table>
+        </td></tr>
+      </table>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px">
         <tr>
-          <td style="background:#000;padding:24px 32px">
-            <p style="margin:0;color:#fff;font-size:12px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo · Comisión</p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:32px">
-            <p style="margin:0 0 4px;font-size:13px;color:#6b7280;font-weight:500">Venta cerrada — ${p.advisorName}</p>
-            <h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#0a0a0a;line-height:1.3">
-              ${p.leadName} contrató un plan
-            </h1>
-            <table width="100%" style="background:#f9fafb;border-radius:12px;margin-bottom:24px">
-              <tr><td style="padding:20px">
-                <p style="margin:0 0 4px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:2px;text-transform:uppercase">Cliente convertido</p>
-                <p style="margin:0 0 16px;font-size:18px;font-weight:700;color:#0a0a0a">${p.leadName}</p>
-                <table>
-                  <tr><td style="padding:2px 0"><span style="font-size:13px;color:#6b7280">📱 </span><a href="tel:${p.leadPhone}" style="font-size:13px;color:#0a0a0a;font-weight:600;text-decoration:none">${p.leadPhone}</a></td></tr>
-                  ${p.leadEmail ? `<tr><td style="padding:2px 0"><span style="font-size:13px;color:#6b7280">✉️ </span><span style="font-size:13px;color:#0a0a0a">${p.leadEmail}</span></td></tr>` : ""}
-                  ${saleRow}
-                </table>
-              </td></tr>
-            </table>
-            <table width="100%" style="margin-bottom:28px">
-              <tr>
-                <td width="50%" style="padding:0 8px 0 0">
-                  <table width="100%" style="background:#f9fafb;border-radius:10px">
-                    <tr><td style="padding:14px 16px">
-                      <p style="margin:0 0 2px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:1px;text-transform:uppercase">Asesor</p>
-                      <p style="margin:0;font-size:14px;font-weight:600;color:#0a0a0a">${p.advisorName}</p>
-                    </td></tr>
-                  </table>
-                </td>
-                <td width="50%" style="padding:0 0 0 8px">
-                  <table width="100%" style="background:#f9fafb;border-radius:10px">
-                    <tr><td style="padding:14px 16px">
-                      <p style="margin:0 0 2px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:1px;text-transform:uppercase">Premio #${p.tierPosition}</p>
-                      <p style="margin:0;font-size:14px;font-weight:700;color:#0a0a0a">${formatMXN(p.rewardAmount)}</p>
-                    </td></tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-            <table width="100%" style="background:#000;border-radius:12px;margin-bottom:20px">
-              <tr><td style="padding:16px 20px">
-                <p style="margin:0 0 2px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:2px;text-transform:uppercase">Referido por</p>
-                <p style="margin:0;font-size:16px;font-weight:700;color:#fff">${p.referrerName}</p>
-              </td></tr>
-            </table>
-            ${commissionBlock}
-            <a href="${adminUrl}" style="display:block;background:#000;color:#fff;text-align:center;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none">
-              Ver en el panel →
-            </a>
-            <p style="margin:20px 0 0;font-size:12px;color:#d1d5db;text-align:center">
-              Notificación de conversión · Referidoo
-            </p>
-          </td>
+          <td width="50%" style="padding-right:8px">${metaChip("Referido por", p.referrerName)}</td>
+          <td width="50%" style="padding-left:8px">${metaChip(`Premio #${p.tierPosition}`, formatMXN(p.rewardAmount))}</td>
         </tr>
       </table>
+
+      ${commissionBlock}
+
+      ${pill(adminUrl, "Ver conversión en el panel →")}
     </td></tr>
-  </table>
-</body>
-</html>`;
+    ${footer("Referidoo · Notificación automática de conversión")}
+  `);
 }
 
 export async function sendReferralApprovedNotification(payload: ApprovedPayload) {
@@ -203,7 +247,6 @@ export async function sendReferralApprovedNotification(payload: ApprovedPayload)
 
   const sends: Promise<unknown>[] = [];
 
-  // Email al asesor — sin comisión de Lessio
   if (payload.advisorEmail && payload.advisorEmail !== CREATOR_EMAIL) {
     sends.push(resend.emails.send({
       from: FROM,
@@ -213,7 +256,6 @@ export async function sendReferralApprovedNotification(payload: ApprovedPayload)
     }));
   }
 
-  // Email al creador (Patrick) — incluye su comisión
   sends.push(resend.emails.send({
     from: FROM,
     to: [CREATOR_EMAIL],
@@ -226,7 +268,7 @@ export async function sendReferralApprovedNotification(payload: ApprovedPayload)
   });
 }
 
-// ─── Payment sent to referrer ───────────────────────────────────────────────
+// ─── 4 & 5. Premio enviado + Solicitud de confirmación ───────────────────────
 
 export type PaymentPayload = {
   referrerName: string;
@@ -244,76 +286,52 @@ export type PaymentPayload = {
 
 function paymentSentHtml(p: PaymentPayload) {
   const nextBlock = p.nextTierAmount && p.nextTierPosition
-    ? `<table width="100%" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;margin-bottom:24px">
-        <tr><td style="padding:16px 20px">
-          <p style="margin:0 0 4px;font-size:11px;color:#166534;font-weight:700;letter-spacing:2px;text-transform:uppercase">Siguiente premio</p>
-          <p style="margin:0 0 4px;font-size:20px;font-weight:800;color:#0a0a0a">Premio #${p.nextTierPosition} — ${formatMXN(p.nextTierAmount)}</p>
-          <p style="margin:0;font-size:13px;color:#166534">Confirma que recibiste el #${p.tierPosition} y tu historial quedará al día para seguir acumulando.</p>
+    ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;margin-bottom:24px">
+        <tr><td style="padding:18px 22px">
+          <p style="margin:0 0 4px;font-size:11px;color:#166534;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">Siguiente premio disponible</p>
+          <p style="margin:0 0 4px;font-size:18px;font-weight:800;color:#0B0B0C;letter-spacing:-0.02em">Premio #${p.nextTierPosition} — ${formatMXN(p.nextTierAmount)}</p>
+          <p style="margin:0;font-size:13px;color:#166534;line-height:1.5">Confirma el #${p.tierPosition} y tu historial queda al día para seguir acumulando.</p>
         </td></tr>
       </table>`
-    : `<p style="margin:0 0 20px;font-size:13px;color:#6b7280;text-align:center">Confirma que lo recibiste para mantener tu historial al día.</p>`;
+    : `<p style="margin:0 0 20px;font-size:13px;color:#6B727D;text-align:center">Confirma que lo recibiste para mantener tu historial al día.</p>`;
 
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
-    <tr><td align="center">
-      <table width="100%" style="max-width:520px;background:#fff;border-radius:16px;overflow:hidden">
-        <tr><td style="background:#000;padding:24px 32px">
-          <p style="margin:0;color:#fff;font-size:12px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo</p>
-        </td></tr>
-        <tr><td style="padding:32px">
-          <p style="margin:0 0 4px;font-size:13px;color:#6b7280;font-weight:500">¡Te han enviado un premio!</p>
-          <h1 style="margin:0 0 4px;font-size:28px;font-weight:800;color:#0a0a0a">${formatMXN(p.rewardAmount)}</h1>
-          <p style="margin:0 0 24px;font-size:14px;color:#6b7280">Premio #${p.tierPosition} por referir a ${p.leadName}</p>
+  return emailShell(`
+    ${header()}
+    <tr><td style="padding:32px 32px 20px">
+      <p style="margin:0 0 8px;font-size:13px;color:#6B727D;font-weight:500">¡Tu premio llegó!</p>
+      <h1 style="margin:0 0 4px;font-size:32px;font-weight:800;color:#0B0B0C;letter-spacing:-0.03em">${formatMXN(p.rewardAmount)}</h1>
+      <p style="margin:0 0 28px;font-size:14px;color:#6B727D">Premio #${p.tierPosition} por referir a ${p.leadName}</p>
 
-          <table width="100%" style="background:#f9fafb;border-radius:12px;margin-bottom:20px">
-            <tr><td style="padding:18px 20px">
-              <p style="margin:0 0 4px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:2px;text-transform:uppercase">Detalles</p>
-              <p style="margin:0 0 8px;font-size:14px;color:#374151">${p.advisorName} confirmó que <strong>${p.leadName}</strong> contrató un plan. Tu Premio #${p.tierPosition} fue aprobado y enviado.</p>
-              ${p.paymentNote ? `<p style="margin:0;font-size:12px;color:#9ca3af">Referencia de pago: ${p.paymentNote}</p>` : ""}
-            </td></tr>
-          </table>
-
-          ${nextBlock}
-
-          <p style="margin:0 0 10px;font-size:15px;font-weight:700;color:#0a0a0a;text-align:center">¿Ya lo recibiste?</p>
-          <p style="margin:0 0 16px;font-size:13px;color:#6b7280;text-align:center">Confírmalo aquí o en la aplicación — tarda menos de 10 segundos.</p>
-          <a href="${p.portalUrl}" style="display:block;background:#000;color:#fff;text-align:center;padding:16px;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:12px">
-            Sí, lo recibí ✓
-          </a>
-          <p style="margin:0;font-size:12px;color:#d1d5db;text-align:center">¿No lo recibiste? Escríbele directamente a ${p.advisorName}.</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F7;border-radius:12px;margin-bottom:20px">
+        <tr><td style="padding:18px 22px">
+          <p style="margin:0 0 2px;font-size:11px;color:#9098A2;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">Detalles del premio</p>
+          <p style="margin:0 0 6px;font-size:14px;color:#3F4651;line-height:1.5">${p.advisorName} confirmó que <strong style="color:#0B0B0C">${p.leadName}</strong> contrató un plan. Tu Premio #${p.tierPosition} fue aprobado y enviado.</p>
+          ${p.paymentNote ? `<p style="margin:0;font-size:12px;color:#9098A2">Referencia: ${p.paymentNote}</p>` : ""}
         </td></tr>
       </table>
+
+      ${nextBlock}
+
+      <p style="margin:0 0 10px;font-size:15px;font-weight:700;color:#0B0B0C;text-align:center">¿Ya lo recibiste?</p>
+      <p style="margin:0 0 16px;font-size:13px;color:#6B727D;text-align:center">Confírmalo aquí — tarda menos de 10 segundos.</p>
+      ${pill(p.portalUrl, "Sí, ya lo recibí ✓")}
+      <p style="margin:14px 0 0;font-size:12px;color:#9098A2;text-align:center">¿No lo recibiste aún? Escríbele directamente a ${p.advisorName}.</p>
     </td></tr>
-  </table>
-</body></html>`;
+    ${footer("Referidoo — programa de referidos para asesores de seguros")}
+  `);
 }
 
 function confirmationRequestHtml(p: PaymentPayload) {
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
-    <tr><td align="center">
-      <table width="100%" style="max-width:520px;background:#fff;border-radius:16px;overflow:hidden">
-        <tr><td style="background:#000;padding:24px 32px">
-          <p style="margin:0;color:#fff;font-size:12px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo</p>
-        </td></tr>
-        <tr><td style="padding:32px">
-          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0a0a0a">¿Ya recibiste tu premio?</h1>
-          <p style="margin:0 0 24px;font-size:14px;color:#6b7280">${p.advisorName} confirmó el pago de <strong>${formatMXN(p.rewardAmount)}</strong>. Confirma que lo recibiste para mantener tu historial al día.</p>
-          <a href="${p.portalUrl}" style="display:block;background:#000;color:#fff;text-align:center;padding:16px;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:12px">
-            Sí, lo recibí ✓
-          </a>
-          <p style="margin:0;font-size:12px;color:#d1d5db;text-align:center">Si no recibiste nada, contacta a ${p.advisorName} directamente.</p>
-        </td></tr>
-      </table>
+  return emailShell(`
+    ${header()}
+    <tr><td style="padding:32px 32px 20px">
+      <h1 style="margin:0 0 10px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">¿Ya recibiste tu premio?</h1>
+      <p style="margin:0 0 28px;font-size:14px;color:#6B727D;line-height:1.6">${p.advisorName} confirmó el pago de <strong style="color:#0B0B0C">${formatMXN(p.rewardAmount)}</strong>. Confírmalo para que tu historial quede al día.</p>
+      ${pill(p.portalUrl, "Confirmar que lo recibí ✓")}
+      <p style="margin:14px 0 0;font-size:12px;color:#9098A2;text-align:center">¿No recibiste nada? Contacta a ${p.advisorName} directamente.</p>
     </td></tr>
-  </table>
-</body></html>`;
+    ${footer("Referidoo — notificación automática")}
+  `);
 }
 
 export async function sendPaymentSentNotification(payload: PaymentPayload) {
@@ -327,43 +345,114 @@ export async function sendPaymentSentNotification(payload: PaymentPayload) {
   results.forEach((r, i) => {
     if (r.status === "rejected") console.error(`[email] pago email [${i}] falló:`, r.reason);
     else if (r.status === "fulfilled" && r.value && typeof r.value === "object" && "error" in r.value && r.value.error) {
-      console.error(`[email] pago email [${i}] error Resend:`, r.value.error);
+      console.error(`[email] pago email [${i}] error Resend:`, (r.value as { error: unknown }).error);
     }
   });
 }
 
 export async function sendConfirmationRequest(payload: PaymentPayload) {
   if (!resend || !payload.referrerEmail) return;
-  await resend.emails.send({ from: FROM, to: [payload.referrerEmail], subject: `¿Recibiste tu premio de ${formatMXN(payload.rewardAmount)}?`, html: confirmationRequestHtml(payload) });
+  await resend.emails.send({
+    from: FROM,
+    to: [payload.referrerEmail],
+    subject: `¿Recibiste tu premio de ${formatMXN(payload.rewardAmount)}?`,
+    html: confirmationRequestHtml(payload),
+  });
 }
 
-export async function sendReferrerConfirmedNotification(payload: { referrerName: string; advisorName: string; leadName: string; rewardAmount: number; saleAmount?: number | null }) {
+// ─── 6. Referente confirmó recepción ─────────────────────────────────────────
+
+export async function sendReferrerConfirmedNotification(payload: {
+  referrerName: string;
+  advisorName: string;
+  leadName: string;
+  rewardAmount: number;
+  saleAmount?: number | null;
+}) {
   if (!resend) return;
   await resend.emails.send({
     from: FROM,
     to: [CREATOR_EMAIL],
     subject: `[Confirmado] ${payload.referrerName} confirmó su premio · ${payload.advisorName}`,
-    html: `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"></head><body style="font-family:-apple-system,sans-serif;background:#f4f4f5;padding:40px 16px">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
-<table width="100%" style="max-width:480px;background:#fff;border-radius:16px;overflow:hidden">
-  <tr><td style="background:#000;padding:20px 28px"><p style="margin:0;color:#fff;font-size:11px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo · Comisión Verificada</p></td></tr>
-  <tr><td style="padding:28px">
-    <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0a0a0a">${payload.referrerName} confirmó su premio</h1>
-    <p style="margin:0 0 8px;font-size:14px;color:#6b7280">Asesor: <strong>${payload.advisorName}</strong></p>
-    <p style="margin:0 0 8px;font-size:14px;color:#6b7280">Lead convertido: <strong>${payload.leadName}</strong></p>
-    <p style="margin:0 0 8px;font-size:14px;color:#6b7280">Premio pagado: <strong>${formatMXN(payload.rewardAmount)}</strong></p>
-    ${payload.saleAmount ? `<p style="margin:0 0 8px;font-size:14px;color:#6b7280">Valor del plan: <strong style="color:#000">${formatMXN(payload.saleAmount)}</strong></p>` : ""}
-    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;margin-top:20px">
-      <p style="margin:0;font-size:14px;font-weight:600;color:#166534">✓ El referente confirmó la recepción de su premio</p>
-    </div>
-  </td></tr>
-</table>
-</td></tr></table>
-</body></html>`,
+    html: emailShell(`
+      ${header("Comisión verificada")}
+      <tr><td style="padding:32px 32px 20px">
+        <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">${payload.referrerName} confirmó su premio</h1>
+        <p style="margin:0 0 24px;font-size:14px;color:#6B727D;line-height:1.6">El ciclo de pago está completo — el referente verificó la recepción de su dinero.</p>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F7;border-radius:12px;margin-bottom:20px">
+          <tr><td style="padding:20px 24px">
+            <table cellpadding="0" cellspacing="0" width="100%">
+              <tr><td style="padding:5px 0;border-bottom:1px solid #ECEDEF">
+                <span style="font-size:13px;color:#6B727D">Asesor</span>
+                <span style="float:right;font-size:13px;font-weight:600;color:#0B0B0C">${payload.advisorName}</span>
+              </td></tr>
+              <tr><td style="padding:5px 0;border-bottom:1px solid #ECEDEF">
+                <span style="font-size:13px;color:#6B727D">Lead convertido</span>
+                <span style="float:right;font-size:13px;font-weight:600;color:#0B0B0C">${payload.leadName}</span>
+              </td></tr>
+              <tr><td style="padding:5px 0;border-bottom:1px solid #ECEDEF">
+                <span style="font-size:13px;color:#6B727D">Premio pagado</span>
+                <span style="float:right;font-size:13px;font-weight:700;color:#0B0B0C">${formatMXN(payload.rewardAmount)}</span>
+              </td></tr>
+              ${payload.saleAmount ? `<tr><td style="padding:5px 0">
+                <span style="font-size:13px;color:#6B727D">Valor del plan</span>
+                <span style="float:right;font-size:13px;font-weight:700;color:#0B0B0C">${formatMXN(payload.saleAmount)}</span>
+              </td></tr>` : ""}
+            </table>
+          </td></tr>
+        </table>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px">
+          <tr><td style="padding:16px 20px">
+            <p style="margin:0;font-size:14px;font-weight:600;color:#166534">✓ Recepción confirmada por el referente</p>
+          </td></tr>
+        </table>
+      </td></tr>
+      ${footer("Referidoo · Notificación interna automática")}
+    `),
   });
 }
 
-// ─── Premios burbuja (Auto + GMM) ───────────────────────────────────────────
+// ─── 7. Verificación de correo ────────────────────────────────────────────────
+
+export async function sendVerificationEmail(payload: {
+  advisorEmail: string;
+  advisorName: string;
+  verificationToken: string;
+}) {
+  const verifyUrl = `${BASE_URL}/api/auth/verify-email?token=${payload.verificationToken}`;
+
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY no configurado — verificación no enviada. Link:", verifyUrl);
+    return;
+  }
+
+  console.log("[email] enviando verificación a:", payload.advisorEmail, "url:", verifyUrl);
+  const result = await resend.emails.send({
+    from: FROM,
+    to: [payload.advisorEmail],
+    subject: "Confirma tu correo en Referidoo",
+    html: emailShell(`
+      ${header()}
+      <tr><td style="padding:32px 32px 20px">
+        <h1 style="margin:0 0 10px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">Hola ${payload.advisorName}, confirma tu correo</h1>
+        <p style="margin:0 0 28px;font-size:14px;color:#6B727D;line-height:1.6">Ya casi está listo. Confirma tu correo con el botón de abajo para empezar a agregar clientes y activar tu programa de referidos.</p>
+        ${pill(verifyUrl, "Verificar mi correo →")}
+        <p style="margin:14px 0 0;font-size:12px;color:#9098A2;text-align:center">Si no creaste esta cuenta en Referidoo, ignora este correo.</p>
+      </td></tr>
+      ${footer("Referidoo — plataforma de referidos para asesores de seguros")}
+    `),
+  });
+
+  if (result.error) {
+    console.error("[email] Resend rechazó verificación:", JSON.stringify(result.error));
+  } else {
+    console.log("[email] verificación enviada OK. id:", result.data?.id);
+  }
+}
+
+// ─── 8. Burbuja reclamada (aviso interno) ────────────────────────────────────
 
 export type BubbleClaimPayload = {
   referrerName: string;
@@ -380,8 +469,6 @@ export async function sendBubbleClaimNotification(payload: BubbleClaimPayload) {
     return;
   }
 
-  const subject = `[Premios burbuja] ${payload.referrerName} reclamó ${formatMXN(payload.amount)}`;
-
   const recipients = [CREATOR_EMAIL];
   if (payload.advisorEmail && payload.advisorEmail !== CREATOR_EMAIL) {
     recipients.push(payload.advisorEmail);
@@ -390,103 +477,78 @@ export async function sendBubbleClaimNotification(payload: BubbleClaimPayload) {
   await resend.emails.send({
     from: FROM,
     to: recipients,
-    subject,
-    html: `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"></head><body style="font-family:-apple-system,sans-serif;background:#f4f4f5;padding:40px 16px">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
-<table width="100%" style="max-width:480px;background:#fff;border-radius:16px;overflow:hidden">
-  <tr><td style="background:#000;padding:20px 28px"><p style="margin:0;color:#fff;font-size:11px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo · Premios burbuja</p></td></tr>
-  <tr><td style="padding:28px">
-    <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0a0a0a">${payload.referrerName} reclamó su premio burbuja</h1>
-    <p style="margin:0 0 8px;font-size:14px;color:#6b7280">Asesor: <strong>${payload.advisorName}</strong></p>
-    <p style="margin:0 0 16px;font-size:14px;color:#6b7280">Monto acumulado (Auto + GMM): <strong style="color:#000">${formatMXN(payload.amount)}</strong></p>
-    <a href="${BASE_URL}/admin/niveles" style="display:block;background:#000;color:#fff;text-align:center;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none">
-      Revisar y marcar como pagado →
-    </a>
-  </td></tr>
-</table>
-</td></tr></table>
-</body></html>`,
+    subject: `[Premios burbuja] ${payload.referrerName} reclamó ${formatMXN(payload.amount)}`,
+    html: emailShell(`
+      ${header("Premios burbuja")}
+      <tr><td style="padding:32px 32px 20px">
+        <p style="margin:0 0 8px;font-size:13px;color:#6B727D;font-weight:500">Acción requerida</p>
+        <h1 style="margin:0 0 6px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">${payload.referrerName} reclamó su premio burbuja</h1>
+        <p style="margin:0 0 28px;font-size:14px;color:#6B727D;line-height:1.6">El referente acumuló <strong style="color:#0B0B0C">${formatMXN(payload.amount)}</strong> en premios de Auto + GMM y solicitó el pago. Revisa y marca como pagado desde el panel.</p>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F7;border-radius:12px;margin-bottom:24px">
+          <tr><td style="padding:18px 22px">
+            <table cellpadding="0" cellspacing="0" width="100%">
+              <tr><td style="padding:4px 0;border-bottom:1px solid #ECEDEF">
+                <span style="font-size:13px;color:#6B727D">Referente</span>
+                <span style="float:right;font-size:13px;font-weight:600;color:#0B0B0C">${payload.referrerName}</span>
+              </td></tr>
+              <tr><td style="padding:4px 0;border-bottom:1px solid #ECEDEF">
+                <span style="font-size:13px;color:#6B727D">Asesor</span>
+                <span style="float:right;font-size:13px;font-weight:600;color:#0B0B0C">${payload.advisorName}</span>
+              </td></tr>
+              <tr><td style="padding:4px 0">
+                <span style="font-size:13px;color:#6B727D">Monto acumulado</span>
+                <span style="float:right;font-size:13px;font-weight:700;color:#0B0B0C">${formatMXN(payload.amount)}</span>
+              </td></tr>
+            </table>
+          </td></tr>
+        </table>
+
+        ${pill(`${BASE_URL}/admin/niveles`, "Revisar y marcar como pagado →")}
+      </td></tr>
+      ${footer("Referidoo · Notificación interna automática")}
+    `),
   }).catch((err) => console.error("[email] Error enviando reclamo de burbuja:", err));
 }
 
-export async function sendBubbleClaimPaidNotification(payload: BubbleClaimPayload & { paymentNote?: string | null }) {
+// ─── 9. Burbuja pagada (al referente) ────────────────────────────────────────
+
+export async function sendBubbleClaimPaidNotification(
+  payload: BubbleClaimPayload & { paymentNote?: string | null }
+) {
   if (!resend || !payload.referrerEmail) return;
 
   await resend.emails.send({
     from: FROM,
     to: [payload.referrerEmail],
     subject: `¡Tu premio burbuja de ${formatMXN(payload.amount)} fue enviado!`,
-    html: `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
-    <tr><td align="center">
-      <table width="100%" style="max-width:520px;background:#fff;border-radius:16px;overflow:hidden">
-        <tr><td style="background:#000;padding:24px 32px">
-          <p style="margin:0;color:#fff;font-size:12px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo</p>
-        </td></tr>
-        <tr><td style="padding:32px">
-          <p style="margin:0 0 4px;font-size:13px;color:#6b7280;font-weight:500">¡Tu premio burbuja fue enviado!</p>
-          <h1 style="margin:0 0 24px;font-size:28px;font-weight:800;color:#0a0a0a">${formatMXN(payload.amount)}</h1>
-          <table width="100%" style="background:#f9fafb;border-radius:12px;margin-bottom:20px">
-            <tr><td style="padding:18px 20px">
-              <p style="margin:0;font-size:14px;color:#374151">${payload.advisorName} envió tu premio acumulado por referir seguros de auto y gastos médicos mayores.</p>
-              ${payload.paymentNote ? `<p style="margin:8px 0 0;font-size:12px;color:#9ca3af">Referencia de pago: ${payload.paymentNote}</p>` : ""}
-            </td></tr>
-          </table>
-          <p style="margin:0;font-size:12px;color:#d1d5db;text-align:center">Notificación automática de Referidoo</p>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>`,
+    html: emailShell(`
+      ${header()}
+      <tr><td style="padding:32px 32px 20px">
+        <p style="margin:0 0 8px;font-size:13px;color:#6B727D;font-weight:500">¡Premio enviado!</p>
+        <h1 style="margin:0 0 4px;font-size:32px;font-weight:800;color:#0B0B0C;letter-spacing:-0.03em">${formatMXN(payload.amount)}</h1>
+        <p style="margin:0 0 28px;font-size:14px;color:#6B727D">Tu premio burbuja acumulado fue enviado</p>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F7;border-radius:12px;margin-bottom:20px">
+          <tr><td style="padding:18px 22px">
+            <p style="margin:0 0 2px;font-size:11px;color:#9098A2;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">Detalles</p>
+            <p style="margin:0 0 6px;font-size:14px;color:#3F4651;line-height:1.5">${payload.advisorName} envió tu premio acumulado por referir seguros de auto y gastos médicos mayores.</p>
+            ${payload.paymentNote ? `<p style="margin:0;font-size:12px;color:#9098A2">Referencia de pago: ${payload.paymentNote}</p>` : ""}
+          </td></tr>
+        </table>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px">
+          <tr><td style="padding:16px 20px">
+            <p style="margin:0;font-size:14px;font-weight:600;color:#166534">✓ Tu premio fue enviado exitosamente</p>
+          </td></tr>
+        </table>
+      </td></tr>
+      ${footer("Referidoo — programa de referidos para asesores de seguros")}
+    `),
   }).catch((err) => console.error("[email] Error enviando pago de burbuja:", err));
 }
 
-export async function sendVerificationEmail(payload: { advisorEmail: string; advisorName: string; verificationToken: string }) {
-  const verifyUrl = `${BASE_URL}/api/auth/verify-email?token=${payload.verificationToken}`;
-
-  if (!resend) {
-    console.log("[email] RESEND_API_KEY no configurado — verificación no enviada. Link:", verifyUrl);
-    return;
-  }
-
-  console.log("[email] enviando verificación a:", payload.advisorEmail, "url:", verifyUrl);
-  const result = await resend.emails.send({
-    from: FROM,
-    to: [payload.advisorEmail],
-    subject: "Confirma tu correo en Referidoo",
-    html: `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
-    <tr><td align="center">
-      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden">
-        <tr><td style="background:#ffffff;padding:28px 32px;border-bottom:1px solid #f3f4f6">
-          <span style="font-size:21px;font-weight:800;letter-spacing:-0.02em;color:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">referidoo</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#3b82f6;margin-left:3px"></span>
-        </td></tr>
-        <tr><td style="padding:32px">
-          <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#0a0a0a">Hola ${payload.advisorName}, confirma tu correo</h1>
-          <p style="margin:0 0 24px;font-size:14px;color:#6b7280">Falta un paso para empezar a agregar clientes en Referidoo — confirma tu correo con el botón de abajo.</p>
-          <a href="${verifyUrl}" style="display:block;background:#000;color:#fff;text-align:center;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none">
-            Verificar mi correo →
-          </a>
-          <p style="margin:20px 0 0;font-size:12px;color:#d1d5db;text-align:center">Si no creaste esta cuenta, ignora este correo.</p>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`,
-  });
-  if (result.error) {
-    console.error("[email] Resend rechazó verificación:", JSON.stringify(result.error));
-  } else {
-    console.log("[email] verificación enviada OK. id:", result.data?.id);
-  }
-}
+// ─── Nuevo referido (exportado) ───────────────────────────────────────────────
 
 export async function sendNewReferralNotification(
   payload: NewReferralPayload,
@@ -498,7 +560,6 @@ export async function sendNewReferralNotification(
   }
 
   const subject = `Nuevo referido: ${payload.leadName} vía ${payload.referrerName}`;
-
   const sends: Promise<unknown>[] = [];
 
   if (!options?.skipAdvisor) {
@@ -510,7 +571,6 @@ export async function sendNewReferralNotification(
     }));
   }
 
-  // Patrick siempre recibe la notificación completa
   sends.push(resend.emails.send({
     from: FROM,
     to: [CREATOR_EMAIL],
@@ -521,85 +581,7 @@ export async function sendNewReferralNotification(
   await Promise.allSettled(sends);
 }
 
-// ─── Límite freemium alcanzado ────────────────────────────────────────────────
-
-type FreemiumLimitPayload = {
-  advisorName: string;
-  advisorEmail: string;
-  referrerName: string;
-  leadName: string;
-  totalLeads: number;
-};
-
-function freemiumLimitHtml(p: FreemiumLimitPayload) {
-  const upgradeUrl = `${BASE_URL}/admin/perfil`;
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
-    <tr><td align="center">
-      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden">
-        <!-- Header -->
-        <tr>
-          <td style="background:#000;padding:24px 32px">
-            <p style="margin:0;color:#fff;font-size:12px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo</p>
-          </td>
-        </tr>
-        <!-- Body -->
-        <tr>
-          <td style="padding:32px">
-            <p style="margin:0 0 4px;font-size:13px;color:#6b7280;font-weight:500">Nuevo lead en espera · Plan Gratis</p>
-            <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#0a0a0a;line-height:1.3">
-              Alcanzaste tu límite de 12 leads
-            </h1>
-            <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6">
-              <strong>${p.referrerName}</strong> acaba de enviarte un nuevo contacto interesado en un seguro, pero ya completaste los 12 leads del Plan Gratis. No puedes ver sus datos hasta que actualices.
-            </p>
-
-            <!-- Lead bloqueado -->
-            <table width="100%" style="background:#f9fafb;border-radius:12px;margin-bottom:24px;border:2px dashed #e5e7eb">
-              <tr><td style="padding:24px;text-align:center">
-                <p style="margin:0 0 8px;font-size:32px">🔒</p>
-                <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#0a0a0a">Contacto bloqueado</p>
-                <p style="margin:0;font-size:13px;color:#9ca3af">Referido por ${p.referrerName} — disponible al actualizar</p>
-              </td></tr>
-            </table>
-
-            <!-- Beneficios Plan Pro -->
-            <table width="100%" style="background:#000;border-radius:12px;margin-bottom:24px">
-              <tr><td style="padding:24px">
-                <p style="margin:0 0 4px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:2px;text-transform:uppercase">Plan Pro</p>
-                <p style="margin:0 0 20px;font-size:20px;font-weight:800;color:#fff">$539 <span style="font-size:14px;font-weight:400;color:#9ca3af">MXN/mes</span></p>
-                <table>
-                  <tr><td style="padding:5px 0"><span style="font-size:14px;color:#fff">✓&nbsp;&nbsp;Leads ilimitados — sin tope</span></td></tr>
-                  <tr><td style="padding:5px 0"><span style="font-size:14px;color:#fff">✓&nbsp;&nbsp;Datos completos de cada contacto</span></td></tr>
-                  <tr><td style="padding:5px 0"><span style="font-size:14px;color:#fff">✓&nbsp;&nbsp;Sistema de premios y comisiones escaladas</span></td></tr>
-                  <tr><td style="padding:5px 0"><span style="font-size:14px;color:#fff">✓&nbsp;&nbsp;Clientes ilimitados en tu cartera</span></td></tr>
-                  <tr><td style="padding:5px 0"><span style="font-size:14px;color:#2563eb">✓&nbsp;&nbsp;Desbloquea el lead que acaba de llegar</span></td></tr>
-                </table>
-              </td></tr>
-            </table>
-
-            <!-- CTA -->
-            <a href="${upgradeUrl}" style="display:block;background:#2563eb;color:#fff;text-align:center;padding:16px 24px;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:12px">
-              Actualizar a Plan Pro →
-            </a>
-            <p style="margin:0 0 20px;font-size:12px;color:#9ca3af;text-align:center">
-              Entra a tu panel → Perfil → Actualizar a Pro
-            </p>
-
-            <p style="margin:0;font-size:12px;color:#d1d5db;text-align:center">
-              Este correo es automático de Referidoo
-            </p>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
-}
+// ─── Límite freemium (exportado) ──────────────────────────────────────────────
 
 export async function sendFreemiumLimitEmail(payload: FreemiumLimitPayload) {
   if (!resend) {
@@ -610,7 +592,7 @@ export async function sendFreemiumLimitEmail(payload: FreemiumLimitPayload) {
   await resend.emails.send({
     from: FROM,
     to: [payload.advisorEmail],
-    subject: `Tienes un nuevo lead esperando — actualiza a Plan Pro`,
+    subject: `Tienes un nuevo lead esperando — activa Plan Pro`,
     html: freemiumLimitHtml(payload),
   });
 }
