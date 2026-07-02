@@ -16,23 +16,41 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   let onboardedAt = session.onboardedAt;
 
   if (name) {
-    // New token: only check deletedAt
-    const record = await db.advisor.findUnique({
-      where: { id: session.advisorId },
-      select: { deletedAt: true },
-    });
-    if (!record || record.deletedAt) redirect("/login");
+    // New token: only check deletedAt.
+    // try/catch guards the migration window before /api/migrate adds the column.
+    try {
+      const record = await db.advisor.findUnique({
+        where: { id: session.advisorId },
+        select: { deletedAt: true },
+      });
+      if (!record || record.deletedAt) redirect("/login");
+    } catch {
+      // deletedAt column missing — migration not yet run, allow access
+    }
   } else {
     // Old token: fetch full profile + deletedAt in one query
-    const advisor = await db.advisor.findUnique({
-      where: { id: session.advisorId },
-      select: { deletedAt: true, name: true, emailVerified: true, plan: true, onboardedAt: true },
-    });
-    if (!advisor || advisor.deletedAt) redirect("/login");
-    name = advisor.name;
-    emailVerified = advisor.emailVerified;
-    plan = advisor.plan;
-    onboardedAt = advisor.onboardedAt?.toISOString() ?? null;
+    try {
+      const advisor = await db.advisor.findUnique({
+        where: { id: session.advisorId },
+        select: { deletedAt: true, name: true, emailVerified: true, plan: true, onboardedAt: true },
+      });
+      if (!advisor || advisor.deletedAt) redirect("/login");
+      name = advisor.name;
+      emailVerified = advisor.emailVerified;
+      plan = advisor.plan;
+      onboardedAt = advisor.onboardedAt?.toISOString() ?? null;
+    } catch {
+      // deletedAt column missing — fallback to profile-only query
+      const advisor = await db.advisor.findUnique({
+        where: { id: session.advisorId },
+        select: { name: true, emailVerified: true, plan: true, onboardedAt: true },
+      });
+      if (!advisor) redirect("/login");
+      name = advisor.name;
+      emailVerified = advisor.emailVerified;
+      plan = advisor.plan;
+      onboardedAt = advisor.onboardedAt?.toISOString() ?? null;
+    }
   }
 
   return (
