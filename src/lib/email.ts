@@ -596,3 +596,135 @@ export async function sendFreemiumLimitEmail(payload: FreemiumLimitPayload) {
     html: freemiumLimitHtml(payload),
   });
 }
+
+// ─── Preview helper (solo test/desarrollo) ───────────────────────────────────
+
+export async function sendPreviewEmailsTo(to: string): Promise<Record<string, string>> {
+  if (!resend) return { error: "RESEND_API_KEY no configurado" };
+
+  const BASE = BASE_URL;
+  const results: Record<string, string> = {};
+
+  const send = async (
+    name: string,
+    subject: string,
+    html: string,
+  ) => {
+    const r = await resend.emails.send({ from: FROM, to: [to], subject, html });
+    results[name] = r.error ? `✗ ${JSON.stringify(r.error)}` : `✓ id:${r.data?.id}`;
+  };
+
+  const ref = {
+    advisorName: "Carlos Méndez",
+    advisorEmail: to,
+    referrerName: "Ana García",
+    leadName: "Roberto Flores",
+    leadPhone: "55 1234 5678",
+    leadEmail: "roberto@ejemplo.com",
+    rewardAmount: 800,
+    tierPosition: 3,
+  };
+
+  const pay = {
+    referrerName: "Ana García",
+    referrerEmail: to,
+    advisorName: "Carlos Méndez",
+    advisorEmail: to,
+    leadName: "Roberto Flores",
+    rewardAmount: 800,
+    portalUrl: `${BASE}/c/demo-token`,
+    tierPosition: 3,
+    nextTierPosition: 4 as number | null,
+    nextTierAmount: 1200 as number | null,
+    paymentNote: "SPEI · Ref. 20240702",
+  };
+
+  await send("1-nuevo-referido", `Nuevo referido: ${ref.leadName} vía ${ref.referrerName}`, newReferralHtml(ref, false));
+  await send("2-limite-freemium", "Tienes un nuevo lead esperando — activa Plan Pro", freemiumLimitHtml({ advisorName: ref.advisorName, advisorEmail: to, referrerName: ref.referrerName, leadName: ref.leadName, totalLeads: 13 }));
+  await send("3-conversion-cerrada", `[Comisión] ${ref.advisorName} cerró — ${ref.leadName} · Plan ${formatMXN(18000)}`, referralApprovedHtml({ ...ref, saleAmount: 18000, productType: "Vida PPR", lessioCommission: 2700 }, true));
+  await send("4-premio-enviado", `¡Tu premio de ${formatMXN(pay.rewardAmount)} está en camino!`, paymentSentHtml(pay));
+  await send("5-solicitud-confirmacion", `¿Recibiste tu premio de ${formatMXN(pay.rewardAmount)}?`, confirmationRequestHtml({ ...pay, nextTierPosition: null, nextTierAmount: null }));
+
+  await send("6-referente-confirmo", `[Confirmado] ${ref.referrerName} confirmó su premio · ${ref.advisorName}`,
+    emailShell(`
+      ${header("Comisión verificada")}
+      <tr><td style="padding:32px 32px 20px">
+        <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">${ref.referrerName} confirmó su premio</h1>
+        <p style="margin:0 0 24px;font-size:14px;color:#6B727D;line-height:1.6">El ciclo de pago está completo — el referente verificó la recepción de su dinero.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F7;border-radius:12px;margin-bottom:20px">
+          <tr><td style="padding:20px 24px">
+            <table cellpadding="0" cellspacing="0" width="100%">
+              <tr><td style="padding:5px 0;border-bottom:1px solid #ECEDEF"><span style="font-size:13px;color:#6B727D">Asesor</span><span style="float:right;font-size:13px;font-weight:600;color:#0B0B0C">${ref.advisorName}</span></td></tr>
+              <tr><td style="padding:5px 0;border-bottom:1px solid #ECEDEF"><span style="font-size:13px;color:#6B727D">Lead convertido</span><span style="float:right;font-size:13px;font-weight:600;color:#0B0B0C">${ref.leadName}</span></td></tr>
+              <tr><td style="padding:5px 0;border-bottom:1px solid #ECEDEF"><span style="font-size:13px;color:#6B727D">Premio pagado</span><span style="float:right;font-size:13px;font-weight:700;color:#0B0B0C">${formatMXN(800)}</span></td></tr>
+              <tr><td style="padding:5px 0"><span style="font-size:13px;color:#6B727D">Valor del plan</span><span style="float:right;font-size:13px;font-weight:700;color:#0B0B0C">${formatMXN(18000)}</span></td></tr>
+            </table>
+          </td></tr>
+        </table>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px">
+          <tr><td style="padding:16px 20px"><p style="margin:0;font-size:14px;font-weight:600;color:#166534">✓ Recepción confirmada por el referente</p></td></tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:0 32px 28px"><p style="margin:0;font-size:12px;color:#9098A2;text-align:center;line-height:1.6">Referidoo · Notificación interna automática</p></td></tr>
+    `)
+  );
+
+  await send("7-verificacion-correo", "Confirma tu correo en Referidoo",
+    emailShell(`
+      ${header()}
+      <tr><td style="padding:32px 32px 20px">
+        <h1 style="margin:0 0 10px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">Hola ${ref.advisorName}, confirma tu correo</h1>
+        <p style="margin:0 0 28px;font-size:14px;color:#6B727D;line-height:1.6">Ya casi está listo. Confirma tu correo con el botón de abajo para empezar a agregar clientes y activar tu programa de referidos.</p>
+        <a href="${BASE}/api/auth/verify-email?token=tok_demo_123abc" style="display:block;background:#0B0B0C;color:#ffffff;text-align:center;padding:15px 24px;border-radius:999px;font-size:15px;font-weight:600;text-decoration:none;letter-spacing:-0.01em">Verificar mi correo →</a>
+        <p style="margin:14px 0 0;font-size:12px;color:#9098A2;text-align:center">Si no creaste esta cuenta en Referidoo, ignora este correo.</p>
+      </td></tr>
+      <tr><td style="padding:0 32px 28px"><p style="margin:0;font-size:12px;color:#9098A2;text-align:center;line-height:1.6">Referidoo — plataforma de referidos para asesores de seguros</p></td></tr>
+    `)
+  );
+
+  await send("8-burbuja-reclamada", `[Premios burbuja] ${ref.referrerName} reclamó ${formatMXN(1500)}`,
+    emailShell(`
+      ${header("Premios burbuja")}
+      <tr><td style="padding:32px 32px 20px">
+        <p style="margin:0 0 8px;font-size:13px;color:#6B727D;font-weight:500">Acción requerida</p>
+        <h1 style="margin:0 0 6px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">${ref.referrerName} reclamó su premio burbuja</h1>
+        <p style="margin:0 0 28px;font-size:14px;color:#6B727D;line-height:1.6">El referente acumuló <strong style="color:#0B0B0C">${formatMXN(1500)}</strong> en premios de Auto + GMM y solicitó el pago.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F7;border-radius:12px;margin-bottom:24px">
+          <tr><td style="padding:18px 22px">
+            <table cellpadding="0" cellspacing="0" width="100%">
+              <tr><td style="padding:4px 0;border-bottom:1px solid #ECEDEF"><span style="font-size:13px;color:#6B727D">Referente</span><span style="float:right;font-size:13px;font-weight:600;color:#0B0B0C">${ref.referrerName}</span></td></tr>
+              <tr><td style="padding:4px 0;border-bottom:1px solid #ECEDEF"><span style="font-size:13px;color:#6B727D">Asesor</span><span style="float:right;font-size:13px;font-weight:600;color:#0B0B0C">${ref.advisorName}</span></td></tr>
+              <tr><td style="padding:4px 0"><span style="font-size:13px;color:#6B727D">Monto acumulado</span><span style="float:right;font-size:13px;font-weight:700;color:#0B0B0C">${formatMXN(1500)}</span></td></tr>
+            </table>
+          </td></tr>
+        </table>
+        <a href="${BASE}/admin/niveles" style="display:block;background:#0B0B0C;color:#ffffff;text-align:center;padding:15px 24px;border-radius:999px;font-size:15px;font-weight:600;text-decoration:none;letter-spacing:-0.01em">Revisar y marcar como pagado →</a>
+      </td></tr>
+      <tr><td style="padding:0 32px 28px"><p style="margin:0;font-size:12px;color:#9098A2;text-align:center;line-height:1.6">Referidoo · Notificación interna automática</p></td></tr>
+    `)
+  );
+
+  await send("9-burbuja-pagada", `¡Tu premio burbuja de ${formatMXN(1500)} fue enviado!`,
+    emailShell(`
+      ${header()}
+      <tr><td style="padding:32px 32px 20px">
+        <p style="margin:0 0 8px;font-size:13px;color:#6B727D;font-weight:500">¡Premio enviado!</p>
+        <h1 style="margin:0 0 4px;font-size:32px;font-weight:800;color:#0B0B0C;letter-spacing:-0.03em">${formatMXN(1500)}</h1>
+        <p style="margin:0 0 28px;font-size:14px;color:#6B727D">Tu premio burbuja acumulado fue enviado</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F7;border-radius:12px;margin-bottom:20px">
+          <tr><td style="padding:18px 22px">
+            <p style="margin:0 0 2px;font-size:11px;color:#9098A2;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">Detalles</p>
+            <p style="margin:0 0 6px;font-size:14px;color:#3F4651;line-height:1.5">${ref.advisorName} envió tu premio acumulado por referir seguros de auto y gastos médicos mayores.</p>
+            <p style="margin:0;font-size:12px;color:#9098A2">Referencia de pago: SPEI · Ref. 20240702</p>
+          </td></tr>
+        </table>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px">
+          <tr><td style="padding:16px 20px"><p style="margin:0;font-size:14px;font-weight:600;color:#166534">✓ Tu premio fue enviado exitosamente</p></td></tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:0 32px 28px"><p style="margin:0;font-size:12px;color:#9098A2;text-align:center;line-height:1.6">Referidoo — programa de referidos para asesores de seguros</p></td></tr>
+    `)
+  );
+
+  return results;
+}
