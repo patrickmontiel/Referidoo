@@ -23,7 +23,14 @@ export async function POST(req: NextRequest) {
   try {
     const existing = await db.advisor.findUnique({ where: { email } });
     if (existing) {
-      return NextResponse.json({ error: "Este correo ya está registrado" }, { status: 409 });
+      if (!existing.deletedAt) {
+        return NextResponse.json({ error: "Este correo ya está registrado" }, { status: 409 });
+      }
+      // Cuenta dada de baja: libera el correo renombrándolo para que el nuevo registro arranque de cero
+      await db.advisor.update({
+        where: { id: existing.id },
+        data: { email: `_baja_${existing.id}_${existing.email}` },
+      });
     }
 
     const hashedPassword = await hashPassword(password);
