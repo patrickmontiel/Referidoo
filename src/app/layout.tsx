@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 
 const geist = Geist({
@@ -16,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={`${geist.variable} h-full`}>
       <body className="min-h-full bg-white text-gray-950 antialiased">
-        {children}
+        <Suspense fallback={null}>{children}</Suspense>
       </body>
     </html>
   );

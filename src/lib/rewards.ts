@@ -1,14 +1,20 @@
+import { cacheTag, revalidateTag } from "next/cache";
 import { db } from "./db";
 
-const getCachedAdvisorSettings = (advisorId: string) =>
-  db.advisorSettings.findUnique({ where: { advisorId } });
+async function getCachedAdvisorSettings(advisorId: string) {
+  "use cache";
+  cacheTag(`advisor-config:${advisorId}`);
+  return db.advisorSettings.findUnique({ where: { advisorId } });
+}
 
-const getCachedAdvisorTiers = (advisorId: string) =>
-  db.rewardTier.findMany({ where: { advisorId }, orderBy: { position: "asc" } });
+async function getCachedAdvisorTiers(advisorId: string) {
+  "use cache";
+  cacheTag(`advisor-config:${advisorId}`);
+  return db.rewardTier.findMany({ where: { advisorId }, orderBy: { position: "asc" } });
+}
 
-export function invalidateAdvisorConfigCache(_advisorId: string) {
-  // no-op — 'use cache' requires cacheComponents: true which changes default
-  // rendering behavior app-wide. Full migration deferred to a dedicated session.
+export function invalidateAdvisorConfigCache(advisorId: string) {
+  revalidateTag(`advisor-config:${advisorId}`, "max");
 }
 
 // Comisión de Lessio sobre el valor del plan/prima, pagada una sola vez (primer

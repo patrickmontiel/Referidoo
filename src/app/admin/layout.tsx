@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { getAdvisorSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import AdminLayoutShell from "./AdminLayoutShell";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  await connection();
   const session = await getAdvisorSession();
   if (!session) redirect("/login");
 

@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
+import { unstable_noStore as noStore } from "next/cache";
 import type { NextResponse } from "next/server";
 
 const SECRET = process.env.JWT_SECRET ?? "dev-secret";
@@ -41,6 +42,7 @@ export function verifyToken(token: string): SessionPayload | null {
 }
 
 export async function getAdvisorSession(): Promise<SessionPayload | null> {
+  noStore(); // cookies are per-request — never cacheable
   const cookieStore = await cookies();
   const token = cookieStore.get("advisor_token")?.value;
   if (!token) return null;
