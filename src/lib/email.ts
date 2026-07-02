@@ -43,7 +43,7 @@ function header(sublabel?: string) {
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr>
           <td>
-            <span style="font-size:17px;font-weight:700;letter-spacing:-0.025em;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">referidoo</span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#2563EB;margin-left:2px;vertical-align:top;margin-top:5px"></span>
+            <span style="font-size:18px;font-weight:700;letter-spacing:-0.025em;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">referidoo</span><span style="font-size:18px;font-weight:700;color:#2563EB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">.</span>
           </td>
           ${sublabel ? `<td align="right"><span style="font-size:11px;color:#6B727D;font-weight:500;letter-spacing:0.04em">${sublabel}</span></td>` : ""}
         </tr>
