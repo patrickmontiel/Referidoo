@@ -356,6 +356,19 @@ export default function AdminLayoutShell({
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // D1: plan field in JWT can be stale after server-side downgrades (crons are
+  // server-to-server and cannot clear browser cookies). Fetch fresh plan on
+  // mount and update the sidebar label if it differs.
+  useEffect(() => {
+    fetch("/api/advisor/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null)
+      .then((data: { plan?: string } | null) => {
+        if (!data?.plan) return;
+        setAdvisorPlan(data.plan === "paid" ? "Plan Pro" : "Plan Gratis");
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   async function resendVerification() {
     if (resendingVerif || resentVerif) return;
     setResendingVerif(true);

@@ -6,12 +6,18 @@ vi.mock("@/lib/db", () => ({
     advisor: { findUnique: vi.fn(), update: vi.fn() },
   },
 }));
+vi.mock("@/lib/auth", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
+  return { ...actual, signToken: vi.fn().mockReturnValue("token"), setAdvisorCookie: vi.fn() };
+});
 
 import { db } from "@/lib/db";
+import { signToken } from "@/lib/auth";
 import { GET } from "../verify-email/route";
 
 const mockFindUnique = db.advisor.findUnique as unknown as ReturnType<typeof vi.fn>;
 const mockUpdate = db.advisor.update as unknown as ReturnType<typeof vi.fn>;
+const mockSignToken = signToken as unknown as ReturnType<typeof vi.fn>;
 
 function getRequest(token?: string) {
   const url = token
@@ -23,6 +29,8 @@ function getRequest(token?: string) {
 beforeEach(() => {
   mockFindUnique.mockReset();
   mockUpdate.mockReset();
+  mockSignToken.mockReset();
+  mockSignToken.mockReturnValue("token");
 });
 
 describe("GET /api/auth/verify-email", () => {
@@ -40,7 +48,7 @@ describe("GET /api/auth/verify-email", () => {
   });
 
   it("marks the advisor verified and clears the token on a valid token", async () => {
-    mockFindUnique.mockResolvedValue({ id: "adv1", email: "a@x.com", verificationToken: "good-token" });
+    mockFindUnique.mockResolvedValue({ id: "adv1", email: "a@x.com", name: "Ana", plan: "freemium", onboardedAt: null, verificationToken: "good-token" });
     const res = await GET(getRequest("good-token"));
 
     expect(mockUpdate).toHaveBeenCalledWith({
@@ -55,11 +63,11 @@ describe("GET /api/auth/verify-email", () => {
   // autenticado — un paso extra innecesario para un link de un solo uso que
   // ya prueba identidad.
   it("logs the advisor in by setting the session cookie on success", async () => {
-    mockFindUnique.mockResolvedValue({ id: "adv1", email: "a@x.com", verificationToken: "good-token" });
-    const res = await GET(getRequest("good-token"));
+    mockFindUnique.mockResolvedValue({ id: "adv1", email: "a@x.com", name: "Ana", plan: "freemium", onboardedAt: null, verificationToken: "good-token" });
+    await GET(getRequest("good-token"));
 
-    const cookie = res.cookies.get("advisor_token");
-    expect(cookie).toBeDefined();
-    expect(cookie?.value).toBeTruthy();
+    expect(mockSignToken).toHaveBeenCalledWith(
+      expect.objectContaining({ emailVerified: true, name: "Ana", plan: "freemium", onboardedAt: null })
+    );
   });
 });

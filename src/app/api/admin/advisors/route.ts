@@ -9,6 +9,7 @@ export async function GET() {
   }
 
   const advisors = await db.advisor.findMany({
+    where: { deletedAt: null },
     select: {
       id: true,
       name: true,

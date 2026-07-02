@@ -7,20 +7,28 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await getAdvisorSession();
   if (!session) redirect("/login");
 
-  // New JWTs carry advisor data — no DB query needed.
-  // Old JWTs (created before this deploy) fall back to one DB query; they are
-  // replaced the next time the advisor logs in or verifies email.
+  // New JWTs carry advisor data — no DB query needed for profile fields.
+  // However, we always do a minimal DB query to enforce soft delete (deletedAt).
+  // Old JWTs (created before this deploy) also need the full profile fallback.
   let name = session.name;
   let emailVerified = session.emailVerified;
   let plan = session.plan;
   let onboardedAt = session.onboardedAt;
 
-  if (!name) {
+  if (name) {
+    // New token: only check deletedAt
+    const record = await db.advisor.findUnique({
+      where: { id: session.advisorId },
+      select: { deletedAt: true },
+    });
+    if (!record || record.deletedAt) redirect("/login");
+  } else {
+    // Old token: fetch full profile + deletedAt in one query
     const advisor = await db.advisor.findUnique({
       where: { id: session.advisorId },
-      select: { name: true, emailVerified: true, plan: true, onboardedAt: true },
+      select: { deletedAt: true, name: true, emailVerified: true, plan: true, onboardedAt: true },
     });
-    if (!advisor) redirect("/login");
+    if (!advisor || advisor.deletedAt) redirect("/login");
     name = advisor.name;
     emailVerified = advisor.emailVerified;
     plan = advisor.plan;

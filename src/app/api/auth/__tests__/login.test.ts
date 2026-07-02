@@ -10,11 +10,12 @@ vi.mock("@/lib/auth", async () => {
 });
 
 import { db } from "@/lib/db";
-import { verifyPassword } from "@/lib/auth";
+import { verifyPassword, signToken } from "@/lib/auth";
 import { POST } from "../login/route";
 
 const mockFindUnique = db.advisor.findUnique as unknown as ReturnType<typeof vi.fn>;
 const mockVerifyPassword = verifyPassword as unknown as ReturnType<typeof vi.fn>;
+const mockSignToken = signToken as unknown as ReturnType<typeof vi.fn>;
 
 function postRequest(body: unknown) {
   return new NextRequest("http://localhost:3050/api/auth/login", {
@@ -28,6 +29,8 @@ const ORIGINAL_OWNER_EMAIL = process.env.PLATFORM_OWNER_EMAIL;
 beforeEach(() => {
   mockFindUnique.mockReset();
   mockVerifyPassword.mockReset();
+  mockSignToken.mockReset();
+  mockSignToken.mockReturnValue("token");
   process.env.PLATFORM_OWNER_EMAIL = "patrick@referidoo.com";
 });
 
@@ -57,6 +60,25 @@ describe("POST /api/auth/login", () => {
     const data = await res.json();
 
     expect(data.isOwner).toBe(false);
+  });
+
+  it("signs the token with enriched advisor fields (name, emailVerified, plan, onboardedAt)", async () => {
+    mockFindUnique.mockResolvedValue({
+      id: "adv2",
+      email: "asesor@demo.com",
+      password: "hashed",
+      name: "Ana",
+      emailVerified: true,
+      plan: "freemium",
+      onboardedAt: null,
+    });
+    mockVerifyPassword.mockResolvedValue(true);
+
+    await POST(postRequest({ email: "asesor@demo.com", password: "secret123" }));
+
+    expect(mockSignToken).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Ana", emailVerified: true, plan: "freemium", onboardedAt: null })
+    );
   });
 
   it("returns 401 on wrong password", async () => {

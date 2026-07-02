@@ -21,6 +21,7 @@ model Advisor {
   paidUntil         DateTime?
   paymentFailedAt   DateTime?
   onboardedAt       DateTime?
+  deletedAt         DateTime?
   createdAt         DateTime         @default(now())
   clients           Client[]
   referrals         Referral[]

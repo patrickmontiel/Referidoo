@@ -9,14 +9,21 @@ vi.mock("@/lib/db", () => ({
 vi.mock("@/lib/email", () => ({
   sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
 }));
+vi.mock("@/lib/auth", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
+  return { ...actual, hashPassword: vi.fn().mockResolvedValue("hashed"), signToken: vi.fn().mockReturnValue("token"), setAdvisorCookie: vi.fn() };
+});
 
 import { db } from "@/lib/db";
 import { sendVerificationEmail } from "@/lib/email";
+import { signToken, setAdvisorCookie } from "@/lib/auth";
 import { POST } from "../register/route";
 
 const mockFindUnique = db.advisor.findUnique as unknown as ReturnType<typeof vi.fn>;
 const mockCreate = db.advisor.create as unknown as ReturnType<typeof vi.fn>;
 const mockSendVerification = sendVerificationEmail as unknown as ReturnType<typeof vi.fn>;
+const mockSignToken = signToken as unknown as ReturnType<typeof vi.fn>;
+const mockSetAdvisorCookie = setAdvisorCookie as unknown as ReturnType<typeof vi.fn>;
 
 function postRequest(body: unknown) {
   return new NextRequest("http://localhost:3050/api/auth/register", {
@@ -29,6 +36,9 @@ beforeEach(() => {
   mockFindUnique.mockReset();
   mockCreate.mockReset();
   mockSendVerification.mockClear();
+  mockSignToken.mockReset();
+  mockSignToken.mockReturnValue("token");
+  mockSetAdvisorCookie.mockReset();
 });
 
 describe("POST /api/auth/register", () => {
@@ -52,7 +62,14 @@ describe("POST /api/auth/register", () => {
 
   it("creates an advisor on plan=freemium with emailVerified=false and sends a verification email", async () => {
     mockFindUnique.mockResolvedValue(null);
-    mockCreate.mockResolvedValue({ id: "adv1", name: "Ana", email: "a@b.com" });
+    mockCreate.mockResolvedValue({
+      id: "adv1",
+      name: "Ana",
+      email: "a@b.com",
+      emailVerified: false,
+      plan: "freemium",
+      onboardedAt: null,
+    });
 
     const res = await POST(postRequest({ name: "Ana", email: "a@b.com", password: "12345678" }));
 
@@ -63,7 +80,10 @@ describe("POST /api/auth/register", () => {
       })
     );
     expect(mockSendVerification).toHaveBeenCalledTimes(1);
-    expect(res.cookies.get("advisor_token")).toBeDefined();
+    expect(mockSignToken).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Ana", emailVerified: false, plan: "freemium", onboardedAt: null })
+    );
+    expect(mockSetAdvisorCookie).toHaveBeenCalledWith(expect.anything(), "token");
   });
 
   it("returns a friendly 409 when create() races on the unique email constraint", async () => {

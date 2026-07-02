@@ -15,9 +15,7 @@ export async function GET() {
     db.advisorSettings.findUnique({ where: { advisorId: session.advisorId } }),
   ]);
 
-  const res = NextResponse.json({ tiers, settings });
-  res.headers.set("Cache-Control", "private, max-age=30, stale-while-revalidate=60");
-  return res;
+  return NextResponse.json({ tiers, settings });
 }
 
 export async function PUT(req: NextRequest) {

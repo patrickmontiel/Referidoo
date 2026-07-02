@@ -76,5 +76,13 @@ export async function POST() {
     results.push("– bubbleClaimThreshold already exists");
   }
 
+  // Add deletedAt column to Advisor if missing (soft delete support)
+  try {
+    await db.execute(`ALTER TABLE "Advisor" ADD COLUMN "deletedAt" DATETIME`);
+    results.push("✓ deletedAt added");
+  } catch {
+    results.push("– deletedAt already exists");
+  }
+
   return NextResponse.json({ ok: true, results });
 }

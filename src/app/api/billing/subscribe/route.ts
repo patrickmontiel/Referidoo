@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getAdvisorSession, signToken } from "@/lib/auth";
+import { getAdvisorSession, signToken, setAdvisorCookie } from "@/lib/auth";
 import { createSubscription, mercadoPagoErrorMessage } from "@/lib/mercadopago";
 
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
@@ -44,13 +44,7 @@ export async function POST(req: NextRequest) {
         plan: "paid",
         onboardedAt: advisor.onboardedAt?.toISOString() ?? null,
       });
-      res.cookies.set("advisor_token", newToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 30,
-        path: "/",
-      });
+      setAdvisorCookie(res, newToken);
     }
 
     return res;

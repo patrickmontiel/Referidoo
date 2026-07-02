@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { signToken } from "@/lib/auth";
+import { signToken, setAdvisorCookie } from "@/lib/auth";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://referidoo.com";
 
@@ -30,13 +30,6 @@ export async function GET(req: NextRequest) {
     onboardedAt: advisor.onboardedAt?.toISOString() ?? null,
   });
   const res = NextResponse.redirect(new URL("/admin?verify=success", BASE_URL));
-  res.cookies.set("advisor_token", sessionToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30,
-    path: "/",
-  });
-
+  setAdvisorCookie(res, sessionToken);
   return res;
 }

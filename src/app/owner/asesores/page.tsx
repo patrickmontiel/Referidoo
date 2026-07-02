@@ -20,6 +20,7 @@ export default function OwnerAsesoresPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [confirmToggleId, setConfirmToggleId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -30,6 +31,15 @@ export default function OwnerAsesoresPage() {
       })
       .catch(() => setError("No se pudo cargar la lista"));
   }, []);
+
+  async function deleteAdvisor(advisorId: string) {
+    setBusyId(advisorId);
+    const res = await fetch(`/api/admin/advisors/${advisorId}`, { method: "DELETE" });
+    setBusyId(null);
+    setConfirmDeleteId(null);
+    if (!res.ok) return;
+    setAdvisors((prev) => prev?.filter((a) => a.id !== advisorId) ?? null);
+  }
 
   async function togglePlan(advisor: AdvisorRow) {
     setBusyId(advisor.id);
@@ -86,7 +96,24 @@ export default function OwnerAsesoresPage() {
                     <td className="px-4 py-3">{advisor.emailVerified ? "Sí" : "No"}</td>
                     <td className="px-4 py-3 text-brand-gray-4">{formatDate(advisor.createdAt)}</td>
                     <td className="px-4 py-3 text-right sticky right-0 bg-white group-hover:bg-brand-surface">
-                      {confirmToggleId === advisor.id ? (
+                      {confirmDeleteId === advisor.id ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); deleteAdvisor(advisor.id); }}
+                            disabled={busyId === advisor.id}
+                            className="text-xs font-medium px-3 py-1.5 rounded-full bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition"
+                          >
+                            {busyId === advisor.id ? "Borrando..." : "Confirmar borrar"}
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                            disabled={busyId === advisor.id}
+                            className="text-xs text-brand-gray-4 hover:text-brand-gray-1 transition"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : confirmToggleId === advisor.id ? (
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={(e) => { e.stopPropagation(); togglePlan(advisor); }}
@@ -104,12 +131,20 @@ export default function OwnerAsesoresPage() {
                           </button>
                         </div>
                       ) : (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setConfirmToggleId(advisor.id); }}
-                          className="text-xs font-medium px-3 py-1.5 rounded-full border border-brand-border-4 hover:bg-brand-surface transition"
-                        >
-                          {advisor.plan === "paid" ? "Pasar a freemium" : "Pasar a pagado"}
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setConfirmToggleId(advisor.id); }}
+                            className="text-xs font-medium px-3 py-1.5 rounded-full border border-brand-border-4 hover:bg-brand-surface transition"
+                          >
+                            {advisor.plan === "paid" ? "Pasar a freemium" : "Pasar a pagado"}
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(advisor.id); }}
+                            className="text-xs font-medium px-3 py-1.5 rounded-full border border-red-200 text-red-600 hover:bg-red-50 transition"
+                          >
+                            Borrar
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>

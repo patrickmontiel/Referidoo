@@ -22,9 +22,7 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
   });
 
-  const res = NextResponse.json(clients);
-  res.headers.set("Cache-Control", "private, max-age=10, stale-while-revalidate=30");
-  return res;
+  return NextResponse.json(clients);
 }
 
 export async function POST(req: NextRequest) {

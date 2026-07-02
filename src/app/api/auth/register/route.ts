@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { db } from "@/lib/db";
-import { hashPassword, signToken } from "@/lib/auth";
+import { hashPassword, signToken, setAdvisorCookie } from "@/lib/auth";
 import { sendVerificationEmail } from "@/lib/email";
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -57,14 +57,7 @@ export async function POST(req: NextRequest) {
     });
 
     const res = NextResponse.json({ ok: true, advisorId: advisor.id }, { status: 201 });
-    res.cookies.set("advisor_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 30,
-      path: "/",
-    });
-
+    setAdvisorCookie(res, token);
     return res;
   } catch (err: unknown) {
     // Carrera de doble-submit: el unique constraint de email truena en el

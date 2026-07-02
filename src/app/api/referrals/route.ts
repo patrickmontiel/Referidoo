@@ -22,9 +22,7 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: "desc" },
   });
 
-  const res = NextResponse.json(referrals);
-  res.headers.set("Cache-Control", "private, max-age=10, stale-while-revalidate=30");
-  return res;
+  return NextResponse.json(referrals);
 }
 
 // Public — no advisor auth needed. Called when a referred friend submits the form.
