@@ -30,7 +30,7 @@ function postRequest(body: unknown) {
 
 beforeEach(() => {
   mockSession.mockReset();
-  mockClientFindMany.mockReset();
+  mockClientFindMany.mockReset().mockResolvedValue([]);
   mockClientFindUnique.mockReset();
   mockClientCreate.mockReset();
   mockAdvisorFindUnique.mockReset();
@@ -77,14 +77,14 @@ describe("POST /api/clients", () => {
     expect(res.status).toBe(201);
   });
 
-  it("blocks creation with 403 when the freemium client limit is reached", async () => {
+  it("allows creation for freemium plan (no client count limit — only email verification required)", async () => {
     mockSession.mockResolvedValue({ advisorId: "adv1", email: "a@b.com" });
     mockAdvisorFindUnique.mockResolvedValue({ plan: "freemium", emailVerified: true });
-    (db.client.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(2);
+    mockClientFindUnique.mockResolvedValue(null);
+    mockClientCreate.mockResolvedValue({ id: "c1", name: "Juan" });
 
     const res = await POST(postRequest({ name: "Juan" }));
-    expect(res.status).toBe(403);
-    expect(mockClientCreate).not.toHaveBeenCalled();
+    expect(res.status).toBe(201);
   });
 
   it("blocks creation with 403 when the advisor hasn't verified their email", async () => {

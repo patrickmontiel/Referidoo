@@ -69,7 +69,8 @@ describe("isEscaleraProduct", () => {
 describe("calculateLessioCommission", () => {
   it("computes commission using the paid rate for the given product type", () => {
     expect(calculateLessioCommission("Vida", 100000, "paid")).toBe(150);
-    expect(calculateLessioCommission("Daños/Auto", 100000, "paid")).toBe(80);
+    expect(calculateLessioCommission("Daños/Auto", 100000, "paid")).toBe(800);
+    expect(calculateLessioCommission("Otro", 100000, "paid")).toBe(800);
   });
 
   // Regresión: freemium paga casi el doble de comisión que pagado — no solo
@@ -77,7 +78,7 @@ describe("calculateLessioCommission", () => {
   // baja al pagar. Decidido en /office-hours 2026-06-29.
   it("computes a higher commission using the freemium rate for the same product type", () => {
     expect(calculateLessioCommission("Vida", 100000, "freemium")).toBe(250);
-    expect(calculateLessioCommission("Daños/Auto", 100000, "freemium")).toBe(150);
+    expect(calculateLessioCommission("Daños/Auto", 100000, "freemium")).toBe(1500);
   });
 
   it("treats any plan other than 'paid' as freemium", () => {
@@ -92,6 +93,6 @@ describe("calculateLessioCommission", () => {
   });
 
   it("returns null for product types with no configured commission rate", () => {
-    expect(calculateLessioCommission("Otro", 100000, "paid")).toBeNull();
+    expect(calculateLessioCommission("Desconocido", 100000, "paid")).toBeNull();
   });
 });

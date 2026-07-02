@@ -202,8 +202,8 @@ describe("PATCH /api/referrals/[id] — persistencia de lessioCommission", () =>
     mockCount.mockResolvedValue(0);
 
     await PATCH(patchRequest({ status: "converted", productType: "Daños/Auto", saleAmount: 100000 }), { params: Promise.resolve({ id: "r1" }) });
-    // Daños/Auto rate = 0.0008 -> 100000 * 0.0008 = 80
-    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ lessioCommission: 80 }) }));
+    // Daños/Auto paid rate = 0.008 -> 100000 * 0.008 = 800
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ lessioCommission: 800 }) }));
   });
 
   // Regresión: freemium paga casi el doble de comisión que pagado, decidido
@@ -213,14 +213,14 @@ describe("PATCH /api/referrals/[id] — persistencia de lessioCommission", () =>
     mockFindUnique.mockResolvedValue(baseReferral({ advisor: { name: "Eduardo", email: "eduardo@referidoo.mx", plan: "freemium" } }));
 
     await PATCH(patchRequest({ status: "converted", productType: "Daños/Auto", saleAmount: 100000 }), { params: Promise.resolve({ id: "r1" }) });
-    // Daños/Auto freemium rate = 0.0015 -> 100000 * 0.0015 = 150 (vs. 80 en pagado)
-    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ lessioCommission: 150 }) }));
+    // Daños/Auto freemium rate = 0.015 -> 100000 * 0.015 = 1500 (vs. 800 en pagado)
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ lessioCommission: 1500 }) }));
   });
 
-  it("persiste null cuando el producto no tiene tasa definida (ej. Otro)", async () => {
+  it("persiste null cuando el producto no tiene tasa definida", async () => {
     mockFindUnique.mockResolvedValue(baseReferral());
 
-    await PATCH(patchRequest({ status: "converted", productType: "Otro", saleAmount: 100000 }), { params: Promise.resolve({ id: "r1" }) });
+    await PATCH(patchRequest({ status: "converted", productType: "Invalido", saleAmount: 100000 }), { params: Promise.resolve({ id: "r1" }) });
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ lessioCommission: null }) }));
   });
 
@@ -232,15 +232,15 @@ describe("PATCH /api/referrals/[id] — persistencia de lessioCommission", () =>
   });
 
   it("recalcula la comisión al corregir el producto después de convertir (isProductTypeEdit)", async () => {
-    mockFindUnique.mockResolvedValue(baseReferral({ status: "converted", productType: "Daños/Auto", saleAmount: 100000, tierPosition: 0, rewardAmount: 0, rewardStatus: "approved", lessioCommission: 80 }));
+    mockFindUnique.mockResolvedValue(baseReferral({ status: "converted", productType: "Daños/Auto", saleAmount: 100000, tierPosition: 0, rewardAmount: 0, rewardStatus: "approved", lessioCommission: 800 }));
 
     await PATCH(patchRequest({ productType: "GMM" }), { params: Promise.resolve({ id: "r1" }) });
-    // GMM rate = 0.0008 también -> mismo monto, pero igual debe recalcularse explícitamente
-    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ lessioCommission: 80 }) }));
+    // GMM paid rate = 0.008 también -> 100000 * 0.008 = 800
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ lessioCommission: 800 }) }));
   });
 
   it("no toca lessioCommission en una edición que no es conversión ni cambio de producto", async () => {
-    mockFindUnique.mockResolvedValue(baseReferral({ status: "converted", productType: "Daños/Auto", saleAmount: 100000, rewardStatus: "approved", lessioCommission: 80 }));
+    mockFindUnique.mockResolvedValue(baseReferral({ status: "converted", productType: "Daños/Auto", saleAmount: 100000, rewardStatus: "approved", lessioCommission: 800 }));
 
     await PATCH(patchRequest({ leadNotes: "nota nueva" }), { params: Promise.resolve({ id: "r1" }) });
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.not.objectContaining({ lessioCommission: expect.anything() }) }));

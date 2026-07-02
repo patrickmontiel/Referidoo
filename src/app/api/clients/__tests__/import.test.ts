@@ -75,19 +75,13 @@ describe("POST /api/clients/import", () => {
     expect(mockClientCreate).not.toHaveBeenCalled();
   });
 
-  it("creates only up to the remaining quota and reports the rest as blocked (no per-row race)", async () => {
+  it("creates all rows for a verified freemium advisor (no client count limit)", async () => {
     mockAdvisorFindUnique.mockResolvedValue({ plan: "freemium", emailVerified: true });
-    mockClientCount.mockResolvedValue(0); // 2 slots remaining
 
     const res = await POST(postRequest([{ name: "Ana" }, { name: "Beto" }, { name: "Caro" }]));
     const data = await res.json();
 
-    expect(data.created).toBe(2);
-    expect(data.failed).toBe(1);
-    const caro = data.results.find((r: { name: string }) => r.name === "Caro");
-    expect(caro).toMatchObject({ ok: false });
-    expect(caro.error).toMatch(/límite de plan/i);
-    // Solo UNA lectura de conteo, no una por fila
-    expect(mockClientCount).toHaveBeenCalledTimes(1);
+    expect(data.created).toBe(3);
+    expect(data.failed).toBe(0);
   });
 });

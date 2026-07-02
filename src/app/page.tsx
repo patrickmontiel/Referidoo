@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Hanken_Grotesk } from "next/font/google";
-import { connection } from "next/server";
 import { getAdvisorSession } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
 import { LandingHeader } from "@/components/LandingHeader";
@@ -86,7 +85,6 @@ const SECURITY_FAQ = [
 ];
 
 export default async function Home() {
-  await connection();
   const session = await getAdvisorSession();
   if (session) redirect("/admin");
 

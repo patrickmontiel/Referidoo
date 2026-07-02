@@ -4,7 +4,12 @@ import { NextRequest } from "next/server";
 vi.mock("@/lib/db", () => ({
   db: { advisor: { findUnique: vi.fn(), update: vi.fn() } },
 }));
-vi.mock("@/lib/auth", () => ({ getAdvisorSession: vi.fn() }));
+vi.mock("@/lib/auth", () => ({
+  getAdvisorSession: vi.fn(),
+  signToken: vi.fn().mockReturnValue("mocked-token"),
+  setAdvisorCookie: vi.fn(),
+  clearAdvisorCookie: vi.fn(),
+}));
 vi.mock("@/lib/mercadopago", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/mercadopago")>();
   return { ...actual, createSubscription: vi.fn() };
