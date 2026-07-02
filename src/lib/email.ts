@@ -488,7 +488,10 @@ export async function sendVerificationEmail(payload: { advisorEmail: string; adv
   }
 }
 
-export async function sendNewReferralNotification(payload: NewReferralPayload) {
+export async function sendNewReferralNotification(
+  payload: NewReferralPayload,
+  options?: { skipAdvisor?: boolean }
+) {
   if (!resend) {
     console.log("[email] RESEND_API_KEY no configurado — email no enviado. Payload:", payload);
     return;
@@ -496,20 +499,118 @@ export async function sendNewReferralNotification(payload: NewReferralPayload) {
 
   const subject = `Nuevo referido: ${payload.leadName} vía ${payload.referrerName}`;
 
-  await Promise.allSettled([
-    // Email al asesor
-    resend.emails.send({
+  const sends: Promise<unknown>[] = [];
+
+  if (!options?.skipAdvisor) {
+    sends.push(resend.emails.send({
       from: FROM,
       to: [payload.advisorEmail],
       subject,
       html: newReferralHtml(payload, false),
-    }),
-    // Email al creador (Patrick)
-    resend.emails.send({
-      from: FROM,
-      to: [CREATOR_EMAIL],
-      subject: `[Referidoo] ${subject}`,
-      html: newReferralHtml(payload, true),
-    }),
-  ]);
+    }));
+  }
+
+  // Patrick siempre recibe la notificación completa
+  sends.push(resend.emails.send({
+    from: FROM,
+    to: [CREATOR_EMAIL],
+    subject: `[Referidoo] ${subject}`,
+    html: newReferralHtml(payload, true),
+  }));
+
+  await Promise.allSettled(sends);
+}
+
+// ─── Límite freemium alcanzado ────────────────────────────────────────────────
+
+type FreemiumLimitPayload = {
+  advisorName: string;
+  advisorEmail: string;
+  referrerName: string;
+  leadName: string;
+  totalLeads: number;
+};
+
+function freemiumLimitHtml(p: FreemiumLimitPayload) {
+  const upgradeUrl = `${BASE_URL}/admin/perfil`;
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden">
+        <!-- Header -->
+        <tr>
+          <td style="background:#000;padding:24px 32px">
+            <p style="margin:0;color:#fff;font-size:12px;letter-spacing:3px;font-weight:600;text-transform:uppercase">Referidoo</p>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style="padding:32px">
+            <p style="margin:0 0 4px;font-size:13px;color:#6b7280;font-weight:500">Nuevo lead en espera · Plan Gratis</p>
+            <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#0a0a0a;line-height:1.3">
+              Alcanzaste tu límite de 12 leads
+            </h1>
+            <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6">
+              <strong>${p.referrerName}</strong> acaba de enviarte un nuevo contacto interesado en un seguro, pero ya completaste los 12 leads del Plan Gratis. No puedes ver sus datos hasta que actualices.
+            </p>
+
+            <!-- Lead bloqueado -->
+            <table width="100%" style="background:#f9fafb;border-radius:12px;margin-bottom:24px;border:2px dashed #e5e7eb">
+              <tr><td style="padding:24px;text-align:center">
+                <p style="margin:0 0 8px;font-size:32px">🔒</p>
+                <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#0a0a0a">Contacto bloqueado</p>
+                <p style="margin:0;font-size:13px;color:#9ca3af">Referido por ${p.referrerName} — disponible al actualizar</p>
+              </td></tr>
+            </table>
+
+            <!-- Beneficios Plan Pro -->
+            <table width="100%" style="background:#000;border-radius:12px;margin-bottom:24px">
+              <tr><td style="padding:24px">
+                <p style="margin:0 0 4px;font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:2px;text-transform:uppercase">Plan Pro</p>
+                <p style="margin:0 0 20px;font-size:20px;font-weight:800;color:#fff">$539 <span style="font-size:14px;font-weight:400;color:#9ca3af">MXN/mes</span></p>
+                <table>
+                  <tr><td style="padding:5px 0"><span style="font-size:14px;color:#fff">✓&nbsp;&nbsp;Leads ilimitados — sin tope</span></td></tr>
+                  <tr><td style="padding:5px 0"><span style="font-size:14px;color:#fff">✓&nbsp;&nbsp;Datos completos de cada contacto</span></td></tr>
+                  <tr><td style="padding:5px 0"><span style="font-size:14px;color:#fff">✓&nbsp;&nbsp;Sistema de premios y comisiones escaladas</span></td></tr>
+                  <tr><td style="padding:5px 0"><span style="font-size:14px;color:#fff">✓&nbsp;&nbsp;Clientes ilimitados en tu cartera</span></td></tr>
+                  <tr><td style="padding:5px 0"><span style="font-size:14px;color:#2563eb">✓&nbsp;&nbsp;Desbloquea el lead que acaba de llegar</span></td></tr>
+                </table>
+              </td></tr>
+            </table>
+
+            <!-- CTA -->
+            <a href="${upgradeUrl}" style="display:block;background:#2563eb;color:#fff;text-align:center;padding:16px 24px;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:12px">
+              Actualizar a Plan Pro →
+            </a>
+            <p style="margin:0 0 20px;font-size:12px;color:#9ca3af;text-align:center">
+              Entra a tu panel → Perfil → Actualizar a Pro
+            </p>
+
+            <p style="margin:0;font-size:12px;color:#d1d5db;text-align:center">
+              Este correo es automático de Referidoo
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendFreemiumLimitEmail(payload: FreemiumLimitPayload) {
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY no configurado — email de límite freemium no enviado. Payload:", payload);
+    return;
+  }
+
+  await resend.emails.send({
+    from: FROM,
+    to: [payload.advisorEmail],
+    subject: `Tienes un nuevo lead esperando — actualiza a Plan Pro`,
+    html: freemiumLimitHtml(payload),
+  });
 }

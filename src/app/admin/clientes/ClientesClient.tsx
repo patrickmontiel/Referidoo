@@ -337,14 +337,21 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
             <h2 className="font-medium text-sm">{csvRows.length} clientes listos para importar</h2>
             <button onClick={() => setCsvRows(null)} className="text-lg leading-none" style={{ color: "#9098A2" }}>×</button>
           </div>
-          <div className="space-y-1.5 max-h-48 overflow-y-auto mb-4">
-            {csvRows.map((row, i) => (
-              <div key={i} className="flex items-center gap-3 text-sm py-1.5 border-b border-[#ECEDEF] last:border-0">
-                <span className="w-5 h-5 bg-[#ECEDEF] rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0" style={{ color: "#9098A2" }}>{i + 1}</span>
-                <span className="font-medium flex-1 truncate">{row.name}</span>
-                {row.phone && <span className="text-xs" style={{ color: "#9098A2" }}>{row.phone}</span>}
-              </div>
-            ))}
+          <div className="space-y-0 max-h-52 overflow-y-auto mb-4">
+            {csvRows.map((row, i) => {
+              const meta = [row.phone, row.email, row.policyNumber].filter(Boolean);
+              return (
+                <div key={i} className="flex items-start gap-3 py-2.5 border-b border-[#ECEDEF] last:border-0">
+                  <span className="w-5 h-5 bg-[#ECEDEF] rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0 mt-0.5" style={{ color: "#9098A2" }}>{i + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: "#0B0B0C" }}>{row.name}</p>
+                    {meta.length > 0 && (
+                      <p className="text-xs truncate mt-0.5" style={{ color: "#9098A2" }}>{meta.join(" · ")}</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
           <button onClick={runImport} disabled={importing} className="w-full bg-[#0B0B0C] text-white text-sm py-2.5 rounded-full font-medium hover:bg-[#26262a] disabled:opacity-50 transition">
             {importing ? "Importando..." : `Importar ${csvRows.length} clientes`}

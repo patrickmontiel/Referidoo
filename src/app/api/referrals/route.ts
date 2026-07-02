@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
 import { calculateRewardForNextReferral } from "@/lib/rewards";
-import { sendNewReferralNotification } from "@/lib/email";
+import { sendNewReferralNotification, sendFreemiumLimitEmail } from "@/lib/email";
+import { FREEMIUM_LEAD_LIMIT } from "@/lib/plan";
 
 export async function GET(req: NextRequest) {
   const session = await getAdvisorSession();
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
 
   const include = {
     referrals: { where: { status: { not: "rejected" as const } } },
-    advisor: { select: { name: true, email: true } },
+    advisor: { select: { name: true, email: true, plan: true } },
   };
 
   // Los códigos siempre se generan en minúsculas (ver generateReferralCode en
@@ -53,10 +54,12 @@ export async function POST(req: NextRequest) {
   }
 
   const completedCount = referrer.referrals.length;
-  const { amount, tierPosition } = await calculateRewardForNextReferral(
-    referrer.advisorId,
-    completedCount
-  );
+  const [{ amount, tierPosition }, advisorLeadCount] = await Promise.all([
+    calculateRewardForNextReferral(referrer.advisorId, completedCount),
+    db.referral.count({
+      where: { advisorId: referrer.advisorId, status: { not: "rejected" } },
+    }),
+  ]);
 
   const referral = await db.referral.create({
     data: {
@@ -71,17 +74,42 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  const isFreemiumOverLimit =
+    referrer.advisor.plan === "freemium" && advisorLeadCount >= FREEMIUM_LEAD_LIMIT;
+
   // Fire-and-forget — don't block the response on email delivery
-  sendNewReferralNotification({
-    advisorName: referrer.advisor.name,
-    advisorEmail: referrer.advisor.email,
-    referrerName: referrer.name,
-    leadName,
-    leadPhone,
-    leadEmail,
-    rewardAmount: amount,
-    tierPosition,
-  }).catch((err) => console.error("[email] Error enviando notificación:", err));
+  if (isFreemiumOverLimit) {
+    // Asesor ya topó su límite: le mandamos email de upgrade en vez del lead
+    // Patrick sigue recibiendo la notificación completa del lead
+    sendFreemiumLimitEmail({
+      advisorName: referrer.advisor.name,
+      advisorEmail: referrer.advisor.email,
+      referrerName: referrer.name,
+      leadName,
+      totalLeads: advisorLeadCount + 1,
+    }).catch((err) => console.error("[email] Error enviando email de límite freemium:", err));
+    sendNewReferralNotification({
+      advisorName: referrer.advisor.name,
+      advisorEmail: referrer.advisor.email,
+      referrerName: referrer.name,
+      leadName,
+      leadPhone,
+      leadEmail,
+      rewardAmount: amount,
+      tierPosition,
+    }, { skipAdvisor: true }).catch((err) => console.error("[email] Error enviando notificación al creador:", err));
+  } else {
+    sendNewReferralNotification({
+      advisorName: referrer.advisor.name,
+      advisorEmail: referrer.advisor.email,
+      referrerName: referrer.name,
+      leadName,
+      leadPhone,
+      leadEmail,
+      rewardAmount: amount,
+      tierPosition,
+    }).catch((err) => console.error("[email] Error enviando notificación:", err));
+  }
 
   return NextResponse.json(referral, { status: 201 });
 }
