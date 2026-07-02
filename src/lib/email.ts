@@ -2,7 +2,7 @@ import { Resend } from "resend";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
-const FROM = process.env.EMAIL_FROM ?? "Referidoo <noreply@referidoo.com>";
+const FROM = process.env.EMAIL_FROM || "Referidoo Team <noreply@referidoo.com>";
 const CREATOR_EMAIL = process.env.EMAIL_NOTIFY_CREATOR ?? "patrick@referidoo.com";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://referidoo.com";
 
