@@ -9,7 +9,6 @@ export async function GET() {
   }
 
   const advisors = await db.advisor.findMany({
-    where: { deletedAt: null },
     select: {
       id: true,
       name: true,
@@ -17,6 +16,7 @@ export async function GET() {
       plan: true,
       emailVerified: true,
       createdAt: true,
+      deletedAt: true,
       paidUntil: true,
       paymentFailedAt: true,
       mpPreapprovalId: true,
