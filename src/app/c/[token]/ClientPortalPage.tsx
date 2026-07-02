@@ -95,8 +95,8 @@ export default function ClientPortalPage() {
   const [tourRect, setTourRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
   const [tourTip, setTourTip]   = useState<{ top: number; left: number } | null>(null);
   const [scrollLocked, setScrollLocked] = useState(false);
-  const t1 = useRef<ReturnType<typeof setTimeout>>();
-  const t2 = useRef<ReturnType<typeof setTimeout>>();
+  const t1 = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const t2 = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const confetti = useMemo(() => {
     const C = ["#2B57F0","#0d0d0d","#1FAE54","#F5B53F","#5B86F7","#E7395A"];
