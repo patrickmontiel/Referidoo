@@ -253,16 +253,26 @@ export default function AdminLayoutShell({
     setTourRect({ top: r.top - P, left: r.left - P, width: r.width + P * 2, height: r.height + P * 2 });
     const TW = 320, TH = 190, G = 14, M = 12;
     let top = 0, left = 0;
-    if (r.bottom + G + TH < window.innerHeight) {
+    const centeredLeft = Math.max(M, Math.min(r.left + r.width / 2 - TW / 2, window.innerWidth - TW - M));
+    if (r.bottom + G + TH + M <= window.innerHeight) {
       top = r.bottom + G;
-      left = Math.max(M, Math.min(r.left + r.width / 2 - TW / 2, window.innerWidth - TW - M));
-    } else if (r.top - G - TH > 0) {
+      left = centeredLeft;
+    } else if (r.top - G - TH >= M) {
       top = r.top - G - TH;
-      left = Math.max(M, Math.min(r.left + r.width / 2 - TW / 2, window.innerWidth - TW - M));
+      left = centeredLeft;
+    } else if (r.right + G + TW + M <= window.innerWidth) {
+      left = r.right + G;
+      top = Math.max(M, Math.min(r.top + r.height / 2 - TH / 2, window.innerHeight - TH - M));
     } else {
-      left = r.right + G + TW < window.innerWidth ? r.right + G : r.left - TW - G;
+      left = Math.max(M, r.left - TW - G);
       top = Math.max(M, Math.min(r.top + r.height / 2 - TH / 2, window.innerHeight - TH - M));
     }
+    // Never overlap the sidebar — clamp left past its right edge
+    const navEl = document.querySelector<HTMLElement>('[data-tour="nav"]');
+    if (navEl && navEl.offsetWidth > 0) {
+      left = Math.max(navEl.getBoundingClientRect().right + G, left);
+    }
+    left = Math.min(left, window.innerWidth - TW - M);
     setTourTip({ top, left });
   }, []);
 
@@ -291,7 +301,15 @@ export default function AdminLayoutShell({
         goStep(next + 1);
         return;
       }
-      if (el) scrollIntoCenter(el);
+      if (el) {
+        const r0 = el.getBoundingClientRect();
+        if (r0.width === 0 && r0.height === 0) {
+          // Element is hidden (e.g. sidebar on mobile) — skip this step
+          goStep(next + 1);
+          return;
+        }
+        scrollIntoCenter(el);
+      }
       setTimeout(() => { measure(next); lockScroll(); }, el ? 470 : 80);
     }, step.modal ? 500 : 130);
   }
