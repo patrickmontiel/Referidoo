@@ -188,21 +188,35 @@ export default function ClientPortalPage() {
 
   // Onboarding modal
   if (showOnboarding) {
+    const firstName = client.name.split(" ")[0];
     const steps = [
       {
-        icon: <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="white" strokeWidth="1.5"/><path d="M12 8V12L15 15" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-        title: `${client.name.split(" ")[0]}, bienvenido a Referidoo`,
+        icon: (
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="white" strokeWidth="1.5"/>
+            <path d="M12 8V12L15 15" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+        ),
+        title: `${firstName}, bienvenido a Referidoo`,
         body: `${advisor.name} te invita a recomendar personas para que también cuiden su patrimonio. Cada vez que alguien contrate un plan gracias a ti, recibes dinero en efectivo.`,
       },
       {
-        icon: <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+        icon: (
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        ),
         title: "Así se acumula",
         body: tiers.length > 0
           ? "Por cada persona que contrate gracias a tu recomendación, ganas en efectivo."
           : `Cada referido que contrate un plan te da ${formatCurrency(1500)} en efectivo, directo.`,
       },
       {
-        icon: <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M22 16.92V19.92C22.0011 20.4813 21.7659 21.0171 21.3527 21.4046C20.9395 21.7921 20.3873 21.9971 19.82 21.97C16.7428 21.6429 13.787 20.5973 11.19 18.92C8.77382 17.3883 6.72534 15.3398 5.19 12.92C3.49997 10.3099 2.45418 7.33897 2.13 4.24999C2.10313 3.68453 2.30731 3.13436 2.69261 2.72161C3.07791 2.30886 3.61263 2.07326 4.17 2.04999H7.17C8.18 2.04999 9.04 2.77999 9.17 3.77999L9.67 7.27999C9.71 7.54999 9.64 7.82999 9.47 8.04999L7.72 9.81999C9.17379 12.3484 11.2516 14.4263 13.78 15.88L15.55 14.13C15.77 13.95 16.06 13.88 16.33 13.92L19.83 14.42C20.8199 14.5527 21.5499 15.4127 21.55 16.42L22 16.92Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+        icon: (
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M22 16.92V19.92C22.0011 20.4813 21.7659 21.0171 21.3527 21.4046C20.9395 21.7921 20.3873 21.9971 19.82 21.97C16.7428 21.6429 13.787 20.5973 11.19 18.92C8.77382 17.3883 6.72534 15.3398 5.19 12.92C3.49997 10.3099 2.45418 7.33897 2.13 4.24999C2.10313 3.68453 2.30731 3.13436 2.69261 2.72161C3.07791 2.30886 3.61263 2.07326 4.17 2.04999H7.17C8.18 2.04999 9.04 2.77999 9.17 3.77999L9.67 7.27999C9.71 7.54999 9.64 7.82999 9.47 8.04999L7.72 9.81999C9.17379 12.3484 11.2516 14.4263 13.78 15.88L15.55 14.13C15.77 13.95 16.06 13.88 16.33 13.92L19.83 14.42C20.8199 14.5527 21.5499 15.4127 21.55 16.42L22 16.92Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        ),
         title: "Sin papeleo, sin presión",
         body: "Comparte tu link con quien quieras. Si a tu contacto le interesa, el asesor lo atiende. Si contrata, tú cobras. Nada más.",
       },
@@ -212,42 +226,75 @@ export default function ClientPortalPage() {
     const isLast = onboardingStep === steps.length - 1;
 
     return (
-      <div className={`min-h-screen bg-white flex flex-col items-center justify-center px-5 ${hankenGrotesk.className}`}
-           style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
-        <div className="w-full max-w-sm">
-          <div className="flex justify-center gap-2 mb-10">
+      <div
+        className={`fixed inset-0 z-50 flex items-center justify-center ${hankenGrotesk.className}`}
+        style={{
+          background: "rgba(13,13,15,.72)",
+          backdropFilter: "blur(6px)",
+          WebkitBackdropFilter: "blur(6px)",
+          paddingTop: "env(safe-area-inset-top)",
+          paddingBottom: "env(safe-area-inset-bottom)",
+          padding: "20px",
+        }}
+      >
+        <div className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl">
+          {/* Logo */}
+          <div className="flex justify-center mb-7">
+            <Logo size="md" />
+          </div>
+
+          {/* Progress */}
+          <div className="flex justify-center gap-2 mb-8">
             {steps.map((_, i) => (
-              <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === onboardingStep ? "w-8 bg-brand-ink" : i < onboardingStep ? "w-4 bg-brand-border-4" : "w-4 bg-brand-border-1"
-              }`} />
+              <div
+                key={i}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === onboardingStep ? "w-8 bg-[#0B0B0C]" : i < onboardingStep ? "w-4 bg-[#DADCE0]" : "w-4 bg-[#ECEDEF]"
+                }`}
+              />
             ))}
           </div>
-          <div className="w-16 h-16 bg-brand-ink rounded-2xl flex items-center justify-center mb-8 shadow-[0_8px_20px_rgba(11,11,12,0.12)]">
+
+          {/* Step icon */}
+          <div className="w-14 h-14 bg-[#0B0B0C] rounded-2xl flex items-center justify-center mb-6 shadow-[0_6px_16px_rgba(11,11,12,0.14)]">
             {step.icon}
           </div>
-          <h1 className="text-2xl font-bold mb-3 leading-snug tracking-[-0.02em] text-brand-ink">{step.title}</h1>
-          <p className="text-brand-gray-4 text-sm leading-relaxed">{step.body}</p>
+
+          {/* Content */}
+          <h1 className="text-xl font-bold mb-2.5 leading-snug tracking-[-0.02em] text-[#0B0B0C]">
+            {step.title}
+          </h1>
+          <p className="text-sm text-[#6B727D] leading-relaxed mb-6">{step.body}</p>
+
+          {/* Tier list (step 2 only) */}
           {onboardingStep === 1 && tiers.length > 0 && (
-            <div className="mt-5 space-y-2">
+            <div className="mb-6 space-y-2">
               {tiers.map((t, i) => (
-                <div key={i} className="flex items-center justify-between bg-brand-surface rounded-xl px-4 py-3">
+                <div key={i} className="flex items-center justify-between bg-[#F4F5F7] rounded-xl px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-brand-ink text-white rounded-full flex items-center justify-center text-xs font-bold">{i + 1}</div>
-                    <span className="text-sm text-brand-gray-1">{t.label || `Referido #${i + 1}`}</span>
+                    <div className="w-6 h-6 bg-[#0B0B0C] text-white rounded-full flex items-center justify-center text-xs font-bold">
+                      {i + 1}
+                    </div>
+                    <span className="text-sm text-[#3F4651]">{t.label || `Referido #${i + 1}`}</span>
                   </div>
-                  <span className="font-bold text-sm text-brand-ink">{formatCurrency(t.amount)}</span>
+                  <span className="font-bold text-sm text-[#0B0B0C]">{formatCurrency(t.amount)}</span>
                 </div>
               ))}
             </div>
           )}
+
+          {/* CTA */}
           <button
             onClick={() => { if (isLast) finishOnboarding(); else setOnboardingStep(onboardingStep + 1); }}
-            className="w-full mt-10 bg-brand-ink text-white text-sm font-medium py-4 rounded-full hover:bg-[#26262a] transition"
+            className="w-full bg-[#2563EB] text-white text-sm font-semibold py-3.5 rounded-full hover:bg-blue-700 active:scale-[.98] transition mb-3"
           >
             {isLast ? "Ir a mi dashboard →" : "Siguiente"}
           </button>
           {!isLast && (
-            <button onClick={finishOnboarding} className="w-full mt-2 text-brand-gray-4 text-xs py-2 hover:text-brand-gray-2 transition">
+            <button
+              onClick={finishOnboarding}
+              className="w-full text-sm text-[#9098A2] hover:text-[#6B727D] transition py-1"
+            >
               Saltar
             </button>
           )}
