@@ -231,37 +231,46 @@ export default function AdminOverviewClient({ referrals, advisor, clientCount }:
       {/* Resumen mensual freemium — al fondo */}
       {showFreemiumCard && (
         <div className="bg-[#0B0B0C] rounded-2xl p-5">
-          <p className="text-xs font-bold text-[#9098A2] uppercase tracking-[0.08em] mb-4">
-            Este mes · plan gratuito
+          {/* Header */}
+          <div className="flex items-start justify-between mb-5">
+            <div>
+              <p className="text-[15px] font-semibold text-white leading-tight">Comisiones este mes</p>
+              <p className="text-[12px] text-[#9098A2] mt-1">
+                {thisMonthConverted.length} conversión{thisMonthConverted.length !== 1 ? "es" : ""} registrada{thisMonthConverted.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+            <span className="bg-white/[0.08] text-[#9098A2] text-[11px] font-medium px-2.5 py-1 rounded-full whitespace-nowrap">
+              Plan gratuito
+            </span>
+          </div>
+
+          {/* Ledger */}
+          <div className="mb-4">
+            <div className="flex justify-between items-baseline py-2.5 border-b border-white/[0.07]">
+              <span className="text-[13px] text-[#9098A2]">Comisión pagada a Lessio</span>
+              <span className="text-[13px] font-semibold text-white">{formatCurrency(freemiumCommission)}</span>
+            </div>
+            <div className="flex justify-between items-baseline py-2.5 border-b border-white/[0.07]">
+              <span className="text-[13px] text-[#9098A2]">Con plan Pro hubiera sido</span>
+              <span className="text-[13px] font-semibold text-green-400">{formatCurrency(proCommission)}</span>
+            </div>
+            <div className="flex justify-between items-baseline pt-3 pb-1">
+              <span className="text-[13px] text-white/60">Ahorrarías</span>
+              <span className="text-[20px] font-bold text-amber-400 leading-none">+{formatCurrency(commissionDiff)}</span>
+            </div>
+            <div className="flex justify-between items-baseline pb-3 border-b border-white/[0.07]">
+              <span className="text-[11px] text-[#9098A2]/70">Membresía Pro</span>
+              <span className="text-[11px] text-[#9098A2]/70">−{formatCurrency(MEMBERSHIP_COST)}/mes</span>
+            </div>
+          </div>
+
+          {/* Verdict */}
+          <p className={`text-[13px] leading-snug mb-5 ${netWithPro >= 0 ? "text-green-400" : "text-[#9098A2]"}`}>
+            {netWithPro >= 0
+              ? `Amortizas la membresía este mes y quedarías ${formatCurrency(netWithPro)} a favor.`
+              : `Te faltan ${formatCurrency(Math.abs(netWithPro))} para amortizar Pro este mes.`}
           </p>
-          <div className="space-y-3 mb-5">
-            <div className="flex justify-between items-baseline">
-              <span className="text-sm text-[#9098A2]">{thisMonthConverted.length} conversión{thisMonthConverted.length !== 1 ? "es" : ""} registrada{thisMonthConverted.length !== 1 ? "s" : ""}</span>
-            </div>
-            <div className="flex justify-between items-baseline">
-              <span className="text-sm text-[#9098A2]">Comisión pagada a Lessio</span>
-              <span className="text-sm font-semibold text-white">{formatCurrency(freemiumCommission)}</span>
-            </div>
-            <div className="flex justify-between items-baseline">
-              <span className="text-sm text-[#9098A2]">Con plan Pro hubiera sido</span>
-              <span className="text-sm font-semibold text-green-400">{formatCurrency(proCommission)}</span>
-            </div>
-            <div className="border-t border-white/10 pt-3 flex justify-between items-baseline">
-              <span className="text-sm text-[#9098A2]">Diferencia</span>
-              <span className="text-sm font-bold text-amber-400">+{formatCurrency(commissionDiff)}</span>
-            </div>
-            <div className="flex justify-between items-baseline">
-              <span className="text-sm text-[#9098A2]">Membresía Pro</span>
-              <span className="text-sm text-[#9098A2]">−{formatCurrency(MEMBERSHIP_COST)}/mes</span>
-            </div>
-          </div>
-          <div className={`rounded-xl px-4 py-3 mb-4 ${netWithPro >= 0 ? "bg-green-500/15" : "bg-white/5"}`}>
-            <p className={`text-sm font-semibold ${netWithPro >= 0 ? "text-green-400" : "text-[#9098A2]"}`}>
-              {netWithPro >= 0
-                ? `Ya estarías ${formatCurrency(netWithPro)} a favor con Pro este mes.`
-                : `Te faltan ${formatCurrency(Math.abs(netWithPro))} en ahorro para cubrir Pro este mes.`}
-            </p>
-          </div>
+
           <button className="w-full bg-white text-[#0B0B0C] text-sm font-semibold py-3 rounded-full hover:bg-white/90 active:scale-95 transition">
             Actualizar a Pro · $539/mes
           </button>
