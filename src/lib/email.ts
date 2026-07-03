@@ -421,7 +421,7 @@ export async function sendVerificationEmail(payload: {
   advisorName: string;
   verificationToken: string;
 }) {
-  const verifyUrl = `${BASE_URL}/api/auth/verify-email?token=${payload.verificationToken}`;
+  const verifyUrl = `${BASE_URL}/verificar?token=${payload.verificationToken}`;
 
   if (!resend) {
     console.log("[email] RESEND_API_KEY no configurado — verificación no enviada. Link:", verifyUrl);
@@ -675,7 +675,7 @@ export async function sendPreviewEmailsTo(to: string): Promise<Record<string, st
       <tr><td style="padding:32px 32px 20px">
         <h1 style="margin:0 0 10px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">Hola ${ref.advisorName}, confirma tu correo</h1>
         <p style="margin:0 0 28px;font-size:14px;color:#6B727D;line-height:1.6">Ya casi está listo. Confirma tu correo con el botón de abajo para empezar a agregar clientes y activar tu programa de referidos.</p>
-        <a href="${BASE}/api/auth/verify-email?token=tok_demo_123abc" style="display:block;background:#0B0B0C;color:#ffffff;text-align:center;padding:15px 24px;border-radius:999px;font-size:15px;font-weight:600;text-decoration:none;letter-spacing:-0.01em">Verificar mi correo →</a>
+        <a href="${BASE}/verificar?token=tok_demo_123abc" style="display:block;background:#0B0B0C;color:#ffffff;text-align:center;padding:15px 24px;border-radius:999px;font-size:15px;font-weight:600;text-decoration:none;letter-spacing:-0.01em">Verificar mi correo →</a>
         <p style="margin:14px 0 0;font-size:12px;color:#9098A2;text-align:center">Si no creaste esta cuenta en Referidoo, ignora este correo.</p>
       </td></tr>
       <tr><td style="padding:0 32px 28px"><p style="margin:0;font-size:12px;color:#9098A2;text-align:center;line-height:1.6">Referidoo — plataforma de referidos para asesores de seguros</p></td></tr>
