@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatCurrency } from "@/lib/utils";
 import { UpgradeCardForm } from "@/components/UpgradeCardForm";
 
 type PendingCommission = {
@@ -51,9 +51,15 @@ type PerfilClientProps = {
   initialAdvisor: Advisor;
   initialClientCount: number;
   initialLeadCount: number;
+  freemiumCommission: number;
+  proCommission: number;
+  commissionDiff: number;
+  netWithPro: number;
+  monthConvertedCount: number;
+  monthName: string;
 };
 
-export default function PerfilClient({ initialAdvisor, initialClientCount, initialLeadCount }: PerfilClientProps) {
+export default function PerfilClient({ initialAdvisor, initialClientCount, initialLeadCount, freemiumCommission, proCommission, commissionDiff, netWithPro, monthConvertedCount, monthName }: PerfilClientProps) {
   const router = useRouter();
   const [advisor, setAdvisor] = useState<Advisor | null>(initialAdvisor);
   const [clientCount, setClientCount] = useState<number | null>(initialClientCount);
@@ -330,6 +336,42 @@ export default function PerfilClient({ initialAdvisor, initialClientCount, initi
           </div>
         )}
       </div>
+
+      {/* Freemium commission card */}
+      {!isPaid && monthConvertedCount >= 1 && (
+        <div style={{ background: "#0d0d0d", borderRadius: 26, padding: 26, color: "#fff", position: "relative", overflow: "hidden", marginBottom: 16 }}>
+          <div style={{ position: "absolute", top: -70, right: -50, width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(43,87,240,.45), transparent 70%)", pointerEvents: "none" }} />
+          <div style={{ background: "rgba(255,255,255,.08)", borderRadius: 999, padding: "6px 13px", width: "fit-content", marginBottom: 20, position: "relative" }}>
+            <span style={{ fontWeight: 700, fontSize: 12.5, color: "rgba(255,255,255,.7)" }}>Plan gratuito · {monthName}</span>
+          </div>
+          <div style={{ fontWeight: 500, fontSize: 14, color: "rgba(255,255,255,.66)", position: "relative" }}>Este mes te habrías ahorrado hasta ahora</div>
+          <div style={{ marginTop: 4, marginBottom: 20, position: "relative" }}>
+            <span style={{ fontWeight: 800, fontSize: 52, letterSpacing: "-.03em", color: "#fff", lineHeight: .95, display: "inline-block" }}>{formatCurrency(commissionDiff)}</span>
+          </div>
+          <div style={{ display: "flex", gap: 12, marginBottom: 12, position: "relative" }}>
+            <div style={{ flex: 1, background: "rgba(255,255,255,.06)", borderRadius: 16, padding: "14px 16px" }}>
+              <div style={{ fontWeight: 500, fontSize: 12.5, color: "rgba(255,255,255,.5)", lineHeight: 1.3 }}>Comisiones en plan Gratuito</div>
+              <div style={{ fontWeight: 800, fontSize: 20, marginTop: 4 }}>{formatCurrency(freemiumCommission)}</div>
+            </div>
+            <div style={{ flex: 1, background: "rgba(255,255,255,.06)", borderRadius: 16, padding: "14px 16px" }}>
+              <div style={{ fontWeight: 500, fontSize: 12.5, color: "rgba(255,255,255,.5)", lineHeight: 1.3 }}>Comisiones en plan Pro</div>
+              <div style={{ fontWeight: 800, fontSize: 20, marginTop: 4, color: "#9db4fb" }}>{formatCurrency(proCommission)}</div>
+            </div>
+          </div>
+          <div style={{ fontWeight: 500, fontSize: 12.5, color: "rgba(255,255,255,.5)", marginBottom: 20, lineHeight: 1.5, position: "relative" }}>
+            {netWithPro >= 0
+              ? <>{`Con tus ${monthConvertedCount} conversión${monthConvertedCount !== 1 ? "es" : ""} de este mes ya pagabas tu membresía y tendrías `}<b style={{ color: "#fff" }}>{formatCurrency(netWithPro)}</b> extra.</>
+              : <>{`Con tus ${monthConvertedCount} conversión${monthConvertedCount !== 1 ? "es" : ""} de este mes te faltan `}<b style={{ color: "#fff" }}>{formatCurrency(Math.abs(netWithPro))}</b> para cubrir tu membresía.</>}
+          </div>
+          <button
+            onClick={() => setShowUpgradeForm(true)}
+            style={{ width: "100%", border: "none", cursor: "pointer", background: "#fff", color: "#0d0d0d", fontFamily: "inherit", fontWeight: 700, fontSize: 14.5, padding: "15px 0", borderRadius: 999, position: "relative" }}
+            className="hover:bg-white/90 active:scale-95 transition"
+          >
+            Actualizar a Pro · $539/mes
+          </button>
+        </div>
+      )}
 
       {/* Upgrade modal */}
       {showUpgradeForm && (

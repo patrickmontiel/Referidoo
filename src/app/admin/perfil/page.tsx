@@ -4,11 +4,24 @@ import { db } from "@/lib/db";
 import { MONTHLY_PRICE_MXN } from "@/lib/mercadopago";
 import PerfilClient from "./PerfilClient";
 
+const COMMISSION_RATES: Record<string, { freemium: number; paid: number }> = {
+  PPR:          { freemium: 0.0025, paid: 0.0015 },
+  Vida:         { freemium: 0.0025, paid: 0.0015 },
+  "Daños/Auto": { freemium: 0.015,  paid: 0.008  },
+  GMM:          { freemium: 0.015,  paid: 0.008  },
+  Otro:         { freemium: 0.015,  paid: 0.008  },
+};
+const MEMBERSHIP_COST = 539;
+
 export default async function PerfilPage() {
   const session = await getAdvisorSession();
   if (!session) redirect("/login");
 
-  const [advisor, pendingCommissions, clientCount, leadCount] = await Promise.all([
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  const [advisor, pendingCommissions, clientCount, leadCount, thisMonthConverted] = await Promise.all([
     db.advisor.findUnique({
       where: { id: session.advisorId },
       select: { id: true, name: true, email: true, phone: true, companyName: true, createdAt: true, emailVerified: true, plan: true, paidUntil: true, onboardedAt: true },
@@ -20,11 +33,33 @@ export default async function PerfilPage() {
     }),
     db.client.count({ where: { advisorId: session.advisorId, active: true } }),
     db.referral.count({ where: { advisorId: session.advisorId } }),
+    db.referral.findMany({
+      where: {
+        advisorId: session.advisorId,
+        status: "converted",
+        createdAt: { gte: startOfMonth, lt: startOfNextMonth },
+        saleAmount: { not: null },
+        productType: { not: null },
+      },
+      select: { saleAmount: true, productType: true },
+    }),
   ]);
 
   if (!advisor) redirect("/login");
 
   const pendingCommissionTotal = pendingCommissions.reduce((sum, r) => sum + (r.lessioCommission ?? 0), 0);
+
+  const freemiumCommission = thisMonthConverted.reduce((sum, r) => {
+    const rate = COMMISSION_RATES[r.productType!];
+    return sum + (rate ? Math.round(r.saleAmount! * rate.freemium) : 0);
+  }, 0);
+  const proCommission = thisMonthConverted.reduce((sum, r) => {
+    const rate = COMMISSION_RATES[r.productType!];
+    return sum + (rate ? Math.round(r.saleAmount! * rate.paid) : 0);
+  }, 0);
+  const commissionDiff = freemiumCommission - proCommission;
+  const netWithPro = commissionDiff - MEMBERSHIP_COST;
+  const monthName = now.toLocaleDateString("es-MX", { month: "long" });
 
   const serializedAdvisor = {
     ...advisor,
@@ -44,6 +79,12 @@ export default async function PerfilPage() {
       initialAdvisor={serializedAdvisor}
       initialClientCount={clientCount}
       initialLeadCount={leadCount}
+      freemiumCommission={freemiumCommission}
+      proCommission={proCommission}
+      commissionDiff={commissionDiff}
+      netWithPro={netWithPro}
+      monthConvertedCount={thisMonthConverted.length}
+      monthName={monthName}
     />
   );
 }
