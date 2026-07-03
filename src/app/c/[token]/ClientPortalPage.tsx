@@ -112,6 +112,19 @@ export default function ClientPortalPage() {
     }));
   }, []);
 
+  const bonoConfetti = useMemo(() => {
+    const C = ["#5B86F7","#2B57F0","#1FAE54","#F5B53F","#E7395A","#fff"];
+    return Array.from({ length: 30 }, (_, k) => ({
+      key: k,
+      left: `${Math.random() * 100}%`,
+      width:  Math.random() * 6 + 3,
+      height: Math.random() * 9 + 4,
+      background:   C[k % C.length],
+      borderRadius: Math.random() > 0.55 ? "50%" : "2px",
+      animation: `confettiFall ${(1.6 + Math.random() * 1.4).toFixed(2)}s linear ${(Math.random() * 1.5).toFixed(2)}s infinite`,
+    }));
+  }, []);
+
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(tick);
@@ -268,7 +281,7 @@ export default function ClientPortalPage() {
   const daysLeft = Math.floor(msLeft / (1000 * 60 * 60 * 24));
   const hoursLeft = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minutesLeft = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
-  const countdownLabel = daysLeft > 0 ? `${daysLeft}d ${hoursLeft}h` : hoursLeft > 0 ? `${hoursLeft}h ${minutesLeft}m` : `${minutesLeft}m`;
+  const countdownLabel = daysLeft > 0 ? `${daysLeft}d ${hoursLeft}h ${minutesLeft}m` : hoursLeft > 0 ? `${hoursLeft}h ${minutesLeft}m` : `${minutesLeft}m`;
   const countdownUrgent = msLeft < 1000 * 60 * 60 * 24;
 
   const bubbleThreshold = settings.bubbleClaimThreshold;
@@ -390,6 +403,16 @@ export default function ClientPortalPage() {
           0%   { transform: scale(.5); opacity: 0; }
           60%  { transform: scale(1.1); }
           100% { transform: scale(1);   opacity: 1; }
+        }
+        @keyframes bonoPulse {
+          0%   { box-shadow: 0 0 0 1.5px rgba(91,134,247,.2); }
+          50%  { box-shadow: 0 0 0 3.5px rgba(91,134,247,.6), 0 0 28px rgba(91,134,247,.15); }
+          100% { box-shadow: 0 0 0 1.5px rgba(91,134,247,.2); }
+        }
+        @keyframes shareNudge {
+          0%, 100% { transform: scale(1);    box-shadow: 0 4px 14px rgba(43,87,240,.32); }
+          40%       { transform: scale(1.04); box-shadow: 0 6px 22px rgba(43,87,240,.5); }
+          70%       { transform: scale(.98); }
         }
       `}</style>
 
@@ -607,29 +630,52 @@ export default function ClientPortalPage() {
 
                   {/* Bono de inicio — ventana activa */}
                   {launchBonusActive && (
-                    <div data-tour="bono" style={{ background: "#0d0d0d", borderRadius: 26, padding: "24px 22px", color: "#fff", position: "relative", overflow: "hidden" }}>
-                      <div style={{ position: "absolute", width: 160, height: 160, background: "radial-gradient(circle,rgba(91,134,247,.35) 0%,transparent 70%)", top: -30, right: -10, pointerEvents: "none" }} />
+                    <div data-tour="bono" style={{ background: "#0d0d0d", borderRadius: 26, padding: "24px 22px", color: "#fff", position: "relative", overflow: "hidden", animation: bonusReady ? "none" : "bonoPulse 2.8s ease-in-out infinite" }}>
+                      {/* Ambient glow */}
+                      <div style={{ position: "absolute", width: 160, height: 160, background: `radial-gradient(circle,rgba(91,134,247,${bonusReady ? ".55" : ".35"}) 0%,transparent 70%)`, top: -30, right: -10, pointerEvents: "none" }} />
+                      {/* Confetti inside card when bonus ready */}
+                      {bonusReady && bonoConfetti.map((p) => (
+                        <div key={p.key} style={{ position: "absolute", top: -12, left: p.left, width: p.width, height: p.height, background: p.background, borderRadius: p.borderRadius, animation: p.animation, pointerEvents: "none", zIndex: 0 }} />
+                      ))}
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, position: "relative" }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.5)", letterSpacing: ".06em", textTransform: "uppercase" }}>Bono de inicio</span>
-                        <span key={countdownLabel} className="cd-tick" style={{ fontSize: 11, fontWeight: 700, padding: "5px 10px", borderRadius: 20, background: countdownUrgent ? "rgba(251,191,36,.15)" : "rgba(255,255,255,.1)", color: countdownUrgent ? "#fbbf24" : "rgba(255,255,255,.65)" }}>
-                          {countdownLabel}
-                        </span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: bonusReady ? "rgba(91,134,247,.9)" : "rgba(255,255,255,.5)", letterSpacing: ".06em", textTransform: "uppercase" }}>{bonusReady ? "⚡ Bono desbloqueado" : "Bono de inicio"}</span>
+                        {!bonusReady && (
+                          <span key={countdownLabel} className="cd-tick" style={{ fontSize: 11, fontWeight: 700, padding: "5px 10px", borderRadius: 20, background: countdownUrgent ? "rgba(251,191,36,.15)" : "rgba(255,255,255,.1)", color: countdownUrgent ? "#fbbf24" : "rgba(255,255,255,.65)" }}>
+                            {countdownLabel}
+                          </span>
+                        )}
                       </div>
                       <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8, position: "relative" }}>
                         <span style={{ fontSize: 36, fontWeight: 800, color: "#fff", letterSpacing: "-.02em" }}>{formatCurrency(bonusAmount)}</span>
                         <span style={{ fontSize: 16, color: "rgba(255,255,255,.3)", textDecoration: "line-through" }}>{formatCurrency(firstTierAmount)}</span>
                       </div>
                       <p style={{ fontSize: 12, color: "rgba(255,255,255,.45)", marginBottom: 16, position: "relative", lineHeight: 1.5 }}>
-                        Tu primer premio cuando alguien contrate Seguro de Vida o PPR gracias a ti.
+                        {bonusReady ? "¡Invitaste a 3 personas! Cuando una contrate, cobras el doble." : "Tu primer premio cuando alguien contrate Seguro de Vida o PPR gracias a ti."}
                       </p>
                       <div style={{ display: "flex", gap: 6, marginBottom: 7, position: "relative" }}>
                         {[1, 2, 3].map((i) => (
-                          <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= referralsInWindow ? "#5B86F7" : "rgba(255,255,255,.12)", transition: "background .3s" }} />
+                          <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= referralsInWindow ? (bonusReady ? "#1FAE54" : "#5B86F7") : "rgba(255,255,255,.12)", transition: "background .3s" }} />
                         ))}
                       </div>
-                      <p style={{ fontSize: 11, color: "rgba(255,255,255,.38)", position: "relative" }}>
+                      <p style={{ fontSize: 11, color: "rgba(255,255,255,.38)", position: "relative", marginBottom: 16 }}>
                         {referralsInWindow} de 3 contactos invitados
                       </p>
+                      {/* Share CTA */}
+                      <button
+                        onClick={shareWhatsApp}
+                        style={{
+                          position: "relative", zIndex: 1, width: "100%", border: "none", borderRadius: 50, cursor: "pointer",
+                          padding: bonusReady ? "14px 0" : "12px 0",
+                          fontSize: bonusReady ? 14 : 13,
+                          fontWeight: 700,
+                          background: bonusReady ? "#2B57F0" : "rgba(91,134,247,.18)",
+                          color: bonusReady ? "#fff" : "#5B86F7",
+                          animation: bonusReady ? "shareNudge 2.2s ease-in-out infinite" : "none",
+                          ...(bonusReady ? {} : { border: "1.5px solid rgba(91,134,247,.35)" }),
+                        }}
+                      >
+                        {bonusReady ? "¡Comparte y cobra tu bono! →" : "Compartir para desbloquear →"}
+                      </button>
                     </div>
                   )}
 
