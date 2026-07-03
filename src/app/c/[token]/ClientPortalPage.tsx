@@ -666,22 +666,6 @@ export default function ClientPortalPage() {
                       <p style={{ fontSize: 11, color: "rgba(255,255,255,.38)", position: "relative", marginBottom: 16 }}>
                         {referralsInWindow} de 3 contactos invitados
                       </p>
-                      {/* Share CTA */}
-                      <button
-                        onClick={shareWhatsApp}
-                        style={{
-                          position: "relative", zIndex: 1, width: "100%", border: "none", borderRadius: 50, cursor: "pointer",
-                          padding: bonusReady ? "14px 0" : "12px 0",
-                          fontSize: bonusReady ? 14 : 13,
-                          fontWeight: 700,
-                          background: bonusReady ? "#2B57F0" : "rgba(91,134,247,.18)",
-                          color: bonusReady ? "#fff" : "#5B86F7",
-                          animation: bonusReady ? "shareNudge 2.2s ease-in-out infinite" : "none",
-                          ...(bonusReady ? {} : { border: "1.5px solid rgba(91,134,247,.35)" }),
-                        }}
-                      >
-                        {bonusReady ? "¡Comparte y cobra tu bono! →" : "Compartir para desbloquear →"}
-                      </button>
                     </div>
                   )}
 
