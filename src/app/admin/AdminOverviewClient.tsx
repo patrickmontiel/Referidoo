@@ -78,6 +78,7 @@ export default function AdminOverviewClient({ referrals, advisor, clientCount }:
     now.toLocaleDateString("es-MX", { month: "long", year: "numeric" })
       .replace(" de ", " ")
       .replace(/^\w/, (c) => c.toUpperCase());
+  const monthName = now.toLocaleDateString("es-MX", { month: "long" });
 
   const isFreemium = advisor?.plan !== "paid";
   const thisMonthConverted = referrals.filter(
@@ -230,48 +231,51 @@ export default function AdminOverviewClient({ referrals, advisor, clientCount }:
 
       {/* Resumen mensual freemium — al fondo */}
       {showFreemiumCard && (
-        <div className="bg-[#0B0B0C] rounded-2xl p-5">
-          {/* Header */}
-          <div className="flex items-start justify-between mb-5">
-            <div>
-              <p className="text-[15px] font-semibold text-white leading-tight">Comisiones este mes</p>
-              <p className="text-[12px] text-[#9098A2] mt-1">
-                {thisMonthConverted.length} conversión{thisMonthConverted.length !== 1 ? "es" : ""} registrada{thisMonthConverted.length !== 1 ? "s" : ""}
-              </p>
-            </div>
-            <span className="bg-white/[0.08] text-[#9098A2] text-[11px] font-medium px-2.5 py-1 rounded-full whitespace-nowrap">
-              Plan gratuito
+        <div style={{ background: "#0d0d0d", borderRadius: 26, padding: 26, color: "#fff", position: "relative", overflow: "hidden" }}>
+          {/* Glow esquina superior derecha */}
+          <div style={{ position: "absolute", top: -70, right: -50, width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(43,87,240,.45), transparent 70%)", pointerEvents: "none" }} />
+
+          {/* Chip */}
+          <div style={{ background: "rgba(255,255,255,.08)", borderRadius: 999, padding: "6px 13px", width: "fit-content", marginBottom: 20, position: "relative" }}>
+            <span style={{ fontWeight: 700, fontSize: 12.5, color: "rgba(255,255,255,.7)" }}>Plan gratuito · {monthName}</span>
+          </div>
+
+          {/* Contexto + número héroe */}
+          <div style={{ fontWeight: 500, fontSize: 14, color: "rgba(255,255,255,.66)", position: "relative" }}>
+            Este mes te habrías ahorrado hasta ahora
+          </div>
+          <div style={{ marginTop: 4, marginBottom: 20, position: "relative" }}>
+            <span style={{ fontWeight: 800, fontSize: 52, letterSpacing: "-.03em", color: "#fff", lineHeight: .95, display: "inline-block" }}>
+              {formatCurrency(commissionDiff)}
             </span>
           </div>
 
-          {/* Ledger */}
-          <div className="mb-4">
-            <div className="flex justify-between items-baseline py-2.5 border-b border-white/[0.07]">
-              <span className="text-[13px] text-[#9098A2]">Comisión pagada a Lessio</span>
-              <span className="text-[13px] font-semibold text-white">{formatCurrency(freemiumCommission)}</span>
+          {/* Dos mini-cards */}
+          <div style={{ display: "flex", gap: 12, marginBottom: 12, position: "relative" }}>
+            <div style={{ flex: 1, background: "rgba(255,255,255,.06)", borderRadius: 16, padding: "14px 16px" }}>
+              <div style={{ fontWeight: 500, fontSize: 12.5, color: "rgba(255,255,255,.5)", lineHeight: 1.3 }}>Comisiones en plan Gratuito</div>
+              <div style={{ fontWeight: 800, fontSize: 20, marginTop: 4 }}>{formatCurrency(freemiumCommission)}</div>
             </div>
-            <div className="flex justify-between items-baseline py-2.5 border-b border-white/[0.07]">
-              <span className="text-[13px] text-[#9098A2]">Con plan Pro hubiera sido</span>
-              <span className="text-[13px] font-semibold text-green-400">{formatCurrency(proCommission)}</span>
-            </div>
-            <div className="flex justify-between items-baseline pt-3 pb-1">
-              <span className="text-[13px] text-white/60">Ahorrarías</span>
-              <span className="text-[20px] font-bold text-amber-400 leading-none">+{formatCurrency(commissionDiff)}</span>
-            </div>
-            <div className="flex justify-between items-baseline pb-3 border-b border-white/[0.07]">
-              <span className="text-[11px] text-[#9098A2]/70">Membresía Pro</span>
-              <span className="text-[11px] text-[#9098A2]/70">−{formatCurrency(MEMBERSHIP_COST)}/mes</span>
+            <div style={{ flex: 1, background: "rgba(255,255,255,.06)", borderRadius: 16, padding: "14px 16px" }}>
+              <div style={{ fontWeight: 500, fontSize: 12.5, color: "rgba(255,255,255,.5)", lineHeight: 1.3 }}>Comisiones en plan Pro</div>
+              <div style={{ fontWeight: 800, fontSize: 20, marginTop: 4, color: "#9db4fb" }}>{formatCurrency(proCommission)}</div>
             </div>
           </div>
 
-          {/* Verdict */}
-          <p className={`text-[13px] leading-snug mb-5 ${netWithPro >= 0 ? "text-green-400" : "text-[#9098A2]"}`}>
-            {netWithPro >= 0
-              ? `Amortizas la membresía este mes y quedarías ${formatCurrency(netWithPro)} a favor.`
-              : `Te faltan ${formatCurrency(Math.abs(netWithPro))} para amortizar Pro este mes.`}
-          </p>
+          {/* Nota de cierre */}
+          <div style={{ fontWeight: 500, fontSize: 12.5, color: "rgba(255,255,255,.5)", marginBottom: 20, lineHeight: 1.5, position: "relative" }}>
+            {netWithPro >= 0 ? (
+              <>Con tus {thisMonthConverted.length} conversión{thisMonthConverted.length !== 1 ? "es" : ""} de este mes ya pagabas tu membresía y tendrías <b style={{ color: "#fff" }}>{formatCurrency(netWithPro)}</b> extra.</>
+            ) : (
+              <>Con tus {thisMonthConverted.length} conversión{thisMonthConverted.length !== 1 ? "es" : ""} de este mes te faltan <b style={{ color: "#fff" }}>{formatCurrency(Math.abs(netWithPro))}</b> para cubrir tu membresía.</>
+            )}
+          </div>
 
-          <button className="w-full bg-white text-[#0B0B0C] text-sm font-semibold py-3 rounded-full hover:bg-white/90 active:scale-95 transition">
+          {/* CTA */}
+          <button
+            style={{ width: "100%", border: "none", cursor: "pointer", background: "#fff", color: "#0d0d0d", fontFamily: "inherit", fontWeight: 700, fontSize: 14.5, padding: "15px 0", borderRadius: 999, position: "relative" }}
+            className="hover:bg-white/90 active:scale-95 transition"
+          >
             Actualizar a Pro · $539/mes
           </button>
         </div>
