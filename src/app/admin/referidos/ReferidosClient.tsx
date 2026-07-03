@@ -253,26 +253,20 @@ export default function ReferidosClient({
       new Date(r.createdAt).getFullYear() === now.getFullYear()
   ).length;
 
-  const thisMonthConvertedList = referrals.filter(
-    (r) =>
-      r.status === "converted" &&
-      new Date(r.createdAt).getMonth() === now.getMonth() &&
-      new Date(r.createdAt).getFullYear() === now.getFullYear() &&
-      r.saleAmount &&
-      r.productType
+  const allConvertedList = referrals.filter(
+    (r) => r.status === "converted" && r.saleAmount
   );
-  const freemiumCommission = thisMonthConvertedList.reduce((sum, r) => {
-    const rate = COMMISSION_RATES[r.productType!];
+  const freemiumCommission = allConvertedList.reduce((sum, r) => {
+    const rate = COMMISSION_RATES[r.productType ?? "Otro"];
     return sum + (rate ? Math.round(r.saleAmount! * rate.freemium) : 0);
   }, 0);
-  const proCommission = thisMonthConvertedList.reduce((sum, r) => {
-    const rate = COMMISSION_RATES[r.productType!];
+  const proCommission = allConvertedList.reduce((sum, r) => {
+    const rate = COMMISSION_RATES[r.productType ?? "Otro"];
     return sum + (rate ? Math.round(r.saleAmount! * rate.paid) : 0);
   }, 0);
   const commissionDiff = freemiumCommission - proCommission;
   const netWithPro = commissionDiff - MEMBERSHIP_COST;
-  const monthName = now.toLocaleDateString("es-MX", { month: "long" });
-  const showFreemiumCard = advisorPlan !== "paid" && thisMonthConvertedList.length >= 1;
+  const showFreemiumCard = advisorPlan !== "paid" && allConvertedList.length >= 1;
 
   const filtered = referrals.filter((r) => matchesFilter(r, filter));
 
@@ -411,9 +405,9 @@ export default function ReferidosClient({
         <div style={{ background: "#0d0d0d", borderRadius: 26, padding: 26, color: "#fff", position: "relative", overflow: "hidden", marginTop: 20 }}>
           <div style={{ position: "absolute", top: -70, right: -50, width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(43,87,240,.45), transparent 70%)", pointerEvents: "none" }} />
           <div style={{ background: "rgba(255,255,255,.08)", borderRadius: 999, padding: "6px 13px", width: "fit-content", marginBottom: 20, position: "relative" }}>
-            <span style={{ fontWeight: 700, fontSize: 12.5, color: "rgba(255,255,255,.7)" }}>Plan gratuito · {monthName}</span>
+            <span style={{ fontWeight: 700, fontSize: 12.5, color: "rgba(255,255,255,.7)" }}>Plan gratuito · acumulado</span>
           </div>
-          <div style={{ fontWeight: 500, fontSize: 14, color: "rgba(255,255,255,.66)", position: "relative" }}>Este mes te habrías ahorrado hasta ahora</div>
+          <div style={{ fontWeight: 500, fontSize: 14, color: "rgba(255,255,255,.66)", position: "relative" }}>Te habrías ahorrado en total hasta ahora</div>
           <div style={{ marginTop: 4, marginBottom: 20, position: "relative" }}>
             <span style={{ fontWeight: 800, fontSize: 52, letterSpacing: "-.03em", color: "#fff", lineHeight: .95, display: "inline-block" }}>{formatCurrency(commissionDiff)}</span>
           </div>
@@ -429,8 +423,8 @@ export default function ReferidosClient({
           </div>
           <div style={{ fontWeight: 500, fontSize: 12.5, color: "rgba(255,255,255,.5)", marginBottom: 20, lineHeight: 1.5, position: "relative" }}>
             {netWithPro >= 0
-              ? <>{`Con tus ${thisMonthConvertedList.length} conversión${thisMonthConvertedList.length !== 1 ? "es" : ""} de este mes ya pagabas tu membresía y tendrías `}<b style={{ color: "#fff" }}>{formatCurrency(netWithPro)}</b> extra.</>
-              : <>{`Con tus ${thisMonthConvertedList.length} conversión${thisMonthConvertedList.length !== 1 ? "es" : ""} de este mes te faltan `}<b style={{ color: "#fff" }}>{formatCurrency(Math.abs(netWithPro))}</b> para cubrir tu membresía.</>}
+              ? <>{`Con tus ${allConvertedList.length} conversión${allConvertedList.length !== 1 ? "es" : ""} ya pagarías tu membresía y tendrías `}<b style={{ color: "#fff" }}>{formatCurrency(netWithPro)}</b> extra neto.</>
+              : <>{`Con tus ${allConvertedList.length} conversión${allConvertedList.length !== 1 ? "es" : ""} te faltan `}<b style={{ color: "#fff" }}>{formatCurrency(Math.abs(netWithPro))}</b> para cubrir tu membresía.</>}
           </div>
           <button
             style={{ width: "100%", border: "none", cursor: "pointer", background: "#fff", color: "#0d0d0d", fontFamily: "inherit", fontWeight: 700, fontSize: 14.5, padding: "15px 0", borderRadius: 999, position: "relative" }}

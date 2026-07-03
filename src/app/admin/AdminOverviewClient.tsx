@@ -81,25 +81,20 @@ export default function AdminOverviewClient({ referrals, advisor, clientCount }:
   const monthName = now.toLocaleDateString("es-MX", { month: "long" });
 
   const isFreemium = advisor?.plan !== "paid";
-  const thisMonthConverted = referrals.filter(
-    (r) =>
-      r.status === "converted" &&
-      new Date(r.createdAt).getMonth() === now.getMonth() &&
-      new Date(r.createdAt).getFullYear() === now.getFullYear() &&
-      r.saleAmount &&
-      r.productType
+  const allConverted = referrals.filter(
+    (r) => r.status === "converted" && r.saleAmount
   );
-  const freemiumCommission = thisMonthConverted.reduce((sum, r) => {
-    const rate = COMMISSION_RATES[r.productType!];
+  const freemiumCommission = allConverted.reduce((sum, r) => {
+    const rate = COMMISSION_RATES[r.productType ?? "Otro"];
     return sum + (rate ? Math.round(r.saleAmount! * rate.freemium) : 0);
   }, 0);
-  const proCommission = thisMonthConverted.reduce((sum, r) => {
-    const rate = COMMISSION_RATES[r.productType!];
+  const proCommission = allConverted.reduce((sum, r) => {
+    const rate = COMMISSION_RATES[r.productType ?? "Otro"];
     return sum + (rate ? Math.round(r.saleAmount! * rate.paid) : 0);
   }, 0);
   const commissionDiff = freemiumCommission - proCommission;
   const netWithPro = commissionDiff - MEMBERSHIP_COST;
-  const showFreemiumCard = isFreemium && thisMonthConverted.length >= 1;
+  const showFreemiumCard = isFreemium && allConverted.length >= 1;
 
   const advisorSlug = advisor ? nameToSlug(advisor.name) : "";
   const recruiterLink = `referidoo.com/unete/${advisorSlug}`;
@@ -237,12 +232,12 @@ export default function AdminOverviewClient({ referrals, advisor, clientCount }:
 
           {/* Chip */}
           <div style={{ background: "rgba(255,255,255,.08)", borderRadius: 999, padding: "6px 13px", width: "fit-content", marginBottom: 20, position: "relative" }}>
-            <span style={{ fontWeight: 700, fontSize: 12.5, color: "rgba(255,255,255,.7)" }}>Plan gratuito · {monthName}</span>
+            <span style={{ fontWeight: 700, fontSize: 12.5, color: "rgba(255,255,255,.7)" }}>Plan gratuito · acumulado</span>
           </div>
 
           {/* Contexto + número héroe */}
           <div style={{ fontWeight: 500, fontSize: 14, color: "rgba(255,255,255,.66)", position: "relative" }}>
-            Este mes te habrías ahorrado hasta ahora
+            Te habrías ahorrado en total hasta ahora
           </div>
           <div style={{ marginTop: 4, marginBottom: 20, position: "relative" }}>
             <span style={{ fontWeight: 800, fontSize: 52, letterSpacing: "-.03em", color: "#fff", lineHeight: .95, display: "inline-block" }}>
@@ -265,9 +260,9 @@ export default function AdminOverviewClient({ referrals, advisor, clientCount }:
           {/* Nota de cierre */}
           <div style={{ fontWeight: 500, fontSize: 12.5, color: "rgba(255,255,255,.5)", marginBottom: 20, lineHeight: 1.5, position: "relative" }}>
             {netWithPro >= 0 ? (
-              <>Con tus {thisMonthConverted.length} conversión{thisMonthConverted.length !== 1 ? "es" : ""} de este mes ya pagabas tu membresía y tendrías <b style={{ color: "#fff" }}>{formatCurrency(netWithPro)}</b> extra.</>
+              <>Con tus {allConverted.length} conversión{allConverted.length !== 1 ? "es" : ""} ya pagarías tu membresía y tendrías <b style={{ color: "#fff" }}>{formatCurrency(netWithPro)}</b> extra neto.</>
             ) : (
-              <>Con tus {thisMonthConverted.length} conversión{thisMonthConverted.length !== 1 ? "es" : ""} de este mes te faltan <b style={{ color: "#fff" }}>{formatCurrency(Math.abs(netWithPro))}</b> para cubrir tu membresía.</>
+              <>Con tus {allConverted.length} conversión{allConverted.length !== 1 ? "es" : ""} te faltan <b style={{ color: "#fff" }}>{formatCurrency(Math.abs(netWithPro))}</b> para cubrir tu membresía.</>
             )}
           </div>
 

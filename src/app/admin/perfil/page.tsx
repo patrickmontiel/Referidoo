@@ -17,11 +17,7 @@ export default async function PerfilPage() {
   const session = await getAdvisorSession();
   if (!session) redirect("/login");
 
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-
-  const [advisor, pendingCommissions, clientCount, leadCount, thisMonthConverted] = await Promise.all([
+  const [advisor, pendingCommissions, clientCount, leadCount, allConverted] = await Promise.all([
     db.advisor.findUnique({
       where: { id: session.advisorId },
       select: { id: true, name: true, email: true, phone: true, companyName: true, createdAt: true, emailVerified: true, plan: true, paidUntil: true, onboardedAt: true },
@@ -37,9 +33,7 @@ export default async function PerfilPage() {
       where: {
         advisorId: session.advisorId,
         status: "converted",
-        createdAt: { gte: startOfMonth, lt: startOfNextMonth },
         saleAmount: { not: null },
-        productType: { not: null },
       },
       select: { saleAmount: true, productType: true },
     }),
@@ -49,17 +43,16 @@ export default async function PerfilPage() {
 
   const pendingCommissionTotal = pendingCommissions.reduce((sum, r) => sum + (r.lessioCommission ?? 0), 0);
 
-  const freemiumCommission = thisMonthConverted.reduce((sum, r) => {
-    const rate = COMMISSION_RATES[r.productType!];
+  const freemiumCommission = allConverted.reduce((sum, r) => {
+    const rate = COMMISSION_RATES[r.productType ?? "Otro"];
     return sum + (rate ? Math.round(r.saleAmount! * rate.freemium) : 0);
   }, 0);
-  const proCommission = thisMonthConverted.reduce((sum, r) => {
-    const rate = COMMISSION_RATES[r.productType!];
+  const proCommission = allConverted.reduce((sum, r) => {
+    const rate = COMMISSION_RATES[r.productType ?? "Otro"];
     return sum + (rate ? Math.round(r.saleAmount! * rate.paid) : 0);
   }, 0);
   const commissionDiff = freemiumCommission - proCommission;
   const netWithPro = commissionDiff - MEMBERSHIP_COST;
-  const monthName = now.toLocaleDateString("es-MX", { month: "long" });
 
   const serializedAdvisor = {
     ...advisor,
@@ -83,8 +76,7 @@ export default async function PerfilPage() {
       proCommission={proCommission}
       commissionDiff={commissionDiff}
       netWithPro={netWithPro}
-      monthConvertedCount={thisMonthConverted.length}
-      monthName={monthName}
+      convertedCount={allConverted.length}
     />
   );
 }
