@@ -80,6 +80,7 @@ type ReferidosClientProps = {
   initialPlan: "freemium" | "paid";
   initialBubbleAutoPoints: number;
   initialBubbleGmmPoints: number;
+  initialFirstTierAmount: number;
 };
 
 export default function ReferidosClient({
@@ -87,6 +88,7 @@ export default function ReferidosClient({
   initialPlan,
   initialBubbleAutoPoints,
   initialBubbleGmmPoints,
+  initialFirstTierAmount,
 }: ReferidosClientProps) {
   const [referrals, setReferrals] = useState<Referral[]>(initialReferrals);
   const referralsRef = useRef<Referral[]>(initialReferrals);
@@ -551,8 +553,8 @@ export default function ReferidosClient({
                         ) : (
                           <div>
                             <p className="text-xl font-bold text-[#0B0B0C]">{formatCurrency(selected.rewardAmount)}</p>
-                            {selected.referrer.launchBonusUsed && selected.tierPosition === 1 && (
-                              <p className="text-[10px] text-amber-600 font-medium mt-0.5">⚡ Incluye bono de lanzamiento</p>
+                            {selected.tierPosition === 1 && selected.rewardAmount > initialFirstTierAmount && (
+                              <p className="text-[10px] font-semibold mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">★ Bono de inicio</p>
                             )}
                           </div>
                         )}

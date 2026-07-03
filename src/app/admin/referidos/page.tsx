@@ -8,7 +8,7 @@ export default async function ReferidosPage() {
   const session = await getAdvisorSession();
   if (!session) redirect("/login");
 
-  const [referrals, advisor, settings] = await Promise.all([
+  const [referrals, advisor, settings, tiers] = await Promise.all([
     db.referral.findMany({
       where: { advisorId: session.advisorId },
       include: {
@@ -21,7 +21,10 @@ export default async function ReferidosPage() {
       select: { plan: true },
     }),
     db.advisorSettings.findUnique({ where: { advisorId: session.advisorId } }),
+    db.rewardTier.findMany({ where: { advisorId: session.advisorId }, orderBy: { position: "asc" }, select: { position: true, amount: true } }),
   ]);
+
+  const firstTierAmount = tiers.find((t) => t.position === 1)?.amount ?? 1500;
 
   const serializedReferrals = referrals.map((r) => ({
     ...r,
@@ -42,6 +45,7 @@ export default async function ReferidosPage() {
       initialPlan={(advisor?.plan as "freemium" | "paid") ?? "freemium"}
       initialBubbleAutoPoints={settings?.bubbleAutoPoints ?? DEFAULT_BUBBLE_AUTO_POINTS}
       initialBubbleGmmPoints={settings?.bubbleGmmPoints ?? DEFAULT_BUBBLE_GMM_POINTS}
+      initialFirstTierAmount={firstTierAmount}
     />
   );
 }

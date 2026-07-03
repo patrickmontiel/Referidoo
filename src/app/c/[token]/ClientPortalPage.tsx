@@ -276,6 +276,7 @@ export default function ClientPortalPage() {
   const firstTierAmount = tiers[0]?.amount ?? 1500;
   const bonusAmount = firstTierAmount + 1000;
   const bonusReady = launchBonusActive && referralsInWindow >= 3;
+  const tier1Claimed = referrals.some((r) => r.tierPosition === 1 && r.status === "converted");
 
   const msLeft = Math.max(0, launchWindowEnd.getTime() - now.getTime());
   const daysLeft = Math.floor(msLeft / (1000 * 60 * 60 * 24));
@@ -628,8 +629,8 @@ export default function ClientPortalPage() {
               {tab === "inicio" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
-                  {/* Bono de inicio — ventana activa */}
-                  {launchBonusActive && (
+                  {/* Bono de inicio — ventana activa (ocultar si ya se cerró tier 1) */}
+                  {launchBonusActive && !tier1Claimed && (
                     <div data-tour="bono" style={{ background: "#0d0d0d", borderRadius: 26, padding: "24px 22px", color: "#fff", position: "relative", overflow: "hidden", animation: bonusReady ? "none" : "bonoPulse 2.8s ease-in-out infinite" }}>
                       {/* Ambient glow */}
                       <div style={{ position: "absolute", width: 160, height: 160, background: `radial-gradient(circle,rgba(91,134,247,${bonusReady ? ".55" : ".35"}) 0%,transparent 70%)`, top: -30, right: -10, pointerEvents: "none" }} />
@@ -638,7 +639,7 @@ export default function ClientPortalPage() {
                         <div key={p.key} style={{ position: "absolute", top: -12, left: p.left, width: p.width, height: p.height, background: p.background, borderRadius: p.borderRadius, animation: p.animation, pointerEvents: "none", zIndex: 0 }} />
                       ))}
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, position: "relative" }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: bonusReady ? "rgba(91,134,247,.9)" : "rgba(255,255,255,.5)", letterSpacing: ".06em", textTransform: "uppercase" }}>{bonusReady ? "⚡ Bono desbloqueado" : "Bono de inicio"}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: bonusReady ? "rgba(91,134,247,.9)" : "rgba(255,255,255,.5)", letterSpacing: ".06em", textTransform: "uppercase" }}>{bonusReady ? "★ BONO DESBLOQUEADO" : "Bono de inicio"}</span>
                         {!bonusReady && (
                           <span key={countdownLabel} className="cd-tick" style={{ fontSize: 11, fontWeight: 700, padding: "5px 10px", borderRadius: 20, background: countdownUrgent ? "rgba(251,191,36,.15)" : "rgba(255,255,255,.1)", color: countdownUrgent ? "#fbbf24" : "rgba(255,255,255,.65)" }}>
                             {countdownLabel}
@@ -853,7 +854,7 @@ export default function ClientPortalPage() {
                               <p style={{ fontSize: 13, fontWeight: 500, color: current ? "#fff" : done ? "#a1a1aa" : "#0d0d0d", textDecoration: done ? "line-through" : "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 {tier.label || `Referido #${tier.position}`}
                               </p>
-                              {showBonusBadge && <p style={{ fontSize: 10, color: "#fbbf24", fontWeight: 600 }}>⚡ Bono de Inicio</p>}
+                              {showBonusBadge && <p style={{ fontSize: 10, color: "#fbbf24", fontWeight: 700 }}>★ Premio especial</p>}
                             </div>
                             <span style={{ fontSize: 13, fontWeight: 700, color: current ? "#fff" : done ? "#16a34a" : "#0d0d0d", flexShrink: 0 }}>
                               {showBonusBadge && (<span style={{ color: current ? "rgba(255,255,255,.3)" : "#a1a1aa", textDecoration: "line-through", marginRight: 5 }}>{formatCurrency(tier.amount)}</span>)}
