@@ -24,6 +24,22 @@ export default function OwnerAsesoresPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
+  const [resendingId, setResendingId] = useState<string | null>(null);
+  const [resentId, setResentId] = useState<string | null>(null);
+
+  async function resendVerification(advisorId: string) {
+    setResendingId(advisorId);
+    const res = await fetch("/api/owner/resend-verification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ advisorId }),
+    });
+    setResendingId(null);
+    if (res.ok) {
+      setResentId(advisorId);
+      setTimeout(() => setResentId(null), 4000);
+    }
+  }
 
   useEffect(() => {
     fetch("/api/admin/advisors")
@@ -143,6 +159,15 @@ export default function OwnerAsesoresPage() {
                         </div>
                       ) : (
                         <div className="flex items-center justify-end gap-2">
+                          {!advisor.emailVerified && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); resendVerification(advisor.id); }}
+                              disabled={resendingId === advisor.id}
+                              className="text-xs font-medium px-3 py-1.5 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 disabled:opacity-50 transition"
+                            >
+                              {resendingId === advisor.id ? "Enviando..." : resentId === advisor.id ? "✓ Enviado" : "Reenviar verificación"}
+                            </button>
+                          )}
                           <button
                             onClick={(e) => { e.stopPropagation(); setConfirmToggleId(advisor.id); }}
                             className="text-xs font-medium px-3 py-1.5 rounded-full border border-brand-border-4 hover:bg-brand-surface transition"
