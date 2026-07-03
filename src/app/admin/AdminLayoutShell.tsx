@@ -176,7 +176,6 @@ export default function AdminLayoutShell({
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const [resendingVerif, setResendingVerif] = useState(false);
   const [resentVerif, setResentVerif] = useState(false);
-  const [resetState, setResetState] = useState<null | "confirm" | "busy">(null);
   const consumedWelcomeFlag = useRef(false);
   const avatarRef = useRef<HTMLDivElement>(null);
 
@@ -401,13 +400,6 @@ export default function AdminLayoutShell({
     router.push("/login");
   }
 
-  async function doReset() {
-    setResetState("busy");
-    await fetch("/api/demo/reset", { method: "POST" });
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
-  }
-
   function handleVerified() {
     setShowVerifiedBanner(true);
     setTimeout(() => setShowVerifiedBanner(false), 5000);
@@ -590,37 +582,6 @@ export default function AdminLayoutShell({
             </div>
           )}
 
-          {/* Reiniciar demo */}
-          <div className={welcomeName ? "pt-3 border-t border-brand-border-1" : "mt-auto pt-4 border-t border-brand-border-1"}>
-            {resetState === null && (
-              <button
-                onClick={() => setResetState("confirm")}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-[#9098A2] hover:text-[#6B727D] hover:bg-[#F4F5F7] transition"
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                  <path d="M1 4V10H7M23 20V14H17M20.49 9C19.9828 7.56678 19.1209 6.2854 17.9845 5.27542C16.8482 4.26543 15.4745 3.55976 13.9917 3.22426C12.5089 2.88875 10.9652 2.93434 9.50481 3.35677C8.04437 3.77921 6.71475 4.56471 5.64 5.64L1 10M23 14L18.36 18.36C17.2853 19.4353 15.9556 20.2208 14.4952 20.6432C13.0348 21.0657 11.4911 21.1113 10.0083 20.7757C8.52547 20.4402 7.1518 19.7346 6.01547 18.7246C4.87913 17.7146 4.01717 16.4332 3.51 15"
-                    stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                Reiniciar demo
-              </button>
-            )}
-            {resetState === "confirm" && (
-              <div className="px-1">
-                <p className="text-[11px] text-[#9098A2] mb-2 leading-snug">¿Borrar todos los clientes y referidos?</p>
-                <div className="flex gap-1.5">
-                  <button onClick={doReset} className="flex-1 text-[11px] py-1.5 rounded-full bg-[#0B0B0C] text-white font-medium hover:bg-[#26262a] transition">
-                    Sí, borrar
-                  </button>
-                  <button onClick={() => setResetState(null)} className="flex-1 text-[11px] py-1.5 rounded-full border border-brand-border-4 text-[#9098A2] hover:bg-[#F4F5F7] transition">
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            )}
-            {resetState === "busy" && (
-              <p className="text-[11px] text-[#9098A2] px-3 py-2">Reiniciando...</p>
-            )}
-          </div>
         </aside>
 
         {/* Main content */}

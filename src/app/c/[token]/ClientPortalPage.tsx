@@ -6,6 +6,11 @@ import { Hanken_Grotesk } from "next/font/google";
 import { formatCurrency, formatDate, getStatusLabel, getRewardStatusLabel } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
 
+function tierOrdinal(n: number) {
+  const map: Record<number, string> = { 1: "1ro", 2: "2do", 3: "3ro", 4: "4to", 5: "5to", 6: "6to", 7: "7mo", 8: "8vo" };
+  return map[n] ?? `${n}°`;
+}
+
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
@@ -739,6 +744,73 @@ export default function ClientPortalPage() {
                     </div>
                   </div>
 
+                  {/* Escalera de premios */}
+                  {tiers.length > 0 && (
+                    <div style={{ background: "#fff", border: "1px solid rgba(0,0,0,.06)", borderRadius: 20, padding: "18px 19px" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
+                        <h2 style={{ fontSize: 14, fontWeight: 700, color: "#0d0d0d" }}>Escalera de premios</h2>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: "#52525b", background: "#f0f0ef", borderRadius: 20, padding: "4px 10px" }}>
+                          {paidCount >= tiers.length ? "Completada" : `Nivel ${Math.min(paidCount + 1, tiers.length)}`}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: 11, color: "#a1a1aa", marginBottom: 18 }}>Vida y PPR · sube con cada contratación</p>
+
+                      <div style={{ display: "flex", gap: 6, alignItems: "flex-end", justifyContent: "center", marginBottom: 14 }}>
+                        {tiers.map((tier) => {
+                          const done    = paidCount >= tier.position;
+                          const current = paidCount < tiers.length && paidCount + 1 === tier.position;
+                          const locked  = !done && !current;
+                          const matchingReferral = referrals.find((r) => r.status === "converted" && r.tierPosition === tier.position);
+                          const displayAmount = matchingReferral ? matchingReferral.rewardAmount : tier.amount;
+                          return (
+                            <div key={tier.position} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
+                              {done ? (
+                                <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#0d0d0d", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M5 12L10 17L19 8" stroke="#fff" strokeWidth="2.8" strokeLinecap="round"/></svg>
+                                </div>
+                              ) : current ? (
+                                <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#2B57F0", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(43,87,240,.35)" }}>
+                                  <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", lineHeight: 1 }}>{tier.position}</span>
+                                </div>
+                              ) : (
+                                <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#f0f0ef", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="#a1a1aa" strokeWidth="2"/><path d="M7 11V7a5 5 0 0110 0v4" stroke="#a1a1aa" strokeWidth="2" strokeLinecap="round"/></svg>
+                                </div>
+                              )}
+                              <span style={{ fontSize: 11, fontWeight: current ? 700 : 500, color: done ? "#71717a" : current ? "#0d0d0d" : "#a1a1aa", whiteSpace: "nowrap" }}>
+                                {formatCurrency(displayAmount)}
+                              </span>
+                              <div style={{
+                                width: "100%", height: 72, borderRadius: 10,
+                                background: done ? "#0d0d0d" : current ? "linear-gradient(180deg,#5B86F7 0%,#2B57F0 100%)" : "transparent",
+                                border: locked ? "1.5px dashed #d4d0c8" : "none",
+                              }} />
+                              <span style={{ fontSize: 11, fontWeight: 600, color: current ? "#2B57F0" : "#a1a1aa" }}>
+                                {tierOrdinal(tier.position)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {paidCount < tiers.length && tiers[paidCount] && (
+                        <div style={{ background: "#f4f3f0", borderRadius: 12, padding: "10px 14px", textAlign: "center" }}>
+                          <p style={{ fontSize: 12, color: "#52525b" }}>
+                            Tu siguiente premio es de{" "}
+                            <strong style={{ color: "#0d0d0d" }}>{formatCurrency(tiers[paidCount].amount)}</strong>
+                          </p>
+                        </div>
+                      )}
+                      {paidCount >= tiers.length && (
+                        <div style={{ background: "#f0fdf4", borderRadius: 12, padding: "10px 14px", textAlign: "center" }}>
+                          <p style={{ fontSize: 12, color: "#166534", fontWeight: 600 }}>
+                            {settings.afterLastTier === "cycle" ? `Los premios se repiten — siguiente: ${formatCurrency(tiers[0]?.amount)}` : "¡Completaste todos los niveles!"}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Tu burbuja */}
                   <div data-tour="burbuja" style={{ background: "#fff", border: "1px solid rgba(0,0,0,.06)", borderRadius: 20, padding: "20px 19px" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
@@ -828,48 +900,6 @@ export default function ClientPortalPage() {
                     </div>
                   </div>
 
-                  {/* Tier ladder */}
-                  {tiers.length > 0 && (
-                    <div style={{ background: "#fff", border: "1px solid rgba(0,0,0,.06)", borderRadius: 20, overflow: "hidden" }}>
-                      <div style={{ padding: "16px 19px", borderBottom: "1px solid rgba(0,0,0,.05)" }}>
-                        <h2 style={{ fontSize: 13, fontWeight: 700, color: "#0d0d0d" }}>Premios Seguro de Vida y PPR</h2>
-                      </div>
-                      {tiers.map((tier) => {
-                        const matchingReferral = referrals.find((r) => r.status === "converted" && r.tierPosition === tier.position);
-                        const done = paidCount >= tier.position;
-                        const current = paidCount + 1 === tier.position;
-                        const bonusHere = !matchingReferral && bonusReady && current && tier.position === 1;
-                        const displayAmount = matchingReferral ? matchingReferral.rewardAmount : tier.amount;
-                        const hasBonus = matchingReferral ? matchingReferral.rewardAmount > tier.amount : false;
-                        const showBonusBadge = bonusHere || hasBonus;
-                        return (
-                          <div key={tier.position} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: current ? "#0d0d0d" : "transparent", borderBottom: "1px solid rgba(0,0,0,.04)" }}>
-                            <div style={{ width: 27, height: 27, borderRadius: "50%", background: done ? "#f0fdf4" : current ? "rgba(255,255,255,.1)" : "#f4f4f5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                              {done
-                                ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M5 12L10 17L19 8" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"/></svg>
-                                : <span style={{ fontSize: 11, fontWeight: 700, color: current ? "#fff" : "#a1a1aa" }}>{tier.position}</span>
-                              }
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ fontSize: 13, fontWeight: 500, color: current ? "#fff" : done ? "#a1a1aa" : "#0d0d0d", textDecoration: done ? "line-through" : "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                {tier.label || `Referido #${tier.position}`}
-                              </p>
-                              {showBonusBadge && <p style={{ fontSize: 10, color: "#fbbf24", fontWeight: 700 }}>★ Premio especial</p>}
-                            </div>
-                            <span style={{ fontSize: 13, fontWeight: 700, color: current ? "#fff" : done ? "#16a34a" : "#0d0d0d", flexShrink: 0 }}>
-                              {showBonusBadge && (<span style={{ color: current ? "rgba(255,255,255,.3)" : "#a1a1aa", textDecoration: "line-through", marginRight: 5 }}>{formatCurrency(tier.amount)}</span>)}
-                              {formatCurrency(bonusHere ? bonusAmount : displayAmount)}
-                            </span>
-                          </div>
-                        );
-                      })}
-                      {settings.afterLastTier === "cycle" && (
-                        <p style={{ fontSize: 11, color: "#a1a1aa", textAlign: "center", padding: "10px 0", borderTop: "1px solid rgba(0,0,0,.05)" }}>
-                          Los premios se repiten después del nivel {tiers.length}
-                        </p>
-                      )}
-                    </div>
-                  )}
                 </div>
               )}
 
