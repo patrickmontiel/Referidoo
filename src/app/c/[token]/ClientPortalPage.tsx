@@ -6,6 +6,12 @@ import { Hanken_Grotesk } from "next/font/google";
 import { formatCurrency, formatDate, getStatusLabel, getRewardStatusLabel } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
 
+const DEFAULT_TIERS = [
+  { position: 1, amount: 1500, label: "1er referido convertido" },
+  { position: 2, amount: 1500, label: "2do referido convertido" },
+  { position: 3, amount: 3500, label: "¡Bono especial!" },
+];
+
 function tierOrdinal(n: number) {
   const map: Record<number, string> = { 1: "1ro", 2: "2do", 3: "3ro", 4: "4to", 5: "5to", 6: "6to", 7: "7mo", 8: "8vo" };
   return map[n] ?? `${n}°`;
@@ -270,7 +276,8 @@ export default function ClientPortalPage() {
     );
   }
 
-  const { client, advisor, tiers, settings, referrals, stats, bubbleClaims } = data;
+  const { client, advisor, tiers: rawTiers, settings, referrals, stats, bubbleClaims } = data;
+  const tiers = rawTiers.length > 0 ? rawTiers : DEFAULT_TIERS;
   const pendingBubbleClaim = bubbleClaims.find((c) => c.status === "pending");
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
 
@@ -729,8 +736,7 @@ export default function ClientPortalPage() {
                   </div>
 
                   {/* Escalera de premios */}
-                  {tiers.length > 0 && (
-                    <div style={{ background: "#fff", border: "1px solid rgba(0,0,0,.06)", borderRadius: 20, padding: "18px 19px" }}>
+                  <div style={{ background: "#fff", border: "1px solid rgba(0,0,0,.06)", borderRadius: 20, padding: "18px 19px" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
                         <h2 style={{ fontSize: 14, fontWeight: 700, color: "#0d0d0d" }}>Escalera de premios</h2>
                         <span style={{ fontSize: 11, fontWeight: 600, color: "#52525b", background: "#f0f0ef", borderRadius: 20, padding: "4px 10px" }}>
@@ -792,8 +798,7 @@ export default function ClientPortalPage() {
                           </p>
                         </div>
                       )}
-                    </div>
-                  )}
+                  </div>
 
                   {/* Tu burbuja */}
                   <div data-tour="burbuja" style={{ background: "#fff", border: "1px solid rgba(0,0,0,.06)", borderRadius: 20, padding: "20px 19px" }}>
