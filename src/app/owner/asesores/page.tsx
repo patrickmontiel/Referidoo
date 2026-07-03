@@ -26,6 +26,8 @@ export default function OwnerAsesoresPage() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [resentId, setResentId] = useState<string | null>(null);
+  const [quickEmail, setQuickEmail] = useState("");
+  const [quickStatus, setQuickStatus] = useState<"idle" | "sending" | "ok" | "error" | "baja">("idle");
 
   async function resendVerification(advisorId: string) {
     setResendingId(advisorId);
@@ -38,6 +40,25 @@ export default function OwnerAsesoresPage() {
     if (res.ok) {
       setResentId(advisorId);
       setTimeout(() => setResentId(null), 4000);
+    }
+  }
+
+  async function quickResend() {
+    if (!quickEmail.trim()) return;
+    setQuickStatus("sending");
+    const res = await fetch("/api/owner/resend-verification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: quickEmail.trim() }),
+    });
+    if (res.ok) {
+      setQuickStatus("ok");
+      setQuickEmail("");
+      setTimeout(() => setQuickStatus("idle"), 5000);
+    } else {
+      const d = await res.json();
+      setQuickStatus(d.error?.includes("baja") ? "baja" : "error");
+      setTimeout(() => setQuickStatus("idle"), 5000);
     }
   }
 
@@ -220,6 +241,31 @@ export default function OwnerAsesoresPage() {
   return (
     <div>
       <h1 className="text-xl font-bold mb-5 text-brand-ink">Asesores</h1>
+
+      {/* Reenvío rápido de verificación por email */}
+      <div className="bg-white rounded-2xl border border-brand-border-1 p-4 mb-6 flex flex-col gap-3">
+        <p className="text-xs text-brand-gray-4">Reenviar correo de verificación</p>
+        <div className="flex gap-2">
+          <input
+            type="email"
+            placeholder="correo@ejemplo.com"
+            value={quickEmail}
+            onChange={(e) => setQuickEmail(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && quickResend()}
+            className="flex-1 text-sm border border-brand-border-1 rounded-xl px-3 py-2 outline-none focus:border-brand-ink"
+          />
+          <button
+            onClick={quickResend}
+            disabled={quickStatus === "sending" || !quickEmail.trim()}
+            className="text-xs font-medium px-4 py-2 rounded-full bg-brand-ink text-white hover:opacity-80 disabled:opacity-40 transition"
+          >
+            {quickStatus === "sending" ? "Enviando..." : "Enviar"}
+          </button>
+        </div>
+        {quickStatus === "ok"   && <p className="text-xs text-green-600">✓ Correo enviado correctamente.</p>}
+        {quickStatus === "baja" && <p className="text-xs text-amber-600">Cuenta dada de baja — el asesor debe registrarse de nuevo en /registro.</p>}
+        {quickStatus === "error" && <p className="text-xs text-red-500">No se encontró el correo o ya está verificado.</p>}
+      </div>
 
       {advisors === null && <p className="text-sm text-brand-gray-4">Cargando...</p>}
 
