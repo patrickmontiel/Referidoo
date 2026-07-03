@@ -427,6 +427,10 @@ export default function ClientPortalPage() {
           40%       { transform: scale(1.04); box-shadow: 0 6px 22px rgba(43,87,240,.5); }
           70%       { transform: scale(.98); }
         }
+        @keyframes stepGlow {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(43,87,240,.55); }
+          50%       { box-shadow: 0 0 0 9px rgba(43,87,240,0); }
+        }
       `}</style>
 
       {/* ── #screen: full-height frame, overlay-safe ── */}
@@ -736,68 +740,76 @@ export default function ClientPortalPage() {
                   </div>
 
                   {/* Escalera de premios */}
-                  <div style={{ background: "#fff", border: "1px solid rgba(0,0,0,.06)", borderRadius: 20, padding: "18px 19px" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
-                        <h2 style={{ fontSize: 14, fontWeight: 700, color: "#0d0d0d" }}>Escalera de premios</h2>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: "#52525b", background: "#f0f0ef", borderRadius: 20, padding: "4px 10px" }}>
+                  <div style={{ background: "#fff", border: "1px solid rgba(0,0,0,.06)", borderRadius: 24, padding: 22, position: "relative", overflow: "hidden" }}>
+                    {/* Glow decorativo */}
+                    <div style={{ position: "absolute", bottom: -70, left: -50, width: 210, height: 210, borderRadius: "50%", background: "radial-gradient(circle, rgba(43,87,240,.12), transparent 70%)", pointerEvents: "none" }} />
+                    <div style={{ position: "relative" }}>
+                      {/* Header */}
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: 16, color: "#0d0d0d" }}>Escalera de premios</div>
+                          <div style={{ fontWeight: 500, fontSize: 12.5, color: "#a1a1aa", marginTop: 3 }}>Vida y PPR · sube con cada contratación</div>
+                        </div>
+                        <span style={{ background: "#f4f4f5", borderRadius: 999, padding: "6px 12px", fontWeight: 600, fontSize: 11.5, color: "#52525b", whiteSpace: "nowrap", flexShrink: 0 }}>
                           {paidCount >= tiers.length ? "Completada" : `Nivel ${Math.min(paidCount + 1, tiers.length)}`}
                         </span>
                       </div>
-                      <p style={{ fontSize: 11, color: "#a1a1aa", marginBottom: 18 }}>Vida y PPR · sube con cada contratación</p>
-
-                      <div style={{ display: "flex", gap: 6, alignItems: "flex-end", justifyContent: "center", marginBottom: 14 }}>
+                      {/* Escalones */}
+                      <div style={{ display: "flex", alignItems: "flex-end", gap: 10, marginTop: 26, padding: "0 2px" }}>
                         {tiers.map((tier) => {
                           const done    = paidCount >= tier.position;
                           const current = paidCount < tiers.length && paidCount + 1 === tier.position;
                           const locked  = !done && !current;
                           const matchingReferral = referrals.find((r) => r.status === "converted" && r.tierPosition === tier.position);
                           const displayAmount = matchingReferral ? matchingReferral.rewardAmount : tier.amount;
+                          const barH = 64 + (tier.position - 1) * 24;
                           return (
-                            <div key={tier.position} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
+                            <div key={tier.position} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 9 }}>
                               {done ? (
-                                <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#0d0d0d", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M5 12L10 17L19 8" stroke="#fff" strokeWidth="2.8" strokeLinecap="round"/></svg>
+                                <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#0d0d0d", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M5 12L10 17L19 8" stroke="#fff" strokeWidth="2.8" strokeLinecap="round"/></svg>
                                 </div>
                               ) : current ? (
-                                <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#2B57F0", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(43,87,240,.35)" }}>
-                                  <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", lineHeight: 1 }}>{tier.position}</span>
+                                <div style={{ width: 30, height: 30, borderRadius: "50%", background: "#2B57F0", display: "flex", alignItems: "center", justifyContent: "center", animation: "stepGlow 1.8s ease-out infinite", flexShrink: 0 }}>
+                                  <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", lineHeight: 1 }}>{tier.position}</span>
                                 </div>
                               ) : (
-                                <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#f0f0ef", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="#a1a1aa" strokeWidth="2"/><path d="M7 11V7a5 5 0 0110 0v4" stroke="#a1a1aa" strokeWidth="2" strokeLinecap="round"/></svg>
+                                <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#f4f4f5", border: "1px solid rgba(0,0,0,.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, flexShrink: 0 }}>
+                                  🔒
                                 </div>
                               )}
-                              <span style={{ fontSize: 11, fontWeight: current ? 700 : 500, color: done ? "#71717a" : current ? "#0d0d0d" : "#a1a1aa", whiteSpace: "nowrap" }}>
+                              <span style={{ fontWeight: 800, fontSize: current ? 19 : 16, color: locked ? "#c4c4cc" : "#0d0d0d", whiteSpace: "nowrap" }}>
                                 {formatCurrency(displayAmount)}
                               </span>
                               <div style={{
-                                width: "100%", height: 72, borderRadius: 10,
-                                background: done ? "#0d0d0d" : current ? "linear-gradient(180deg,#5B86F7 0%,#2B57F0 100%)" : "transparent",
-                                border: locked ? "1.5px dashed #d4d0c8" : "none",
+                                width: "100%",
+                                height: barH,
+                                borderRadius: "10px 10px 4px 4px",
+                                background: done ? "#0d0d0d" : current ? "linear-gradient(180deg,#5B86F7,#2B57F0)" : "#f4f4f5",
+                                border: locked ? "1px dashed rgba(0,0,0,.14)" : "none",
+                                boxShadow: current ? "0 10px 24px -8px rgba(43,87,240,.5)" : "none",
                               }} />
-                              <span style={{ fontSize: 11, fontWeight: 600, color: current ? "#2B57F0" : "#a1a1aa" }}>
+                              <span style={{ fontWeight: 600, fontSize: 11, color: current ? "#2B57F0" : "#a1a1aa" }}>
                                 {tierOrdinal(tier.position)}
                               </span>
                             </div>
                           );
                         })}
                       </div>
-
+                      {/* Footer */}
                       {paidCount < tiers.length && tiers[paidCount] && (
-                        <div style={{ background: "#f4f3f0", borderRadius: 12, padding: "10px 14px", textAlign: "center" }}>
-                          <p style={{ fontSize: 12, color: "#52525b" }}>
-                            Tu siguiente premio es de{" "}
-                            <strong style={{ color: "#0d0d0d" }}>{formatCurrency(tiers[paidCount].amount)}</strong>
-                          </p>
+                        <div style={{ fontWeight: 500, fontSize: 12.5, color: "#71717a", marginTop: 18, lineHeight: 1.5, textAlign: "center" }}>
+                          Tu siguiente premio es de <b style={{ color: "#0d0d0d" }}>{formatCurrency(tiers[paidCount].amount)}</b>
                         </div>
                       )}
                       {paidCount >= tiers.length && (
-                        <div style={{ background: "#f0fdf4", borderRadius: 12, padding: "10px 14px", textAlign: "center" }}>
-                          <p style={{ fontSize: 12, color: "#166534", fontWeight: 600 }}>
-                            {settings.afterLastTier === "cycle" ? `Los premios se repiten — siguiente: ${formatCurrency(tiers[0]?.amount)}` : "¡Completaste todos los niveles!"}
-                          </p>
+                        <div style={{ fontWeight: 500, fontSize: 12.5, color: "#71717a", marginTop: 18, lineHeight: 1.5, textAlign: "center" }}>
+                          {settings.afterLastTier === "cycle"
+                            ? <>Los premios se repiten — siguiente: <b style={{ color: "#0d0d0d" }}>{formatCurrency(tiers[0]?.amount)}</b></>
+                            : <b style={{ color: "#166534" }}>¡Completaste todos los niveles!</b>}
                         </div>
                       )}
+                    </div>
                   </div>
 
                   {/* Tu burbuja */}
