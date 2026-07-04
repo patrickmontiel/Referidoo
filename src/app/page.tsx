@@ -167,7 +167,7 @@ export default async function Home() {
               {[
                 { label: "1er referido convertido", amount: "$1,500" },
                 { label: "2do referido convertido", amount: "$1,500" },
-                { label: "3er referido convertido", amount: "$2,500" },
+                { label: "3er referido convertido", amount: "$3,500" },
               ].map((step, i) => (
                 <div key={step.label} className="sr-item flex items-center justify-between bg-white rounded-[12px] border border-[#ECEDEF] px-4 py-2.5">
                   <span className="text-sm text-[#3F4651] flex items-center gap-2">

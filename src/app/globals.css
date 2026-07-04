@@ -196,6 +196,24 @@ body {
 .sr-armed.sr-shown .sr-bubble:nth-child(3) { animation-delay: 420ms; }
 .sr-armed.sr-shown .sr-bubble:nth-child(4) { animation-delay: 500ms; }
 
+/* Burbuja de /como-funciona: el agua sube al revelar. La altura vive aquí
+   (no inline) para que .sr-armed pueda arrancar en 0 solo con JS activo. */
+.bubble-fill { height: 70%; }
+.sr-armed .bubble-fill { height: 0%; }
+.sr-armed.sr-shown .bubble-fill {
+  height: 70%;
+  transition: height 900ms cubic-bezier(0.22, 1, 0.36, 1) 250ms;
+}
+
+/* Pill "Reclamar" del demo del portal */
+@keyframes claimPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, .45); }
+  50%      { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); }
+}
+.claim-pulse {
+  animation: claimPulse 2s ease-out infinite;
+}
+
 /* Hero demo: cambio de badge de estatus */
 @keyframes badgeSwap {
   from { opacity: 0; transform: scale(0.7); }
@@ -275,6 +293,7 @@ body {
   .countdown-urgent,
   .demo-badge,
   .chart-ping,
+  .claim-pulse,
   .animate-spin,
   .animate-pulse {
     animation: none;
@@ -284,6 +303,9 @@ body {
   .sr-armed .sr-bubble {
     opacity: 1;
     animation: none;
+  }
+  .sr-armed .bubble-fill {
+    height: 70%;
   }
 }
 
