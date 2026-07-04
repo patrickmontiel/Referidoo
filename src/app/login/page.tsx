@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Hanken_Grotesk } from "next/font/google";
 import { Logo } from "@/components/Logo";
 
@@ -58,7 +59,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-10 text-center flex flex-col items-center">
           <div className="mb-4">
-            <Logo size="md" />
+            <Link href="/" aria-label="Ir al inicio">
+              <Logo size="md" />
+            </Link>
           </div>
           <p className="text-sm text-brand-gray-4">Panel del asesor</p>
         </div>

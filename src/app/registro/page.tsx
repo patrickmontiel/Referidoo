@@ -48,7 +48,9 @@ export default function RegistroPage() {
       <div className="w-full max-w-sm">
         <div className="mb-10 text-center flex flex-col items-center">
           <div className="mb-4">
-            <Logo size="md" />
+            <Link href="/" aria-label="Ir al inicio">
+              <Logo size="md" />
+            </Link>
           </div>
           <p className="text-sm text-brand-gray-4">Crea tu cuenta de asesor</p>
         </div>
