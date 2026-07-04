@@ -7,6 +7,8 @@ import { LandingHeader } from "@/components/LandingHeader";
 import { LandingFooter } from "@/components/LandingFooter";
 import { FaqAccordion } from "@/components/FaqAccordion";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { HeroDemo } from "@/components/landing/HeroDemo";
+import { ReferralMath } from "@/components/landing/ReferralMath";
 
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
@@ -121,79 +123,7 @@ export default async function Home() {
           <p className="text-xs text-[#8A8F98] mt-4">Plan gratis — clientes ilimitados. Sin tarjeta para empezar.</p>
         </div>
 
-        <div
-          className="landing-cta bg-[#F4F5F7] rounded-[22px] border border-[#EAEBED] p-5 select-none"
-          style={{ boxShadow: "0 12px 48px rgba(15,23,42,.12)" }}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="font-bold text-[15px] text-[#0B0B0C] leading-tight">Hola, Eduardo</p>
-              <p className="text-xs text-[#8A8F98]">Resumen · Julio 2026</p>
-            </div>
-            <span className="text-[11px] font-bold text-[#8A8F98] uppercase tracking-[0.08em]">Ejemplo</span>
-          </div>
-
-          {/* 4 stat cards in a row */}
-          <div className="grid grid-cols-4 gap-2 mb-4">
-            {[
-              { value: "5", label: "Clientes" },
-              { value: "12", label: "Referidos" },
-              { value: "4", label: "Convertidos" },
-              { value: "3", label: "Pendientes" },
-            ].map((s) => (
-              <div key={s.label} className="bg-white rounded-[14px] p-3">
-                <p className="text-xl font-bold text-[#0B0B0C] leading-none">{s.value}</p>
-                <p className="text-[10px] text-[#6B727D] mt-1 leading-tight">{s.label}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Main: referrals list + right column */}
-          <div className="grid grid-cols-[1fr_140px] gap-2">
-            {/* Referrals list */}
-            <div className="bg-white rounded-[14px] overflow-hidden">
-              <div className="px-3 py-2.5 border-b border-[#F4F5F7]">
-                <p className="text-[11px] font-bold text-[#0B0B0C]">Referidos recientes</p>
-              </div>
-              {[
-                { name: "María López", sub: "Vida · Alejandro R.", badge: "Contactado", blue: true },
-                { name: "Carlos Pérez", sub: "PPR · Ana G.", badge: "Convertido", green: true },
-                { name: "Rosa Flores", sub: "por Javier M.", badge: "Nuevo", gray: true },
-              ].map((r) => (
-                <div key={r.name} className="flex items-center gap-2.5 px-3 py-2 border-b border-[#F4F5F7] last:border-0">
-                  <div className="w-7 h-7 rounded-full bg-[#F4F5F7] flex items-center justify-center text-[9px] font-bold text-[#3F4651] flex-shrink-0">
-                    {r.name.split(" ").map((n) => n[0]).join("")}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-semibold text-[#0B0B0C] truncate">{r.name}</p>
-                    <p className="text-[9px] text-[#8A8F98] truncate">{r.sub}</p>
-                  </div>
-                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ${r.green ? "bg-green-50 text-green-700" : r.blue ? "bg-[#EBF2FF] text-[#2563EB]" : "bg-[#F4F5F7] text-[#6B727D]"}`}>
-                    {r.badge}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Right column: link card + earnings */}
-            <div className="flex flex-col gap-2">
-              <div className="bg-[#2563EB] rounded-[14px] p-3 flex-1">
-                <p className="text-[9px] font-bold text-white/60 uppercase tracking-[0.06em] mb-1">Tu link</p>
-                <p className="text-[10px] font-bold text-white leading-tight mb-2.5">referidoo.com/c/eduardo</p>
-                <div className="bg-white/20 rounded-full px-2 py-1 text-[9px] font-semibold text-white text-center">
-                  Copiar
-                </div>
-              </div>
-              <div className="bg-[#0B0B0C] rounded-[14px] p-3">
-                <p className="text-[9px] text-[#9098A2] mb-1">Premios pagados</p>
-                <p className="text-base font-bold text-white leading-none">$4,500</p>
-                <p className="text-[9px] text-[#9098A2] mt-2 mb-0.5">Por pagar</p>
-                <p className="text-sm font-bold text-white leading-none">$1,500</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <HeroDemo />
       </section>
 
       {/* Feature highlight */}
@@ -238,7 +168,7 @@ export default async function Home() {
                 { label: "2do referido convertido", amount: "$1,500" },
                 { label: "3er referido convertido", amount: "$2,500" },
               ].map((step, i) => (
-                <div key={step.label} className="flex items-center justify-between bg-white rounded-[12px] border border-[#ECEDEF] px-4 py-2.5">
+                <div key={step.label} className="sr-item flex items-center justify-between bg-white rounded-[12px] border border-[#ECEDEF] px-4 py-2.5">
                   <span className="text-sm text-[#3F4651] flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full bg-[#0B0B0C] text-white text-xs flex items-center justify-center flex-shrink-0">{i + 1}</span>
                     {step.label}
@@ -275,18 +205,18 @@ export default async function Home() {
               {/* Circles */}
               <div className="flex items-end gap-3 mt-3">
                 {/* GMM — largest, dark blue */}
-                <div className="flex flex-col items-center justify-center rounded-full bg-[#1D4ED8] text-white flex-shrink-0" style={{ width: 68, height: 68 }}>
+                <div className="sr-bubble flex flex-col items-center justify-center rounded-full bg-[#1D4ED8] text-white flex-shrink-0" style={{ width: 68, height: 68 }}>
                   <span className="text-[11px] font-bold leading-tight">GMM</span>
                   <span className="text-[10px] font-semibold text-white/80">+300</span>
                 </div>
                 {/* Auto — medium, lighter blue */}
-                <div className="flex flex-col items-center justify-center rounded-full bg-[#3B82F6] text-white flex-shrink-0" style={{ width: 50, height: 50 }}>
+                <div className="sr-bubble flex flex-col items-center justify-center rounded-full bg-[#3B82F6] text-white flex-shrink-0" style={{ width: 50, height: 50 }}>
                   <span className="text-[10px] font-bold leading-tight">Auto</span>
                   <span className="text-[9px] font-semibold text-white/80">+150</span>
                 </div>
                 {/* Empty slots */}
-                <div className="rounded-full border-2 border-dashed border-[#DADCE0] flex-shrink-0" style={{ width: 40, height: 40 }} />
-                <div className="rounded-full border-2 border-dashed border-[#DADCE0] flex-shrink-0" style={{ width: 40, height: 40 }} />
+                <div className="sr-bubble rounded-full border-2 border-dashed border-[#DADCE0] flex-shrink-0" style={{ width: 40, height: 40 }} />
+                <div className="sr-bubble rounded-full border-2 border-dashed border-[#DADCE0] flex-shrink-0" style={{ width: 40, height: 40 }} />
               </div>
             </div>
 
@@ -340,7 +270,7 @@ export default async function Home() {
             <p className="text-xs font-bold text-[#8A8F98] uppercase tracking-[0.08em] mb-4">Antes</p>
             <div className="space-y-4">
               {COMPARISON.map((row, i) => (
-                <div key={i} className={`flex items-start gap-3 ${i > 0 ? "pt-4 border-t border-[#EAEBED]" : ""}`}>
+                <div key={i} className={`sr-item flex items-start gap-3 ${i > 0 ? "pt-4 border-t border-[#EAEBED]" : ""}`}>
                   <span className="w-5 h-5 rounded-full bg-[#F0DDE2] text-[#C2566B] flex items-center justify-center flex-shrink-0 mt-0.5">
                     <XIcon />
                   </span>
@@ -360,7 +290,7 @@ export default async function Home() {
               </div>
               <div className="space-y-4">
                 {COMPARISON.map((row, i) => (
-                  <div key={i} className={`flex items-start gap-3 ${i > 0 ? "pt-4 border-t border-[#EAEBED]" : ""}`}>
+                  <div key={i} className={`sr-item flex items-start gap-3 ${i > 0 ? "pt-4 border-t border-[#EAEBED]" : ""}`}>
                     <span className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center flex-shrink-0 mt-0.5">
                       <CheckIcon />
                     </span>
@@ -376,6 +306,9 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* La matemática de referidos */}
+      <ReferralMath />
 
       {/* Seguridad y privacidad */}
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
@@ -401,7 +334,7 @@ export default async function Home() {
 
           {/* Freemium */}
           <ScrollReveal>
-            <div className="rounded-[20px] border border-[#ECEDEF] bg-[#F4F5F7] p-7 flex flex-col h-full">
+            <div className="rounded-[20px] border border-[#ECEDEF] bg-[#F4F5F7] p-7 flex flex-col h-full transition-transform duration-200 hover:-translate-y-0.5">
               <div className="flex-1">
                 <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-2">Freemium</p>
                 <p className="text-[42px] font-extrabold text-[#0B0B0C] leading-none mb-1">Gratis</p>
@@ -443,7 +376,7 @@ export default async function Home() {
 
           {/* Pro */}
           <ScrollReveal delayMs={60}>
-            <div className="relative rounded-[20px] border-2 border-[#2563EB] bg-white p-7 flex flex-col h-full">
+            <div className="relative rounded-[20px] border-2 border-[#2563EB] bg-white p-7 flex flex-col h-full transition-transform duration-200 hover:-translate-y-0.5">
               <div className="flex-1">
                 <p className="text-xs font-bold text-[#2563EB] uppercase tracking-[0.08em] mb-2">Pagado</p>
                 <p className="text-[42px] font-extrabold text-[#0B0B0C] leading-none mb-1">

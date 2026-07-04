@@ -42,7 +42,7 @@ export function ScrollReveal({
   return (
     <div
       ref={ref}
-      className={className}
+      className={`${className ?? ""}${armed ? " sr-armed" : ""}${shown ? " sr-shown" : ""}`}
       style={
         armed
           ? {
