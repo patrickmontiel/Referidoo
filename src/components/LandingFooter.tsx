@@ -24,7 +24,10 @@ export function LandingFooter() {
         </div>
       </div>
       <div className="max-w-[1180px] mx-auto px-8 py-6 border-t border-[#EFEFF1] text-xs text-[#8A8F98] text-center">
-        <p>© 2026 Referidoo. Todos los derechos reservados.</p>
+        <p>
+          © 2026 Referidoo — hecho en México para asesores de seguros.
+          Todos los derechos reservados.
+        </p>
       </div>
     </footer>
   );

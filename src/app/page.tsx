@@ -96,21 +96,21 @@ export default async function Home() {
 
       {/* Acceso anticipado */}
       <div className="bg-[#2563EB] text-white text-center text-xs font-medium" style={{ paddingTop: 11, paddingBottom: 11 }}>
-        Acceso anticipado — sé de los primeros asesores en usarlo
+        Acceso anticipado — entra antes que tu competencia
       </div>
 
       {/* Hero */}
       <section className="max-w-[1180px] mx-auto px-8 pt-16 pb-12 grid md:grid-cols-2 gap-16 items-center">
         <div className="landing-stagger">
           <h1 className="font-extrabold tracking-[-0.03em] leading-[1.04] mb-5 text-[#0B0B0C] text-balance" style={{ fontSize: "clamp(2.5rem, 5.5vw, 60px)" }}>
-            El sistema de referidos
+            Deja de perder referidos
             <br />
-            que no existía. Hasta ahora.
+            en WhatsApp y Excel.
           </h1>
           <p className="text-[#5A626E] leading-[1.6] mb-8 max-w-md" style={{ fontSize: 18 }}>
             Referidoo es para asesores de seguros y planes financieros en México.
-            Antes, cada referido vivía en un chat de WhatsApp o una fila de Excel.
-            Ahora se registra solo, se calcula solo, y se paga solo.
+            Cada recomendación de tus clientes se registra sola y su premio se
+            calcula solo — tú nada más haces lo tuyo: cerrar la venta.
           </p>
           <div className="flex items-center gap-3">
             <Link href="/registro" className="text-sm font-medium bg-[#0B0B0C] text-white px-5 py-3 rounded-full transition-[background-color,transform] duration-150 hover:bg-[#26262a] active:scale-[0.97]">
@@ -130,14 +130,15 @@ export default async function Home() {
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal className="max-w-[760px] mx-auto text-center">
           <h2 className={`${SECTION_HEADING} mb-4 text-balance`} style={SECTION_HEADING_SIZE}>
-            Cobra automático, sin perseguir pagos
+            Cero cuentas a mano. Cero premios olvidados.
           </h2>
           <p className="text-[#5A626E] leading-[1.6]" style={{ fontSize: 18 }}>
-            Tu suscripción se cobra sola, cada mes, vía Mercado Pago — sin que
-            tengas que acordarte. Y cuando un referido cierra, Referidoo ya sabe
-            cuánto te toca: escalera para Vida y PPR, premios burbuja para Auto
-            y Gastos Médicos Mayores. Configura tus reglas una vez; el sistema
-            hace las cuentas para siempre.
+            Cuando un referido cierra, Referidoo ya hizo la cuenta del premio que
+            le toca a tu cliente: escalera para Vida y PPR, premios burbuja para
+            Auto y Gastos Médicos Mayores. Tu cliente ve su premio sin
+            preguntarte, y tu suscripción se cobra sola cada mes vía Mercado
+            Pago. Configuras tus reglas una vez — y te olvidas de las cuentas
+            para siempre.
           </p>
         </ScrollReveal>
       </section>
@@ -327,7 +328,7 @@ export default async function Home() {
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal>
           <h2 className={`${SECTION_HEADING} mb-10 text-center text-balance`} style={SECTION_HEADING_SIZE}>
-            Simple y transparente
+            Un precio simple, sin letras chiquitas
           </h2>
         </ScrollReveal>
         <div className="grid md:grid-cols-2 gap-4 max-w-[760px] mx-auto">
@@ -413,7 +414,7 @@ export default async function Home() {
                 </div>
               </div>
               <Link href="/registro" className="block text-center text-sm font-semibold bg-[#0B0B0C] text-white px-4 py-3 rounded-full transition-[background-color,transform] duration-150 hover:bg-[#26262a] active:scale-[0.97]">
-                Empezar
+                Empezar con Pro
               </Link>
             </div>
           </ScrollReveal>

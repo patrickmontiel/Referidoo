@@ -9,8 +9,8 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Referidoo",
-  description: "Recomienda. Gana. Repite.",
+  title: "Referidoo — referidos que se registran solos",
+  description: "El sistema de referidos para asesores de seguros en México. Cada recomendación de tus clientes se registra sola y su premio se calcula solo — tú nada más cierras la venta.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
