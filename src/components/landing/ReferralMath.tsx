@@ -62,7 +62,7 @@ export function ReferralMath() {
 
   return (
     <section ref={ref} className="bg-[#0B0B0C]">
-      <div className="max-w-[1180px] mx-auto px-8 pt-20 pb-14 grid md:grid-cols-2 gap-14 items-center">
+      <div className="max-w-[1180px] mx-auto px-8 py-20 grid md:grid-cols-2 gap-14 items-center">
         <div>
           <h2
             className="font-extrabold tracking-[-0.028em] text-white mb-4 text-balance"
@@ -179,32 +179,6 @@ export function ReferralMath() {
         </div>
       </div>
 
-      {/* Datos de la industria */}
-      <div className="max-w-[1180px] mx-auto px-8 pb-20">
-        <div className="border-t border-white/10 pt-10 grid sm:grid-cols-3 gap-8">
-          <div>
-            <p className="font-extrabold text-white tabular-nums" style={{ fontSize: 34, lineHeight: 1 }}>92%</p>
-            <p className="text-[13px] text-[#9098A2] leading-snug mt-2">
-              de la gente confía más en la recomendación de un conocido que en
-              cualquier anuncio <span style={{ color: "rgba(255,255,255,.35)" }}>— Nielsen</span>
-            </p>
-          </div>
-          <div>
-            <p className="font-extrabold text-[#3B82F6] tabular-nums" style={{ fontSize: 34, lineHeight: 1 }}>26% vs 9%</p>
-            <p className="text-[13px] text-[#9098A2] leading-snug mt-2">
-              tasa de cierre de un referido contra una llamada en frío — el
-              canal #1 en ventas <span style={{ color: "rgba(255,255,255,.35)" }}>— Focus Digital 2025</span>
-            </p>
-          </div>
-          <div>
-            <p className="font-extrabold text-white tabular-nums" style={{ fontSize: 34, lineHeight: 1 }}>1–5%</p>
-            <p className="text-[13px] text-[#9098A2] leading-snug mt-2">
-              es lo que cierra un lead comprado de internet en seguros — pagas
-              por volumen, no por confianza <span style={{ color: "rgba(255,255,255,.35)" }}>— promedio del sector</span>
-            </p>
-          </div>
-        </div>
-      </div>
     </section>
   );
 }

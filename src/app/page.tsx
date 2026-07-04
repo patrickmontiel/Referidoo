@@ -9,6 +9,7 @@ import { FaqAccordion } from "@/components/FaqAccordion";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { HeroDemo } from "@/components/landing/HeroDemo";
 import { ReferralMath } from "@/components/landing/ReferralMath";
+import { ChannelData } from "@/components/landing/ChannelData";
 
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
@@ -125,6 +126,9 @@ export default async function Home() {
 
         <HeroDemo />
       </section>
+
+      {/* Por qué referidos — data de la industria */}
+      <ChannelData />
 
       {/* Feature highlight */}
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
@@ -324,6 +328,18 @@ export default async function Home() {
         </ScrollReveal>
       </section>
 
+      {/* Nota de acceso anticipado */}
+      <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
+        <ScrollReveal className="max-w-[640px] mx-auto text-center">
+          <p className="text-[20px] leading-[1.55] text-[#0B0B0C] font-medium mb-5 text-balance">
+            Referidoo está en acceso anticipado. Lo estamos construyendo mano a
+            mano con asesores reales en México — cada función sale de una
+            necesidad de su semana, no de una junta de producto.
+          </p>
+          <p className="text-sm text-[#8A8F98]">Patrick — fundador de Referidoo</p>
+        </ScrollReveal>
+      </section>
+
       {/* Pricing */}
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal>
@@ -420,6 +436,19 @@ export default async function Home() {
           </ScrollReveal>
 
         </div>
+      </section>
+
+      {/* CTA final */}
+      <section className="max-w-[760px] mx-auto px-8 py-16 border-t border-[#EFEFF1] text-center">
+        <ScrollReveal>
+          <h2 className={`${SECTION_HEADING} mb-6 text-balance`} style={SECTION_HEADING_SIZE}>
+            Pruébalo gratis con tu propia cartera
+          </h2>
+          <Link href="/registro" className="inline-block text-sm font-medium bg-[#0B0B0C] text-white px-6 py-3.5 rounded-full transition-[background-color,transform] duration-150 hover:bg-[#26262a] active:scale-[0.97]">
+            Crear cuenta gratis
+          </Link>
+          <p className="text-xs text-[#8A8F98] mt-4">Plan gratis — clientes ilimitados. Sin tarjeta para empezar.</p>
+        </ScrollReveal>
       </section>
 
       <LandingFooter />
