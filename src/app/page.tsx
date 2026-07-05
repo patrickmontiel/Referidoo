@@ -139,14 +139,14 @@ export default async function Home() {
       <section className="max-w-[1180px] mx-auto px-8 pt-16 pb-12 grid md:grid-cols-2 gap-16 items-center">
         <div className="landing-stagger">
           <h1 className="font-extrabold tracking-[-0.03em] leading-[1.04] mb-5 text-[#0B0B0C] text-balance" style={{ fontSize: "clamp(2.5rem, 5.5vw, 60px)" }}>
-            Deja de perder referidos
+            Tus clientes ya te recomiendan.
             <br />
-            en WhatsApp y Excel.
+            Tú no te estás enterando.
           </h1>
           <p className="text-[#5A626E] leading-[1.6] mb-8 max-w-md" style={{ fontSize: 18 }}>
+            Cada recomendación que hoy muere en un chat de WhatsApp puede
+            registrarse sola, calcular su premio sola y avisarte al momento.
             Referidoo es para asesores de seguros y planes financieros en México.
-            Cada recomendación de tus clientes se registra sola y su premio se
-            calcula solo — tú nada más haces lo tuyo: cerrar la venta.
           </p>
           <div className="flex items-center gap-3">
             <Link href="/registro" className="text-sm font-medium bg-[#0B0B0C] text-white px-5 py-3 rounded-full transition-[background-color,transform] duration-150 hover:bg-[#26262a] active:scale-[0.97]">

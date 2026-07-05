@@ -55,16 +55,16 @@ export default function OpengraphImage() {
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div
             style={{
-              fontSize: 82,
+              fontSize: 76,
               fontWeight: 700,
               color: "#0B0B0C",
               letterSpacing: "-0.03em",
-              lineHeight: 1.06,
-              maxWidth: 880,
+              lineHeight: 1.08,
+              maxWidth: 900,
               display: "flex",
             }}
           >
-            Deja de perder referidos en WhatsApp y Excel.
+            Tus clientes ya te recomiendan. Tú no te estás enterando.
           </div>
           <div
             style={{
@@ -76,7 +76,7 @@ export default function OpengraphImage() {
               display: "flex",
             }}
           >
-            Cada recomendación de tus clientes se registra sola y su premio se calcula solo.
+            Cada recomendación se registra sola y su premio se calcula solo.
           </div>
         </div>
 
