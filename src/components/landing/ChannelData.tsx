@@ -51,7 +51,7 @@ export function ChannelData() {
   }, []);
 
   return (
-    <section ref={ref} className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
+    <section ref={ref} id="por-que-referidos" className="scroll-mt-24 max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
       <div className="text-center mb-10">
         <h2
           className="font-extrabold tracking-[-0.028em] text-[#0B0B0C] mb-4 max-w-2xl mx-auto text-balance"
@@ -76,9 +76,9 @@ export function ChannelData() {
           </div>
           <div className="space-y-2.5">
             {CHANNELS.map((c, i) => (
-              <div key={c.label} className="grid items-center gap-3" style={{ gridTemplateColumns: "132px 1fr 52px" }}>
+              <div key={c.label} className="grid items-center gap-2 sm:gap-3 grid-cols-[96px_1fr_44px] sm:grid-cols-[132px_1fr_52px]">
                 <span
-                  className={`text-[13px] text-right leading-tight ${
+                  className={`text-[11px] sm:text-[13px] text-right leading-tight ${
                     c.highlight ? "font-bold text-[#0B0B0C]" : c.dim ? "text-[#9AA1AB]" : "text-[#5A626E]"
                   }`}
                 >
@@ -94,7 +94,7 @@ export function ChannelData() {
                     }}
                   />
                 </div>
-                <span className={`text-[13px] tabular-nums ${c.highlight ? "font-extrabold text-[#2563EB]" : c.dim ? "text-[#9AA1AB]" : "font-semibold text-[#0B0B0C]"}`}>
+                <span className={`text-[11px] sm:text-[13px] tabular-nums ${c.highlight ? "font-extrabold text-[#2563EB]" : c.dim ? "text-[#9AA1AB]" : "font-semibold text-[#0B0B0C]"}`}>
                   {c.display}
                 </span>
               </div>

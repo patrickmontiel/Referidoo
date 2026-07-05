@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Suspense } from "react";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const geist = Geist({
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" className={`${geist.variable} h-full`}>
       <body className="min-h-full bg-white text-gray-950 antialiased">
         <Suspense fallback={null}>{children}</Suspense>
+        <Analytics />
       </body>
     </html>
   );

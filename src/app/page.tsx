@@ -60,6 +60,29 @@ const COMPARISON = [
   { antes: "Tu cliente no tiene idea de cuánto le falta para su premio, ni cómo reclamarlo", despues: "Tu cliente ve su progreso y reclama su premio solo, desde su propio portal" },
 ];
 
+const SALES_FAQ = [
+  {
+    question: "¿Quién paga los premios a los clientes?",
+    answer: "Tú — y tú defines los montos desde tu panel. Referidoo los calcula, los trackea y le avisa a tu cliente; tú solo envías el pago. Piénsalo así: el premio es tu costo de adquisición, y sale mucho más barato que comprar leads que cierran al 1–5%.",
+  },
+  {
+    question: "¿Qué pasa cuando llego a 12 leads en el plan gratis?",
+    answer: "Los leads del 13 en adelante se guardan bloqueados — no se pierden. Subes a Pro cuando quieras y se desbloquean todos. Tus clientes y sus premios nunca se bloquean.",
+  },
+  {
+    question: "¿Mis clientes necesitan bajar una app?",
+    answer: "No. Su portal es un link que se abre en el navegador del celular — sin descargas, sin contraseñas. Lo comparten por WhatsApp como cualquier otro link.",
+  },
+  {
+    question: "¿Cómo gana dinero Referidoo?",
+    answer: "Dos cosas: la membresía Pro ($539/mes, opcional) y una comisión pequeña por contrato cerrado, con las tasas publicadas en la tabla de precios. Sin letras chiquitas.",
+  },
+  {
+    question: "¿Y si ya llevo mis referidos en Excel?",
+    answer: "Importas tu lista de clientes en minutos y arrancas con tu cartera actual. Lo que ya trackeabas a mano, el sistema lo sigue solo desde ahí.",
+  },
+];
+
 const SECURITY_FAQ = [
   {
     question: "¿Mis clientes tienen que dar información sensible?",
@@ -238,28 +261,78 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Features */}
+      {/* Features + portal del cliente */}
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal className="text-center">
           <h2 className={`${SECTION_HEADING} mb-10 max-w-xl mx-auto text-balance`} style={SECTION_HEADING_SIZE}>
             Todo lo que necesitas para no perder ni un referido
           </h2>
         </ScrollReveal>
-        <div>
-          {FEATURES.map((f, i) => (
-            <ScrollReveal key={f.title} delayMs={i * 60}>
-              <div
-                className={`grid gap-4 py-6 px-3 -mx-3 rounded-[12px] hover:bg-[#FAFAFB] transition-colors ${i > 0 ? "border-t border-[#EFEFF1]" : ""}`}
-                style={{ gridTemplateColumns: "64px 1fr" }}
-              >
-                <span className="text-[#2563EB] font-extrabold text-2xl">{String(i + 1).padStart(2, "0")}</span>
-                <div>
-                  <h3 className="font-bold text-[20px] text-[#0B0B0C] mb-1.5">{f.title}</h3>
-                  <p className="text-[#5A626E] leading-[1.6]" style={{ fontSize: 16 }}>{f.body}</p>
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            {FEATURES.map((f, i) => (
+              <ScrollReveal key={f.title} delayMs={i * 60}>
+                <div
+                  className={`grid gap-4 py-6 px-3 -mx-3 rounded-[12px] hover:bg-[#FAFAFB] transition-colors ${i > 0 ? "border-t border-[#EFEFF1]" : ""}`}
+                  style={{ gridTemplateColumns: "52px 1fr" }}
+                >
+                  <span className="text-[#2563EB] font-extrabold text-2xl">{String(i + 1).padStart(2, "0")}</span>
+                  <div>
+                    <h3 className="font-bold text-[20px] text-[#0B0B0C] mb-1.5">{f.title}</h3>
+                    <p className="text-[#5A626E] leading-[1.6]" style={{ fontSize: 16 }}>{f.body}</p>
+                  </div>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+
+          {/* Mockup del portal del cliente */}
+          <ScrollReveal delayMs={80}>
+            <div className="bg-[#F4F5F7] rounded-[22px] p-4 max-w-[320px] mx-auto select-none">
+              <div className="flex items-center justify-between px-1 mb-3">
+                <p className="text-[13px] font-bold text-[#0B0B0C]">Portal de Lupita</p>
+                <span className="text-[10px] font-bold text-[#8A8F98] uppercase tracking-[0.08em]">Ejemplo</span>
+              </div>
+              <div className="flex gap-1 bg-[#ECEDEF] rounded-xl p-1 mb-3">
+                <span className="flex-1 text-center py-1.5 text-xs font-medium rounded-lg bg-white text-[#0B0B0C] shadow-sm">Inicio</span>
+                <span className="flex-1 text-center py-1.5 text-xs font-medium text-[#8A8F98]">Mis Referidos</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                <div className="sr-item bg-[#0B0B0C] text-white rounded-2xl p-3">
+                  <p className="text-[11px] text-[#9098A2]">Ganado</p>
+                  <p className="text-lg font-bold">$4,500</p>
+                </div>
+                <div className="sr-item bg-white rounded-2xl border border-[#ECEDEF] p-3">
+                  <p className="text-[11px] text-[#8A8F98]">Por cobrar</p>
+                  <p className="text-lg font-bold text-[#0B0B0C]">$1,500</p>
                 </div>
               </div>
-            </ScrollReveal>
-          ))}
+              <div className="sr-item bg-white rounded-2xl border border-[#ECEDEF] p-3 mb-2 flex items-center gap-3">
+                <div className="relative w-11 h-11 rounded-full border-2 overflow-hidden bg-[#EEF3FE] flex-shrink-0" style={{ borderColor: "#2563EB" }}>
+                  <div className="bubble-fill absolute bottom-0 left-0 right-0" style={{ background: "linear-gradient(to top, #2563EB, #6EA1F5)" }} />
+                  <div className="bubble-shine absolute inset-0 rounded-full" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-[#0B0B0C]">Tu burbuja de premio</p>
+                  <p className="text-[11px] text-[#8A8F98]">350 / 500 pts — ya casi</p>
+                </div>
+              </div>
+              <div className="sr-item bg-white rounded-2xl border border-[#ECEDEF] p-3 mb-2 flex items-center justify-between">
+                <span className="text-xs font-medium text-[#0B0B0C]">Premio listo para reclamar</span>
+                <span className="claim-pulse text-[11px] font-bold text-white bg-[#2563EB] px-2 py-1 rounded-full">Reclamar</span>
+              </div>
+              <div className="sr-item bg-[#2563EB] rounded-2xl p-3 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.06em]">Tu link</p>
+                  <p className="text-[11px] font-bold text-white truncate">referidoo.com/r/lupita</p>
+                </div>
+                <span className="bg-white/20 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white flex-shrink-0">Compartir</span>
+              </div>
+            </div>
+            <p className="text-xs text-[#8A8F98] text-center mt-4 max-w-[320px] mx-auto leading-relaxed">
+              Esto es lo que ve tu cliente — sin apps ni contraseñas, solo un link.
+            </p>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -340,8 +413,18 @@ export default async function Home() {
         </ScrollReveal>
       </section>
 
-      {/* Pricing */}
+      {/* FAQ de objeciones */}
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
+        <ScrollReveal className="max-w-[680px] mx-auto">
+          <h2 className={`${SECTION_HEADING} mb-10 text-center text-balance`} style={SECTION_HEADING_SIZE}>
+            Las preguntas antes de empezar
+          </h2>
+          <FaqAccordion items={SALES_FAQ} />
+        </ScrollReveal>
+      </section>
+
+      {/* Pricing */}
+      <section id="precios" className="scroll-mt-24 max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal>
           <h2 className={`${SECTION_HEADING} mb-10 text-center text-balance`} style={SECTION_HEADING_SIZE}>
             Un precio simple, sin letras chiquitas

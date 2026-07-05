@@ -27,8 +27,14 @@ export function LandingHeader() {
           <Logo size="md" />
         </Link>
         <div className="hidden sm:flex items-center gap-3">
+          <Link href="/#por-que-referidos" className="hidden md:block text-sm text-[#5A626E] hover:text-[#0B0B0C] transition px-3 py-2">
+            Por qué referidos
+          </Link>
           <Link href="/como-funciona" className="text-sm text-[#5A626E] hover:text-[#0B0B0C] transition px-3 py-2">
             Cómo funciona
+          </Link>
+          <Link href="/#precios" className="hidden md:block text-sm text-[#5A626E] hover:text-[#0B0B0C] transition px-3 py-2">
+            Precios
           </Link>
           <Link href="/login" className="text-sm text-[#5A626E] hover:text-[#0B0B0C] transition px-3 py-2">
             Iniciar sesión
