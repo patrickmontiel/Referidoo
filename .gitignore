@@ -66,3 +66,6 @@ qa-dev-server.log
 .claude/
 .context/
 skills-lock.json
+
+# datos de prospección (padrón CNSF) — datos personales, nunca al repo
+/prospeccion/
