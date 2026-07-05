@@ -234,12 +234,12 @@ export default async function Home() {
             {/* Fondo + pts */}
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold text-[#8A8F98] uppercase tracking-[0.08em]">Fondo compartido</span>
-              <span className="text-sm font-bold text-[#0B0B0C]">450 / 500 pts</span>
+              <span className="text-sm font-bold text-[#0B0B0C]">350 / 500 pts</span>
             </div>
 
             {/* Bubble visualization — la burbuja líquida del portal */}
             <div className="bg-white rounded-[12px] border border-[#ECEDEF] p-4 mb-3 flex items-center gap-4" style={{ minHeight: 110 }}>
-              <LiquidBubble size={76} fill={90} className="sr-bubble flex-shrink-0" />
+              <LiquidBubble size={76} fill={70} className="sr-bubble flex-shrink-0" />
               <div className="flex-1 min-w-0 space-y-2">
                 <div className="sr-item flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2 text-[#3F4651]">

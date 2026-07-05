@@ -1,6 +1,7 @@
-/* Burbuja de premio con líquido animado — la misma que ve el cliente en su
-   portal. El nivel se controla con `fill` (%); las olas y el brillo vienen
-   de globals.css (.liquid-wave / .bubble-shine) y respetan reduced-motion. */
+/* Burbuja de premio con líquido animado — réplica exacta de la burbuja del
+   portal del cliente (mismos colores y capas de agua). Las olas wave-a/wave-b
+   se mecen en contrafase (globals.css) y respetan reduced-motion; la altura
+   del agua se controla con `fill` (%) y sube al revelar (.bubble-fill). */
 export function LiquidBubble({
   size = 64,
   fill = 70,
@@ -12,25 +13,34 @@ export function LiquidBubble({
 }) {
   return (
     <div
-      className={`relative rounded-full border-2 overflow-hidden bg-[#EEF3FE] ${className}`}
+      className={`relative rounded-full overflow-hidden ${className}`}
       style={{
         width: size,
         height: size,
-        borderColor: "#2563EB",
-        boxShadow: "0 3px 10px rgba(37,99,235,.25)",
-      }}
+        background: "#eef1f9",
+        ["--bubble-fill" as string]: `${fill}%`,
+      } as React.CSSProperties}
     >
-      <div
-        className="bubble-fill absolute bottom-0 left-0 right-0"
+      <span
+        className="bubble-fill wave-a absolute block"
         style={{
-          background: "linear-gradient(to top, #2563EB, #6EA1F5)",
-          ["--bubble-fill" as string]: `${fill}%`,
-        } as React.CSSProperties}
-      >
-        <span className="liquid-wave" />
-        <span className="liquid-wave liquid-wave-2" />
-      </div>
-      <div className="bubble-shine absolute inset-0 rounded-full" />
+          bottom: 0,
+          left: "-8%",
+          width: "116%",
+          background: "linear-gradient(180deg, #5B86F7 0%, #2B57F0 100%)",
+          borderRadius: "42% 38% 0 0",
+        }}
+      />
+      <span
+        className="bubble-fill wave-b absolute block"
+        style={{
+          bottom: 0,
+          left: "-8%",
+          width: "116%",
+          background: "linear-gradient(180deg, rgba(91,134,247,.5) 0%, rgba(43,87,240,.3) 100%)",
+          borderRadius: "38% 42% 0 0",
+        }}
+      />
     </div>
   );
 }

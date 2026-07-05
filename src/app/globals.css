@@ -206,27 +206,18 @@ body {
   transition: height 900ms cubic-bezier(0.22, 1, 0.36, 1) 250ms;
 }
 
-/* Olas: dos cuadrados redondeados girando centrados en la línea del agua.
-   Sus curvas cruzan la superficie y crean el vaivén del líquido. */
-.liquid-wave {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  width: 220%;
-  aspect-ratio: 1 / 1;
-  transform: translate(-50%, -50%);
-  border-radius: 44%;
-  background: #6EA1F5;
-  animation: liquidSpin 7s linear infinite;
-  pointer-events: none;
+/* Olas del agua: las dos capas (wave-a sólida, wave-b translúcida) se mecen
+   de lado a lado en contrafase mientras su cresta cambia de forma — el
+   líquido se esparce como en la burbuja del portal del cliente. */
+@keyframes waveSway {
+  0%, 100% { transform: translateX(-3%); border-radius: 46% 34% 0 0; }
+  50%      { transform: translateX(3%);  border-radius: 34% 46% 0 0; }
 }
-.liquid-wave-2 {
-  border-radius: 47%;
-  background: rgba(147, 197, 253, 0.5);
-  animation: liquidSpin 11s linear infinite reverse;
+.wave-a {
+  animation: waveSway 3.6s ease-in-out infinite;
 }
-@keyframes liquidSpin {
-  to { transform: translate(-50%, -50%) rotate(360deg); }
+.wave-b {
+  animation: waveSway 5.2s ease-in-out -1.8s infinite reverse;
 }
 
 /* Pill "Reclamar" del demo del portal */
@@ -318,7 +309,8 @@ body {
   .demo-badge,
   .chart-ping,
   .claim-pulse,
-  .liquid-wave,
+  .wave-a,
+  .wave-b,
   .animate-spin,
   .animate-pulse {
     animation: none;
