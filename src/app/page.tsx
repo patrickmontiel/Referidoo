@@ -11,6 +11,7 @@ import { HeroDemo } from "@/components/landing/HeroDemo";
 import { ReferralMath } from "@/components/landing/ReferralMath";
 import { ChannelData } from "@/components/landing/ChannelData";
 import { LiquidBubble } from "@/components/landing/LiquidBubble";
+import { BrandWord } from "@/components/landing/BrandWord";
 
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
@@ -187,7 +188,7 @@ export default async function Home() {
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal className="text-center mb-10">
           <h2 className={`${SECTION_HEADING} mb-4 max-w-xl mx-auto text-balance`} style={SECTION_HEADING_SIZE}>
-            Tú pones los montos. Referidoo hace las cuentas.
+            Tú pones los montos. <BrandWord /> hace las cuentas.
           </h2>
           <p className="text-[#5A626E] max-w-md mx-auto leading-[1.6] mb-3" style={{ fontSize: 18 }}>
             Dos formas de premiar, según el producto — tú decides los números,
@@ -278,7 +279,7 @@ export default async function Home() {
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal className="text-center">
           <h2 className={`${SECTION_HEADING} mb-10 max-w-xl mx-auto text-balance`} style={SECTION_HEADING_SIZE}>
-            Todo lo que necesitas para no perder ni un referido
+            Todo lo que necesitas para no perder ni un <BrandWord />
           </h2>
         </ScrollReveal>
         <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -350,7 +351,7 @@ export default async function Home() {
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal>
           <h2 className={`${SECTION_HEADING} mb-10 text-center text-balance`} style={SECTION_HEADING_SIZE}>
-            Antes vs. con Referidoo
+            Antes vs. con <BrandWord />
           </h2>
         </ScrollReveal>
         <div className="relative grid md:grid-cols-2 gap-6 max-w-[820px] mx-auto">
@@ -374,7 +375,10 @@ export default async function Home() {
               style={{ boxShadow: "0 10px 30px rgba(37,99,235,.12)" }}
             >
               <div className="text-xs font-bold text-[#2563EB] uppercase tracking-[0.08em] mb-4 flex items-center gap-1.5">
-                Con <Logo size="sm" />
+                Con{" "}
+                <span className="normal-case tracking-normal">
+                  <Logo size="sm" />
+                </span>
               </div>
               <div className="space-y-4">
                 {COMPARISON.map((row, i) => (

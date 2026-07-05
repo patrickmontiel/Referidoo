@@ -4,6 +4,7 @@ import { LandingHeader } from "@/components/LandingHeader";
 import { LandingFooter } from "@/components/LandingFooter";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { LiquidBubble } from "@/components/landing/LiquidBubble";
+import { BrandWord } from "@/components/landing/BrandWord";
 
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
@@ -44,7 +45,7 @@ export default function ComoFuncionaPage() {
       <section className="max-w-[760px] mx-auto px-8 pt-16 pb-12 text-center">
         <div className="landing-stagger">
           <h1 className="font-extrabold tracking-[-0.03em] leading-[1.1] mb-5 text-[#0B0B0C] text-balance" style={{ fontSize: "clamp(2rem, 4.5vw, 48px)" }}>
-            Así funciona Referidoo, paso a paso
+            Así funciona <BrandWord />, paso a paso
           </h1>
           <p className="text-[#5A626E] leading-[1.6]" style={{ fontSize: 18 }}>
             Sin letras chiquitas. Esto es exactamente lo que pasa desde que tu
