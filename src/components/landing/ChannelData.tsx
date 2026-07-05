@@ -57,7 +57,10 @@ export function ChannelData() {
           className="font-extrabold tracking-[-0.028em] text-[#0B0B0C] mb-4 max-w-2xl mx-auto text-balance"
           style={{ fontSize: "clamp(1.75rem, 4vw, 39px)" }}
         >
-          Ningún canal cierra como un referido
+          Ningún canal cierra como un{" "}
+          <span className="whitespace-nowrap">
+            referidoo<span className="inline-block rounded-full bg-[#3B82F6] ml-1" style={{ width: "0.24em", height: "0.24em" }} />
+          </span>
         </h2>
         <p className="text-[#5A626E] max-w-xl mx-auto leading-[1.6]" style={{ fontSize: 18 }}>
           Los datos no son nuestros — son de la industria. Un referido cierra
@@ -123,14 +126,13 @@ export function ChannelData() {
                 transition: "opacity 700ms ease 200ms, transform 700ms cubic-bezier(0.22,1,0.36,1) 200ms",
               }}
             >
-              <div className="absolute rounded-full bg-[#F4F5F7] flex flex-col items-center justify-center" style={{ inset: 34 }}>
-                <span className="font-extrabold text-[#0B0B0C] leading-none" style={{ fontSize: 26 }}>6 de 10</span>
-                <span className="text-[10.5px] text-[#6B727D] text-center leading-tight mt-1 px-2">
-                  clientes nuevos<br />llegan por referidos
-                </span>
-              </div>
+              <div className="absolute rounded-full bg-[#F4F5F7]" style={{ inset: 38 }} />
             </div>
           </div>
+          <p className="text-center text-[15px] text-[#5A626E] mb-5 leading-snug">
+            <b className="text-[#0B0B0C] font-extrabold text-[19px]">6 de 10</b>{" "}
+            clientes nuevos llegan por referidos
+          </p>
           <div className="space-y-2 mb-5">
             {MIX.map((m) => (
               <div key={m.label} className="flex items-center gap-2 text-[13px]">

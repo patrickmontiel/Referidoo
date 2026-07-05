@@ -196,13 +196,37 @@ body {
 .sr-armed.sr-shown .sr-bubble:nth-child(3) { animation-delay: 420ms; }
 .sr-armed.sr-shown .sr-bubble:nth-child(4) { animation-delay: 500ms; }
 
-/* Burbuja de /como-funciona: el agua sube al revelar. La altura vive aquí
-   (no inline) para que .sr-armed pueda arrancar en 0 solo con JS activo. */
-.bubble-fill { height: 70%; }
+/* Burbuja líquida: el agua sube al revelar y las olas giran en la
+   superficie. La altura vive aquí (no inline) para que .sr-armed pueda
+   arrancar en 0 solo con JS activo; el nivel se controla con --bubble-fill. */
+.bubble-fill { height: var(--bubble-fill, 70%); }
 .sr-armed .bubble-fill { height: 0%; }
 .sr-armed.sr-shown .bubble-fill {
-  height: 70%;
+  height: var(--bubble-fill, 70%);
   transition: height 900ms cubic-bezier(0.22, 1, 0.36, 1) 250ms;
+}
+
+/* Olas: dos cuadrados redondeados girando centrados en la línea del agua.
+   Sus curvas cruzan la superficie y crean el vaivén del líquido. */
+.liquid-wave {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 220%;
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  border-radius: 44%;
+  background: #6EA1F5;
+  animation: liquidSpin 7s linear infinite;
+  pointer-events: none;
+}
+.liquid-wave-2 {
+  border-radius: 47%;
+  background: rgba(147, 197, 253, 0.5);
+  animation: liquidSpin 11s linear infinite reverse;
+}
+@keyframes liquidSpin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
 /* Pill "Reclamar" del demo del portal */
@@ -294,6 +318,7 @@ body {
   .demo-badge,
   .chart-ping,
   .claim-pulse,
+  .liquid-wave,
   .animate-spin,
   .animate-pulse {
     animation: none;
@@ -305,7 +330,7 @@ body {
     animation: none;
   }
   .sr-armed .bubble-fill {
-    height: 70%;
+    height: var(--bubble-fill, 70%);
   }
 }
 

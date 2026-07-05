@@ -62,11 +62,6 @@ export function LandingFooter() {
                 WhatsApp
               </a>
             </li>
-            <li>
-              <a href="https://www.instagram.com/referidoo" target="_blank" rel="noopener noreferrer" className="text-[15px] text-[#3F4651] hover:text-[#0B0B0C] transition-colors">
-                Instagram
-              </a>
-            </li>
           </ul>
         </div>
       </div>

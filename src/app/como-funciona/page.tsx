@@ -3,6 +3,7 @@ import { Hanken_Grotesk } from "next/font/google";
 import { LandingHeader } from "@/components/LandingHeader";
 import { LandingFooter } from "@/components/LandingFooter";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { LiquidBubble } from "@/components/landing/LiquidBubble";
 
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
@@ -177,10 +178,7 @@ export default function ComoFuncionaPage() {
             <h3 className="font-bold text-[20px] text-[#0B0B0C] mb-4">Premios burbuja</h3>
             <div className="bg-white rounded-[12px] border border-[#ECEDEF] p-4 mb-4">
               <div className="flex items-center justify-center py-1 mb-3">
-                <div className="relative w-16 h-16 rounded-full border-2 overflow-hidden bg-[#EEF3FE]" style={{ borderColor: "#2563EB", boxShadow: "0 3px 10px rgba(37,99,235,.25)" }}>
-                  <div className="bubble-fill absolute bottom-0 left-0 right-0" style={{ background: "linear-gradient(to top, #2563EB, #6EA1F5)" }} />
-                  <div className="bubble-shine absolute inset-0 rounded-full" />
-                </div>
+                <LiquidBubble size={64} fill={70} />
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-[#6B727D]">Auto = 150 pts · GMM = 300 pts</span>

@@ -10,6 +10,7 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { HeroDemo } from "@/components/landing/HeroDemo";
 import { ReferralMath } from "@/components/landing/ReferralMath";
 import { ChannelData } from "@/components/landing/ChannelData";
+import { LiquidBubble } from "@/components/landing/LiquidBubble";
 
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
@@ -235,28 +236,28 @@ export default async function Home() {
               <span className="text-sm font-bold text-[#0B0B0C]">450 / 500 pts</span>
             </div>
 
-            {/* Bubble visualization */}
-            <div className="bg-white rounded-[12px] border border-[#ECEDEF] px-4 pt-4 pb-3 mb-3 relative overflow-hidden" style={{ minHeight: 110 }}>
-              {/* META dashed line */}
-              <div className="absolute left-0 right-0" style={{ top: 18 }}>
-                <div className="border-t border-dashed border-[#2563EB]/40 mx-4" />
-                <span className="absolute right-4 -top-2.5 text-[9px] font-bold text-[#2563EB] tracking-[0.06em]">META · 500</span>
-              </div>
-              {/* Circles */}
-              <div className="flex items-end gap-3 mt-3">
-                {/* GMM — largest, dark blue */}
-                <div className="sr-bubble flex flex-col items-center justify-center rounded-full bg-[#1D4ED8] text-white flex-shrink-0" style={{ width: 68, height: 68 }}>
-                  <span className="text-[11px] font-bold leading-tight">GMM</span>
-                  <span className="text-[10px] font-semibold text-white/80">+300</span>
+            {/* Bubble visualization — la burbuja líquida del portal */}
+            <div className="bg-white rounded-[12px] border border-[#ECEDEF] p-4 mb-3 flex items-center gap-4" style={{ minHeight: 110 }}>
+              <LiquidBubble size={76} fill={90} className="sr-bubble flex-shrink-0" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="sr-item flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 text-[#3F4651]">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#1D4ED8] flex-shrink-0" />
+                    GMM
+                  </span>
+                  <span className="font-bold text-[#0B0B0C]">+300 pts</span>
                 </div>
-                {/* Auto — medium, lighter blue */}
-                <div className="sr-bubble flex flex-col items-center justify-center rounded-full bg-[#3B82F6] text-white flex-shrink-0" style={{ width: 50, height: 50 }}>
-                  <span className="text-[10px] font-bold leading-tight">Auto</span>
-                  <span className="text-[9px] font-semibold text-white/80">+150</span>
+                <div className="sr-item flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 text-[#3F4651]">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6] flex-shrink-0" />
+                    Auto
+                  </span>
+                  <span className="font-bold text-[#0B0B0C]">+150 pts</span>
                 </div>
-                {/* Empty slots */}
-                <div className="sr-bubble rounded-full border-2 border-dashed border-[#DADCE0] flex-shrink-0" style={{ width: 40, height: 40 }} />
-                <div className="sr-bubble rounded-full border-2 border-dashed border-[#DADCE0] flex-shrink-0" style={{ width: 40, height: 40 }} />
+                <div className="sr-item flex items-center justify-between text-xs pt-1.5 border-t border-[#F4F5F7]">
+                  <span className="text-[#8A8F98]">Meta para reclamar</span>
+                  <span className="font-bold text-[#2563EB]">500 pts</span>
+                </div>
               </div>
             </div>
 
@@ -320,10 +321,7 @@ export default async function Home() {
                 </div>
               </div>
               <div className="sr-item bg-white rounded-2xl border border-[#ECEDEF] p-3 mb-2 flex items-center gap-3">
-                <div className="relative w-11 h-11 rounded-full border-2 overflow-hidden bg-[#EEF3FE] flex-shrink-0" style={{ borderColor: "#2563EB" }}>
-                  <div className="bubble-fill absolute bottom-0 left-0 right-0" style={{ background: "linear-gradient(to top, #2563EB, #6EA1F5)" }} />
-                  <div className="bubble-shine absolute inset-0 rounded-full" />
-                </div>
+                <LiquidBubble size={44} fill={70} className="flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-[#0B0B0C]">Tu burbuja de premio</p>
                   <p className="text-[11px] text-[#8A8F98]">350 / 500 pts — ya casi</p>
