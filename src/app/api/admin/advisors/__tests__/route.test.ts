@@ -54,6 +54,7 @@ describe("GET /api/admin/advisors", () => {
           plan: true,
           emailVerified: true,
           createdAt: true,
+          deletedAt: true,
           paidUntil: true,
           paymentFailedAt: true,
           mpPreapprovalId: true,

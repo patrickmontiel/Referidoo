@@ -7,7 +7,7 @@ import { sendVerificationEmail } from "@/lib/email";
 const MIN_PASSWORD_LENGTH = 8;
 
 export async function POST(req: NextRequest) {
-  const { name, email, password, companyName } = await req.json();
+  const { name, email, password, companyName, ref } = await req.json();
 
   if (!name || !email || !password) {
     return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
@@ -47,6 +47,17 @@ export async function POST(req: NextRequest) {
         verificationToken,
       },
     });
+
+    // Atribución del loop asesor→asesor (/unete/{slug}): se registra como
+    // PlanEvent "unete:{slug}" — sin columna nueva, visible en /owner/pagos.
+    if (typeof ref === "string" && ref.trim()) {
+      const cleanRef = ref.trim().slice(0, 60).replace(/[^a-z0-9-]/gi, "");
+      if (cleanRef) {
+        await db.planEvent
+          .create({ data: { advisorId: advisor.id, event: `unete:${cleanRef}` } })
+          .catch((err) => console.error("[register] Error registrando atribución:", err));
+      }
+    }
 
     await sendVerificationEmail({
       advisorEmail: advisor.email,

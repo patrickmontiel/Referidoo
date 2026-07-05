@@ -30,7 +30,7 @@ describe("Home (landing page)", () => {
     const jsx = await Home();
     render(jsx);
 
-    expect(screen.getByText(/que no existía/i)).toBeInTheDocument();
+    expect(screen.getByText(/tus clientes ya te recomiendan/i)).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /crear cuenta gratis/i }).length).toBeGreaterThan(0);
     expect(document.body.textContent?.replace(/\s+/g, " ")).toContain("$539 MXN");
     expect(mockRedirect).not.toHaveBeenCalled();
@@ -42,6 +42,7 @@ describe("Home (landing page)", () => {
     const jsx = await Home();
     render(jsx);
 
-    expect(screen.getByText("Ejemplo")).toBeInTheDocument();
+    // Hay varias superficies de demo (hero, gráfica, portal) — todas etiquetadas
+    expect(screen.getAllByText("Ejemplo").length).toBeGreaterThan(0);
   });
 });

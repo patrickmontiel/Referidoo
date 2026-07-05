@@ -15,7 +15,7 @@ const SECTIONS = [
   {
     title: "Quiénes somos",
     body: [
-      "Referidoo es una plataforma de gestión de referidos para asesores de seguros y planes financieros en México. Para cualquier tema relacionado con este aviso puedes escribirnos a hola@referidoo.mx.",
+      "Referidoo es una plataforma de gestión de referidos para asesores de seguros y planes financieros en México. Para cualquier tema relacionado con este aviso puedes escribirnos a hola@referidoo.com.",
     ],
   },
   {
@@ -59,7 +59,7 @@ const SECTIONS = [
   {
     title: "Tus derechos",
     body: [
-      "Puedes solicitar el acceso, rectificación, cancelación u oposición sobre tus datos personales (derechos ARCO) escribiendo a hola@referidoo.mx. Si cancelas tu cuenta, tus datos dejan de usarse para operar el servicio.",
+      "Puedes solicitar el acceso, rectificación, cancelación u oposición sobre tus datos personales (derechos ARCO) escribiendo a hola@referidoo.com. Si cancelas tu cuenta, tus datos dejan de usarse para operar el servicio.",
     ],
   },
   {

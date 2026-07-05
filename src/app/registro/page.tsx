@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Hanken_Grotesk } from "next/font/google";
 import { Logo } from "@/components/Logo";
@@ -13,6 +13,8 @@ const hankenGrotesk = Hanken_Grotesk({
 
 export default function RegistroPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const ref = searchParams.get("ref") ?? "";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +30,7 @@ export default function RegistroPage() {
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, companyName }),
+      body: JSON.stringify({ name, email, password, companyName, ref }),
     });
 
     const data = await res.json();

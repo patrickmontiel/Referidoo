@@ -53,8 +53,8 @@ export function LandingFooter() {
           <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#8A8F98] mb-5">Contacto</p>
           <ul className="space-y-3.5">
             <li>
-              <a href="mailto:hola@referidoo.mx" className="text-[15px] text-[#3F4651] hover:text-[#0B0B0C] transition-colors">
-                hola@referidoo.mx
+              <a href="mailto:hola@referidoo.com" className="text-[15px] text-[#3F4651] hover:text-[#0B0B0C] transition-colors">
+                hola@referidoo.com
               </a>
             </li>
             <li>

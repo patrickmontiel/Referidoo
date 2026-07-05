@@ -60,7 +60,7 @@ const SECTIONS = [
   {
     title: "Ley aplicable y contacto",
     body: [
-      "Estos términos se rigen por las leyes de México. Para cualquier duda escríbenos a hola@referidoo.mx.",
+      "Estos términos se rigen por las leyes de México. Para cualquier duda escríbenos a hola@referidoo.com.",
     ],
   },
 ];
