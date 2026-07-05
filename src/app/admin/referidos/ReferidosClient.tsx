@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { formatCurrency, formatDate, formatNumberWithCommas } from "@/lib/utils";
 
 type Referral = {
@@ -426,12 +427,13 @@ export default function ReferidosClient({
               ? <>{`Con tus ${allConvertedList.length} conversión${allConvertedList.length !== 1 ? "es" : ""} ya pagarías tu membresía y tendrías `}<b style={{ color: "#fff" }}>{formatCurrency(netWithPro)}</b> extra neto.</>
               : <>{`Con tus ${allConvertedList.length} conversión${allConvertedList.length !== 1 ? "es" : ""} te faltan `}<b style={{ color: "#fff" }}>{formatCurrency(Math.abs(netWithPro))}</b> para cubrir tu membresía.</>}
           </div>
-          <button
-            style={{ width: "100%", border: "none", cursor: "pointer", background: "#fff", color: "#0d0d0d", fontFamily: "inherit", fontWeight: 700, fontSize: 14.5, padding: "15px 0", borderRadius: 999, position: "relative" }}
+          <Link
+            href="/admin/perfil"
+            style={{ display: "block", width: "100%", textAlign: "center", textDecoration: "none", background: "#fff", color: "#0d0d0d", fontFamily: "inherit", fontWeight: 700, fontSize: 14.5, padding: "15px 0", borderRadius: 999, position: "relative" }}
             className="hover:bg-white/90 active:scale-95 transition"
           >
             Actualizar a Pro · $539/mes
-          </button>
+          </Link>
         </div>
       )}
 

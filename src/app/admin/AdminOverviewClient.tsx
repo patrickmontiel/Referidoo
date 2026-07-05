@@ -267,12 +267,13 @@ export default function AdminOverviewClient({ referrals, advisor, clientCount }:
           </div>
 
           {/* CTA */}
-          <button
-            style={{ width: "100%", border: "none", cursor: "pointer", background: "#fff", color: "#0d0d0d", fontFamily: "inherit", fontWeight: 700, fontSize: 14.5, padding: "15px 0", borderRadius: 999, position: "relative" }}
+          <Link
+            href="/admin/perfil"
+            style={{ display: "block", width: "100%", textAlign: "center", textDecoration: "none", background: "#fff", color: "#0d0d0d", fontFamily: "inherit", fontWeight: 700, fontSize: 14.5, padding: "15px 0", borderRadius: 999, position: "relative" }}
             className="hover:bg-white/90 active:scale-95 transition"
           >
             Actualizar a Pro · $539/mes
-          </button>
+          </Link>
         </div>
       )}
     </div>
