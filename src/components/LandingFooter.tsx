@@ -19,6 +19,14 @@ export function LandingFooter() {
           <Link href="/como-funciona" className="text-sm text-[#5A626E] hover:text-[#0B0B0C] transition-colors">
             Cómo funciona
           </Link>
+          <a
+            href="https://wa.me/527351209009?text=Hola%20Patrick%2C%20vi%20Referidoo%20y%20tengo%20una%20duda"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-[#5A626E] hover:text-[#0B0B0C] transition-colors"
+          >
+            WhatsApp
+          </a>
           <Link href="/login" className="text-sm text-[#5A626E] hover:text-[#0B0B0C] transition-colors">
             Iniciar sesión
           </Link>
