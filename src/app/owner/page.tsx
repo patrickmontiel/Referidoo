@@ -156,14 +156,15 @@ export default function OwnerResumenPage() {
 
       {!loading && !error && data && (
         <>
-          {/* Stat cards */}
+          {/* Stat cards — GWP referido es la North Star, siempre primero */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-brand-ink text-white rounded-2xl p-5">
-              <p className="text-sm text-brand-gray-5 mb-3">MRR (suscripciones)</p>
-              <p className="text-[34px] font-bold leading-none mb-3">{formatCurrency(data.mrr)}</p>
+              <p className="text-sm text-brand-gray-5 mb-3">
+                Prima referida · GWP ({period === "month" ? "este mes" : period === "90d" ? "90 días" : "todo"})
+              </p>
+              <p className="text-[34px] font-bold leading-none mb-3">{formatCurrency(data.salesValue)}</p>
               <p className="text-sm text-brand-gray-5">
-                {data.mrrNew > 0 && <span className="text-green-400 font-semibold">▲ +{formatCurrency(data.mrrNew)} · </span>}
-                {data.proCount} asesor{data.proCount !== 1 ? "es" : ""} en Pro
+                {data.conversionsCount} póliza{data.conversionsCount !== 1 ? "s" : ""} cerrada{data.conversionsCount !== 1 ? "s" : ""} vía Referidoo
               </p>
             </div>
             <div className="bg-white rounded-2xl border border-brand-border-1 p-5">
@@ -172,18 +173,19 @@ export default function OwnerResumenPage() {
               <p className="text-sm text-brand-gray-4">{data.periodLabel}</p>
             </div>
             <div className="bg-white rounded-2xl border border-brand-border-1 p-5">
+              <p className="text-sm text-brand-gray-3 mb-3">MRR (suscripciones)</p>
+              <p className="text-[34px] font-bold text-brand-ink leading-none mb-3">{formatCurrency(data.mrr)}</p>
+              <p className="text-sm text-brand-gray-4">
+                {data.mrrNew > 0 && <span className="text-green-600 font-semibold">▲ +{formatCurrency(data.mrrNew)} · </span>}
+                {data.proCount} asesor{data.proCount !== 1 ? "es" : ""} en Pro
+              </p>
+            </div>
+            <div className="bg-white rounded-2xl border border-brand-border-1 p-5">
               <p className="text-sm text-brand-gray-3 mb-3">Asesores activos</p>
               <p className="text-[34px] font-bold text-brand-ink leading-none mb-3">{data.activeCount}</p>
               <p className="text-sm text-brand-gray-4">
                 <span className="text-green-600 font-semibold">{data.proCount} Pro</span> · {data.freemiumCount} freemium
               </p>
-            </div>
-            <div className="bg-white rounded-2xl border border-brand-border-1 p-5">
-              <p className="text-sm text-brand-gray-3 mb-3">
-                Conversiones ({period === "month" ? "este mes" : period === "90d" ? "90 días" : "todo"})
-              </p>
-              <p className="text-[34px] font-bold text-brand-ink leading-none mb-3">{data.conversionsCount}</p>
-              <p className="text-sm text-brand-gray-4">{formatCurrency(data.salesValue)} en valor de pólizas</p>
             </div>
           </div>
 
