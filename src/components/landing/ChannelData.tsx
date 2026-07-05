@@ -63,8 +63,9 @@ export function ChannelData() {
           </span>
         </h2>
         <p className="text-[#5A626E] max-w-xl mx-auto leading-[1.6]" style={{ fontSize: 18 }}>
-          Los datos no son nuestros — son de la industria. Un referido cierra
-          casi 3 veces más que una llamada en frío, y cuesta cero.
+          El canal que más cierra no se compra: se pide. Un referido cierra
+          casi 3 veces más que una llamada en frío — y los datos no son
+          nuestros, son de la industria.
         </p>
       </div>
 

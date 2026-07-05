@@ -190,9 +190,10 @@ export default async function Home() {
           <h2 className={`${SECTION_HEADING} mb-4 max-w-xl mx-auto text-balance`} style={SECTION_HEADING_SIZE}>
             Tú pones los montos. <BrandWord /> hace las cuentas.
           </h2>
-          <p className="text-[#5A626E] max-w-md mx-auto leading-[1.6] mb-3" style={{ fontSize: 18 }}>
+          <p className="text-[#5A626E] max-w-lg mx-auto leading-[1.6] mb-3" style={{ fontSize: 18 }}>
             Dos formas de premiar, según el producto — tú decides los números,
-            el sistema nunca se equivoca.
+            el sistema nunca se equivoca. Y el premio no es un gasto: es tu
+            costo de adquisición, mucho más barato que un lead comprado.
           </p>
           <Link href="/como-funciona" className="inline-flex items-center gap-1.5 text-sm font-medium text-[#2563EB] hover:gap-2.5 transition-[gap]">
             Ver cómo funciona, paso a paso

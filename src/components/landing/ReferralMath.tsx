@@ -71,8 +71,10 @@ export function ReferralMath() {
             Tu cartera ya trae tus próximas ventas
           </h2>
           <p className="text-[#9098A2] leading-[1.65] mb-9" style={{ fontSize: 17 }}>
-            No necesitas más leads fríos. Necesitas que tus clientes de hoy te
-            presenten a los de mañana — y que eso pase solo, sin perseguir a nadie.
+            Cada venta que empieza con un &ldquo;oye, te recomiendo a mi
+            asesor&rdquo; hoy vive en un chat que nadie registra. Referidoo
+            convierte ese canal en tu sistema: tus clientes de hoy te presentan
+            a los de mañana — solo, sin perseguir a nadie.
           </p>
 
           <div className="mb-8">
