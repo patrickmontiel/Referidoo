@@ -81,8 +81,8 @@ export function HeroDemo() {
         ))}
       </div>
 
-      {/* Main: referrals list + right column */}
-      <div className="grid grid-cols-[1fr_140px] gap-2">
+      {/* Main: referrals list + right column (apilado en mobile) */}
+      <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-2">
         {/* Referrals list */}
         <div className="bg-white rounded-[14px] overflow-hidden">
           <div className="px-3 py-2.5 border-b border-[#F4F5F7] flex items-center gap-1.5">
@@ -125,8 +125,8 @@ export function HeroDemo() {
           </div>
         </div>
 
-        {/* Right column: link card + earnings */}
-        <div className="flex flex-col gap-2">
+        {/* Right column: link card + earnings (2 columnas en mobile) */}
+        <div className="grid grid-cols-2 sm:flex sm:flex-col gap-2">
           <div className="bg-[#2563EB] rounded-[14px] p-3 flex-1">
             <p className="text-[9px] font-bold text-white/60 uppercase tracking-[0.06em] mb-1">Tu link</p>
             <p className="text-[10px] font-bold text-white leading-tight mb-2.5">referidoo.com/c/eduardo</p>
