@@ -9,8 +9,20 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://referidoo.com"),
   title: "Referidoo — referidos que se registran solos",
   description: "El sistema de referidos para asesores de seguros en México. Cada recomendación de tus clientes se registra sola y su premio se calcula solo — tú nada más cierras la venta.",
+  openGraph: {
+    title: "Referidoo — referidos que se registran solos",
+    description: "El sistema de referidos para asesores de seguros en México. Cada recomendación de tus clientes se registra sola y su premio se calcula solo.",
+    url: "https://referidoo.com",
+    siteName: "Referidoo",
+    locale: "es_MX",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
