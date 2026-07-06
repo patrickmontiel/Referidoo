@@ -548,7 +548,7 @@ export default async function Home() {
                   ))}
                 </div>
               </div>
-              <Link href="/registro" className="block text-center text-sm font-semibold bg-[#0B0B0C] text-white px-4 py-3 rounded-full transition-[background-color,transform] duration-150 hover:bg-[#26262a] active:scale-[0.97]">
+              <Link href="/registro?plan=pro" className="block text-center text-sm font-semibold bg-[#0B0B0C] text-white px-4 py-3 rounded-full transition-[background-color,transform] duration-150 hover:bg-[#26262a] active:scale-[0.97]">
                 Empezar con Pro
               </Link>
             </div>

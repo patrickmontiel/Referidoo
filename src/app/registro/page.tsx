@@ -15,6 +15,7 @@ export default function RegistroPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const ref = searchParams.get("ref") ?? "";
+  const wantsPro = searchParams.get("plan") === "pro";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,7 +43,8 @@ export default function RegistroPage() {
     }
 
     sessionStorage.setItem("referidoo_welcome", "1");
-    router.push("/admin");
+    // Intención Pro desde la landing: no se pierde — directo a activar el plan.
+    router.push(wantsPro ? "/admin/perfil?upgrade=pro" : "/admin");
   }
 
   return (
@@ -55,6 +57,11 @@ export default function RegistroPage() {
             </Link>
           </div>
           <p className="text-sm text-brand-gray-4">Crea tu cuenta de asesor</p>
+          {wantsPro && (
+            <p className="mt-3 text-xs font-semibold text-[#2563EB] bg-[#EEF3FE] rounded-full px-4 py-1.5">
+              Vas por el plan Pro — al crear tu cuenta te llevamos directo a activarlo
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

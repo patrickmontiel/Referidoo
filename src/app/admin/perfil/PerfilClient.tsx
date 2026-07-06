@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { UpgradeCardForm } from "@/components/UpgradeCardForm";
 
@@ -60,6 +60,7 @@ type PerfilClientProps = {
 
 export default function PerfilClient({ initialAdvisor, initialClientCount, initialLeadCount, freemiumCommission, proCommission, commissionDiff, netWithPro, convertedCount }: PerfilClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [advisor, setAdvisor] = useState<Advisor | null>(initialAdvisor);
   const [clientCount, setClientCount] = useState<number | null>(initialClientCount);
   const [leadCount, setLeadCount] = useState<number | null>(initialLeadCount);
@@ -71,6 +72,15 @@ export default function PerfilClient({ initialAdvisor, initialClientCount, initi
   const [copied, setCopied] = useState(false);
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
+
+  // Intención Pro desde la landing (/registro?plan=pro → aquí): abre el
+  // modal de upgrade directo para que la compra no se pierda en el camino.
+  useEffect(() => {
+    if (searchParams.get("upgrade") === "pro" && initialAdvisor.plan !== "paid") {
+      setShowUpgradeForm(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function resendVerification() {
     if (resending || resent) return;
