@@ -5,6 +5,7 @@ import PerfilClient from "../perfil/PerfilClient";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
+  useSearchParams: () => ({ get: () => null }),
 }));
 
 vi.mock("@/components/UpgradeCardForm", () => ({
