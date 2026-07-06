@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
 import { sendReferralApprovedNotification, sendPaymentSentNotification, type PaymentPayload } from "@/lib/email";
 import { getAdvisorTiers, calculateLessioCommission, calculateRewardForNextReferral, getAdvisorBubbleSettings, getBubblePointsForProduct, isEscaleraProduct, ESCALERA_PRODUCTS } from "@/lib/rewards";
+import { grantUneteRewardsIfFirstConversion } from "@/lib/unete";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getAdvisorSession();
@@ -197,6 +198,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         data: { bubblePoints: { increment: bubblePoints } },
       });
     }
+
+    // Programa de invitados: si este es el PRIMER cierre del asesor y llegó
+    // vía /unete, ganan 1 mes de Pro él y su reclutador. El helper atrapa
+    // sus propios errores — nunca truena la conversión.
+    await grantUneteRewardsIfFirstConversion(referral.advisorId);
   }
 
   // 2. Notify referrer (Ana) and creator when payment is sent

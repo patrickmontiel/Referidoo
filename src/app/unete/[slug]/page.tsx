@@ -60,11 +60,14 @@ export default async function UnetePage({ params }: { params: Promise<{ slug: st
         >
           {firstName} ya deja que su cartera le traiga las ventas. ¿Y tú?
         </h1>
-        <p className="text-[#5A626E] leading-[1.6] max-w-[520px] mx-auto mb-10" style={{ fontSize: 18 }}>
+        <p className="text-[#5A626E] leading-[1.6] max-w-[520px] mx-auto mb-6" style={{ fontSize: 18 }}>
           Referidoo es el sistema de referidos para asesores de seguros y planes
           financieros en México — cada recomendación se registra sola y su
           premio se calcula solo.
         </p>
+        <div className="inline-flex items-center gap-2 bg-[#0B0B0C] text-white rounded-full px-5 py-2.5 mb-10 text-sm font-medium">
+          🎁 Bono de arranque: cierra tu primer cliente y tu primer mes de Pro es gratis
+        </div>
 
         <div className="grid sm:grid-cols-3 gap-4 text-left mb-10">
           {BULLETS.map((b) => (

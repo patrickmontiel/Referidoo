@@ -597,6 +597,152 @@ export async function sendFreemiumLimitEmail(payload: FreemiumLimitPayload) {
   });
 }
 
+// ─── 10. Programa de invitados: premio /unete ────────────────────────────────
+
+export async function sendUneteRewardEmail(payload: {
+  to: string;
+  name: string;
+  counterpartName: string;
+  until: Date;
+  side: "recruiter" | "recruit";
+}) {
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY no configurado — premio unete no notificado");
+    return;
+  }
+
+  const firstName = payload.name.split(" ")[0];
+  const untilStr = payload.until.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
+  const isRecruiter = payload.side === "recruiter";
+
+  const title = isRecruiter
+    ? `${payload.counterpartName} cerró su primer cliente — y tú ganas`
+    : "Cerraste tu primer cliente — este mes va por nuestra cuenta";
+  const bodyText = isRecruiter
+    ? `El colega que invitaste con tu link acaba de cerrar su primera venta en Referidoo. Lo prometido es deuda: <strong style="color:#0B0B0C">1 mes de Referidoo Pro gratis</strong> para ti.`
+    : `Bono de arranque del programa de invitados: por cerrar tu primer cliente referido, tu primer mes de <strong style="color:#0B0B0C">Referidoo Pro</strong> corre por nuestra cuenta.`;
+  const loopLine = isRecruiter
+    ? "¿Otro colega que deba estar aquí? Cada invitado tuyo que cierre su primer cliente = otro mes de Pro gratis."
+    : "Tú también puedes invitar: tu link personal está en tu panel — cada colega que cierre su primer cliente te gana 1 mes de Pro.";
+
+  await resend.emails.send({
+    from: FROM,
+    to: [payload.to],
+    subject: isRecruiter
+      ? `Te ganaste 1 mes de Pro — ${payload.counterpartName} ya cerró 🎉`
+      : "Tu primer mes de Pro es gratis 🎉",
+    html: emailShell(`
+      ${header("Programa de invitados")}
+      <tr><td style="padding:32px 32px 20px">
+        <p style="margin:0 0 8px;font-size:13px;color:#6B727D;font-weight:500">Hola ${firstName}</p>
+        <h1 style="margin:0 0 10px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">${title}</h1>
+        <p style="margin:0 0 24px;font-size:14px;color:#6B727D;line-height:1.6">${bodyText}</p>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#0B0B0C;border-radius:12px;margin-bottom:20px">
+          <tr><td style="padding:24px">
+            <p style="margin:0 0 4px;font-size:11px;color:#6B727D;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">Referidoo Pro</p>
+            <p style="margin:0 0 4px;font-size:26px;font-weight:800;color:#ffffff;letter-spacing:-0.02em">1 mes gratis</p>
+            <p style="margin:0 0 16px;font-size:13px;color:#9098A2">Activo hasta el ${untilStr}</p>
+            <table cellpadding="0" cellspacing="0">
+              <tr><td style="padding:4px 0"><span style="font-size:14px;color:#ffffff">✓&nbsp; Leads ilimitados en tu pipeline</span></td></tr>
+              <tr><td style="padding:4px 0"><span style="font-size:14px;color:#ffffff">✓&nbsp; Premios burbuja (Auto y GMM)</span></td></tr>
+              <tr><td style="padding:4px 0"><span style="font-size:14px;color:#ffffff">✓&nbsp; Comisiones reducidas en todos los productos</span></td></tr>
+            </table>
+          </td></tr>
+        </table>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;margin-bottom:24px">
+          <tr><td style="padding:16px 20px">
+            <p style="margin:0;font-size:13px;font-weight:600;color:#166534;line-height:1.5">${loopLine}</p>
+          </td></tr>
+        </table>
+
+        ${pill(`${BASE_URL}/admin`, "Abrir mi panel →", "#2563EB")}
+      </td></tr>
+      ${footer("Referidoo · Programa de invitados")}
+    `),
+  }).catch((err) => console.error("[email] Error enviando premio unete:", err));
+}
+
+// ─── 11. Recordatorio: premio burbuja listo (al cliente) ─────────────────────
+
+export async function sendBubbleReadyReminder(payload: {
+  referrerName: string;
+  referrerEmail: string;
+  amount: number;
+  portalUrl: string;
+  advisorName: string;
+}) {
+  if (!resend) return;
+  const firstName = payload.referrerName.split(" ")[0];
+
+  await resend.emails.send({
+    from: FROM,
+    to: [payload.referrerEmail],
+    subject: `${firstName}, tienes ${formatMXN(payload.amount)} listos para reclamar`,
+    html: emailShell(`
+      ${header("Premios burbuja")}
+      <tr><td style="padding:32px 32px 20px">
+        <p style="margin:0 0 8px;font-size:13px;color:#6B727D;font-weight:500">Tu burbuja se llenó</p>
+        <h1 style="margin:0 0 4px;font-size:32px;font-weight:800;color:#0B0B0C;letter-spacing:-0.03em">${formatMXN(payload.amount)}</h1>
+        <p style="margin:0 0 28px;font-size:14px;color:#6B727D;line-height:1.6">Están esperándote en tu página. Reclámalos con un clic y ${payload.advisorName} te envía tu premio.</p>
+        ${pill(payload.portalUrl, "Reclamar mi premio →", "#2563EB")}
+        <p style="margin:14px 0 0;font-size:12px;color:#9098A2;text-align:center">Y tu burbuja se sigue llenando con cada recomendación que hagas.</p>
+      </td></tr>
+      ${footer("Referidoo — programa de referidos para asesores de seguros")}
+    `),
+  }).catch((err) => console.error("[email] Error enviando recordatorio de burbuja:", err));
+}
+
+// ─── 12. Resumen mensual de progreso (al cliente) ────────────────────────────
+
+export async function sendMonthlyProgressEmail(payload: {
+  referrerName: string;
+  referrerEmail: string;
+  advisorName: string;
+  portalUrl: string;
+  bubblePoints: number;
+  bubbleThreshold: number;
+  nextTierPosition?: number | null;
+  nextTierAmount?: number | null;
+}) {
+  if (!resend) return;
+  const firstName = payload.referrerName.split(" ")[0];
+  const faltan = Math.max(0, payload.bubbleThreshold - (payload.bubblePoints % payload.bubbleThreshold || payload.bubbleThreshold));
+
+  const bubbleChip = payload.bubblePoints > 0
+    ? metaChip("Tu burbuja", `${payload.bubblePoints} / ${payload.bubbleThreshold} pts${payload.bubblePoints >= payload.bubbleThreshold ? " — ¡lista para reclamar!" : faltan > 0 ? ` — te faltan ${faltan}` : ""}`)
+    : metaChip("Tu burbuja", "Se llena con cada seguro de Auto o GMM que recomiendes");
+
+  const nextPrizeChip = payload.nextTierAmount && payload.nextTierPosition
+    ? metaChip(`Tu siguiente premio (#${payload.nextTierPosition})`, formatMXN(payload.nextTierAmount))
+    : metaChip("Tu siguiente premio", "Pregúntale a tu asesor");
+
+  await resend.emails.send({
+    from: FROM,
+    to: [payload.referrerEmail],
+    subject: `${firstName}, así va tu premio con ${payload.advisorName}`,
+    html: emailShell(`
+      ${header("Tu progreso del mes")}
+      <tr><td style="padding:32px 32px 20px">
+        <h1 style="margin:0 0 10px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">Tu premio no se olvida de ti, ${firstName}</h1>
+        <p style="margin:0 0 24px;font-size:14px;color:#6B727D;line-height:1.6">Así vas este mes en el programa de referidos de ${payload.advisorName}:</p>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px">
+          <tr>
+            <td width="50%" style="padding-right:8px">${bubbleChip}</td>
+            <td width="50%" style="padding-left:8px">${nextPrizeChip}</td>
+          </tr>
+        </table>
+
+        <p style="margin:0 0 16px;font-size:14px;color:#3F4651;line-height:1.6;text-align:center">¿Conoces a alguien que necesite un seguro? Compártele tu link desde tu página — <strong style="color:#0B0B0C">cada recomendación te acerca a tu premio</strong>.</p>
+        ${pill(payload.portalUrl, "Ver mi progreso →")}
+      </td></tr>
+      ${footer("Recibes este resumen una vez al mes · Referidoo")}
+    `),
+  }).catch((err) => console.error("[email] Error enviando resumen mensual:", err));
+}
+
 // ─── Preview helper (solo test/desarrollo) ───────────────────────────────────
 
 export async function sendPreviewEmailsTo(to: string): Promise<Record<string, string>> {

@@ -1,17 +1,18 @@
-import { Resend } from "resend";
 import { db } from "@/lib/db";
+import { sendUneteRewardEmail } from "@/lib/email";
 
-// Incentivo del loop asesor→asesor: cuando un asesor reclutado vía
-// /unete/{slug} registra su PRIMER referido, el reclutador gana 30 días de
-// Pro. Freemium → sube a Pro por 30 días (sin suscripción MP: el cron de
-// billing-commission lo ignora porque filtra mpPreapprovalId != null, y
-// billing-downgrade lo regresa a freemium solo cuando expira). Pro pagado →
-// se extiende su vigencia 30 días.
-// La atribución vive como PlanEvent "unete:{slug}" en el reclutado, y el
-// pago del premio como "unete_reward:{reclutadoId}" en el reclutador — ese
-// evento evita otorgar dos veces por el mismo reclutado.
+// Incentivo del loop asesor→asesor, de doble lado: cuando un asesor que llegó
+// vía /unete/{slug} CIERRA su primer cliente (primer referido convertido),
+// ganan los dos — el invitado (bono de arranque) y el reclutador. 30 días de
+// Pro cada uno: freemium sube a Pro sin suscripción MP (billing-commission lo
+// ignora porque filtra mpPreapprovalId != null; billing-downgrade lo regresa a
+// freemium al expirar), Pro pagado extiende su vigencia.
+// Contabilidad en PlanEvents: "unete:{slug}" = atribución (en el invitado),
+// "unete_reward_self" = bono del invitado pagado, "unete_reward:{invitadoId}"
+// = premio del reclutador pagado. Los eventos evitan dobles otorgamientos.
 
 const REWARD_DAYS = 30;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 function nameToSlug(name: string) {
   return name
@@ -22,14 +23,35 @@ function nameToSlug(name: string) {
     .replace(/^-|-$/g, "");
 }
 
-export async function grantUneteRewardIfFirstReferral(recruitedAdvisorId: string) {
+type AdvisorLite = { id: string; name: string; email: string; plan: string; paidUntil: Date | null };
+
+async function grantProMonth(advisor: AdvisorLite): Promise<Date> {
+  const now = new Date();
+  const base =
+    advisor.plan === "paid" && advisor.paidUntil && advisor.paidUntil > now
+      ? advisor.paidUntil
+      : now;
+  const newPaidUntil = new Date(base.getTime() + REWARD_DAYS * DAY_MS);
+  await db.advisor.update({
+    where: { id: advisor.id },
+    data: { plan: "paid", paidUntil: newPaidUntil },
+  });
+  return newPaidUntil;
+}
+
+export async function grantUneteRewardsIfFirstConversion(recruitedAdvisorId: string) {
   try {
+    // Solo en la PRIMERA conversión del asesor invitado.
+    const convertedCount = await db.referral.count({
+      where: { advisorId: recruitedAdvisorId, status: "converted" },
+    });
+    if (convertedCount !== 1) return;
+
     const attribution = await db.planEvent.findFirst({
       where: { advisorId: recruitedAdvisorId, event: { startsWith: "unete:" } },
       select: { event: true },
     });
     if (!attribution) return;
-
     const slug = attribution.event.slice("unete:".length);
     if (!slug) return;
 
@@ -37,42 +59,53 @@ export async function grantUneteRewardIfFirstReferral(recruitedAdvisorId: string
       where: { deletedAt: null },
       select: { id: true, name: true, email: true, plan: true, paidUntil: true },
     });
-    const recruiter = advisors.find((a) => a.id !== recruitedAdvisorId && nameToSlug(a.name) === slug);
-    if (!recruiter) return;
+    const recruited = advisors.find((a) => a.id === recruitedAdvisorId);
+    if (!recruited) return;
+    const recruiter = advisors.find(
+      (a) => a.id !== recruitedAdvisorId && nameToSlug(a.name) === slug
+    );
 
-    const rewardEvent = `unete_reward:${recruitedAdvisorId}`;
-    const already = await db.planEvent.findFirst({
-      where: { advisorId: recruiter.id, event: rewardEvent },
+    // 1. Bono de arranque del invitado (una sola vez).
+    const selfAlready = await db.planEvent.findFirst({
+      where: { advisorId: recruitedAdvisorId, event: "unete_reward_self" },
       select: { id: true },
     });
-    if (already) return;
+    if (!selfAlready) {
+      const until = await grantProMonth(recruited);
+      await db.planEvent.create({
+        data: { advisorId: recruitedAdvisorId, event: "unete_reward_self" },
+      });
+      console.log(`[unete] Bono de arranque: ${recruited.name} gana ${REWARD_DAYS} días Pro (primer cierre)`);
+      await sendUneteRewardEmail({
+        to: recruited.email,
+        name: recruited.name,
+        counterpartName: recruiter?.name ?? "tu colega",
+        until,
+        side: "recruit",
+      });
+    }
 
-    const now = new Date();
-    const base = recruiter.plan === "paid" && recruiter.paidUntil && recruiter.paidUntil > now
-      ? recruiter.paidUntil
-      : now;
-    const newPaidUntil = new Date(base.getTime() + REWARD_DAYS * 24 * 60 * 60 * 1000);
-
-    await db.advisor.update({
-      where: { id: recruiter.id },
-      data: { plan: "paid", paidUntil: newPaidUntil },
-    });
-    await db.planEvent.create({ data: { advisorId: recruiter.id, event: rewardEvent } });
-
-    const recruited = advisors.find((a) => a.id === recruitedAdvisorId);
-    console.log(`[unete] Premio otorgado: ${recruiter.name} gana ${REWARD_DAYS} días Pro por reclutar a ${recruited?.name ?? recruitedAdvisorId}`);
-
-    // Aviso al reclutador — mejor esfuerzo, nunca truena el flujo del lead.
-    if (process.env.RESEND_API_KEY) {
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      await resend.emails.send({
-        from: process.env.EMAIL_FROM || "Referidoo Team <noreply@referidoo.com>",
-        to: recruiter.email,
-        subject: "Te ganaste 1 mes de Referidoo Pro 🎉",
-        text: `${recruiter.name.split(" ")[0]}, el colega que invitaste con tu link ya registró su primer referido — y eso te gana ${REWARD_DAYS} días de Referidoo Pro.\n\nTu Pro está activo hasta el ${newPaidUntil.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}: leads ilimitados, premios burbuja y comisiones reducidas.\n\n¿Conoces a otro colega que deba estar en Referidoo? Tu link sigue activo en tu panel — cada asesor que actives es otro mes gratis.\n\n— Patrick, Referidoo`,
-      }).catch((err) => console.error("[unete] Error enviando aviso de premio:", err));
+    // 2. Premio del reclutador (una sola vez por invitado).
+    if (recruiter) {
+      const rewardEvent = `unete_reward:${recruitedAdvisorId}`;
+      const already = await db.planEvent.findFirst({
+        where: { advisorId: recruiter.id, event: rewardEvent },
+        select: { id: true },
+      });
+      if (!already) {
+        const until = await grantProMonth(recruiter);
+        await db.planEvent.create({ data: { advisorId: recruiter.id, event: rewardEvent } });
+        console.log(`[unete] Premio de reclutador: ${recruiter.name} gana ${REWARD_DAYS} días Pro por ${recruited.name}`);
+        await sendUneteRewardEmail({
+          to: recruiter.email,
+          name: recruiter.name,
+          counterpartName: recruited.name,
+          until,
+          side: "recruiter",
+        });
+      }
     }
   } catch (err) {
-    console.error("[unete] Error otorgando premio de reclutamiento:", err);
+    console.error("[unete] Error otorgando premios de reclutamiento:", err);
   }
 }

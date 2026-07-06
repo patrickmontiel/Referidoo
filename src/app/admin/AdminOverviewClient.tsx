@@ -196,7 +196,7 @@ export default function AdminOverviewClient({ referrals, advisor, clientCount }:
           <p className="text-xs font-bold text-white/60 uppercase tracking-[0.08em] mb-1.5">Invita a un colega</p>
           <p className="font-bold text-white text-[15px] mb-1.5 break-all">{recruiterLink}</p>
           <p className="text-[13px] text-[#CFE0FF] mb-4">
-            Cuando el colega que invites registre su primer referido, te regalamos <b className="text-white">1 mes de Pro</b>.
+            Cuando tu invitado cierre su primer cliente, <b className="text-white">los dos ganan 1 mes de Pro</b> — tú y él.
           </p>
           <div className="flex gap-2">
             <button

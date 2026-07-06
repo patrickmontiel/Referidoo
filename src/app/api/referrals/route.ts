@@ -4,7 +4,6 @@ import { getAdvisorSession } from "@/lib/auth";
 import { calculateRewardForNextReferral } from "@/lib/rewards";
 import { sendNewReferralNotification, sendFreemiumLimitEmail } from "@/lib/email";
 import { FREEMIUM_LEAD_LIMIT } from "@/lib/plan";
-import { grantUneteRewardIfFirstReferral } from "@/lib/unete";
 
 export async function GET(req: NextRequest) {
   const session = await getAdvisorSession();
@@ -74,13 +73,6 @@ export async function POST(req: NextRequest) {
       rewardAmount: amount,
     },
   });
-
-  // Primer referido del asesor: si llegó vía /unete, su reclutador gana
-  // 30 días de Pro. Se espera (serverless mata fire-and-forget) pero nunca
-  // truena el flujo del lead — el helper atrapa sus propios errores.
-  if (advisorLeadCount === 0) {
-    await grantUneteRewardIfFirstReferral(referrer.advisorId);
-  }
 
   const isFreemiumOverLimit =
     referrer.advisor.plan === "freemium" && advisorLeadCount >= FREEMIUM_LEAD_LIMIT;
