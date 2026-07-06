@@ -14,9 +14,16 @@ const DOCS: {
   {
     titulo: "Whitepaper Maestro",
     tipo: "Whitepaper",
-    descripcion: "Tesis, potencial oculto, mercado (CNSF/AMIS), fases GTM, capítulos 1/11/12 redactados, 9 playbooks y checklist de 30 días.",
+    descripcion: "Tesis, potencial oculto, mercado (CNSF/AMIS), fases GTM, capítulos 1/7/8/11/12 redactados, 9 playbooks y checklist de 30 días.",
     url: "https://claude.ai/code/artifact/af1ed7f5-4cf5-42f1-b184-0db1276bc516",
-    actualizado: "jul 2026 · v0.3.1",
+    actualizado: "jul 2026 · v0.4",
+  },
+  {
+    titulo: "Manual de Playbooks (1·3·4·6·7·9)",
+    tipo: "Playbook",
+    descripcion: "Adquisición de asesores, activación de clientes, freemium→Pro, promotorías, retención y economía de premios — cada uno con objetivo, disparador, pasos y métrica.",
+    url: "https://claude.ai/code/artifact/a9b6496f-1c30-4d91-bac5-e49d5b021e93",
+    actualizado: "jul 2026 · v1",
   },
   {
     titulo: "Playbook 2 — Onboarding 7 días",
