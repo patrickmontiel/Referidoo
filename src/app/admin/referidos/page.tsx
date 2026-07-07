@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getAdvisorSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { isBlobConfigured } from "@/lib/blob";
 import { DEFAULT_BUBBLE_AUTO_POINTS, DEFAULT_BUBBLE_GMM_POINTS } from "@/lib/rewards";
 import ReferidosClient from "./ReferidosClient";
 
@@ -46,7 +47,7 @@ export default async function ReferidosPage() {
       initialBubbleAutoPoints={settings?.bubbleAutoPoints ?? DEFAULT_BUBBLE_AUTO_POINTS}
       initialBubbleGmmPoints={settings?.bubbleGmmPoints ?? DEFAULT_BUBBLE_GMM_POINTS}
       initialFirstTierAmount={firstTierAmount}
-      initialCaratulaRequired={Boolean(process.env.BLOB_READ_WRITE_TOKEN)}
+      initialCaratulaRequired={isBlobConfigured()}
     />
   );
 }

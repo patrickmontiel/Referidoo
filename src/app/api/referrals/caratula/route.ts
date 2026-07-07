@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 import { getAdvisorSession } from "@/lib/auth";
+import { isBlobConfigured } from "@/lib/blob";
 
 // Sube la carátula de la póliza a Vercel Blob y devuelve la URL. La URL es
 // pública pero no adivinable (sufijo aleatorio) — mismo modelo de seguridad
-// que los tokens del portal. Requiere BLOB_READ_WRITE_TOKEN en Vercel.
+// que los tokens del portal.
 const MAX_BYTES = 8 * 1024 * 1024;
 const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/heic", "application/pdf"];
 
@@ -12,9 +13,9 @@ export async function POST(req: NextRequest) {
   const session = await getAdvisorSession();
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  if (!isBlobConfigured()) {
     return NextResponse.json(
-      { error: "Almacenamiento de carátulas no configurado (BLOB_READ_WRITE_TOKEN)" },
+      { error: "Almacenamiento de carátulas no configurado" },
       { status: 503 }
     );
   }
@@ -41,10 +42,7 @@ export async function POST(req: NextRequest) {
   try {
     blob = await put(path, file, { access: "public", addRandomSuffix: true });
   } catch {
-    blob = await put(path, file, {
-      access: "private" as unknown as "public",
-      addRandomSuffix: true,
-    });
+    blob = await put(path, file, { access: "private", addRandomSuffix: true });
   }
 
   return NextResponse.json({ url: blob.url });

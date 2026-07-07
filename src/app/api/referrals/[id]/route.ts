@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
 import { db } from "@/lib/db";
 import { analyzeCaratula } from "@/lib/caratula-ai";
+import { isBlobConfigured } from "@/lib/blob";
 import { getAdvisorSession } from "@/lib/auth";
 import { sendReferralApprovedNotification, sendPaymentSentNotification, type PaymentPayload } from "@/lib/email";
 import { getAdvisorTiers, calculateLessioCommission, calculateRewardForNextReferral, getAdvisorBubbleSettings, getBubblePointsForProduct, isEscaleraProduct, ESCALERA_PRODUCTS } from "@/lib/rewards";
@@ -40,8 +41,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     );
   }
   // Con Vercel Blob habilitado, la carátula es obligatoria como evidencia
-  // del monto. Sin el token (dev/preview), la regla queda apagada.
-  const caratulaRequired = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  // del monto. Sin credenciales (dev/preview), la regla queda apagada.
+  const caratulaRequired = isBlobConfigured();
   if (isConverting && caratulaRequired && !body.caratulaUrl && !referral.caratulaUrl) {
     return NextResponse.json(
       { error: "La carátula de la póliza es obligatoria para convertir" },

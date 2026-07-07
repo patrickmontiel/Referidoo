@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdvisorSession, isPlatformOwner } from "@/lib/auth";
+import { fetchBlobAuthenticated } from "@/lib/blob";
 
 // Visor de carátulas para el dueño: sirve el blob aunque el store sea
-// privado (reintenta con el token RW). Solo URLs de Vercel Blob.
+// privado. Solo URLs de Vercel Blob.
 export async function GET(req: NextRequest) {
   const session = await getAdvisorSession();
   if (!session || !isPlatformOwner(session.email)) {
@@ -10,16 +11,11 @@ export async function GET(req: NextRequest) {
   }
 
   const src = req.nextUrl.searchParams.get("u");
-  if (!src || !/^https:\/\/[a-z0-9-]+\.(public\.blob\.vercel-storage\.com|blob\.vercel-storage\.com)\//.test(src)) {
+  if (!src || !/^https:\/\/[a-z0-9-]+\.(public\.blob\.vercel-storage\.com|private\.blob\.vercel-storage\.com|blob\.vercel-storage\.com)\//.test(src)) {
     return NextResponse.json({ error: "URL inválida" }, { status: 400 });
   }
 
-  let res = await fetch(src).catch(() => null);
-  if ((!res || !res.ok) && process.env.BLOB_READ_WRITE_TOKEN) {
-    res = await fetch(src, {
-      headers: { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` },
-    }).catch(() => null);
-  }
+  const res = await fetchBlobAuthenticated(src);
   if (!res || !res.ok) {
     return NextResponse.json({ error: "No se pudo leer la carátula" }, { status: 502 });
   }

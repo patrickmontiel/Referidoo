@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { fetchBlobAuthenticated } from "@/lib/blob";
 
 // Análisis automático de carátulas: lee la imagen con visión de OpenAI,
 // extrae la prima anual y la compara contra el monto reportado por el asesor.
@@ -9,14 +10,7 @@ import { db } from "@/lib/db";
 const TOLERANCE = 0.25;
 
 async function fetchBlobAsDataUrl(url: string): Promise<string | null> {
-  // Store público responde directo; store privado requiere el token RW.
-  let res = await fetch(url).catch(() => null);
-  if (!res || !res.ok) {
-    if (!process.env.BLOB_READ_WRITE_TOKEN) return null;
-    res = await fetch(url, {
-      headers: { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` },
-    }).catch(() => null);
-  }
+  const res = await fetchBlobAuthenticated(url);
   if (!res || !res.ok) return null;
   const type = res.headers.get("content-type") ?? "image/jpeg";
   if (!type.startsWith("image/")) return null; // PDF: validación manual
