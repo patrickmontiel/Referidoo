@@ -15,7 +15,7 @@ type Doc = {
 const CARPETAS: { nombre: string; nota: string; docs: Doc[] }[] = [
   {
     nombre: "Estrategia",
-    nota: "El cerebro del negocio — todo lo demás deriva de aquí.",
+    nota: "Va primero, siempre: el cerebro del negocio. Todo lo demás deriva de aquí y se relee cada mes.",
     docs: [
       {
         titulo: "Whitepaper Maestro",
@@ -26,32 +26,20 @@ const CARPETAS: { nombre: string; nota: string; docs: Doc[] }[] = [
     ],
   },
   {
-    nombre: "Playbooks",
-    nota: "Ejecución repetible. Si un playbook contradice al whitepaper, uno de los dos se corrige ese día.",
+    nombre: "Guiones",
+    nota: "Lo que sigue esta semana: la entrevista es la acción #1 de la fase concierge.",
     docs: [
       {
-        titulo: "Playbook 2 — Onboarding 7 días",
-        descripcion: "Del alta al primer referido en 7 días: secuencia día por día, 3 plantillas de WhatsApp, fallas comunes y métricas.",
-        url: "https://claude.ai/code/artifact/5cd0c290-163a-4240-8af8-c7da56b016ca",
-        actualizado: "jul 2026 · v1",
-      },
-      {
-        titulo: "Playbook 8 — Contenido builder in progress",
-        descripcion: "Canales (TikTok+Reels / LinkedIn), posicionamiento, cadencia mínima viable y los primeros 10 posts con gancho.",
-        url: "https://claude.ai/code/artifact/ccf3a45e-fa92-4914-8860-c5604cfa662b",
-        actualizado: "jul 2026 · v1",
-      },
-      {
-        titulo: "Manual de Playbooks (1·3·4·6·7·9)",
-        descripcion: "Adquisición, activación de clientes, freemium→Pro, promotorías, retención y economía de premios — objetivo, disparador, pasos y métrica de cada uno.",
-        url: "https://claude.ai/code/artifact/a9b6496f-1c30-4d91-bac5-e49d5b021e93",
+        titulo: "Entrevista con Eduardo (45 min)",
+        descripcion: "Arquetipo del asesor (cap. 3), test de uso en vivo para cazar fallas funcionales, testimonio y loop /unete. Reutilizable con cada asesor de la fase 0→10.",
+        url: "https://claude.ai/code/artifact/17dbf0d9-20fc-4e8a-9404-e31c5c2e41d3",
         actualizado: "jul 2026 · v1",
       },
     ],
   },
   {
     nombre: "Presentaciones",
-    nota: "Listas para proyectar o mandar por link.",
+    nota: "Para conseguir asesores (y después, capital). El de asesores se usa en cada demo; el de inversionistas espera su momento.",
     docs: [
       {
         titulo: "Deck para nuevos asesores",
@@ -68,20 +56,32 @@ const CARPETAS: { nombre: string; nota: string; docs: Doc[] }[] = [
     ],
   },
   {
-    nombre: "Guiones",
-    nota: "Conversaciones que se repiten — con estructura para no improvisar.",
+    nombre: "Playbooks",
+    nota: "La operación diaria, en orden del embudo: adquirir → onboardear → contenido en paralelo. Si un playbook contradice al whitepaper, uno de los dos se corrige ese día.",
     docs: [
       {
-        titulo: "Entrevista con Eduardo (45 min)",
-        descripcion: "Arquetipo del asesor (cap. 3), test de uso en vivo para cazar fallas funcionales, testimonio y loop /unete. Reutilizable con cada asesor de la fase 0→10.",
-        url: "https://claude.ai/code/artifact/17dbf0d9-20fc-4e8a-9404-e31c5c2e41d3",
+        titulo: "Manual de Playbooks (1·3·4·6·7·9)",
+        descripcion: "El embudo completo: adquisición, activación de clientes, freemium→Pro, promotorías, retención y economía de premios — objetivo, disparador, pasos y métrica de cada uno.",
+        url: "https://claude.ai/code/artifact/a9b6496f-1c30-4d91-bac5-e49d5b021e93",
+        actualizado: "jul 2026 · v1",
+      },
+      {
+        titulo: "Playbook 2 — Onboarding 7 días",
+        descripcion: "Se usa con CADA alta nueva: del alta al primer referido en 7 días, con secuencia día por día, 3 plantillas de WhatsApp y fallas comunes.",
+        url: "https://claude.ai/code/artifact/5cd0c290-163a-4240-8af8-c7da56b016ca",
+        actualizado: "jul 2026 · v1",
+      },
+      {
+        titulo: "Playbook 8 — Contenido builder in progress",
+        descripcion: "Corre en paralelo cada semana: canales (TikTok+Reels / LinkedIn), cadencia mínima viable y los primeros 10 posts con gancho.",
+        url: "https://claude.ai/code/artifact/ccf3a45e-fa92-4914-8860-c5604cfa662b",
         actualizado: "jul 2026 · v1",
       },
     ],
   },
   {
     nombre: "Datos",
-    nota: "Fuentes crudas — datos personales fuera de git.",
+    nota: "Consulta puntual — fuentes crudas, datos personales fuera de git.",
     docs: [
       {
         titulo: "Padrón CNSF + análisis",
@@ -114,13 +114,14 @@ export default async function OwnerDocumentosPage() {
       <div>
         <h1 className="text-[26px] font-bold text-brand-ink">Documentos</h1>
         <p className="text-sm text-brand-gray-4 mt-1">
-          La biblioteca del negocio, por carpetas. Todo deriva del Whitepaper Maestro.
+          La biblioteca del negocio, por carpetas y en orden de uso: de lo que va primero a lo que va después.
         </p>
       </div>
 
-      {CARPETAS.map((carpeta) => (
+      {CARPETAS.map((carpeta, i) => (
         <section key={carpeta.nombre}>
           <div className="flex items-center gap-2 mb-1 text-brand-ink">
+            <span className="text-[13px] font-extrabold text-[#2563EB] w-4">{i + 1}</span>
             <FolderIcon />
             <h2 className="font-bold text-[15px]">{carpeta.nombre}</h2>
             <span className="text-[11px] font-semibold text-brand-gray-4 bg-brand-border-1 rounded-full px-2 py-0.5">
