@@ -465,7 +465,7 @@ export default function ReferidosClient({
                 ))}
               </div>
               <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">{valueLabel}</label>
-              <div className="relative mb-5">
+              <div className="relative mb-2">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-gray-4 text-sm font-medium">$</span>
                 <input
                   type="text"
@@ -478,6 +478,10 @@ export default function ReferidosClient({
                   autoFocus
                 />
               </div>
+              <p className="text-[11.5px] text-brand-gray-4 leading-snug mb-5">
+                Usa el monto real de la carátula — define el premio de tu cliente y tu
+                comisión. Referidoo valida muestras contra carátula de póliza.
+              </p>
               <div className="flex gap-2">
                 <button
                   onClick={confirmConvert}

@@ -194,6 +194,29 @@ export default function AdminLayoutShell({
     setReducedMotion(mq.matches);
   }, []);
 
+  // Auto-cura de sesión: el JWT puede quedarse viejo (correo verificado en
+  // otro dispositivo, plan cambiado por webhook/cron). Al montar se re-firma
+  // el token contra la base y se sincronizan banner y label del plan.
+  useEffect(() => {
+    fetch("/api/auth/refresh", { method: "POST" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d) return;
+        if (d.emailVerified === true && !initialEmailVerified) {
+          setEmailVerified(true);
+          setShowVerifiedBanner(true);
+          setTimeout(() => setShowVerifiedBanner(false), 4000);
+        } else if (typeof d.emailVerified === "boolean") {
+          setEmailVerified(d.emailVerified);
+        }
+        if (typeof d.plan === "string") {
+          setAdvisorPlan(d.plan === "paid" ? "Plan Pro" : "Plan Gratis");
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (confettiRef.current.length === 0) {
     const CONFETTI_COLORS = ["#2B57F0", "#0B0B0C", "#1FAE54", "#F5B53F", "#5B86F7", "#E7395A"];
     confettiRef.current = Array.from({ length: 80 }, (_, k) => ({

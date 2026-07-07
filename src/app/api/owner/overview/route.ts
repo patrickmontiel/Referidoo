@@ -217,6 +217,34 @@ export async function GET(req: NextRequest) {
     });
   }
 
+  // Montos de póliza atípicamente bajos: la comisión de Referidoo depende del
+  // monto que reporta el asesor — subreportar es el vector de fraude directo.
+  // Umbrales = primas anuales mínimas plausibles por producto en MX.
+  const MIN_PLAUSIBLE: Record<string, number> = {
+    PPR: 15000,
+    Vida: 8000,
+    GMM: 8000,
+    "Daños/Auto": 4000,
+  };
+  const lowByAdvisor = new Map<string, { count: number; worst: string }>();
+  for (const r of converted) {
+    if (!r.saleAmount || !r.productType) continue;
+    const min = MIN_PLAUSIBLE[r.productType];
+    if (!min || r.saleAmount >= min) continue;
+    const prev = lowByAdvisor.get(r.advisorId) ?? { count: 0, worst: "" };
+    lowByAdvisor.set(r.advisorId, {
+      count: prev.count + 1,
+      worst: `${r.productType} de ${r.leadName} por $${r.saleAmount.toLocaleString("es-MX")}`,
+    });
+  }
+  for (const [advisorId, info] of lowByAdvisor) {
+    problems.push({
+      id: `lowamt-${advisorId}`,
+      title: `${info.count} conversión${info.count !== 1 ? "es" : ""} con monto atípicamente bajo`,
+      detail: `${advisorName.get(advisorId) ?? "Un asesor"} reportó ${info.worst} — pedir carátula de póliza para validar el monto y la comisión.`,
+    });
+  }
+
   for (const a of advisors) {
     if (a.paymentFailedAt) {
       const date = a.paymentFailedAt.toLocaleDateString("es-MX", { day: "numeric", month: "short" }).replace(".", "");
