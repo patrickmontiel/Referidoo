@@ -21,7 +21,7 @@ type Overview = {
   weekly: { label: string; commission: number; mrr: number }[];
   weeklyHasData: boolean;
   products: { type: string; commission: number; pct: number }[];
-  ranking: { id: string; name: string; plan: string; leads: number; converted: number; commission: number; lastCloseAt: string | null }[];
+  ranking: { id: string; name: string; plan: string; leads: number; converted: number; commission: number; lastCloseAt: string | null; moroso?: boolean }[];
   problems: { id: string; title: string; detail: string }[];
   activity: { type: "conversion" | "payment" | "bubble" | "new" | "alert"; text: string; amount: number | null; date: string }[];
 };
@@ -324,12 +324,19 @@ export default function OwnerResumenPage() {
                           </div>
                         </td>
                         <td className="py-3.5 pr-4">
-                          <span
-                            className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${
-                              row.plan === "paid" ? "bg-[#EBF2FF] text-[#2563EB]" : "bg-[#F4F5F7] text-[#6B727D]"
-                            }`}
-                          >
-                            {row.plan === "paid" ? "Pro" : "Freemium"}
+                          <span className="flex items-center gap-1.5">
+                            <span
+                              className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${
+                                row.plan === "paid" ? "bg-[#EBF2FF] text-[#2563EB]" : "bg-[#F4F5F7] text-[#6B727D]"
+                              }`}
+                            >
+                              {row.plan === "paid" ? "Pro" : "Freemium"}
+                            </span>
+                            {row.moroso && (
+                              <span className="text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap bg-red-50 text-red-600">
+                                Premio vencido
+                              </span>
+                            )}
                           </span>
                         </td>
                         <td className="py-3.5 pr-4 text-right text-brand-ink">{row.leads}</td>

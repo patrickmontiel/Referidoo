@@ -743,6 +743,51 @@ export async function sendMonthlyProgressEmail(payload: {
   }).catch((err) => console.error("[email] Error enviando resumen mensual:", err));
 }
 
+// ─── 13. Premio vencido (recordatorio / morosidad al asesor) ─────────────────
+
+export async function sendRewardOverdueEmail(payload: {
+  advisorName: string;
+  advisorEmail: string;
+  referrerName: string;
+  amount: number;
+  kind: "escalera" | "burbuja";
+  level: "recordatorio" | "firme";
+  daysOverdue: number;
+}) {
+  if (!resend) return;
+  const firstName = payload.advisorName.split(" ")[0];
+  const firme = payload.level === "firme";
+  const que = payload.kind === "burbuja" ? "premio burbuja reclamado" : "premio de escalera aprobado";
+
+  const cuerpo = firme
+    ? `El ${que} de <strong style="color:#0B0B0C">${payload.referrerName}</strong> lleva <strong style="color:#0B0B0C">${payload.daysOverdue} días sin pagarse</strong>. A partir de los 14 días esto cuenta como morosidad en la plataforma: aparece marcado en tu historial y, si se repite, pausa tu programa de premios. Tu cliente confió en tu promesa — es lo que sostiene tus referidos.`
+    : `El ${que} de <strong style="color:#0B0B0C">${payload.referrerName}</strong> lleva ${payload.daysOverdue} días esperando. Un premio pagado rápido es tu mejor publicidad — es el momento exacto en el que tu cliente decide si te recomienda de nuevo.`;
+
+  await resend.emails.send({
+    from: FROM,
+    to: [payload.advisorEmail],
+    subject: firme
+      ? `⚠️ Premio de ${formatMXN(payload.amount)} con ${payload.daysOverdue} días vencido — ${payload.referrerName}`
+      : `Recordatorio: ${payload.referrerName} espera su premio de ${formatMXN(payload.amount)}`,
+    html: emailShell(`
+      ${header(firme ? "Morosidad" : "Recordatorio de pago")}
+      <tr><td style="padding:32px 32px 20px">
+        <p style="margin:0 0 8px;font-size:13px;color:${firme ? "#B45309" : "#6B727D"};font-weight:600">${firme ? "Acción requerida hoy" : `Hola ${firstName}`}</p>
+        <h1 style="margin:0 0 4px;font-size:30px;font-weight:800;color:#0B0B0C;letter-spacing:-0.03em">${formatMXN(payload.amount)}</h1>
+        <p style="margin:0 0 24px;font-size:14px;color:#6B727D">pendiente de pagar a ${payload.referrerName}</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:${firme ? "#fdf3e7" : "#F4F5F7"};border-radius:12px;margin-bottom:24px${firme ? ";border:1px solid #f5d0a9" : ""}">
+          <tr><td style="padding:18px 22px">
+            <p style="margin:0;font-size:14px;color:#3F4651;line-height:1.6">${cuerpo}</p>
+          </td></tr>
+        </table>
+        ${pill(`${BASE_URL}/admin/${payload.kind === "burbuja" ? "niveles" : "referidos"}`, "Pagar y marcar como pagado →", firme ? "#B45309" : "#0B0B0C")}
+        <p style="margin:14px 0 0;font-size:12px;color:#9098A2;text-align:center">Si tu cliente ya guardó su CLABE en su portal, la verás al momento de pagar.</p>
+      </td></tr>
+      ${footer("Referidoo · Política de premios: recordatorio a los 7 días, morosidad a los 14")}
+    `),
+  }).catch((err) => console.error("[email] Error enviando premio vencido:", err));
+}
+
 // ─── Preview helper (solo test/desarrollo) ───────────────────────────────────
 
 export async function sendPreviewEmailsTo(to: string): Promise<Record<string, string>> {

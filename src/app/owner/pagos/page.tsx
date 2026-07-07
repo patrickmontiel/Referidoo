@@ -3,6 +3,7 @@ import { getAdvisorSession, isPlatformOwner } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { MONTHLY_PRICE_MXN } from "@/lib/mercadopago";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { CaratulasQueue } from "./CaratulasQueue";
 
 const EVENT_LABEL: Record<string, { label: string; cls: string }> = {
   activated: { label: "Suscripción activada", cls: "bg-green-50 text-green-700" },
@@ -14,7 +15,7 @@ export default async function OwnerPagosPage() {
   const session = await getAdvisorSession();
   if (!session || !isPlatformOwner(session.email)) redirect("/login");
 
-  const [proAdvisors, pendingCommissions, planEvents] = await Promise.all([
+  const [proAdvisors, pendingCommissions, planEvents, caratulasPendientes] = await Promise.all([
     db.advisor.findMany({
       where: { plan: "paid", deletedAt: null },
       select: { id: true, name: true, email: true, paidUntil: true, paymentFailedAt: true },
@@ -28,6 +29,20 @@ export default async function OwnerPagosPage() {
       orderBy: { createdAt: "desc" },
       take: 12,
       select: { id: true, event: true, createdAt: true, advisor: { select: { name: true } } },
+    }),
+    db.referral.findMany({
+      where: { caratulaStatus: { in: ["pendiente", "discrepancia"] }, advisor: { deletedAt: null } },
+      orderBy: { updatedAt: "desc" },
+      select: {
+        id: true,
+        leadName: true,
+        productType: true,
+        saleAmount: true,
+        caratulaUrl: true,
+        caratulaStatus: true,
+        updatedAt: true,
+        advisor: { select: { name: true } },
+      },
     }),
   ]);
 
@@ -60,6 +75,28 @@ export default async function OwnerPagosPage() {
           <p className="text-[34px] font-bold text-brand-ink leading-none mb-3">{formatCurrency(pendingTotal)}</p>
           <p className="text-sm text-brand-gray-4">se suma al próximo cobro mensual de cada asesor</p>
         </div>
+      </div>
+
+      {/* Carátulas por validar — evidencia del monto de cada conversión */}
+      <div className="bg-white rounded-2xl border border-brand-border-1 p-6">
+        <p className="font-bold text-brand-ink text-[15px] mb-1">Carátulas por validar</p>
+        <p className="text-xs text-brand-gray-4 mb-4">
+          Compara la carátula contra el monto reportado — de esto depende la comisión y el premio del cliente.
+        </p>
+        <CaratulasQueue
+          initialRows={caratulasPendientes
+            .filter((c) => c.caratulaUrl)
+            .map((c) => ({
+              referralId: c.id,
+              advisorName: c.advisor.name,
+              leadName: c.leadName,
+              productType: c.productType,
+              saleAmount: c.saleAmount,
+              caratulaUrl: c.caratulaUrl!,
+              caratulaStatus: c.caratulaStatus ?? "pendiente",
+              convertedAt: formatDate(c.updatedAt.toISOString()),
+            }))}
+        />
       </div>
 
       {/* Suscripciones activas */}

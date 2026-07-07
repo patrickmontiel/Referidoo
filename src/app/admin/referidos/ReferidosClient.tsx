@@ -21,7 +21,7 @@ type Referral = {
   confirmedByReferrer: boolean;
   referrerConfirmedAt: string | null;
   createdAt: string;
-  referrer: { id: string; name: string; createdAt: string; launchBonusUsed: boolean; bubblePoints: number };
+  referrer: { id: string; name: string; createdAt: string; launchBonusUsed: boolean; bubblePoints: number; clabe?: string | null; clabeBank?: string | null; clabeHolder?: string | null };
 };
 
 function getInitials(name: string) {
@@ -91,6 +91,7 @@ type ReferidosClientProps = {
   initialBubbleAutoPoints: number;
   initialBubbleGmmPoints: number;
   initialFirstTierAmount: number;
+  initialCaratulaRequired: boolean;
 };
 
 export default function ReferidosClient({
@@ -99,6 +100,7 @@ export default function ReferidosClient({
   initialBubbleAutoPoints,
   initialBubbleGmmPoints,
   initialFirstTierAmount,
+  initialCaratulaRequired,
 }: ReferidosClientProps) {
   const [referrals, setReferrals] = useState<Referral[]>(initialReferrals);
   const referralsRef = useRef<Referral[]>(initialReferrals);
@@ -109,7 +111,10 @@ export default function ReferidosClient({
   const [convertTarget, setConvertTarget] = useState<{ id: string; name: string } | null>(null);
   const [saleInput, setSaleInput] = useState("");
   const [productType, setProductType] = useState("");
-  const [payTarget, setPayTarget] = useState<{ id: string; referrerName: string; amount: number } | null>(null);
+  const [caratulaFile, setCaratulaFile] = useState<File | null>(null);
+  const [convertError, setConvertError] = useState("");
+  const [payTarget, setPayTarget] = useState<{ id: string; referrerName: string; amount: number; clabe?: string | null; clabeBank?: string | null; clabeHolder?: string | null } | null>(null);
+  const [copiedField, setCopiedField] = useState("");
   const [payNote, setPayNote] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingSale, setEditingSale] = useState(false);
@@ -149,12 +154,21 @@ export default function ReferidosClient({
   function startConvert(id: string, name: string, initialProductType?: string | null) {
     setSaleInput("");
     setProductType(initialProductType ?? "");
+    setCaratulaFile(null);
+    setConvertError("");
     setConvertTarget({ id, name });
   }
 
-  function startPay(id: string, referrerName: string, amount: number) {
+  function startPay(id: string, referrerName: string, amount: number, referrer?: Referral["referrer"]) {
     setPayNote("");
-    setPayTarget({ id, referrerName, amount });
+    setCopiedField("");
+    setPayTarget({ id, referrerName, amount, clabe: referrer?.clabe, clabeBank: referrer?.clabeBank, clabeHolder: referrer?.clabeHolder });
+  }
+
+  function copyField(label: string, value: string) {
+    navigator.clipboard.writeText(value).catch(() => {});
+    setCopiedField(label);
+    setTimeout(() => setCopiedField(""), 1600);
   }
 
   async function deleteReferral(id: string) {
@@ -174,10 +188,40 @@ export default function ReferidosClient({
     if (!convertTarget) return;
     const saleAmount = Number(saleInput.replace(/,/g, ""));
     if (!saleAmount) return;
+    setConvertError("");
+
+    // Con Blob habilitado, la carátula es obligatoria: se sube primero y la
+    // conversión viaja con su evidencia.
+    let caratulaUrl: string | undefined;
+    if (initialCaratulaRequired) {
+      if (!caratulaFile) {
+        setConvertError("Sube la carátula de la póliza — es la evidencia del monto.");
+        return;
+      }
+      setUpdating(true);
+      const fd = new FormData();
+      fd.append("file", caratulaFile);
+      const up = await fetch("/api/referrals/caratula", { method: "POST", body: fd });
+      const upData = await up.json().catch(() => ({}));
+      if (!up.ok) {
+        setUpdating(false);
+        setConvertError(upData.error ?? "No se pudo subir la carátula, intenta de nuevo");
+        return;
+      }
+      caratulaUrl = upData.url;
+    }
+
     const usedProduct = productType;
-    await update(convertTarget.id, { status: "converted", rewardStatus: "approved", saleAmount, productType: productType || null });
+    await update(convertTarget.id, {
+      status: "converted",
+      rewardStatus: "approved",
+      saleAmount,
+      productType: productType || null,
+      ...(caratulaUrl ? { caratulaUrl } : {}),
+    });
     setConvertTarget(null);
     setProductType("");
+    setCaratulaFile(null);
     if (advisorPlan === "freemium" && saleAmount && usedProduct) {
       const rates: Record<string, { freemium: number; paid: number }> = {
         PPR: { freemium: 0.0025, paid: 0.0015 },
@@ -478,10 +522,32 @@ export default function ReferidosClient({
                   autoFocus
                 />
               </div>
-              <p className="text-[11.5px] text-brand-gray-4 leading-snug mb-5">
+              <p className="text-[11.5px] text-brand-gray-4 leading-snug mb-4">
                 Usa el monto real de la carátula — define el premio de tu cliente y tu
                 comisión. Referidoo valida muestras contra carátula de póliza.
               </p>
+              {initialCaratulaRequired && (
+                <div className="mb-5">
+                  <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">
+                    Carátula de la póliza (foto o PDF)
+                  </label>
+                  <label className={`flex items-center justify-between gap-3 border rounded-xl px-4 py-3 cursor-pointer transition ${caratulaFile ? "border-brand-ink bg-brand-surface" : "border-brand-border-4 hover:border-brand-ink"}`}>
+                    <span className={`text-sm truncate ${caratulaFile ? "text-brand-ink font-medium" : "text-brand-gray-4"}`}>
+                      {caratulaFile ? caratulaFile.name : "Elegir archivo…"}
+                    </span>
+                    <span className="text-xs font-semibold text-[#2563EB] flex-shrink-0">{caratulaFile ? "Cambiar" : "Subir"}</span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
+                      className="hidden"
+                      onChange={(e) => setCaratulaFile(e.target.files?.[0] ?? null)}
+                    />
+                  </label>
+                </div>
+              )}
+              {convertError && (
+                <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl px-3.5 py-2.5 mb-4">{convertError}</p>
+              )}
               <div className="flex gap-2">
                 <button
                   onClick={confirmConvert}
@@ -505,9 +571,41 @@ export default function ReferidosClient({
           <div className="absolute inset-0 bg-black/25" onClick={() => setPayTarget(null)} />
           <div className="relative bg-white w-full max-w-sm rounded-t-3xl md:rounded-2xl p-6 shadow-2xl">
             <h2 className="font-semibold mb-1">Confirmar pago del premio</h2>
-            <p className="text-sm text-brand-gray-4 mb-5">
+            <p className="text-sm text-brand-gray-4 mb-4">
               Confirma que enviaste <span className="font-semibold text-brand-ink">{formatCurrency(payTarget.amount)}</span> a {payTarget.referrerName}
             </p>
+            {payTarget.clabe ? (
+              <div className="bg-brand-surface rounded-xl p-4 mb-4">
+                <p className="text-[10px] font-bold text-brand-gray-4 uppercase tracking-[0.08em] mb-2">
+                  Datos para transferir{payTarget.clabeBank ? ` · ${payTarget.clabeBank}` : ""}
+                </p>
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span className="text-sm font-semibold text-brand-ink tabular-nums tracking-wide">{payTarget.clabe}</span>
+                  <button
+                    onClick={() => copyField("clabe", payTarget.clabe!)}
+                    className="text-xs font-semibold text-[#2563EB] bg-[#EBF2FF] px-2.5 py-1 rounded-full hover:bg-[#dbe7ff] transition flex-shrink-0"
+                  >
+                    {copiedField === "clabe" ? "Copiada ✓" : "Copiar CLABE"}
+                  </button>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-brand-gray-3">
+                    {payTarget.clabeHolder || payTarget.referrerName} · {formatCurrency(payTarget.amount)}
+                  </span>
+                  <button
+                    onClick={() => copyField("monto", String(payTarget.amount))}
+                    className="text-xs font-semibold text-brand-gray-2 bg-white border border-brand-border-4 px-2.5 py-1 rounded-full hover:border-brand-ink transition flex-shrink-0"
+                  >
+                    {copiedField === "monto" ? "Copiado ✓" : "Copiar monto"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-brand-gray-4 bg-brand-surface rounded-xl px-4 py-3 mb-4">
+                {payTarget.referrerName} aún no guarda su CLABE en su portal — pídesela por
+                WhatsApp o dile que la capture en su página (sección &ldquo;Datos para recibir tus premios&rdquo;).
+              </p>
+            )}
             <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">Referencia del pago (opcional)</label>
             <input
               type="text"
@@ -769,7 +867,7 @@ export default function ReferidosClient({
                         onClick={() => {
                           if (value === "paid" && selected.rewardStatus !== "paid") {
                             closeDrawer();
-                            startPay(selected.id, selected.referrer.name, selected.rewardAmount);
+                            startPay(selected.id, selected.referrer.name, selected.rewardAmount, selected.referrer);
                           } else {
                             update(selected.id, { rewardStatus: value });
                           }

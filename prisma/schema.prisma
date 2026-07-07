@@ -62,6 +62,11 @@ model Client {
   email            String?
   phone            String?
   policyNumber     String?
+  // Datos para recibir premios (el cliente los captura en su portal; el
+  // asesor los ve al pagar). CLABE de 18 dígitos, banco y titular.
+  clabe            String?
+  clabeBank        String?
+  clabeHolder      String?
   accessToken      String     @unique @default(cuid())
   referralCode     String     @unique
   active           Boolean    @default(true)
@@ -125,8 +130,15 @@ model Referral {
   billedAt            DateTime?
   rewardPaidAt        DateTime?
   paymentNote         String?
+  // Carátula de la póliza: evidencia del monto reportado (URL en Vercel Blob).
+  // caratulaStatus: pendiente (subida, sin revisar) | validada | discrepancia.
+  caratulaUrl         String?
+  caratulaStatus      String?
   confirmedByReferrer Boolean   @default(false)
   referrerConfirmedAt DateTime?
+  // Primer contacto del asesor con el lead (status → contacted por 1a vez).
+  // Alimenta la métrica "horas a primer contacto" del Playbook 2.
+  contactedAt         DateTime?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 

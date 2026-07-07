@@ -90,19 +90,19 @@ beforeEach(() => {
 describe("PATCH /api/referrals/[id] — auth & ownership", () => {
   it("returns 401 without a session", async () => {
     mockSession.mockResolvedValue(null);
-    const res = await PATCH(patchRequest({ status: "converted" }), { params: Promise.resolve({ id: "r1" }) });
+    const res = await PATCH(patchRequest({ status: "converted", saleAmount: 50000 }), { params: Promise.resolve({ id: "r1" }) });
     expect(res.status).toBe(401);
   });
 
   it("returns 404 when the referral does not exist", async () => {
     mockFindUnique.mockResolvedValue(null);
-    const res = await PATCH(patchRequest({ status: "converted" }), { params: Promise.resolve({ id: "r1" }) });
+    const res = await PATCH(patchRequest({ status: "converted", saleAmount: 50000 }), { params: Promise.resolve({ id: "r1" }) });
     expect(res.status).toBe(404);
   });
 
   it("returns 404 when the referral belongs to a different advisor", async () => {
     mockFindUnique.mockResolvedValue(baseReferral({ advisorId: "other-advisor" }));
-    const res = await PATCH(patchRequest({ status: "converted" }), { params: Promise.resolve({ id: "r1" }) });
+    const res = await PATCH(patchRequest({ status: "converted", saleAmount: 50000 }), { params: Promise.resolve({ id: "r1" }) });
     expect(res.status).toBe(404);
   });
 });
@@ -113,7 +113,7 @@ describe("PATCH /api/referrals/[id] — conversión escalera (Vida/PPR)", () => 
     mockCount.mockResolvedValue(2);
     mockNextReferral.mockResolvedValue({ amount: 1500, tierPosition: 2 });
 
-    const res = await PATCH(patchRequest({ status: "converted", productType: "Vida" }), { params: Promise.resolve({ id: "r1" }) });
+    const res = await PATCH(patchRequest({ status: "converted", productType: "Vida", saleAmount: 50000 }), { params: Promise.resolve({ id: "r1" }) });
     expect(res.status).toBe(200);
     expect(mockNextReferral).toHaveBeenCalledWith("adv1", 2);
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ tierPosition: 2, rewardAmount: 1500 }) }));
@@ -122,7 +122,7 @@ describe("PATCH /api/referrals/[id] — conversión escalera (Vida/PPR)", () => 
   it("keeps the existing tier/reward when re-converting after a de-conversion (previouslyHadEscaleraSlot)", async () => {
     mockFindUnique.mockResolvedValue(baseReferral({ status: "contacted", tierPosition: 1, rewardAmount: 1500, rewardStatus: "approved" }));
 
-    const res = await PATCH(patchRequest({ status: "converted", productType: "Vida" }), { params: Promise.resolve({ id: "r1" }) });
+    const res = await PATCH(patchRequest({ status: "converted", productType: "Vida", saleAmount: 50000 }), { params: Promise.resolve({ id: "r1" }) });
     expect(res.status).toBe(200);
     expect(mockNextReferral).not.toHaveBeenCalled();
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.not.objectContaining({ tierPosition: expect.anything() }) }));
@@ -133,7 +133,7 @@ describe("PATCH /api/referrals/[id] — conversión burbuja (Daños/Auto, GMM, O
   it("sets tier/reward to zero and releases the launch bonus if it occupied tier 1 unpaid", async () => {
     mockFindUnique.mockResolvedValue(baseReferral({ status: "contacted", tierPosition: 1, rewardAmount: 1500, rewardStatus: "approved" }));
 
-    const res = await PATCH(patchRequest({ status: "converted", productType: "Daños/Auto" }), { params: Promise.resolve({ id: "r1" }) });
+    const res = await PATCH(patchRequest({ status: "converted", productType: "Daños/Auto", saleAmount: 60000 }), { params: Promise.resolve({ id: "r1" }) });
     expect(res.status).toBe(200);
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ tierPosition: 0, rewardAmount: 0 }) }));
     expect(mockClientUpdate).toHaveBeenCalledWith({ where: { id: "client1" }, data: { launchBonusUsed: false } });
@@ -142,7 +142,7 @@ describe("PATCH /api/referrals/[id] — conversión burbuja (Daños/Auto, GMM, O
   it("does not release the launch bonus if the previous slot was already paid", async () => {
     mockFindUnique.mockResolvedValue(baseReferral({ status: "contacted", tierPosition: 1, rewardAmount: 1500, rewardStatus: "paid" }));
 
-    await PATCH(patchRequest({ status: "converted", productType: "GMM" }), { params: Promise.resolve({ id: "r1" }) });
+    await PATCH(patchRequest({ status: "converted", productType: "GMM", saleAmount: 60000 }), { params: Promise.resolve({ id: "r1" }) });
     expect(mockClientUpdate).not.toHaveBeenCalledWith({ where: { id: "client1" }, data: { launchBonusUsed: false } });
   });
 });
@@ -224,11 +224,12 @@ describe("PATCH /api/referrals/[id] — persistencia de lessioCommission", () =>
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ lessioCommission: null }) }));
   });
 
-  it("persiste null cuando no hay saleAmount", async () => {
+  it("rechaza convertir sin saleAmount (regla dura: sin monto no hay conversión)", async () => {
     mockFindUnique.mockResolvedValue(baseReferral());
 
-    await PATCH(patchRequest({ status: "converted", productType: "Vida" }), { params: Promise.resolve({ id: "r1" }) });
-    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ lessioCommission: null }) }));
+    const res = await PATCH(patchRequest({ status: "converted", productType: "Vida" }), { params: Promise.resolve({ id: "r1" }) });
+    expect(res.status).toBe(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
   });
 
   it("recalcula la comisión al corregir el producto después de convertir (isProductTypeEdit)", async () => {
@@ -255,7 +256,7 @@ describe("PATCH /api/referrals/[id] — Bono de Inicio", () => {
       .mockResolvedValueOnce(3); // countInWindow para el bono
     mockNextReferral.mockResolvedValue({ amount: 1500, tierPosition: 1 });
 
-    const res = await PATCH(patchRequest({ status: "converted", productType: "Vida" }), { params: Promise.resolve({ id: "r1" }) });
+    const res = await PATCH(patchRequest({ status: "converted", productType: "Vida", saleAmount: 50000 }), { params: Promise.resolve({ id: "r1" }) });
     expect(res.status).toBe(200);
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ rewardAmount: 2500 }) }));
     expect(mockClientUpdate).toHaveBeenCalledWith({ where: { id: "client1" }, data: { launchBonusUsed: true } });
@@ -267,7 +268,7 @@ describe("PATCH /api/referrals/[id] — Bono de Inicio", () => {
     mockCount.mockResolvedValueOnce(0);
     mockNextReferral.mockResolvedValue({ amount: 1500, tierPosition: 1 });
 
-    await PATCH(patchRequest({ status: "converted", productType: "Vida" }), { params: Promise.resolve({ id: "r1" }) });
+    await PATCH(patchRequest({ status: "converted", productType: "Vida", saleAmount: 50000 }), { params: Promise.resolve({ id: "r1" }) });
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ rewardAmount: 1500 }) }));
   });
 
@@ -277,7 +278,7 @@ describe("PATCH /api/referrals/[id] — Bono de Inicio", () => {
     mockCount.mockResolvedValueOnce(0);
     mockNextReferral.mockResolvedValue({ amount: 1500, tierPosition: 1 });
 
-    await PATCH(patchRequest({ status: "converted", productType: "Vida" }), { params: Promise.resolve({ id: "r1" }) });
+    await PATCH(patchRequest({ status: "converted", productType: "Vida", saleAmount: 50000 }), { params: Promise.resolve({ id: "r1" }) });
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ rewardAmount: 1500 }) }));
   });
 
@@ -286,7 +287,7 @@ describe("PATCH /api/referrals/[id] — Bono de Inicio", () => {
     mockCount.mockResolvedValueOnce(0).mockResolvedValueOnce(2);
     mockNextReferral.mockResolvedValue({ amount: 1500, tierPosition: 1 });
 
-    await PATCH(patchRequest({ status: "converted", productType: "Vida" }), { params: Promise.resolve({ id: "r1" }) });
+    await PATCH(patchRequest({ status: "converted", productType: "Vida", saleAmount: 50000 }), { params: Promise.resolve({ id: "r1" }) });
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ rewardAmount: 1500 }) }));
   });
 });
@@ -295,7 +296,7 @@ describe("PATCH /api/referrals/[id] — notificaciones", () => {
   it("envía la notificación de conversión y suma puntos burbuja si el producto aplica", async () => {
     mockFindUnique.mockResolvedValue(baseReferral());
 
-    await PATCH(patchRequest({ status: "converted", productType: "GMM" }), { params: Promise.resolve({ id: "r1" }) });
+    await PATCH(patchRequest({ status: "converted", productType: "GMM", saleAmount: 60000 }), { params: Promise.resolve({ id: "r1" }) });
     expect(sendReferralApprovedNotification).toHaveBeenCalled();
     expect(mockClientUpdate).toHaveBeenCalledWith({ where: { id: "client1" }, data: { bubblePoints: { increment: 300 } } });
   });

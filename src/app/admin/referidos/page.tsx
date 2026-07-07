@@ -46,6 +46,7 @@ export default async function ReferidosPage() {
       initialBubbleAutoPoints={settings?.bubbleAutoPoints ?? DEFAULT_BUBBLE_AUTO_POINTS}
       initialBubbleGmmPoints={settings?.bubbleGmmPoints ?? DEFAULT_BUBBLE_GMM_POINTS}
       initialFirstTierAmount={firstTierAmount}
+      initialCaratulaRequired={Boolean(process.env.BLOB_READ_WRITE_TOKEN)}
     />
   );
 }

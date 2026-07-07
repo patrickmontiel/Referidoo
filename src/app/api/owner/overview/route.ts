@@ -164,6 +164,36 @@ export async function GET(req: NextRequest) {
     }))
     .sort((a, b) => b.commission - a.commission);
 
+  // ── Morosidad: premios con +14 días sin pagar (escalera aprobada o
+  //    burbuja reclamada). Alimenta el chip rojo del ranking y el detector. ──
+  const OVERDUE_MS = 14 * 24 * 60 * 60 * 1000;
+  const overdueCutoff = new Date(now.getTime() - OVERDUE_MS);
+  const morosos = new Map<string, { count: number; total: number; ejemplo: string }>();
+  const [overdueEscalera, overdueClaims] = await Promise.all([
+    db.referral.findMany({
+      where: {
+        status: "converted",
+        rewardStatus: "approved",
+        tierPosition: { gt: 0 },
+        updatedAt: { lt: overdueCutoff },
+        advisor: { deletedAt: null },
+      },
+      select: { advisorId: true, rewardAmount: true, referrer: { select: { name: true } } },
+    }),
+    db.bubbleClaim.findMany({
+      where: { status: "pending", createdAt: { lt: overdueCutoff }, client: { advisor: { deletedAt: null } } },
+      select: { amount: true, client: { select: { name: true, advisorId: true } } },
+    }),
+  ]);
+  for (const r of overdueEscalera) {
+    const prev = morosos.get(r.advisorId) ?? { count: 0, total: 0, ejemplo: "" };
+    morosos.set(r.advisorId, { count: prev.count + 1, total: prev.total + r.rewardAmount, ejemplo: r.referrer.name });
+  }
+  for (const c of overdueClaims) {
+    const prev = morosos.get(c.client.advisorId) ?? { count: 0, total: 0, ejemplo: "" };
+    morosos.set(c.client.advisorId, { count: prev.count + 1, total: prev.total + c.amount, ejemplo: c.client.name });
+  }
+
   // ── Ranking ──
   const ranking = advisors
     .map((a) => {
@@ -181,6 +211,7 @@ export async function GET(req: NextRequest) {
         converted: myConverted.length,
         commission: myConverted.reduce((s, r) => s + (r.lessioCommission ?? 0), 0),
         lastCloseAt: lastClose?.toISOString() ?? null,
+        moroso: morosos.has(a.id),
       };
     })
     .sort((a, b) => b.commission - a.commission || b.converted - a.converted || b.leads - a.leads);
@@ -214,6 +245,15 @@ export async function GET(req: NextRequest) {
       id: `noamount-${advisorId}`,
       title: `${count} conversión${count !== 1 ? "es" : ""} sin monto capturado`,
       detail: `${advisorName.get(advisorId) ?? "Un asesor"} registró cierres sin valor de póliza — la comisión no se puede calcular.`,
+    });
+  }
+
+  // Morosidad → entradas en problemas (el mapa se calcula antes del ranking).
+  for (const [advisorId, info] of morosos) {
+    problems.push({
+      id: `moroso-${advisorId}`,
+      title: `Premios vencidos: ${info.count} sin pagar +14 días ($${info.total.toLocaleString("es-MX")})`,
+      detail: `${advisorName.get(advisorId) ?? "Un asesor"} debe premios a sus clientes (ej. ${info.ejemplo}) — la promesa rota quema el canal. El cron ya le mandó recordatorio (día 7) y aviso firme (día 14).`,
     });
   }
 

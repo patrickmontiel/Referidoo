@@ -48,7 +48,7 @@ type BubbleClaim = {
 };
 
 type PortalData = {
-  client: { id: string; name: string; referralCode: string; createdAt: string; launchBonusUsed: boolean; bubblePoints: number };
+  client: { id: string; name: string; referralCode: string; createdAt: string; launchBonusUsed: boolean; bubblePoints: number; clabe: string | null; clabeBank: string | null; clabeHolder: string | null };
   advisor: { name: string; phone: string | null; companyName: string | null; whatsappMessage: string | null };
   tiers: RewardTier[];
   settings: {
@@ -98,6 +98,40 @@ export default function ClientPortalPage() {
   const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
   const [claimingBubble, setClaimingBubble] = useState(false);
   const [now, setNow] = useState(() => new Date());
+
+  // Datos bancarios para recibir premios
+  const [editingClabe, setEditingClabe] = useState(false);
+  const [clabeIn, setClabeIn] = useState("");
+  const [bankIn, setBankIn] = useState("");
+  const [holderIn, setHolderIn] = useState("");
+  const [savingClabe, setSavingClabe] = useState(false);
+  const [clabeError, setClabeError] = useState("");
+
+  async function saveClabe() {
+    const clean = clabeIn.replace(/\s/g, "");
+    if (!/^\d{18}$/.test(clean)) {
+      setClabeError("La CLABE debe tener exactamente 18 dígitos");
+      return;
+    }
+    setSavingClabe(true);
+    setClabeError("");
+    const res = await fetch(`/api/portal/${token}/clabe`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clabe: clean, bank: bankIn, holder: holderIn }),
+    }).catch(() => null);
+    setSavingClabe(false);
+    if (!res?.ok) {
+      setClabeError("No se pudo guardar, intenta de nuevo");
+      return;
+    }
+    setData((prev) =>
+      prev
+        ? { ...prev, client: { ...prev.client, clabe: clean, clabeBank: bankIn || null, clabeHolder: holderIn || null } }
+        : prev
+    );
+    setEditingClabe(false);
+  }
 
   // Tour state
   const [tourActive, setTourActive] = useState(false);
@@ -861,6 +895,87 @@ export default function ClientPortalPage() {
                           </p>
                         )}
                       </>
+                    )}
+                  </div>
+
+                  {/* Datos para recibir premios */}
+                  <div style={{ background: "#fff", border: "1px solid rgba(0,0,0,.06)", borderRadius: 20, padding: "20px 19px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                      <h2 style={{ fontSize: 14, fontWeight: 700, color: "#0d0d0d" }}>Datos para recibir tus premios</h2>
+                      {client.clabe && !editingClabe && (
+                        <button
+                          onClick={() => { setEditingClabe(true); setClabeIn(client.clabe ?? ""); setBankIn(client.clabeBank ?? ""); setHolderIn(client.clabeHolder ?? ""); }}
+                          style={{ fontSize: 12, color: "#2B57F0", fontWeight: 600, background: "none", border: "none", cursor: "pointer", padding: 4 }}
+                        >
+                          Editar
+                        </button>
+                      )}
+                    </div>
+                    {client.clabe && !editingClabe ? (
+                      <div>
+                        <p style={{ fontSize: 13, color: "#0d0d0d", fontWeight: 600, letterSpacing: ".02em" }}>
+                          CLABE ···· {client.clabe.slice(-4)}{client.clabeBank ? ` · ${client.clabeBank}` : ""}
+                        </p>
+                        <p style={{ fontSize: 12, color: "#71717a", marginTop: 3 }}>
+                          {client.clabeHolder || client.name} — tu asesor la usa para transferirte cada premio.
+                        </p>
+                      </div>
+                    ) : !editingClabe ? (
+                      <div>
+                        <p style={{ fontSize: 12.5, color: "#71717a", lineHeight: 1.5, marginBottom: 10 }}>
+                          Guarda tu CLABE una vez y tus premios te llegan por transferencia sin
+                          que tengas que pasarla cada vez.
+                        </p>
+                        <button
+                          onClick={() => setEditingClabe(true)}
+                          style={{ fontSize: 13, fontWeight: 700, color: "#fff", background: "#2B57F0", border: "none", borderRadius: 999, padding: "9px 18px", cursor: "pointer" }}
+                        >
+                          Agregar mi CLABE
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: "grid", gap: 8 }}>
+                        <input
+                          value={clabeIn}
+                          onChange={(e) => setClabeIn(e.target.value.replace(/[^\d\s]/g, ""))}
+                          placeholder="CLABE interbancaria (18 dígitos)"
+                          inputMode="numeric"
+                          style={{ fontSize: 13, padding: "11px 13px", borderRadius: 12, border: "1px solid rgba(0,0,0,.14)", outline: "none", fontFamily: "inherit" }}
+                        />
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                          <input
+                            value={bankIn}
+                            onChange={(e) => setBankIn(e.target.value)}
+                            placeholder="Banco"
+                            style={{ fontSize: 13, padding: "11px 13px", borderRadius: 12, border: "1px solid rgba(0,0,0,.14)", outline: "none", fontFamily: "inherit" }}
+                          />
+                          <input
+                            value={holderIn}
+                            onChange={(e) => setHolderIn(e.target.value)}
+                            placeholder="Titular de la cuenta"
+                            style={{ fontSize: 13, padding: "11px 13px", borderRadius: 12, border: "1px solid rgba(0,0,0,.14)", outline: "none", fontFamily: "inherit" }}
+                          />
+                        </div>
+                        {clabeError && <p style={{ fontSize: 12, color: "#E7395A" }}>{clabeError}</p>}
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button
+                            onClick={saveClabe}
+                            disabled={savingClabe}
+                            style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#fff", background: "#2B57F0", border: "none", borderRadius: 999, padding: "11px 0", cursor: "pointer", opacity: savingClabe ? 0.6 : 1 }}
+                          >
+                            {savingClabe ? "Guardando…" : "Guardar"}
+                          </button>
+                          <button
+                            onClick={() => { setEditingClabe(false); setClabeError(""); }}
+                            style={{ fontSize: 13, fontWeight: 600, color: "#71717a", background: "#f0f0ef", border: "none", borderRadius: 999, padding: "11px 16px", cursor: "pointer" }}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                        <p style={{ fontSize: 11, color: "#a1a1aa", lineHeight: 1.45 }}>
+                          Solo tu asesor ve estos datos, y solo para pagarte tus premios.
+                        </p>
+                      </div>
                     )}
                   </div>
 

@@ -52,6 +52,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
       createdAt: client.createdAt,
       launchBonusUsed: (client as typeof client & { launchBonusUsed?: boolean }).launchBonusUsed ?? false,
       bubblePoints: client.bubblePoints,
+      clabe: client.clabe ?? null,
+      clabeBank: client.clabeBank ?? null,
+      clabeHolder: client.clabeHolder ?? null,
     },
     bubbleClaims: client.bubbleClaims,
     advisor: {

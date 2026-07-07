@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { db } from "@/lib/db";
+import { analyzeCaratula } from "@/lib/caratula-ai";
 import { getAdvisorSession } from "@/lib/auth";
 import { sendReferralApprovedNotification, sendPaymentSentNotification, type PaymentPayload } from "@/lib/email";
 import { getAdvisorTiers, calculateLessioCommission, calculateRewardForNextReferral, getAdvisorBubbleSettings, getBubblePointsForProduct, isEscaleraProduct, ESCALERA_PRODUCTS } from "@/lib/rewards";
@@ -28,6 +30,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const saleAmount = body.saleAmount != null ? Number(body.saleAmount) : r.saleAmount;
   const isPaid = newRewardStatus === "paid" && referral.rewardStatus !== "paid";
   const isConverting = newStatus === "converted" && referral.status !== "converted";
+
+  // Regla dura (whitepaper cap. 11 / playbook 9): sin monto real no hay
+  // conversión — el monto define el premio del cliente y la comisión.
+  if (isConverting && !saleAmount) {
+    return NextResponse.json(
+      { error: "El monto de la póliza es obligatorio para marcar como convertido" },
+      { status: 400 }
+    );
+  }
+  // Con Vercel Blob habilitado, la carátula es obligatoria como evidencia
+  // del monto. Sin el token (dev/preview), la regla queda apagada.
+  const caratulaRequired = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  if (isConverting && caratulaRequired && !body.caratulaUrl && !referral.caratulaUrl) {
+    return NextResponse.json(
+      { error: "La carátula de la póliza es obligatoria para convertir" },
+      { status: 400 }
+    );
+  }
   const productTypeForConversion: string | null = body.productType !== undefined ? body.productType : referral.productType ?? null;
 
   // El nivel/premio se asigna por orden de CONVERSIÓN (no por orden de registro del lead):
@@ -157,6 +177,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(finalRewardAmount !== referral.rewardAmount ? { rewardAmount: finalRewardAmount } : {}),
       ...(isPaid ? { rewardPaidAt: new Date(), paymentNote: body.paymentNote ?? null } : {}),
       ...(lessioCommission !== undefined ? { lessioCommission } : {}),
+      ...(typeof body.caratulaUrl === "string" && body.caratulaUrl
+        ? { caratulaUrl: body.caratulaUrl, caratulaStatus: "pendiente" }
+        : {}),
+      // Primer contacto: se sella una sola vez, alimenta la métrica <24h.
+      ...(newStatus === "contacted" && !referral.contactedAt ? { contactedAt: new Date() } : {}),
     },
   });
 
@@ -203,6 +228,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // vía /unete, ganan 1 mes de Pro él y su reclutador. El helper atrapa
     // sus propios errores — nunca truena la conversión.
     await grantUneteRewardsIfFirstConversion(referral.advisorId);
+
+    // Análisis IA de la carátula: corre DESPUÉS de responder (after()) para
+    // no frenar al asesor; si coincide con el monto se auto-valida.
+    if (typeof body.caratulaUrl === "string" && body.caratulaUrl && saleAmount) {
+      after(() =>
+        analyzeCaratula({
+          referralId: id,
+          caratulaUrl: body.caratulaUrl,
+          saleAmount,
+          productType: productTypeForConversion,
+        })
+      );
+    }
   }
 
   // 2. Notify referrer (Ana) and creator when payment is sent

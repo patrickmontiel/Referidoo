@@ -23,6 +23,7 @@ export default async function OwnerInteligenciaPage() {
         status: true,
         createdAt: true,
         updatedAt: true,
+        contactedAt: true,
         saleAmount: true,
         productType: true,
         referrerId: true,
@@ -45,6 +46,15 @@ export default async function OwnerInteligenciaPage() {
     .filter((d) => d >= 0);
   const avgDays = daysToClose.length
     ? daysToClose.reduce((s, d) => s + d, 0) / daysToClose.length
+    : null;
+
+  // Horas a primer contacto (métrica del Playbook 2: meta <24h)
+  const hoursToContact = active
+    .filter((r) => r.contactedAt)
+    .map((r) => (r.contactedAt!.getTime() - r.createdAt.getTime()) / (60 * 60 * 1000))
+    .filter((h) => h >= 0);
+  const avgHoursContact = hoursToContact.length
+    ? hoursToContact.reduce((s, h) => s + h, 0) / hoursToContact.length
     : null;
 
   const sharers = new Set(active.map((r) => r.referrerId));
@@ -123,7 +133,11 @@ export default async function OwnerInteligenciaPage() {
         <div className="bg-white rounded-2xl border border-brand-border-1 p-5">
           <p className="text-sm text-brand-gray-3 mb-3">Días a cierre (aprox.)</p>
           <p className="text-[34px] font-bold text-brand-ink leading-none mb-3">{avgDays !== null ? nf(avgDays, 1) : "—"}</p>
-          <p className="text-sm text-brand-gray-4">del registro del lead a la conversión</p>
+          <p className="text-sm text-brand-gray-4">
+            {avgHoursContact !== null
+              ? `primer contacto: ${nf(avgHoursContact, 1)} h promedio (meta <24 h)`
+              : "primer contacto: sin datos aún"}
+          </p>
         </div>
         <div className="bg-white rounded-2xl border border-brand-border-1 p-5">
           <p className="text-sm text-brand-gray-3 mb-3">Prima promedio referida</p>
