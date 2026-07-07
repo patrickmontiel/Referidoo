@@ -84,5 +84,37 @@ export async function POST() {
     results.push("– deletedAt already exists");
   }
 
+  // Carátula de póliza: evidencia del monto reportado (jul 2026)
+  try {
+    await db.execute(`ALTER TABLE "Referral" ADD COLUMN "caratulaUrl" TEXT`);
+    results.push("✓ caratulaUrl added");
+  } catch {
+    results.push("– caratulaUrl already exists");
+  }
+
+  try {
+    await db.execute(`ALTER TABLE "Referral" ADD COLUMN "caratulaStatus" TEXT`);
+    results.push("✓ caratulaStatus added");
+  } catch {
+    results.push("– caratulaStatus already exists");
+  }
+
+  // Timestamp de primer contacto + datos bancarios del cliente (jul 2026)
+  try {
+    await db.execute(`ALTER TABLE "Referral" ADD COLUMN "contactedAt" DATETIME`);
+    results.push("✓ contactedAt added");
+  } catch {
+    results.push("– contactedAt already exists");
+  }
+
+  for (const col of ["clabe", "clabeBank", "clabeHolder"]) {
+    try {
+      await db.execute(`ALTER TABLE "Client" ADD COLUMN "${col}" TEXT`);
+      results.push(`✓ ${col} added`);
+    } catch {
+      results.push(`– ${col} already exists`);
+    }
+  }
+
   return NextResponse.json({ ok: true, results });
 }
