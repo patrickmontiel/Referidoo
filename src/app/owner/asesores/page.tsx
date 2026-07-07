@@ -18,6 +18,8 @@ type AdvisorRow = {
 
 export default function OwnerAsesoresPage() {
   const [advisors, setAdvisors] = useState<AdvisorRow[] | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [confirmToggleId, setConfirmToggleId] = useState<string | null>(null);
@@ -66,10 +68,23 @@ export default function OwnerAsesoresPage() {
     fetch("/api/admin/advisors")
       .then(async (r) => {
         if (!r.ok) { setError("No autorizado"); return; }
-        setAdvisors(await r.json());
+        const data = await r.json();
+        setAdvisors(data.advisors);
+        setNextCursor(data.nextCursor);
       })
       .catch(() => setError("No se pudo cargar la lista"));
   }, []);
+
+  async function loadMore() {
+    if (!nextCursor) return;
+    setLoadingMore(true);
+    const res = await fetch(`/api/admin/advisors?cursor=${encodeURIComponent(nextCursor)}`);
+    setLoadingMore(false);
+    if (!res.ok) return;
+    const data = await res.json();
+    setAdvisors((prev) => [...(prev ?? []), ...data.advisors]);
+    setNextCursor(data.nextCursor);
+  }
 
   async function deleteAdvisor(advisorId: string) {
     setBusyId(advisorId);
@@ -290,6 +305,18 @@ export default function OwnerAsesoresPage() {
             <span>{deleted.length} asesor{deleted.length !== 1 ? "es" : ""} dado{deleted.length !== 1 ? "s" : ""} de baja</span>
           </button>
           {showDeleted && <AdvisorTable rows={deleted} showActions={false} />}
+        </div>
+      )}
+
+      {nextCursor && (
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="text-xs font-medium px-4 py-2 rounded-full border border-brand-border-4 hover:bg-brand-surface disabled:opacity-50 transition"
+          >
+            {loadingMore ? "Cargando..." : "Cargar más asesores"}
+          </button>
         </div>
       )}
     </div>

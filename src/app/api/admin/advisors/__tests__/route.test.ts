@@ -25,26 +25,36 @@ beforeEach(() => {
   process.env.PLATFORM_OWNER_EMAIL = "patrick@referidoo.com";
 });
 
+function listRequest(cursor?: string) {
+  const url = cursor
+    ? `http://localhost:3050/api/admin/advisors?cursor=${cursor}`
+    : "http://localhost:3050/api/admin/advisors";
+  return new NextRequest(url);
+}
+
 describe("GET /api/admin/advisors", () => {
   it("returns 403 when there is no session", async () => {
     mockSession.mockResolvedValue(null);
-    const res = await GET();
+    const res = await GET(listRequest());
     expect(res.status).toBe(403);
   });
 
   it("returns 403 when the session email is not the platform owner", async () => {
     mockSession.mockResolvedValue({ advisorId: "adv1", email: "not-owner@x.com" });
-    const res = await GET();
+    const res = await GET(listRequest());
     expect(res.status).toBe(403);
     expect(mockFindMany).not.toHaveBeenCalled();
   });
 
-  it("returns the advisor list (minimal fields only) for the platform owner", async () => {
+  it("returns the advisor list (minimal fields only) for the platform owner, with nextCursor null under a page", async () => {
     mockSession.mockResolvedValue({ advisorId: "owner1", email: "patrick@referidoo.com" });
     mockFindMany.mockResolvedValue([{ id: "adv1", name: "Ana", email: "ana@x.com", plan: "freemium", emailVerified: true, createdAt: new Date(), paidUntil: null, paymentFailedAt: null, mpPreapprovalId: null }]);
 
-    const res = await GET();
+    const res = await GET(listRequest());
     expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.advisors).toHaveLength(1);
+    expect(body.nextCursor).toBeNull();
     expect(mockFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         select: {
@@ -59,7 +69,33 @@ describe("GET /api/admin/advisors", () => {
           paymentFailedAt: true,
           mpPreapprovalId: true,
         },
+        take: 51,
       })
+    );
+    expect(mockFindMany.mock.calls[0][0]).not.toHaveProperty("cursor");
+  });
+
+  it("returns nextCursor when there are more rows than the page size", async () => {
+    mockSession.mockResolvedValue({ advisorId: "owner1", email: "patrick@referidoo.com" });
+    const rows = Array.from({ length: 51 }, (_, i) => ({
+      id: `adv${i}`, name: `A${i}`, email: `a${i}@x.com`, plan: "freemium", emailVerified: true,
+      createdAt: new Date(), paidUntil: null, paymentFailedAt: null, mpPreapprovalId: null,
+    }));
+    mockFindMany.mockResolvedValue(rows);
+
+    const res = await GET(listRequest());
+    const body = await res.json();
+    expect(body.advisors).toHaveLength(50);
+    expect(body.nextCursor).toBe("adv50");
+  });
+
+  it("passes the cursor through to the query when provided", async () => {
+    mockSession.mockResolvedValue({ advisorId: "owner1", email: "patrick@referidoo.com" });
+    mockFindMany.mockResolvedValue([]);
+
+    await GET(listRequest("adv1"));
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ cursor: { id: "adv1" }, skip: 1 })
     );
   });
 });

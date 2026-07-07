@@ -106,14 +106,9 @@ persistida es dinero real no contabilizado en los reportes de ingresos.
 
 ## Design
 
-### Crear DESIGN.md formal
+### ~~Crear DESIGN.md formal~~ — YA EXISTE (completado 2026-06-29)
 
-**What:** Documentar por escrito el sistema visual real del proyecto (paleta, tipografía, espaciado, componentes base) que hoy solo existe implícito en el código.
-
-**Why:** Cada `/design-review` y `/plan-design-review` tiene que re-derivar el sistema visual leyendo `/login` u otras páginas directamente — funciona, pero es repetitivo y propenso a divergencia conforme se agreguen más pantallas.
-
-**Context:** Surgió durante `/plan-design-review` de Approach A (2026-06-19). El sistema actual: fondo blanco, card centrado `max-w-sm`, `-apple-system`/`Segoe UI` como tipografía principal (decisión deliberada, no accidental — confirmada en este mismo review), labels uppercase `text-gray-500`, inputs `rounded-xl border-gray-200`, botón pill negro. No bloquea nada hoy; correr `/design-consultation` cuando haya tiempo.
-
-**Effort:** S
-**Priority:** P3
-**Depends on:** None
+Ya no aplica: `DESIGN.md` en la raíz documenta ambos sistemas visuales
+(landing sección 2-6, app de producto sección 7 histórica) con colores,
+tipografía, layout, elevación, componentes y do's/don'ts. Esta entrada
+quedó en el backlog por error después de que el trabajo real se hizo.
