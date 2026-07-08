@@ -20,6 +20,7 @@ type Referral = {
   rewardPaidAt: string | null;
   confirmedByReferrer: boolean;
   referrerConfirmedAt: string | null;
+  billedAt: string | null;
   createdAt: string;
   referrer: { id: string; name: string; createdAt: string; launchBonusUsed: boolean; bubblePoints: number; clabe?: string | null; clabeBank?: string | null; clabeHolder?: string | null };
 };
@@ -117,6 +118,7 @@ export default function ReferidosClient({
   const [copiedField, setCopiedField] = useState("");
   const [payNote, setPayNote] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState("");
   const [editingSale, setEditingSale] = useState(false);
   const [editSaleInput, setEditSaleInput] = useState("");
   const [bubblePointsByProduct, setBubblePointsByProduct] = useState({ autoPoints: initialBubbleAutoPoints, gmmPoints: initialBubbleGmmPoints });
@@ -172,8 +174,14 @@ export default function ReferidosClient({
   }
 
   async function deleteReferral(id: string) {
-    await fetch(`/api/referrals/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/referrals/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setDeleteError(body.error || "No se pudo eliminar el referido");
+      return;
+    }
     setDeleteId(null);
+    setDeleteError("");
     setSelected(null);
     load();
   }
@@ -949,11 +957,18 @@ export default function ReferidosClient({
 
               {/* Delete */}
               <div className="pt-2 border-t border-brand-border-1">
-                {deleteId === selected.id ? (
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs text-brand-gray-4 flex-1">¿Eliminar este referido?</p>
-                    <button onClick={() => deleteReferral(selected.id)} className="text-xs px-3 py-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition font-medium">Eliminar</button>
-                    <button onClick={() => setDeleteId(null)} className="text-xs text-brand-gray-4 hover:text-brand-gray-2 transition">Cancelar</button>
+                {selected.rewardStatus === "approved" || selected.rewardStatus === "paid" || selected.billedAt ? (
+                  <p className="text-xs text-brand-gray-4">
+                    Este referido ya tiene un premio aprobado o pagado (o una comisión facturada) — no se puede eliminar.
+                  </p>
+                ) : deleteId === selected.id ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-brand-gray-4 flex-1">¿Eliminar este referido?</p>
+                      <button onClick={() => deleteReferral(selected.id)} className="text-xs px-3 py-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition font-medium">Eliminar</button>
+                      <button onClick={() => { setDeleteId(null); setDeleteError(""); }} className="text-xs text-brand-gray-4 hover:text-brand-gray-2 transition">Cancelar</button>
+                    </div>
+                    {deleteError && <p className="text-xs text-red-500">{deleteError}</p>}
                   </div>
                 ) : (
                   <button onClick={() => setDeleteId(selected.id)} className="text-xs text-brand-gray-4 hover:text-red-500 transition">

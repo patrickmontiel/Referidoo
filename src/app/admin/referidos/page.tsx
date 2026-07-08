@@ -11,7 +11,7 @@ export default async function ReferidosPage() {
 
   const [referrals, advisor, settings, tiers] = await Promise.all([
     db.referral.findMany({
-      where: { advisorId: session.advisorId },
+      where: { advisorId: session.advisorId, deletedAt: null },
       include: {
         referrer: { select: { id: true, name: true, referralCode: true, createdAt: true, launchBonusUsed: true, bubblePoints: true } },
       },

@@ -14,7 +14,7 @@ export default async function AdminOverviewPage() {
       select: { id: true, name: true, companyName: true, plan: true, onboardedAt: true },
     }),
     db.referral.findMany({
-      where: { advisorId: session.advisorId },
+      where: { advisorId: session.advisorId, deletedAt: null },
       include: {
         referrer: { select: { id: true, name: true, referralCode: true, createdAt: true, launchBonusUsed: true, bubblePoints: true } },
       },

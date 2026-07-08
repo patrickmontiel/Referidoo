@@ -20,7 +20,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       advisor: { select: { name: true, email: true, plan: true } },
     },
   });
-  if (!referral || referral.advisorId !== session.advisorId) {
+  if (!referral || referral.advisorId !== session.advisorId || referral.deletedAt) {
     return NextResponse.json({ error: "No encontrado" }, { status: 404 });
   }
 
@@ -317,16 +317,43 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
   const { id } = await params;
   const referral = await db.referral.findUnique({ where: { id } });
-  if (!referral || referral.advisorId !== session.advisorId) {
+  if (!referral || referral.advisorId !== session.advisorId || referral.deletedAt) {
     return NextResponse.json({ error: "No encontrado" }, { status: 404 });
   }
 
-  await db.referral.delete({ where: { id } });
+  // Regla dura: un premio ya aprobado o pagado (o una comisión ya
+  // facturada) es un compromiso real con el cliente o dinero que ya se
+  // movió — no se puede borrar el rastro. Solo el dueño de la plataforma
+  // puede corregir un caso así.
+  if (referral.rewardStatus === "approved" || referral.rewardStatus === "paid" || referral.billedAt) {
+    return NextResponse.json(
+      { error: "Este referido ya tiene un premio aprobado o pagado, o una comisión facturada — no se puede eliminar. Contacta al dueño de la plataforma si necesitas corregirlo." },
+      { status: 400 }
+    );
+  }
 
-  // Si se borra el referido que ocupaba el nivel 1 sin haberse pagado, libera el Bono de
-  // Inicio para que un futuro referido pueda volver a calificar.
-  if (referral.tierPosition === 1 && referral.rewardStatus !== "paid") {
+  // Soft delete: se oculta de tu lista, pero el registro se conserva (rastro
+  // contable y antifraude para el dueño de la plataforma).
+  await db.referral.update({ where: { id }, data: { deletedAt: new Date() } });
+
+  // Si el referido ocupaba el nivel 1 (rewardStatus ya es "pending" a esta
+  // altura — approved/paid se bloquean arriba), libera el Bono de Inicio
+  // para que un futuro referido pueda volver a calificar.
+  if (referral.tierPosition === 1) {
     await db.client.update({ where: { id: referral.referrerId }, data: { launchBonusUsed: false } });
+  }
+
+  // Si era una conversión de premio burbuja (Auto/GMM), devuelve los puntos
+  // que había sumado al pool del cliente — si no, el cliente conserva
+  // crédito de un referido que, para ti, ya no existe.
+  if (referral.status === "converted" && referral.tierPosition === 0 && referral.productType) {
+    const bubbleSettings = await getAdvisorBubbleSettings(referral.advisorId);
+    const points = getBubblePointsForProduct(referral.productType, bubbleSettings);
+    if (points) {
+      const referrerClient = await db.client.findUnique({ where: { id: referral.referrerId }, select: { bubblePoints: true } });
+      const newBubblePoints = Math.max(0, (referrerClient?.bubblePoints ?? 0) - points);
+      await db.client.update({ where: { id: referral.referrerId }, data: { bubblePoints: newBubblePoints } });
+    }
   }
 
   return NextResponse.json({ ok: true });

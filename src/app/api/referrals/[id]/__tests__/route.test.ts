@@ -71,6 +71,8 @@ function baseReferral(overrides: Record<string, unknown> = {}) {
     productType: null,
     interestProductType: null,
     lessioCommission: null,
+    billedAt: null,
+    deletedAt: null,
     referrer: { name: "Ana" },
     advisor: { name: "Eduardo", email: "eduardo@referidoo.mx", plan: "paid" },
     ...overrides,
@@ -338,18 +340,75 @@ describe("DELETE /api/referrals/[id]", () => {
     expect(res.status).toBe(404);
   });
 
-  it("deletes the referral and releases the launch bonus if it occupied tier 1 unpaid", async () => {
-    mockFindUnique.mockResolvedValue(baseReferral({ tierPosition: 1, rewardStatus: "approved" }));
-    mockDelete.mockResolvedValue({});
+  it("returns 404 when the referral was already soft-deleted", async () => {
+    mockFindUnique.mockResolvedValue(baseReferral({ deletedAt: new Date() }));
+    const res = await DELETE(new NextRequest("http://localhost:3050/api/referrals/r1", { method: "DELETE" }), { params: Promise.resolve({ id: "r1" }) });
+    expect(res.status).toBe(404);
+  });
+
+  it("blocks deletion when the reward is already approved", async () => {
+    mockFindUnique.mockResolvedValue(baseReferral({ rewardStatus: "approved" }));
+    const res = await DELETE(new NextRequest("http://localhost:3050/api/referrals/r1", { method: "DELETE" }), { params: Promise.resolve({ id: "r1" }) });
+    expect(res.status).toBe(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("blocks deletion when the reward is already paid", async () => {
+    mockFindUnique.mockResolvedValue(baseReferral({ rewardStatus: "paid" }));
+    const res = await DELETE(new NextRequest("http://localhost:3050/api/referrals/r1", { method: "DELETE" }), { params: Promise.resolve({ id: "r1" }) });
+    expect(res.status).toBe(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("blocks deletion when the commission was already billed", async () => {
+    mockFindUnique.mockResolvedValue(baseReferral({ billedAt: new Date() }));
+    const res = await DELETE(new NextRequest("http://localhost:3050/api/referrals/r1", { method: "DELETE" }), { params: Promise.resolve({ id: "r1" }) });
+    expect(res.status).toBe(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("soft-deletes (never a hard delete) and releases the launch bonus if it occupied tier 1", async () => {
+    mockFindUnique.mockResolvedValue(baseReferral({ tierPosition: 1, rewardStatus: "pending" }));
 
     const res = await DELETE(new NextRequest("http://localhost:3050/api/referrals/r1", { method: "DELETE" }), { params: Promise.resolve({ id: "r1" }) });
     expect(res.status).toBe(200);
+    expect(mockUpdate).toHaveBeenCalledWith({ where: { id: "r1" }, data: { deletedAt: expect.any(Date) } });
+    expect(mockDelete).not.toHaveBeenCalled();
     expect(mockClientUpdate).toHaveBeenCalledWith({ where: { id: "client1" }, data: { launchBonusUsed: false } });
   });
 
-  it("does not touch the launch bonus when the deleted referral was not an unpaid tier-1 slot", async () => {
+  it("does not touch the launch bonus when the deleted referral was not tier 1", async () => {
     mockFindUnique.mockResolvedValue(baseReferral({ tierPosition: 0, rewardStatus: "pending" }));
-    mockDelete.mockResolvedValue({});
+
+    const res = await DELETE(new NextRequest("http://localhost:3050/api/referrals/r1", { method: "DELETE" }), { params: Promise.resolve({ id: "r1" }) });
+    expect(res.status).toBe(200);
+    expect(mockClientUpdate).not.toHaveBeenCalled();
+  });
+
+  it("reverses the bubble points a converted Auto/GMM referral had contributed", async () => {
+    mockFindUnique.mockResolvedValue(
+      baseReferral({ status: "converted", tierPosition: 0, rewardStatus: "pending", productType: "GMM" })
+    );
+    mockClientFindUnique.mockResolvedValue({ bubblePoints: 300 });
+
+    const res = await DELETE(new NextRequest("http://localhost:3050/api/referrals/r1", { method: "DELETE" }), { params: Promise.resolve({ id: "r1" }) });
+    expect(res.status).toBe(200);
+    expect(mockClientUpdate).toHaveBeenCalledWith({ where: { id: "client1" }, data: { bubblePoints: 0 } });
+  });
+
+  it("never drops bubble points below zero when reversing", async () => {
+    mockFindUnique.mockResolvedValue(
+      baseReferral({ status: "converted", tierPosition: 0, rewardStatus: "pending", productType: "GMM" })
+    );
+    mockClientFindUnique.mockResolvedValue({ bubblePoints: 100 });
+
+    const res = await DELETE(new NextRequest("http://localhost:3050/api/referrals/r1", { method: "DELETE" }), { params: Promise.resolve({ id: "r1" }) });
+    expect(res.status).toBe(200);
+    expect(mockClientUpdate).toHaveBeenCalledWith({ where: { id: "client1" }, data: { bubblePoints: 0 } });
+  });
+
+  it("does not touch bubble points for a non-converted referral", async () => {
+    mockFindUnique.mockResolvedValue(baseReferral({ status: "pending", tierPosition: 0, rewardStatus: "pending" }));
 
     const res = await DELETE(new NextRequest("http://localhost:3050/api/referrals/r1", { method: "DELETE" }), { params: Promise.resolve({ id: "r1" }) });
     expect(res.status).toBe(200);

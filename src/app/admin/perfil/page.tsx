@@ -28,10 +28,11 @@ export default async function PerfilPage() {
       orderBy: { createdAt: "asc" },
     }),
     db.client.count({ where: { advisorId: session.advisorId, active: true } }),
-    db.referral.count({ where: { advisorId: session.advisorId } }),
+    db.referral.count({ where: { advisorId: session.advisorId, deletedAt: null } }),
     db.referral.findMany({
       where: {
         advisorId: session.advisorId,
+        deletedAt: null,
         status: "converted",
         saleAmount: { not: null },
       },

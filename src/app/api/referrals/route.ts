@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
   const referrals = await db.referral.findMany({
     where: {
       advisorId: session.advisorId,
+      deletedAt: null,
       ...(status ? { status } : {}),
     },
     include: {

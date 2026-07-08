@@ -14,8 +14,9 @@ export async function GET() {
     db.client.findMany({
       where: { advisorId: session.advisorId },
       include: {
-        _count: { select: { referrals: true } },
+        _count: { select: { referrals: { where: { deletedAt: null } } } },
         referrals: {
+          where: { deletedAt: null },
           select: { rewardAmount: true, rewardStatus: true, status: true, tierPosition: true, productType: true, interestProductType: true },
         },
         bubbleClaims: { select: { amount: true, status: true } },
