@@ -103,6 +103,15 @@ model PlanEvent {
   @@index([createdAt])
 }
 
+// Última narrativa generada por IA para /owner. Una sola fila vigente a la
+// vez — se relee mientras no pase el intervalo de refresco y se reemplaza
+// cuando toca regenerar (ver REFRESH_MS en owner-narrative-ai.ts).
+model OwnerBriefing {
+  id          String   @id @default(cuid())
+  narrative   String
+  generatedAt DateTime @default(now())
+}
+
 model Referral {
   id           String   @id @default(cuid())
   advisorId    String

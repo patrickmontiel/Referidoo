@@ -118,5 +118,17 @@ export async function POST() {
     }
   }
 
+  // Briefing de IA cacheado en /owner (jul 2026)
+  try {
+    await db.execute(`CREATE TABLE IF NOT EXISTS "OwnerBriefing" (
+      "id" TEXT PRIMARY KEY,
+      "narrative" TEXT NOT NULL,
+      "generatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`);
+    results.push("✓ OwnerBriefing table ready");
+  } catch {
+    results.push("– OwnerBriefing table already exists");
+  }
+
   return NextResponse.json({ ok: true, results });
 }
