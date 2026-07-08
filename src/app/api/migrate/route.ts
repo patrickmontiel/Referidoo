@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
-import { getAdvisorSession } from "@/lib/auth";
+import { getAdvisorSession, isPlatformOwner } from "@/lib/auth";
 import { createClient } from "@libsql/client";
 
 export async function POST() {
   const session = await getAdvisorSession();
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  if (!session || !isPlatformOwner(session.email)) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
 
   const db = createClient({
     url: process.env.DATABASE_URL!,

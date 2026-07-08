@@ -5,7 +5,7 @@ const TEST_TO = "patrickkarim2002@gmail.com";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  if (searchParams.get("secret") !== "preview2024") {
+  if (!process.env.TEST_EMAILS_SECRET || searchParams.get("secret") !== process.env.TEST_EMAILS_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
