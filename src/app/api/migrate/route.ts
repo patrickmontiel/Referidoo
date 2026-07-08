@@ -130,5 +130,13 @@ export async function POST() {
     results.push("– OwnerBriefing table already exists");
   }
 
+  // Soft delete de referidos (jul 2026)
+  try {
+    await db.execute(`ALTER TABLE "Referral" ADD COLUMN "deletedAt" DATETIME`);
+    results.push("✓ deletedAt (Referral) added");
+  } catch {
+    results.push("– deletedAt (Referral) already exists");
+  }
+
   return NextResponse.json({ ok: true, results });
 }

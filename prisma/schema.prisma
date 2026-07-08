@@ -148,6 +148,11 @@ model Referral {
   // Primer contacto del asesor con el lead (status → contacted por 1a vez).
   // Alimenta la métrica "horas a primer contacto" del Playbook 2.
   contactedAt         DateTime?
+  // Soft delete: se oculta de la lista del asesor, pero el registro se
+  // conserva para el rastro contable y antifraude del dueño de la
+  // plataforma (nunca se borra de verdad — ver DELETE en
+  // api/referrals/[id]/route.ts).
+  deletedAt           DateTime?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
