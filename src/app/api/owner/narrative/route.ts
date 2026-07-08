@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { getAdvisorSession, isPlatformOwner } from "@/lib/auth";
 import { MONTHLY_PRICE_MXN } from "@/lib/mercadopago";
 import { computeMorosos, computeOwnerProblems } from "@/lib/owner-problems";
-import { generateOwnerNarrative } from "@/lib/owner-narrative-ai";
+import { generateOwnerNarrative, NARRATIVE_REFRESH_MS } from "@/lib/owner-narrative-ai";
 
 // Independiente del selector de periodo de /owner (mes/90d/todo) — el
 // briefing siempre refleja el estado operativo actual, no una ventana de
@@ -13,6 +13,12 @@ export async function GET() {
   const session = await getAdvisorSession();
   if (!session || !isPlatformOwner(session.email)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
+
+  // Cacheado — no se regenera en cada carga (ver NARRATIVE_REFRESH_MS).
+  const cached = await db.ownerBriefing.findFirst({ orderBy: { generatedAt: "desc" } });
+  if (cached && Date.now() - cached.generatedAt.getTime() < NARRATIVE_REFRESH_MS) {
+    return NextResponse.json({ narrative: cached.narrative, generatedAt: cached.generatedAt, cached: true });
   }
 
   const now = new Date();
@@ -55,5 +61,11 @@ export async function GET() {
     conversionsCount: convertedThisMonth.length,
   });
 
-  return NextResponse.json({ narrative, problemsCount: problems.length });
+  if (narrative) {
+    await db.ownerBriefing.create({ data: { narrative } });
+  }
+
+  // Si falla la generación (sin key, error de OpenAI) mostramos el último
+  // briefing conocido aunque esté vencido, en vez de dejar la tarjeta vacía.
+  return NextResponse.json({ narrative: narrative ?? cached?.narrative ?? null, problemsCount: problems.length });
 }

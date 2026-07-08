@@ -3,6 +3,14 @@
 // rechazados, leads sin seguimiento) en 2-4 oraciones priorizadas, en vez de
 // solo mostrar la lista cruda. Nunca bloquea la carga de /owner: si falla o
 // no hay API key, regresa null y la tarjeta simplemente no se muestra.
+
+// Decisión explícita de Patrick (jul 2026): con pocos asesores no vale la
+// pena regenerar en cada carga de página — cada 2 semanas por ahora.
+// Bajar este intervalo conforme crezca la base de asesores reales, hasta
+// llegar a "cada carga" cuando haya suficiente volumen para que valga la
+// pena leer un briefing siempre fresco.
+export const NARRATIVE_REFRESH_MS = 14 * 24 * 60 * 60 * 1000;
+
 type Problem = { id: string; title: string; detail: string };
 
 export async function generateOwnerNarrative(params: {
