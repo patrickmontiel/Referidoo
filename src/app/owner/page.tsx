@@ -103,6 +103,8 @@ export default function OwnerResumenPage() {
   const [data, setData] = useState<Overview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [narrative, setNarrative] = useState<string | null>(null);
+  const [narrativeLoading, setNarrativeLoading] = useState(true);
 
   function load(p: Period) {
     setLoading(true);
@@ -118,6 +120,16 @@ export default function OwnerResumenPage() {
   }
 
   useEffect(() => load(period), [period]);
+
+  // Independiente del selector de periodo — el briefing refleja el estado
+  // operativo actual, no cambia si alternas mes/90 días/todo.
+  useEffect(() => {
+    fetch("/api/owner/narrative")
+      .then((r) => r.json())
+      .then((d) => setNarrative(typeof d?.narrative === "string" ? d.narrative : null))
+      .catch(() => setNarrative(null))
+      .finally(() => setNarrativeLoading(false));
+  }, []);
 
   const topProduct = data?.products[0];
 
@@ -142,6 +154,21 @@ export default function OwnerResumenPage() {
           ))}
         </div>
       </div>
+
+      {/* Briefing de IA — sintetiza los problemas operativos, nunca bloquea la carga del resto */}
+      {narrativeLoading && (
+        <div className="bg-white rounded-2xl border border-brand-border-1 p-5 animate-pulse">
+          <div className="h-3 w-20 bg-[#F4F5F7] rounded mb-3" />
+          <div className="h-4 w-full bg-[#F4F5F7] rounded mb-2" />
+          <div className="h-4 w-2/3 bg-[#F4F5F7] rounded" />
+        </div>
+      )}
+      {!narrativeLoading && narrative && (
+        <div className="bg-white rounded-2xl border border-brand-border-1 p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#2563EB] mb-2">Resumen — qué necesita tu atención</p>
+          <p className="text-sm text-brand-ink leading-relaxed">{narrative}</p>
+        </div>
+      )}
 
       {loading && <StatSkeleton />}
 
