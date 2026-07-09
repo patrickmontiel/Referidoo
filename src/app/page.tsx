@@ -95,9 +95,6 @@ const SALES_FAQ = [
     question: "¿Y si ya llevo mis referidos en Excel?",
     answer: "Importas tu lista de clientes en minutos y arrancas con tu cartera actual. Lo que ya trackeabas a mano, el sistema lo sigue solo desde ahí.",
   },
-];
-
-const SECURITY_FAQ = [
   {
     question: "¿Mis clientes tienen que dar información sensible?",
     answer: "No. Solo nombre, teléfono y correo — lo mismo que ya te comparten por WhatsApp. Nunca pedimos RFC, cuentas bancarias ni datos de la póliza.",
@@ -402,19 +399,6 @@ export default async function Home() {
 
       {/* La matemática de referidos */}
       <ReferralMath />
-
-      {/* Seguridad y privacidad */}
-      <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
-        <ScrollReveal className="max-w-[680px] mx-auto">
-          <h2 className={`${SECTION_HEADING} mb-3 text-center text-balance`} style={SECTION_HEADING_SIZE}>
-            ¿Cómo protegemos los datos?
-          </h2>
-          <p className="text-[#5A626E] text-center mb-10 leading-[1.6]" style={{ fontSize: 17 }}>
-            Manejas información de tus clientes. Esto es exactamente lo que hacemos con ella.
-          </p>
-          <FaqAccordion items={SECURITY_FAQ} />
-        </ScrollReveal>
-      </section>
 
       {/* Nota de acceso anticipado */}
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">

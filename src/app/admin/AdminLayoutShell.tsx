@@ -420,7 +420,7 @@ export default function AdminLayoutShell({
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
+    router.push("/");
   }
 
   function handleVerified() {

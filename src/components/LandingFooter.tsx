@@ -14,28 +14,8 @@ const PRODUCT_LINKS = [
 export function LandingFooter() {
   return (
     <footer className="border-t border-[#EFEFF1] overflow-hidden">
-      {/* Columnas: CTA + producto + contacto */}
-      <div className="max-w-[1180px] mx-auto px-8 py-16 grid md:grid-cols-[1.3fr_1fr_1fr] gap-x-10 gap-y-12">
-        <div>
-          <p className="font-extrabold tracking-[-0.028em] text-[#0B0B0C] leading-[1.15] mb-7 text-balance" style={{ fontSize: "clamp(1.6rem, 2.6vw, 34px)" }}>
-            Deja de contar referidos a mano.
-          </p>
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href="/registro"
-              className="text-sm font-medium bg-[#0B0B0C] text-white px-5 py-3 rounded-full transition-[background-color,transform] duration-150 hover:bg-[#26262a] active:scale-[0.97]"
-            >
-              Crear cuenta gratis
-            </Link>
-            <Link
-              href="/login"
-              className="text-sm font-medium text-[#3F4651] hover:text-[#0B0B0C] px-5 py-3 rounded-full border border-[#DADCE0] hover:border-[#0B0B0C] transition-[border-color,color,transform] duration-150 active:scale-[0.97]"
-            >
-              Iniciar sesión
-            </Link>
-          </div>
-        </div>
-
+      {/* Columnas: producto + contacto */}
+      <div className="max-w-[1180px] mx-auto px-8 py-16 grid grid-cols-2 sm:grid-cols-2 gap-x-10 gap-y-12">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#8A8F98] mb-5">Producto</p>
           <ul className="space-y-3.5">

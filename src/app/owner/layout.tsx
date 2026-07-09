@@ -40,7 +40,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
+    router.push("/");
   }
 
   return (
