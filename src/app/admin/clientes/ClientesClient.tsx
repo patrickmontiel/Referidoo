@@ -25,6 +25,9 @@ type Client = {
   }[];
   bubbleClaims: { amount: number; status: string; createdAt?: string }[];
   bubblePoints: number;
+  clabe?: string | null;
+  clabeBank?: string | null;
+  clabeHolder?: string | null;
 };
 
 // Corte obligatorio: el asesor tiene REWARD_CUTOFF_DAYS para pagarle el premio
@@ -144,6 +147,8 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
   const [submitting, setSubmitting] = useState(false);
   const [createError, setCreateError] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedField, setCopiedField] = useState<string>("");
+  const [payingId, setPayingId] = useState<string | null>(null);
   const [deactivateId, setDeactivateId] = useState<string | null>(null);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -267,6 +272,37 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
     navigator.clipboard.writeText(`${base}/c/${client.accessToken}`);
     setCopiedId(client.id);
     setTimeout(() => setCopiedId(null), 2000);
+  }
+
+  function copyText(text: string, key: string) {
+    navigator.clipboard.writeText(text).catch(() => {});
+    setCopiedField(key);
+    setTimeout(() => setCopiedField(""), 1800);
+  }
+
+  async function payClient(id: string) {
+    setPayingId(id);
+    await fetch(`/api/clients/${id}/pay-rewards`, { method: "POST" }).catch(() => {});
+    setPayingId(null);
+    load();
+  }
+
+  // WhatsApp para avisar al cliente que ya se le depositó su premio.
+  function buildPayWhatsApp(client: Client, amount: number) {
+    const firstName = client.name.split(" ")[0];
+    const msg = `¡Hola ${firstName}! Te deposité tu premio de ${formatCurrency(amount)} por recomendarme. ¡Gracias! 🙌`;
+    const phone = client.phone ? "52" + client.phone.replace(/\D/g, "").replace(/^(52|1)/, "") : "";
+    return phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  }
+
+  // WhatsApp para pedirle la CLABE al cliente cuando aún no la guardó.
+  function buildAskClabeWhatsApp(client: Client) {
+    const base = typeof window !== "undefined" ? window.location.origin : "";
+    const firstName = client.name.split(" ")[0];
+    const portalLink = `${base}/c/${client.accessToken}`;
+    const msg = `¡Hola ${firstName}! Ya tengo listo tu premio. ¿Me compartes tu CLABE para depositarte? También puedes guardarla en tu portal:\n${portalLink}`;
+    const phone = client.phone ? "52" + client.phone.replace(/\D/g, "").replace(/^(52|1)/, "") : "";
+    return phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
   }
 
   function buildWhatsAppUrl(client: Client) {
@@ -782,6 +818,84 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
                         </p>
                       </div>
                     </div>
+
+                    {/* Pagar premio — conveniencia: el dinero se mueve por fuera (CLABE), esto cierra el ciclo */}
+                    {owed.total > 0 && (
+                      <div className="px-5 py-4 border-t border-[#ECEDEF]">
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-xs font-bold uppercase tracking-wide text-[#8A8F98]">Pagar premio</p>
+                          <p className={`text-sm font-bold ${owed.overdue ? "text-red-600" : "text-amber-700"}`}>{formatCurrency(owed.total)}</p>
+                        </div>
+                        {client.clabe ? (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between gap-2 bg-[#F4F5F7] rounded-xl px-3 py-2.5">
+                              <div className="min-w-0">
+                                <p className="text-[10px] text-[#8A8F98] uppercase tracking-wide">CLABE{client.clabeBank ? ` · ${client.clabeBank}` : ""}</p>
+                                <p className="text-sm font-mono font-semibold text-[#0B0B0C] truncate">{client.clabe}</p>
+                                {client.clabeHolder && <p className="text-[11px] text-[#8A8F98] truncate">{client.clabeHolder}</p>}
+                              </div>
+                              <button
+                                onClick={() => copyText(client.clabe!, `clabe-${client.id}`)}
+                                className="text-xs px-3 py-1.5 rounded-full border border-[#DADCE0] text-[#0B0B0C] hover:bg-white transition font-medium flex-shrink-0"
+                              >
+                                {copiedField === `clabe-${client.id}` ? "¡Copiado!" : "Copiar"}
+                              </button>
+                            </div>
+                            <div className="flex items-center justify-between gap-2 bg-[#F4F5F7] rounded-xl px-3 py-2.5">
+                              <div>
+                                <p className="text-[10px] text-[#8A8F98] uppercase tracking-wide">Monto a depositar</p>
+                                <p className="text-sm font-bold text-[#0B0B0C]">{formatCurrency(owed.total)}</p>
+                              </div>
+                              <button
+                                onClick={() => copyText(String(owed.total), `monto-${client.id}`)}
+                                className="text-xs px-3 py-1.5 rounded-full border border-[#DADCE0] text-[#0B0B0C] hover:bg-white transition font-medium flex-shrink-0"
+                              >
+                                {copiedField === `monto-${client.id}` ? "¡Copiado!" : "Copiar"}
+                              </button>
+                            </div>
+                            <div className="flex gap-2 pt-1">
+                              <button
+                                onClick={() => window.open(buildPayWhatsApp(client, owed.total), "_blank")}
+                                className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#22C55E] text-white text-sm py-2.5 rounded-full font-semibold transition"
+                              >
+                                <WhatsAppIcon /> Avisar
+                              </button>
+                              <button
+                                onClick={() => payClient(client.id)}
+                                disabled={payingId === client.id}
+                                className="flex-1 bg-[#0B0B0C] text-white text-sm py-2.5 rounded-full font-medium hover:bg-[#26262a] disabled:opacity-50 transition"
+                              >
+                                {payingId === client.id ? "Guardando..." : "Marcar como pagado"}
+                              </button>
+                            </div>
+                            <p className="text-[11px] text-center mt-1" style={{ color: "#9098A2" }}>
+                              El depósito lo haces por fuera con la CLABE. Aquí solo registras que ya pagaste.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="bg-amber-50 border border-amber-100 rounded-xl px-3 py-3">
+                            <p className="text-xs text-amber-800 mb-2">
+                              Este cliente aún no guardó su CLABE. Pídesela para poder depositarle su premio.
+                            </p>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => window.open(buildAskClabeWhatsApp(client), "_blank")}
+                                className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#22C55E] text-white text-xs py-2.5 rounded-full font-semibold transition"
+                              >
+                                <WhatsAppIcon /> Pedir CLABE
+                              </button>
+                              <button
+                                onClick={() => payClient(client.id)}
+                                disabled={payingId === client.id}
+                                className="flex-1 border border-[#DADCE0] text-[#0B0B0C] text-xs py-2.5 rounded-full font-medium hover:bg-[#F4F5F7] disabled:opacity-50 transition"
+                              >
+                                {payingId === client.id ? "Guardando..." : "Ya le pagué"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 

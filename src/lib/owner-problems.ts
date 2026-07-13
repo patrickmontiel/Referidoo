@@ -1,9 +1,13 @@
 import { db } from "@/lib/db";
 import { MONTHLY_PRICE_MXN } from "@/lib/mercadopago";
+import { REWARD_CUTOFF_DAYS } from "@/lib/utils";
 
 const OPEN_STATUSES = ["pending", "contacted", "in_process"];
 const STALE_LEAD_MS = 7 * 24 * 60 * 60 * 1000;
-const OVERDUE_MS = 14 * 24 * 60 * 60 * 1000;
+// Alineado con el corte obligatorio del asesor (REWARD_CUTOFF_DAYS): un premio
+// se marca vencido/moroso al pasar el mismo umbral que ve el asesor. Los avisos
+// de día 7 y 14 (cron) son recordatorios previos, no morosidad.
+const OVERDUE_MS = REWARD_CUTOFF_DAYS * 24 * 60 * 60 * 1000;
 
 // Umbrales = primas anuales mínimas plausibles por producto en MX — la
 // comisión de Referidoo depende del monto que reporta el asesor, así que
@@ -106,8 +110,8 @@ export function computeOwnerProblems(params: {
   for (const [advisorId, info] of morosos) {
     problems.push({
       id: `moroso-${advisorId}`,
-      title: `Premios vencidos: ${info.count} sin pagar +14 días ($${info.total.toLocaleString("es-MX")})`,
-      detail: `${advisorName.get(advisorId) ?? "Un asesor"} debe premios a sus clientes (ej. ${info.ejemplo}) — la promesa rota quema el canal. El cron ya le mandó recordatorio (día 7) y aviso firme (día 14).`,
+      title: `Premios vencidos: ${info.count} sin pagar +${REWARD_CUTOFF_DAYS} días ($${info.total.toLocaleString("es-MX")})`,
+      detail: `${advisorName.get(advisorId) ?? "Un asesor"} pasó el corte obligatorio de ${REWARD_CUTOFF_DAYS} días sin pagarle a sus clientes (ej. ${info.ejemplo}) — la promesa rota quema el canal. El cron ya le mandó recordatorios (día 7 y 14) antes del corte.`,
     });
   }
 
