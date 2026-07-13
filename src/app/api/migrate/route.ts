@@ -138,5 +138,21 @@ export async function POST() {
     results.push("– deletedAt (Referral) already exists");
   }
 
+  // Preferencias de contacto del lead + ancla del corte de comisión (jul 2026)
+  for (const col of ["preferredDays", "preferredHours"]) {
+    try {
+      await db.execute(`ALTER TABLE "Referral" ADD COLUMN "${col}" TEXT`);
+      results.push(`✓ ${col} added`);
+    } catch {
+      results.push(`– ${col} already exists`);
+    }
+  }
+  try {
+    await db.execute(`ALTER TABLE "Referral" ADD COLUMN "rewardApprovedAt" DATETIME`);
+    results.push("✓ rewardApprovedAt added");
+  } catch {
+    results.push("– rewardApprovedAt already exists");
+  }
+
   return NextResponse.json({ ok: true, results });
 }
