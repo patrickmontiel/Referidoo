@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate, REWARD_CUTOFF_DAYS } from "@/lib/utils";
 
 type Client = {
   id: string;
@@ -21,18 +21,55 @@ type Client = {
     tierPosition: number;
     productType?: string | null;
     interestProductType?: string | null;
+    rewardApprovedAt?: string | null;
   }[];
-  bubbleClaims: { amount: number; status: string }[];
+  bubbleClaims: { amount: number; status: string; createdAt?: string }[];
   bubblePoints: number;
 };
+
+// Corte obligatorio: el asesor tiene REWARD_CUTOFF_DAYS para pagarle el premio
+// a su cliente desde que se aprueba (escalera) o desde que lo reclama (burbuja).
+type Owed = { total: number; deadline: number | null; overdue: boolean; daysLeft: number | null };
+
+function computeOwed(client: Client): Owed {
+  const now = Date.now();
+  const cutoffMs = REWARD_CUTOFF_DAYS * 24 * 60 * 60 * 1000;
+  const dueDates: number[] = [];
+  let total = 0;
+  for (const r of client.referrals) {
+    if (r.rewardStatus === "approved" && r.tierPosition > 0) {
+      total += r.rewardAmount;
+      if (r.rewardApprovedAt) dueDates.push(new Date(r.rewardApprovedAt).getTime() + cutoffMs);
+    }
+  }
+  for (const b of client.bubbleClaims) {
+    if (b.status === "pending") {
+      total += b.amount;
+      if (b.createdAt) dueDates.push(new Date(b.createdAt).getTime() + cutoffMs);
+    }
+  }
+  const deadline = dueDates.length ? Math.min(...dueDates) : null;
+  const overdue = deadline !== null && now > deadline;
+  const daysLeft = deadline !== null ? Math.ceil((deadline - now) / (24 * 60 * 60 * 1000)) : null;
+  return { total, deadline, overdue, daysLeft };
+}
+
+function owedLabel(o: Owed): string {
+  const money = formatCurrency(o.total);
+  if (o.deadline === null) return `Debe ${money}`;
+  if (o.overdue) return `Debe ${money} · vencido ${Math.abs(o.daysLeft ?? 0)}d`;
+  if ((o.daysLeft ?? 0) <= 0) return `Debe ${money} · vence hoy`;
+  return `Debe ${money} · ${o.daysLeft}d`;
+}
 
 type Advisor = { name: string; companyName: string | null };
 type CsvRow = { name: string; phone: string; email: string; policyNumber: string };
 type ImportResult = { name: string; ok: boolean; error?: string };
 
-const SORT_MODES = ["converted", "referrals", "name"] as const;
+const SORT_MODES = ["debe", "converted", "referrals", "name"] as const;
 type SortMode = typeof SORT_MODES[number];
 const SORT_LABELS: Record<SortMode, string> = {
+  debe:      "Se le debe",
   converted: "Más convertidos",
   referrals: "Más referidos",
   name:      "Nombre (A–Z)",
@@ -114,7 +151,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editError, setEditError] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [sortMode, setSortMode] = useState<SortMode>("converted");
+  const [sortMode, setSortMode] = useState<SortMode>("debe");
   const fileRef = useRef<HTMLInputElement>(null);
   const [csvRows, setCsvRows] = useState<CsvRow[] | null>(null);
   const [importing, setImporting] = useState(false);
@@ -253,9 +290,37 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
 
   const activeClients = clients.filter((c) => c.active);
 
+  // Resumen de deuda: a cuántos clientes se les debe, cuánto, y cuántos vencidos.
+  const owedSummary = activeClients.reduce(
+    (acc, c) => {
+      const o = computeOwed(c);
+      if (o.total > 0) {
+        acc.count += 1;
+        acc.total += o.total;
+        if (o.overdue) acc.overdue += 1;
+      }
+      return acc;
+    },
+    { count: 0, total: 0, overdue: 0 }
+  );
+
   const sorted = [...activeClients].sort((a, b) => {
     const ac = a.referrals.filter((r) => r.status === "converted").length;
     const bc = b.referrals.filter((r) => r.status === "converted").length;
+    if (sortMode === "debe") {
+      const oa = computeOwed(a);
+      const ob = computeOwed(b);
+      const aOwed = oa.total > 0 ? 1 : 0;
+      const bOwed = ob.total > 0 ? 1 : 0;
+      if (aOwed !== bOwed) return bOwed - aOwed; // los que deben, primero
+      if (aOwed && bOwed) {
+        const da = oa.deadline ?? Infinity;
+        const dbb = ob.deadline ?? Infinity;
+        if (da !== dbb) return da - dbb; // vencidos y por vencer primero
+        return ob.total - oa.total;
+      }
+      return bc - ac; // sin deuda: por convertidos
+    }
     if (sortMode === "converted") return bc - ac;
     if (sortMode === "referrals") return b._count.referrals - a._count.referrals;
     return a.name.localeCompare(b.name, "es");
@@ -329,6 +394,35 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
           </button>
         </div>
       </div>
+
+      {/* Resumen de deuda con corte obligatorio */}
+      {owedSummary.count > 0 && (
+        <div
+          className={`rounded-2xl border p-4 mb-4 flex items-start gap-3 ${
+            owedSummary.overdue > 0 ? "bg-red-50 border-red-100" : "bg-amber-50 border-amber-100"
+          }`}
+        >
+          <div
+            className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+              owedSummary.overdue > 0 ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-700"
+            }`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M12 8v5M12 16h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className={`text-sm font-bold ${owedSummary.overdue > 0 ? "text-red-700" : "text-amber-800"}`}>
+              Le debes a {owedSummary.count} cliente{owedSummary.count !== 1 ? "s" : ""} · {formatCurrency(owedSummary.total)}
+            </p>
+            <p className={`text-xs mt-0.5 ${owedSummary.overdue > 0 ? "text-red-600" : "text-amber-700"}`}>
+              {owedSummary.overdue > 0
+                ? `${owedSummary.overdue} vencido${owedSummary.overdue !== 1 ? "s" : ""} — el corte obligatorio es de ${REWARD_CUTOFF_DAYS} días para pagarle a tu cliente.`
+                : `Tienes un corte obligatorio de ${REWARD_CUTOFF_DAYS} días para pagar cada premio desde que se aprueba.`}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* CSV preview */}
       {csvRows && csvRows.length > 0 && (
@@ -428,6 +522,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
           {sorted.map((client) => {
             const conv = client.referrals.filter((r) => r.status === "converted").length;
             const refCount = client._count.referrals;
+            const owed = computeOwed(client);
             const mainProduct: string | null =
               client.referrals.find((r) => r.status === "converted" && r.productType)?.productType ??
               client.referrals.find((r) => r.interestProductType)?.interestProductType ??
@@ -547,7 +642,11 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
                   {avatar}
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-[#0B0B0C] text-[15px] leading-tight truncate">{client.name}</p>
-                    {mainProduct && <p className="text-xs mt-0.5" style={{ color: "#9098A2" }}>{mainProduct}</p>}
+                    {owed.total > 0 ? (
+                      <p className={`text-xs mt-0.5 font-semibold ${owed.overdue ? "text-red-600" : "text-amber-700"}`}>{owedLabel(owed)}</p>
+                    ) : mainProduct ? (
+                      <p className="text-xs mt-0.5" style={{ color: "#9098A2" }}>{mainProduct}</p>
+                    ) : null}
                   </div>
                   <div className="text-center flex-shrink-0 w-14">
                     <p className="text-xl font-bold text-[#0B0B0C] leading-none">{refCount}</p>
@@ -577,7 +676,11 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
                     {avatar}
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-[#0B0B0C] text-base leading-snug">{client.name}</p>
-                      {mainProduct && <p className="text-sm" style={{ color: "#9098A2" }}>{mainProduct}</p>}
+                      {owed.total > 0 ? (
+                        <p className={`text-sm font-semibold ${owed.overdue ? "text-red-600" : "text-amber-700"}`}>{owedLabel(owed)}</p>
+                      ) : mainProduct ? (
+                        <p className="text-sm" style={{ color: "#9098A2" }}>{mainProduct}</p>
+                      ) : null}
                     </div>
                     {chevron}
                   </div>
@@ -655,9 +758,16 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
                     <div className="px-5 py-4 grid grid-cols-3 gap-4">
                       <div>
                         <p className="text-xs text-[#8A8F98] mb-1.5">Se le debe</p>
-                        <p className={`text-[22px] font-bold leading-none ${totalOwed > 0 ? "text-amber-600" : "text-[#0B0B0C]"}`}>
+                        <p className={`text-[22px] font-bold leading-none ${owed.overdue ? "text-red-600" : totalOwed > 0 ? "text-amber-600" : "text-[#0B0B0C]"}`}>
                           {formatCurrency(totalOwed)}
                         </p>
+                        {owed.total > 0 && owed.deadline !== null && (
+                          <p className={`text-[11px] mt-1.5 font-medium ${owed.overdue ? "text-red-600" : "text-amber-700"}`}>
+                            {owed.overdue
+                              ? `Vencido · pago obligatorio (venció el ${formatDate(new Date(owed.deadline))})`
+                              : `Paga antes del ${formatDate(new Date(owed.deadline))}`}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <p className="text-xs text-[#8A8F98] mb-1.5">Pagado total</p>

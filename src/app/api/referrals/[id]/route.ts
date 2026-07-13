@@ -31,6 +31,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const saleAmount = body.saleAmount != null ? Number(body.saleAmount) : r.saleAmount;
   const isPaid = newRewardStatus === "paid" && referral.rewardStatus !== "paid";
   const isConverting = newStatus === "converted" && referral.status !== "converted";
+  // Primera aprobación del premio: sella la fecha que ancla el corte obligatorio
+  // (el asesor tiene REWARD_CUTOFF_DAYS para pagarle al cliente desde aquí).
+  const r2 = referral as typeof referral & { rewardApprovedAt?: Date | null };
+  const isApproving = newRewardStatus === "approved" && referral.rewardStatus !== "approved";
 
   // Regla dura (whitepaper cap. 11 / playbook 9): sin monto real no hay
   // conversión — el monto define el premio del cliente y la comisión.
@@ -177,6 +181,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(finalTierPosition !== referral.tierPosition ? { tierPosition: finalTierPosition } : {}),
       ...(finalRewardAmount !== referral.rewardAmount ? { rewardAmount: finalRewardAmount } : {}),
       ...(isPaid ? { rewardPaidAt: new Date(), paymentNote: body.paymentNote ?? null } : {}),
+      ...(isApproving && !r2.rewardApprovedAt ? { rewardApprovedAt: new Date() } : {}),
       ...(lessioCommission !== undefined ? { lessioCommission } : {}),
       ...(typeof body.caratulaUrl === "string" && body.caratulaUrl
         ? { caratulaUrl: body.caratulaUrl, caratulaStatus: "pendiente" }

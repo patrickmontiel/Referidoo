@@ -4,6 +4,7 @@ import { getAdvisorSession } from "@/lib/auth";
 import { calculateRewardForNextReferral } from "@/lib/rewards";
 import { sendNewReferralNotification, sendFreemiumLimitEmail } from "@/lib/email";
 import { FREEMIUM_LEAD_LIMIT } from "@/lib/plan";
+import { normalizePhone } from "@/lib/utils";
 
 export async function GET(req: NextRequest) {
   const session = await getAdvisorSession();
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
 
 // Public — no advisor auth needed. Called when a referred friend submits the form.
 export async function POST(req: NextRequest) {
-  const { referralCode, leadName, leadPhone, leadEmail, leadNotes } = await req.json();
+  const { referralCode, leadName, leadPhone, leadEmail, leadNotes, preferredDays, preferredHours } = await req.json();
 
   if (!referralCode || !leadName || !leadPhone) {
     return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
@@ -54,6 +55,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Código no válido" }, { status: 404 });
   }
 
+  // Validar número duplicado: mismo teléfono ya registrado (no rechazado, no
+  // borrado) para el mismo asesor. Evita registrar dos veces al mismo lead.
+  const normPhone = normalizePhone(leadPhone);
+  if (normPhone) {
+    const advisorLeads = await db.referral.findMany({
+      where: { advisorId: referrer.advisorId, status: { not: "rejected" }, deletedAt: null },
+      select: { leadPhone: true },
+    });
+    if (advisorLeads.some((l) => normalizePhone(l.leadPhone) === normPhone)) {
+      return NextResponse.json(
+        { error: "Este número ya está registrado como referido." },
+        { status: 409 }
+      );
+    }
+  }
+
   const completedCount = referrer.referrals.length;
   const [{ amount, tierPosition }, advisorLeadCount] = await Promise.all([
     calculateRewardForNextReferral(referrer.advisorId, completedCount),
@@ -70,6 +87,8 @@ export async function POST(req: NextRequest) {
       leadPhone,
       leadEmail: leadEmail || null,
       leadNotes: leadNotes || null,
+      preferredDays: preferredDays || null,
+      preferredHours: preferredHours || null,
       tierPosition,
       rewardAmount: amount,
     },

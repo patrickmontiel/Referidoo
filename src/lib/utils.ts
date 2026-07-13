@@ -61,3 +61,14 @@ export function getRewardStatusLabel(status: string) {
   };
   return map[status] ?? status;
 }
+
+// Corte obligatorio: el asesor tiene este número de días para pagarle el premio
+// a su cliente desde que el premio queda aprobado (o desde que reclama su burbuja).
+export const REWARD_CUTOFF_DAYS = 30;
+
+// Normaliza un teléfono a sus últimos 10 dígitos para comparar duplicados sin
+// que el formato (espacios, +52, lada) genere falsos negativos.
+export function normalizePhone(phone: string | null | undefined): string {
+  const digits = (phone ?? "").replace(/\D/g, "");
+  return digits.length > 10 ? digits.slice(-10) : digits;
+}

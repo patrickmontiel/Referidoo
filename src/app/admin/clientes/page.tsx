@@ -15,11 +15,12 @@ export default async function ClientesPage() {
     db.client.findMany({
       where: { advisorId: session.advisorId },
       include: {
-        _count: { select: { referrals: true } },
+        _count: { select: { referrals: { where: { deletedAt: null } } } },
         referrals: {
-          select: { rewardAmount: true, rewardStatus: true, status: true, tierPosition: true, productType: true, interestProductType: true },
+          where: { deletedAt: null },
+          select: { rewardAmount: true, rewardStatus: true, status: true, tierPosition: true, productType: true, interestProductType: true, rewardApprovedAt: true },
         },
-        bubbleClaims: { select: { amount: true, status: true } },
+        bubbleClaims: { select: { amount: true, status: true, createdAt: true } },
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -34,8 +35,14 @@ export default async function ClientesPage() {
   const serializedClients = clients.map((c) => ({
     ...c,
     createdAt: c.createdAt.toISOString(),
-    referrals: c.referrals,
-    bubbleClaims: c.bubbleClaims,
+    referrals: c.referrals.map((r) => ({
+      ...r,
+      rewardApprovedAt: r.rewardApprovedAt ? r.rewardApprovedAt.toISOString() : null,
+    })),
+    bubbleClaims: c.bubbleClaims.map((b) => ({
+      ...b,
+      createdAt: b.createdAt.toISOString(),
+    })),
   }));
 
   return (

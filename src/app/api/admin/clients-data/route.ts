@@ -17,9 +17,9 @@ export async function GET() {
         _count: { select: { referrals: { where: { deletedAt: null } } } },
         referrals: {
           where: { deletedAt: null },
-          select: { rewardAmount: true, rewardStatus: true, status: true, tierPosition: true, productType: true, interestProductType: true },
+          select: { rewardAmount: true, rewardStatus: true, status: true, tierPosition: true, productType: true, interestProductType: true, rewardApprovedAt: true },
         },
-        bubbleClaims: { select: { amount: true, status: true } },
+        bubbleClaims: { select: { amount: true, status: true, createdAt: true } },
       },
       orderBy: { createdAt: "desc" },
     }),

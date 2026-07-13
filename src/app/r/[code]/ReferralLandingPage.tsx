@@ -54,7 +54,7 @@ export default function ReferralLandingPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ name: "", phone: "", email: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", preferredDays: "", preferredHours: "" });
 
   useEffect(() => {
     fetch(`/api/referral-info/${code}`)
@@ -83,6 +83,8 @@ export default function ReferralLandingPage() {
         leadName: form.name,
         leadPhone: form.phone,
         leadEmail: form.email,
+        preferredDays: form.preferredDays,
+        preferredHours: form.preferredHours,
       }),
     });
 
@@ -210,6 +212,56 @@ export default function ReferralLandingPage() {
                 placeholder="tu@correo.com"
                 className="w-full px-4 py-3.5 rounded-2xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition"
               />
+            </div>
+
+            {/* Preferencias de contacto (opcionales) — para que el asesor te busque cuando te acomode */}
+            <div>
+              <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
+                ¿Qué días te acomoda? (opcional)
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {["Entre semana", "Fin de semana", "Cualquier día"].map((d) => {
+                  const active = form.preferredDays === d;
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setForm({ ...form, preferredDays: active ? "" : d })}
+                      className={`px-3.5 py-2 rounded-full text-sm font-medium border transition active:scale-[0.97] ${
+                        active
+                          ? "bg-brand-ink text-white border-brand-ink"
+                          : "bg-white text-brand-gray-1 border-brand-border-4"
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
+                ¿A qué hora? (opcional)
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {["Mañana", "Tarde", "Noche", "Cualquiera"].map((h) => {
+                  const active = form.preferredHours === h;
+                  return (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => setForm({ ...form, preferredHours: active ? "" : h })}
+                      className={`px-3.5 py-2 rounded-full text-sm font-medium border transition active:scale-[0.97] ${
+                        active
+                          ? "bg-brand-ink text-white border-brand-ink"
+                          : "bg-white text-brand-gray-1 border-brand-border-4"
+                      }`}
+                    >
+                      {h}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {error && <p className="text-brand-danger-ink text-sm">{error}</p>}

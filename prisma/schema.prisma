@@ -148,6 +148,13 @@ model Referral {
   // Primer contacto del asesor con el lead (status → contacted por 1a vez).
   // Alimenta la métrica "horas a primer contacto" del Playbook 2.
   contactedAt         DateTime?
+  // Preferencias de contacto que el lead captura en el formulario (opcionales):
+  // días y franja horaria en que prefiere que lo contacten.
+  preferredDays       String?
+  preferredHours      String?
+  // Cuándo se aprobó el premio del cliente (rewardStatus → approved por 1a vez).
+  // Ancla del corte obligatorio: el asesor tiene 1 mes desde aquí para pagarlo.
+  rewardApprovedAt    DateTime?
   // Soft delete: se oculta de la lista del asesor, pero el registro se
   // conserva para el rastro contable y antifraude del dueño de la
   // plataforma (nunca se borra de verdad — ver DELETE en
