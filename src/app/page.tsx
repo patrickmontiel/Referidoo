@@ -473,7 +473,7 @@ export default async function Home() {
                   ))}
                 </ul>
                 <p className="text-[10px] font-bold text-[#8A8F98] uppercase tracking-[0.08em] mb-2">Comisión por producto</p>
-                <p className="text-xs text-[#8A8F98] mb-3">Cobro único al emitir la póliza — una sola vez, nunca por anualidad ni recurrente.</p>
+                <p className="text-xs text-[#8A8F98] mb-3">Se cobra una sola vez, al emitir la póliza.</p>
                 <div className="space-y-1.5 mb-6">
                   {[
                     { label: "PPR/Vida",             pct: "0.25%" },
@@ -515,7 +515,7 @@ export default async function Home() {
                   ))}
                 </ul>
                 <p className="text-[10px] font-bold text-[#2563EB] uppercase tracking-[0.08em] mb-2">Comisión por producto</p>
-                <p className="text-xs text-[#8A8F98] mb-3">Cobro único al emitir la póliza — una sola vez, nunca por anualidad ni recurrente.</p>
+                <p className="text-xs text-[#8A8F98] mb-3">Se cobra una sola vez, al emitir la póliza.</p>
                 <div className="space-y-1.5 mb-6">
                   {[
                     { label: "PPR/Vida",             pct: "0.15%" },

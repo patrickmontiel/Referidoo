@@ -36,7 +36,10 @@ export function LandingHeader() {
           <Link href="/#precios" className="hidden md:block text-sm text-[#5A626E] hover:text-[#0B0B0C] transition px-3 py-2">
             Precios
           </Link>
-          <Link href="/login" className="text-sm text-[#5A626E] hover:text-[#0B0B0C] transition px-3 py-2">
+          <Link
+            href="/login"
+            className="text-sm font-medium bg-[#2563EB] text-white px-4 py-2 rounded-full transition-[background-color,transform] duration-150 hover:bg-[#1D4ED8] active:scale-[0.97] whitespace-nowrap"
+          >
             Iniciar sesión
           </Link>
           <Link
