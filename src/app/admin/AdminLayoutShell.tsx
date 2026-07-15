@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Hanken_Grotesk } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { computeTipPosition } from "@/lib/tour-position";
 import { Logo } from "@/components/Logo";
 
 const hankenGrotesk = Hanken_Grotesk({
@@ -272,42 +273,44 @@ export default function AdminLayoutShell({
     if (!el) return;
     const r = el.getBoundingClientRect();
     const P = 8;
-    setTourRect({ top: r.top - P, left: r.left - P, width: r.width + P * 2, height: r.height + P * 2 });
-    const TW = 320, TH = 190, G = 14, M = 12;
-    let top = 0, left = 0;
-    const centeredLeft = Math.max(M, Math.min(r.left + r.width / 2 - TW / 2, window.innerWidth - TW - M));
-    if (r.bottom + G + TH + M <= window.innerHeight) {
-      top = r.bottom + G;
-      left = centeredLeft;
-    } else if (r.top - G - TH >= M) {
-      top = r.top - G - TH;
-      left = centeredLeft;
-    } else if (r.right + G + TW + M <= window.innerWidth) {
-      left = r.right + G;
-      top = Math.max(M, Math.min(r.top + r.height / 2 - TH / 2, window.innerHeight - TH - M));
-    } else {
-      left = Math.max(M, r.left - TW - G);
-      top = Math.max(M, Math.min(r.top + r.height / 2 - TH / 2, window.innerHeight - TH - M));
-    }
-    // Never overlap the sidebar — clamp left past its right edge
+    const rect = { top: r.top - P, left: r.left - P, width: r.width + P * 2, height: r.height + P * 2 };
+    setTourRect(rect);
+
+    // El tooltip nunca debe encimarse del elemento iluminado — ver
+    // computeTipPosition (barrido de no-overlap en tour-position.test.ts).
     const navEl = document.querySelector<HTMLElement>('[data-tour="nav"]');
-    if (navEl && navEl.offsetWidth > 0) {
-      left = Math.max(navEl.getBoundingClientRect().right + G, left);
-    }
-    left = Math.min(left, window.innerWidth - TW - M);
-    setTourTip({ top, left });
+    const navRight = navEl && navEl.offsetWidth > 0 ? navEl.getBoundingClientRect().right : 0;
+    const M = 12;
+    const p = computeTipPosition({
+      rect,
+      vw: window.innerWidth,
+      vh: window.innerHeight,
+      tipW: 320,
+      tipH: 200,
+      gap: 16,
+      margin: M,
+      minLeft: Math.max(M, navRight + 16),
+    });
+    setTourTip({ top: p.top, left: p.left });
   }, []);
 
   function goStep(next: number) {
     if (next >= TOUR.length) { endTour(); return; }
     const step = TOUR[next];
+    const changingPage = !!step.page && step.page !== pathname;
     tourStepRef.current = next;
     setTourStep(next);
-    setTourRect(null);
-    setTourTip(null);
+    // En la misma página conservamos spotlight y tooltip para que MORFEEN a la
+    // nueva posición (transición CSS) en vez de parpadear. Solo los limpiamos
+    // al cambiar de página, donde el ancla vieja apunta a un elemento que ya
+    // no existe.
+    if (changingPage || step.intro || step.outro) {
+      setTourRect(null);
+      setTourTip(null);
+    }
 
     if (step.closeModal) window.dispatchEvent(new Event("referidoo:closeModal"));
-    if (step.page && step.page !== pathname) router.push(step.page);
+    if (changingPage) router.push(step.page!);
     if (step.modal) {
       // Small delay so the page has settled before opening modal
       setTimeout(() => window.dispatchEvent(new Event("referidoo:openFirstReferido")), 300);
@@ -719,6 +722,14 @@ export default function AdminLayoutShell({
               60%  { transform: scale(1.08); }
               100% { transform: scale(1); opacity: 1; }
             }
+            @keyframes tipContentIn {
+              0%   { opacity: 0; transform: translateY(5px); }
+              100% { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes tipCardIn {
+              0%   { opacity: 0; transform: scale(.96); }
+              100% { opacity: 1; transform: scale(1); }
+            }
           `}</style>
 
           {/* Step 0: intro welcome card */}
@@ -802,6 +813,10 @@ export default function AdminLayoutShell({
                 width: 320,
                 maxWidth: "calc(100vw - 24px)",
                 zIndex: 72,
+                transition: reducedMotion
+                  ? undefined
+                  : "top .34s cubic-bezier(.22,1,.36,1), left .34s cubic-bezier(.22,1,.36,1)",
+                animation: reducedMotion ? undefined : "tipCardIn .28s cubic-bezier(.22,1,.36,1) both",
               }}
               className="bg-white rounded-2xl p-5 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
@@ -820,12 +835,17 @@ export default function AdminLayoutShell({
                 ))}
               </div>
 
-              <h3 className="text-sm font-bold text-[#0B0B0C] mb-1.5 leading-snug">
-                {curStep?.title}
-              </h3>
-              <p className="text-xs text-[#6B727D] leading-relaxed mb-4">
-                {curStep?.body}
-              </p>
+              <div
+                key={tourStep}
+                style={{ animation: reducedMotion ? undefined : "tipContentIn .3s ease-out both" }}
+              >
+                <h3 className="text-sm font-bold text-[#0B0B0C] mb-1.5 leading-snug">
+                  {curStep?.title}
+                </h3>
+                <p className="text-xs text-[#6B727D] leading-relaxed mb-4">
+                  {curStep?.body}
+                </p>
+              </div>
 
               <div className="flex gap-2">
                 <button
