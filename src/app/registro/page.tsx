@@ -77,7 +77,7 @@ export default function RegistroPage() {
               onChange={(e) => setName(e.target.value)}
               required
               className="w-full min-h-11 px-4 py-3 rounded-2xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink focus:border-transparent transition"
-              placeholder="Eduardo Neri"
+              placeholder="Bob Parr"
             />
           </div>
 
@@ -93,7 +93,7 @@ export default function RegistroPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full min-h-11 px-4 py-3 rounded-2xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink focus:border-transparent transition"
-              placeholder="tu@correo.com"
+              placeholder="bob.parr@insuricare.com"
             />
           </div>
 
@@ -117,7 +117,7 @@ export default function RegistroPage() {
 
           <div>
             <label htmlFor="reg-company" className="block text-xs font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
-              Despacho / empresa <span className="text-brand-gray-4 font-normal normal-case tracking-normal">(opcional)</span>
+              Empresa <span className="text-brand-gray-4 font-normal normal-case tracking-normal">(opcional)</span>
             </label>
             <input
               id="reg-company"
@@ -126,7 +126,7 @@ export default function RegistroPage() {
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
               className="w-full min-h-11 px-4 py-3 rounded-2xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink focus:border-transparent transition"
-              placeholder="Eduardo Neri — Asesor Financiero"
+              placeholder="Insuricare"
             />
           </div>
 
