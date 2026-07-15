@@ -218,7 +218,7 @@ export default function AdminLayoutShell({
   }, []);
 
   if (confettiRef.current.length === 0) {
-    const CONFETTI_COLORS = ["#2B57F0", "#0B0B0C", "#1FAE54", "#F5B53F", "#5B86F7", "#E7395A"];
+    const CONFETTI_COLORS = ["#2563EB", "#0B0B0C", "#1FAE54", "#F5B53F", "#5B86F7", "#E7395A"];
     confettiRef.current = Array.from({ length: 80 }, (_, k) => ({
       position: "absolute",
       top: 0,
@@ -360,6 +360,30 @@ export default function AdminLayoutShell({
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, [tourActive, tourStep, measure]);
+
+  // Pasos "tap": si el asesor obedece la instrucción y toca el elemento
+  // señalado (navega a la página del siguiente paso), el tour avanza solo —
+  // sin esto, la instrucción "toca el menú" no hace avanzar nada y confunde.
+  useEffect(() => {
+    if (!tourActive) return;
+    const cur = TOUR[tourStepRef.current];
+    const next = TOUR[tourStepRef.current + 1];
+    if (cur?.tap && next?.page === pathname && cur.page !== pathname) {
+      goStep(tourStepRef.current + 1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, tourActive]);
+
+  // Escape cierra el tour (misma semántica que "Saltar")
+  useEffect(() => {
+    if (!tourActive) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") endTour();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tourActive]);
 
   // Avatar click outside
   useEffect(() => {
@@ -677,9 +701,9 @@ export default function AdminLayoutShell({
         <>
           <style>{`
             @keyframes tourPulse {
-              0%   { box-shadow: 0 0 0 9999px rgba(13,13,15,.6), 0 0 0 0   rgba(43,87,240,.5); }
-              70%  { box-shadow: 0 0 0 9999px rgba(13,13,15,.6), 0 0 0 12px rgba(43,87,240,0); }
-              100% { box-shadow: 0 0 0 9999px rgba(13,13,15,.6), 0 0 0 0   rgba(43,87,240,0); }
+              0%   { box-shadow: 0 0 0 9999px rgba(13,13,15,.6), 0 0 0 0   rgba(37,99,235,.5); }
+              70%  { box-shadow: 0 0 0 9999px rgba(13,13,15,.6), 0 0 0 12px rgba(37,99,235,0); }
+              100% { box-shadow: 0 0 0 9999px rgba(13,13,15,.6), 0 0 0 0   rgba(37,99,235,0); }
             }
             @keyframes tapRing {
               0%   { transform: scale(.55); opacity: 1; }
@@ -738,16 +762,16 @@ export default function AdminLayoutShell({
                   height: tourRect.height,
                   borderRadius: 14,
                   boxShadow: "0 0 0 9999px rgba(13,13,15,.6)",
-                  border: "2.5px solid #2B57F0",
+                  border: "2.5px solid #2563EB",
                   zIndex: 70,
                   pointerEvents: "none",
-                  animation: curStep?.tap ? "tourPulse 2s ease-in-out infinite" : undefined,
+                  animation: curStep?.tap && !reducedMotion ? "tourPulse 2s ease-in-out infinite" : undefined,
                   transition: "top .3s cubic-bezier(.22,1,.36,1), left .3s cubic-bezier(.22,1,.36,1), width .3s cubic-bezier(.22,1,.36,1), height .3s cubic-bezier(.22,1,.36,1)",
                 }}
               />
 
               {/* Tap ring indicator */}
-              {curStep?.tap && (
+              {curStep?.tap && !reducedMotion && (
                 <div
                   style={{
                     position: "fixed",
@@ -756,7 +780,7 @@ export default function AdminLayoutShell({
                     width: 36,
                     height: 36,
                     borderRadius: "50%",
-                    border: "2.5px solid #2B57F0",
+                    border: "2.5px solid #2563EB",
                     zIndex: 71,
                     pointerEvents: "none",
                     animation: "tapRing 1.6s ease-out infinite",
@@ -769,11 +793,14 @@ export default function AdminLayoutShell({
           {/* Tooltip (steps 1–13) */}
           {tourStep > 0 && tourTip && (
             <div
+              role="dialog"
+              aria-label={curStep?.title}
               style={{
                 position: "fixed",
                 top: tourTip.top,
                 left: tourTip.left,
                 width: 320,
+                maxWidth: "calc(100vw - 24px)",
                 zIndex: 72,
               }}
               className="bg-white rounded-2xl p-5 shadow-2xl"
@@ -857,7 +884,7 @@ export default function AdminLayoutShell({
                     width: 74,
                     height: 74,
                     borderRadius: "50%",
-                    background: "#2B57F0",
+                    background: "#2563EB",
                     marginBottom: 22,
                     animation: reducedMotion ? undefined : "popIn .5s cubic-bezier(.34,1.3,.5,1) both",
                   }}
@@ -876,8 +903,8 @@ export default function AdminLayoutShell({
 
                 <button
                   onClick={endTour}
-                  className="w-full text-white font-bold text-[15px]"
-                  style={{ border: "none", background: "#2B57F0", cursor: "pointer", padding: "15px 0", borderRadius: 14 }}
+                  className="w-full text-white font-bold text-[15px] active:scale-[.98] transition-transform"
+                  style={{ border: "none", background: "#2563EB", cursor: "pointer", padding: "15px 0", borderRadius: 999 }}
                 >
                   Empezar a referir
                 </button>
