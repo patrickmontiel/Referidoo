@@ -473,10 +473,10 @@ export default async function Home() {
                   ))}
                 </ul>
                 <p className="text-[10px] font-bold text-[#8A8F98] uppercase tracking-[0.08em] mb-2">Comisión por producto</p>
+                <p className="text-xs text-[#8A8F98] mb-3">Cobro único al emitir la póliza — una sola vez, nunca por anualidad ni recurrente.</p>
                 <div className="space-y-1.5 mb-6">
                   {[
-                    { label: "PPR",                  pct: "0.25%" },
-                    { label: "Vida",                 pct: "0.25%" },
+                    { label: "PPR/Vida",             pct: "0.25%" },
                     { label: "Daños/Auto/GMM/Otro",  pct: "1.5%"  },
                   ].map((r) => (
                     <div key={r.label} className="flex items-center justify-between text-sm">
@@ -515,10 +515,10 @@ export default async function Home() {
                   ))}
                 </ul>
                 <p className="text-[10px] font-bold text-[#2563EB] uppercase tracking-[0.08em] mb-2">Comisión por producto</p>
+                <p className="text-xs text-[#8A8F98] mb-3">Cobro único al emitir la póliza — una sola vez, nunca por anualidad ni recurrente.</p>
                 <div className="space-y-1.5 mb-6">
                   {[
-                    { label: "PPR",                  pct: "0.15%" },
-                    { label: "Vida",                 pct: "0.15%" },
+                    { label: "PPR/Vida",             pct: "0.15%" },
                     { label: "Daños/Auto/GMM/Otro",  pct: "0.80%" },
                   ].map((r) => (
                     <div key={r.label} className="flex items-center justify-between text-sm">
