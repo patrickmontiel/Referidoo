@@ -661,8 +661,7 @@ export default function AdminLayoutShell({
             {welcomeName && (
               <>
                 <p className="welcome-name text-[2.75rem] font-bold tracking-[-0.02em] text-[#0B0B0C] leading-none mb-2">
-                  {welcomeName.split(" ")[0]}
-                  <span className="opacity-25"> {welcomeName.split(" ").slice(1).join(" ")}</span>
+                  {welcomeName}
                 </p>
                 <p className="welcome-sub text-sm text-[#0B0B0C]/30 font-normal tracking-wide">
                   {initialOnboardedAt ? "Bienvenido de vuelta" : "Tu cuenta está lista"}

@@ -475,11 +475,9 @@ export default async function Home() {
                 <p className="text-[10px] font-bold text-[#8A8F98] uppercase tracking-[0.08em] mb-2">Comisión por producto</p>
                 <div className="space-y-1.5 mb-6">
                   {[
-                    { label: "PPR",         pct: "0.25%" },
-                    { label: "Vida",        pct: "0.25%" },
-                    { label: "Daños/Auto",  pct: "1.5%"  },
-                    { label: "GMM",         pct: "1.5%"  },
-                    { label: "Otro",        pct: "1.5%"  },
+                    { label: "PPR",                  pct: "0.25%" },
+                    { label: "Vida",                 pct: "0.25%" },
+                    { label: "Daños/Auto/GMM/Otro",  pct: "1.5%"  },
                   ].map((r) => (
                     <div key={r.label} className="flex items-center justify-between text-sm">
                       <span className="text-[#5A626E]">{r.label}</span>
@@ -519,11 +517,9 @@ export default async function Home() {
                 <p className="text-[10px] font-bold text-[#2563EB] uppercase tracking-[0.08em] mb-2">Comisión por producto</p>
                 <div className="space-y-1.5 mb-6">
                   {[
-                    { label: "PPR",         pct: "0.15%" },
-                    { label: "Vida",        pct: "0.15%" },
-                    { label: "Daños/Auto",  pct: "0.80%" },
-                    { label: "GMM",         pct: "0.80%" },
-                    { label: "Otro",        pct: "0.80%" },
+                    { label: "PPR",                  pct: "0.15%" },
+                    { label: "Vida",                 pct: "0.15%" },
+                    { label: "Daños/Auto/GMM/Otro",  pct: "0.80%" },
                   ].map((r) => (
                     <div key={r.label} className="flex items-center justify-between text-sm">
                       <span className="text-[#5A626E]">{r.label}</span>
