@@ -665,7 +665,7 @@ export default function AdminLayoutShell({
                   <span className="opacity-25"> {welcomeName.split(" ").slice(1).join(" ")}</span>
                 </p>
                 <p className="welcome-sub text-sm text-[#0B0B0C]/30 font-normal tracking-wide">
-                  Bienvenido de vuelta
+                  {initialOnboardedAt ? "Bienvenido de vuelta" : "Tu cuenta está lista"}
                 </p>
               </>
             )}
