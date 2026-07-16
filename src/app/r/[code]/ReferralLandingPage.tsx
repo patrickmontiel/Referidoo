@@ -98,7 +98,7 @@ export default function ReferralLandingPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.name || !form.phone) return;
+    if (!form.name || !form.phone || !form.email) return;
     setSubmitting(true);
 
     const res = await fetch("/api/referrals", {
@@ -245,13 +245,14 @@ export default function ReferralLandingPage() {
             </div>
             <div>
               <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
-                Correo (opcional)
+                Correo *
               </label>
               <input
                 type="email"
                 autoComplete="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
                 placeholder="tu@correo.com"
                 className="w-full px-4 py-3.5 rounded-2xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition"
               />
@@ -260,7 +261,7 @@ export default function ReferralLandingPage() {
             {/* Producto de interés (opcional) — le llega al asesor como interestProductType */}
             <div>
               <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
-                ¿Sobre qué te gustaría platicar? (opcional)
+                ¿Sobre qué te gustaría platicar?
               </label>
               <div className="flex flex-wrap gap-2">
                 {INTERESTS.map((it) => {
@@ -286,7 +287,7 @@ export default function ReferralLandingPage() {
             {/* Preferencias de contacto (opcionales) — para que el asesor te busque cuando te acomode */}
             <div>
               <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
-                ¿Qué días te acomoda? (opcional)
+                ¿Qué días te acomoda?
               </label>
               <div className="flex flex-wrap gap-2">
                 {["Entre semana", "Fin de semana", "Cualquier día"].map((d) => {
@@ -310,7 +311,7 @@ export default function ReferralLandingPage() {
             </div>
             <div>
               <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
-                ¿A qué hora? (opcional)
+                ¿A qué hora?
               </label>
               <div className="flex flex-wrap gap-2">
                 {["Mañana", "Tarde", "Noche", "Cualquiera"].map((h) => {
@@ -337,7 +338,7 @@ export default function ReferralLandingPage() {
 
             <button
               type="submit"
-              disabled={submitting || !form.name || !form.phone}
+              disabled={submitting || !form.name || !form.phone || !form.email}
               className="w-full bg-[#2563EB] text-white text-base font-semibold py-4 rounded-full shadow-[0_8px_24px_rgba(37,99,235,.28)] hover:bg-[#1D4ED8] active:scale-[0.98] disabled:opacity-40 disabled:shadow-none transition mt-2"
             >
               {submitting ? "Enviando..." : "Quiero que me contacten"}
