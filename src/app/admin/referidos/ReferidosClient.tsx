@@ -17,6 +17,8 @@ type Referral = {
   saleAmount: number | null;
   productType: string | null;
   interestProductType: string | null;
+  caratulaUrl: string | null;
+  caratulaStatus: string | null;
   rewardPaidAt: string | null;
   confirmedByReferrer: boolean;
   referrerConfirmedAt: string | null;
@@ -779,6 +781,25 @@ export default function ReferidosClient({
                   );
                 })()}
               </div>
+
+              {/* Verificación de carátula (IA): monto + producto vs lo reportado */}
+              {selected.status === "converted" && selected.caratulaUrl && (() => {
+                const s = selected.caratulaStatus;
+                const cfg =
+                  s === "validada"
+                    ? { bg: "bg-green-50", border: "border-green-200", text: "text-green-800", icon: "✓", title: "Carátula validada", body: "El monto y el producto coinciden con la póliza." }
+                    : s === "discrepancia"
+                    ? { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-800", icon: "⚠️", title: "Revisar carátula", body: "La póliza no coincide con el producto o el monto que reportaste. Corrige el dato o vuelve a subir la carátula correcta." }
+                    : { bg: "bg-[#F4F5F7]", border: "border-brand-border-1", text: "text-brand-gray-2", icon: "⏳", title: "Carátula en revisión", body: "Estamos verificando la póliza contra lo que reportaste. Vuelve a abrir el referido en un momento." };
+                return (
+                  <div className={`rounded-xl border ${cfg.bg} ${cfg.border} px-4 py-3`}>
+                    <p className={`text-sm font-semibold ${cfg.text} flex items-center gap-1.5`}>
+                      <span>{cfg.icon}</span> {cfg.title}
+                    </p>
+                    <p className={`text-xs ${cfg.text} opacity-90 mt-1 leading-relaxed`}>{cfg.body}</p>
+                  </div>
+                );
+              })()}
 
               {/* Interés del lead */}
               {(selected.status === "contacted" || selected.status === "in_process") && (
