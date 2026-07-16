@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 
 // Public — no advisor auth needed. Called when a referred friend submits the form.
 export async function POST(req: NextRequest) {
-  const { referralCode, leadName, leadPhone, leadEmail, leadNotes, preferredDays, preferredHours } = await req.json();
+  const { referralCode, leadName, leadPhone, leadEmail, leadNotes, interestProductType, preferredDays, preferredHours } = await req.json();
 
   if (!referralCode || !leadName || !leadPhone) {
     return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
@@ -87,6 +87,7 @@ export async function POST(req: NextRequest) {
       leadPhone,
       leadEmail: leadEmail || null,
       leadNotes: leadNotes || null,
+      interestProductType: interestProductType || null,
       preferredDays: preferredDays || null,
       preferredHours: preferredHours || null,
       tierPosition,

@@ -20,6 +20,17 @@ type ReferralInfo = {
 
 type Step = "landing" | "form" | "success";
 
+// Etiquetas amigables para el lead → valor canónico que ve el asesor en su
+// panel (interestProductType usa el mismo vocabulario que productType:
+// PPR / Vida / GMM / Daños/Auto). "Aún no sé" no fija ningún producto.
+const INTERESTS: { label: string; value: string }[] = [
+  { label: "Plan de retiro / ahorro", value: "PPR" },
+  { label: "Seguro de vida", value: "Vida" },
+  { label: "Gastos médicos mayores", value: "GMM" },
+  { label: "Seguro de auto", value: "Daños/Auto" },
+  { label: "Aún no sé", value: "" },
+];
+
 function GrowthIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -54,7 +65,7 @@ export default function ReferralLandingPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ name: "", phone: "", email: "", preferredDays: "", preferredHours: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", interest: "", preferredDays: "", preferredHours: "" });
 
   useEffect(() => {
     fetch(`/api/referral-info/${code}`)
@@ -83,6 +94,7 @@ export default function ReferralLandingPage() {
         leadName: form.name,
         leadPhone: form.phone,
         leadEmail: form.email,
+        interestProductType: INTERESTS.find((i) => i.label === form.interest)?.value || null,
         preferredDays: form.preferredDays,
         preferredHours: form.preferredHours,
       }),
@@ -214,6 +226,32 @@ export default function ReferralLandingPage() {
               />
             </div>
 
+            {/* Producto de interés (opcional) — le llega al asesor como interestProductType */}
+            <div>
+              <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
+                ¿Sobre qué te gustaría platicar? (opcional)
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {INTERESTS.map((it) => {
+                  const active = form.interest === it.label;
+                  return (
+                    <button
+                      key={it.label}
+                      type="button"
+                      onClick={() => setForm({ ...form, interest: active ? "" : it.label })}
+                      className={`px-3.5 py-2 rounded-full text-sm font-medium border transition active:scale-[0.97] ${
+                        active
+                          ? "bg-[#2563EB] text-white border-[#2563EB]"
+                          : "bg-white text-brand-gray-1 border-brand-border-4"
+                      }`}
+                    >
+                      {it.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Preferencias de contacto (opcionales) — para que el asesor te busque cuando te acomode */}
             <div>
               <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
@@ -269,7 +307,7 @@ export default function ReferralLandingPage() {
             <button
               type="submit"
               disabled={submitting || !form.name || !form.phone}
-              className="w-full bg-brand-ink text-white text-sm font-semibold py-4 rounded-full hover:bg-[#26262a] active:scale-[0.98] disabled:opacity-40 transition mt-2"
+              className="w-full bg-[#2563EB] text-white text-base font-semibold py-4 rounded-full shadow-[0_8px_24px_rgba(37,99,235,.28)] hover:bg-[#1D4ED8] active:scale-[0.98] disabled:opacity-40 disabled:shadow-none transition mt-2"
             >
               {submitting ? "Enviando..." : "Quiero que me contacten"}
             </button>
@@ -352,7 +390,7 @@ export default function ReferralLandingPage() {
         <div className="landing-cta mt-10">
           <button
             onClick={() => setStep("form")}
-            className="w-full bg-brand-ink text-white text-sm font-semibold py-4 rounded-full hover:bg-[#26262a] active:scale-[0.98] transition"
+            className="w-full bg-[#2563EB] text-white text-base font-semibold py-4 rounded-full shadow-[0_8px_24px_rgba(37,99,235,.28)] hover:bg-[#1D4ED8] active:scale-[0.98] transition"
           >
             Quiero conocer mi oportunidad
           </button>
