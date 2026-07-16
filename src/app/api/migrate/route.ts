@@ -154,5 +154,14 @@ export async function POST() {
     results.push("– rewardApprovedAt already exists");
   }
 
+  // Link de agenda del asesor (Calendly/Cal.com/Google) para el botón
+  // "Agendar cita" del formulario de referido (jul 2026)
+  try {
+    await db.execute(`ALTER TABLE "AdvisorSettings" ADD COLUMN "schedulingUrl" TEXT`);
+    results.push("✓ schedulingUrl added");
+  } catch {
+    results.push("– schedulingUrl already exists");
+  }
+
   return NextResponse.json({ ok: true, results });
 }
