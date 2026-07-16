@@ -32,6 +32,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ cod
     advisorName: client.advisor.name,
     companyName: client.advisor.companyName,
     welcomeMessage: client.advisor.settings?.welcomeMessage,
+    schedulingUrl: client.advisor.settings?.schedulingUrl ?? null,
     nextReward: amount,
   });
 }

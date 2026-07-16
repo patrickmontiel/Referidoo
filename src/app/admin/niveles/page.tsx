@@ -67,6 +67,7 @@ export default function PremiosPage() {
   const [flatAmount, setFlatAmount] = useState(1500);
   const [whatsappMessage, setWhatsappMessage] = useState("");
   const [welcomeMessage, setWelcomeMessage] = useState("");
+  const [schedulingUrl, setSchedulingUrl] = useState("");
   const [loadingTiers, setLoadingTiers] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -94,6 +95,7 @@ export default function PremiosPage() {
           setFlatAmount(s.flatAmount ?? 1500);
           setWhatsappMessage(s.whatsappMessage ?? "");
           setWelcomeMessage(s.welcomeMessage ?? "");
+          setSchedulingUrl(s.schedulingUrl ?? "");
         }
         setLoadingTiers(false);
       });
@@ -142,7 +144,7 @@ export default function PremiosPage() {
       fetch("/api/tiers", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tiers, afterLastTier, flatAmount, whatsappMessage, welcomeMessage }),
+        body: JSON.stringify({ tiers, afterLastTier, flatAmount, whatsappMessage, welcomeMessage, schedulingUrl }),
       }),
       fetch("/api/bubble-settings", {
         method: "PUT",
@@ -360,6 +362,21 @@ export default function PremiosPage() {
               Usa{" "}
               <code className="bg-[#F4F5F7] px-1.5 py-0.5 rounded-md">{"{link}"}</code> para el enlace y{" "}
               <code className="bg-[#F4F5F7] px-1.5 py-0.5 rounded-md">{"{nombre}"}</code> para el nombre del cliente.
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-[#0B0B0C] mb-2">Link de agenda</label>
+            <input
+              type="url"
+              inputMode="url"
+              value={schedulingUrl}
+              onChange={(e) => setSchedulingUrl(e.target.value)}
+              placeholder="calendly.com/tu-usuario  ·  cal.com/tu-usuario"
+              className="w-full px-4 py-3 rounded-2xl border border-brand-border-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition text-[#3F4651] placeholder:text-brand-gray-4"
+            />
+            <p className="text-xs text-brand-gray-4 mt-2">
+              Pega tu link de Calendly, Cal.com o la página de citas de Google Calendar. Aparecerá como un botón{" "}
+              <strong className="text-brand-gray-3">Agendar una cita</strong> en el formulario de tus referidos. Déjalo vacío para ocultarlo.
             </p>
           </div>
         </div>

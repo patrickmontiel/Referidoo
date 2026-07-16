@@ -22,7 +22,15 @@ export async function PUT(req: NextRequest) {
   const session = await getAdvisorSession();
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const { tiers, afterLastTier, flatAmount, whatsappMessage, welcomeMessage } = await req.json();
+  const { tiers, afterLastTier, flatAmount, whatsappMessage, welcomeMessage, schedulingUrl } = await req.json();
+
+  // Normaliza el link de agenda: acepta "calendly.com/x" sin esquema y le
+  // antepone https:// para que el botón del formulario abra bien.
+  const cleanSchedulingUrl = (() => {
+    const s = typeof schedulingUrl === "string" ? schedulingUrl.trim() : "";
+    if (!s) return null;
+    return /^https?:\/\//i.test(s) ? s : `https://${s}`;
+  })();
 
   await db.rewardTier.deleteMany({ where: { advisorId: session.advisorId } });
 
@@ -45,12 +53,14 @@ export async function PUT(req: NextRequest) {
       flatAmount: Number(flatAmount) || 1500,
       whatsappMessage: whatsappMessage || null,
       welcomeMessage: welcomeMessage || null,
+      schedulingUrl: cleanSchedulingUrl,
     },
     update: {
       afterLastTier: afterLastTier ?? "cycle",
       flatAmount: Number(flatAmount) || 1500,
       whatsappMessage: whatsappMessage || null,
       welcomeMessage: welcomeMessage || null,
+      schedulingUrl: cleanSchedulingUrl,
     },
   });
   invalidateAdvisorConfigCache(session.advisorId);

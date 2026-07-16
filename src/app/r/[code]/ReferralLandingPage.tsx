@@ -15,8 +15,23 @@ type ReferralInfo = {
   advisorName: string;
   companyName: string | null;
   welcomeMessage: string | null;
+  schedulingUrl: string | null;
   nextReward: number;
 };
+
+// Abre el link de agenda del asesor con el nombre/correo del lead prellenados
+// donde el proveedor lo soporta (Calendly y Cal.com usan ?name=&email=; Google
+// ignora los params desconocidos sin romperse).
+function buildBookingUrl(base: string, name: string, email: string): string {
+  try {
+    const u = new URL(base);
+    if (name && !u.searchParams.has("name")) u.searchParams.set("name", name);
+    if (email && !u.searchParams.has("email")) u.searchParams.set("email", email);
+    return u.toString();
+  } catch {
+    return base;
+  }
+}
 
 type Step = "landing" | "form" | "success";
 
@@ -143,9 +158,25 @@ export default function ReferralLandingPage() {
           <h1 className="text-2xl font-bold mb-3 text-brand-ink">
             Listo, {form.name.split(" ")[0]}
           </h1>
-          <p className="text-brand-gray-4 text-sm leading-relaxed mb-8">
-            Tu asesor te contactará pronto para platicar sobre tu situación patrimonial sin ningún compromiso.
-          </p>
+          {info.schedulingUrl ? (
+            <>
+              <p className="text-brand-gray-4 text-sm leading-relaxed mb-5">
+                Tus datos ya le llegaron a tu asesor. Si quieres, aparta tu cita ahora mismo — o él te contacta.
+              </p>
+              <a
+                href={buildBookingUrl(info.schedulingUrl, form.name, form.email)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full bg-[#2563EB] text-white text-base font-semibold py-4 rounded-full shadow-[0_8px_24px_rgba(37,99,235,.28)] hover:bg-[#1D4ED8] active:scale-[0.98] transition mb-8"
+              >
+                Agendar una cita ahora →
+              </a>
+            </>
+          ) : (
+            <p className="text-brand-gray-4 text-sm leading-relaxed mb-8">
+              Tu asesor te contactará pronto para platicar sobre tu situación patrimonial sin ningún compromiso.
+            </p>
+          )}
           <div className="bg-brand-surface rounded-[20px] p-4 text-left">
             <p className="text-[11px] text-brand-gray-4 uppercase tracking-[0.08em] font-bold mb-1">
               Te recomendó

@@ -38,6 +38,7 @@ model AdvisorSettings {
   flatAmount           Int     @default(1500)
   whatsappMessage      String?
   welcomeMessage       String?
+  schedulingUrl        String?
   bubbleAutoPoints     Int     @default(150)
   bubbleGmmPoints      Int     @default(300)
   bubbleClaimThreshold Int     @default(500)
