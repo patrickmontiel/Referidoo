@@ -29,7 +29,11 @@ export async function GET(req: NextRequest) {
     plan: advisor.plan,
     onboardedAt: advisor.onboardedAt?.toISOString() ?? null,
   });
-  const res = NextResponse.redirect(new URL("/admin?verify=success", BASE_URL));
+  // Aterriza en una confirmación ligera (no en un /admin fresco): esa página
+  // avisa en vivo a la pestaña donde la asesora ya estaba trabajando y le pide
+  // volver ahí, en vez de invitarla a empezar de cero en esta pestaña nueva y
+  // abandonar (perder) el cliente que iba a medias en la otra.
+  const res = NextResponse.redirect(new URL("/correo-verificado", BASE_URL));
   setAdvisorCookie(res, sessionToken);
   return res;
 }

@@ -218,6 +218,52 @@ export default function AdminLayoutShell({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Sincronización en vivo de la verificación de correo. Si la asesora
+  // verifica su correo desde OTRA pestaña (el link del correo abre una nueva)
+  // o desde su teléfono mientras aquí va a medias agregando un cliente, esta
+  // pestaña se entera y baja el banner SIN recargar — no pierde lo que estaba
+  // escribiendo. Cubre 3 vías: BroadcastChannel (misma-navegador), evento
+  // storage (fallback), y re-check al volver el foco / poll suave (teléfono).
+  useEffect(() => {
+    if (emailVerified) return; // ya verificada — nada que vigilar
+
+    let done = false;
+    const flip = () => {
+      if (done) return;
+      done = true;
+      setEmailVerified(true);
+      setShowVerifiedBanner(true);
+      setTimeout(() => setShowVerifiedBanner(false), 5000);
+    };
+
+    let bc: BroadcastChannel | undefined;
+    if (typeof BroadcastChannel !== "undefined") {
+      bc = new BroadcastChannel("referidoo-auth");
+      bc.onmessage = (e) => { if (e.data?.type === "email-verified") flip(); };
+    }
+    const onStorage = (e: StorageEvent) => { if (e.key === "referidoo-email-verified") flip(); };
+    window.addEventListener("storage", onStorage);
+
+    const recheck = () => {
+      if (done || document.visibilityState !== "visible") return;
+      fetch("/api/auth/refresh", { method: "POST" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => { if (d?.emailVerified === true) flip(); })
+        .catch(() => {});
+    };
+    window.addEventListener("visibilitychange", recheck);
+    window.addEventListener("focus", recheck);
+    const poll = window.setInterval(recheck, 20000);
+
+    return () => {
+      bc?.close();
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("visibilitychange", recheck);
+      window.removeEventListener("focus", recheck);
+      window.clearInterval(poll);
+    };
+  }, [emailVerified]);
+
   if (confettiRef.current.length === 0) {
     const CONFETTI_COLORS = ["#2563EB", "#0B0B0C", "#1FAE54", "#F5B53F", "#5B86F7", "#E7395A"];
     confettiRef.current = Array.from({ length: 80 }, (_, k) => ({

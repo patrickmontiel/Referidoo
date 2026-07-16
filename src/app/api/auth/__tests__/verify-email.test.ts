@@ -55,7 +55,7 @@ describe("GET /api/auth/verify-email", () => {
       where: { id: "adv1" },
       data: { emailVerified: true, verificationToken: null },
     });
-    expect(res.headers.get("location")).toContain("verify=success");
+    expect(res.headers.get("location")).toContain("/correo-verificado");
   });
 
   // Regresión: el link de verificación redirigía a /admin sin iniciar sesión,
