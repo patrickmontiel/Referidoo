@@ -314,7 +314,7 @@ export default function ReferralLandingPage() {
                 ¿A qué hora?
               </label>
               <div className="flex flex-wrap gap-2">
-                {["Mañana", "Tarde", "Noche", "Cualquiera"].map((h) => {
+                {["Mañana · 8–11am", "Medio día · 11am–1pm", "Comida · 1–4pm", "Tarde · 4–7pm", "Noche · 7–9pm", "Cualquier hora"].map((h) => {
                   const active = form.preferredHours === h;
                   return (
                     <button
