@@ -410,27 +410,30 @@ export default function AdminLayoutShell({
 
     if (step.intro || step.outro) return;
 
-    setTimeout(() => {
+    // Reintento: al cambiar de página o abrir un modal, el elemento tarda en
+    // renderizar. Si medimos a los 130ms y aún no está, ANTES saltábamos el paso
+    // — y como toda la página nueva no había cargado, se saltaban TODOS los pasos
+    // en cascada hasta terminar el recorrido. Ahora se sondea el elemento hasta
+    // ~2s antes de darlo por ausente.
+    const runStep = (attempt: number) => {
+      if (tourStepRef.current !== next) return; // el usuario ya avanzó
       unlockScroll();
       const el = step.target ? findVisibleEl(step.target) : null;
-      if (!el && step.target) {
-        // Element not found — skip this step
-        goStep(next + 1);
+      const hidden = el ? (() => { const r0 = el.getBoundingClientRect(); return r0.width === 0 && r0.height === 0; })() : false;
+      if (step.target && (!el || hidden)) {
+        if (attempt < 14) { setTimeout(() => runStep(attempt + 1), 150); return; }
+        goStep(next + 1); // de plano no aparece — sáltalo
         return;
       }
       if (el) {
-        const r0 = el.getBoundingClientRect();
-        if (r0.width === 0 && r0.height === 0) {
-          // Element is hidden (e.g. sidebar on mobile) — skip this step
-          goStep(next + 1);
-          return;
-        }
         scrollIntoCenter(el);
       }
       // Con scroll suave hay que esperar a que asiente antes de medir el
       // spotlight (si no, cae a media animación).
       setTimeout(() => { measure(next); lockScroll(); }, el ? (reducedMotion ? 470 : 620) : 80);
-    }, step.event ? 500 : 130);
+    };
+    // Primer intento tras un delay base (más largo si abre modal o cambia de página).
+    setTimeout(() => runStep(0), step.event ? 500 : changingPage ? 300 : 130);
   }
 
   // Arranca cualquier recorrido (onboarding o una tarea). sealOnboarding sella
