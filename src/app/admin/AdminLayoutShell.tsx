@@ -253,7 +253,10 @@ export default function AdminLayoutShell({
     };
     window.addEventListener("visibilitychange", recheck);
     window.addEventListener("focus", recheck);
-    const poll = window.setInterval(recheck, 20000);
+    // Poll mientras la pestaña esté visible: cubre el caso cross-device (verificas
+    // en el celular sin tocar la compu → ningún evento focus/visibility dispara,
+    // solo el poll refleja el cambio). 8s = se siente casi inmediato sin martillar.
+    const poll = window.setInterval(recheck, 8000);
 
     return () => {
       bc?.close();
@@ -488,7 +491,7 @@ export default function AdminLayoutShell({
     await fetch("/api/auth/resend-verification", { method: "POST" }).catch(() => {});
     setResendingVerif(false);
     setResentVerif(true);
-    setTimeout(() => setResentVerif(false), 2000);
+    setTimeout(() => setResentVerif(false), 4000);
   }
 
   async function logout() {
@@ -616,16 +619,20 @@ export default function AdminLayoutShell({
       {!emailVerified && !showVerifiedBanner && (
         <div className="bg-brand-blue-bg border-b border-brand-border-1 flex-shrink-0">
           <div className="max-w-5xl mx-auto px-5 py-2.5 text-sm text-brand-blue flex items-center justify-between gap-3">
-            <span>Verifica tu correo para empezar a agregar clientes — revisa tu bandeja de entrada.</span>
+            <span>
+              {resentVerif
+                ? "Te enviamos un correo nuevo. Abre el MÁS reciente — los anteriores dejan de servir."
+                : "Verifica tu correo para empezar a agregar clientes. Puedes abrirlo desde cualquier dispositivo."}
+            </span>
             {resentVerif ? (
-              <span className="text-green-700 font-medium whitespace-nowrap flex-shrink-0">reenviado con éxito</span>
+              <span className="text-green-700 font-medium whitespace-nowrap flex-shrink-0">✓ reenviado</span>
             ) : (
               <button
                 onClick={resendVerification}
                 disabled={resendingVerif}
                 className="underline whitespace-nowrap flex-shrink-0 disabled:opacity-50 bg-transparent border-0 p-0 text-brand-blue text-sm cursor-pointer"
               >
-                {resendingVerif ? "enviando..." : "reenviar correo"}
+                {resendingVerif ? "enviando…" : "reenviar correo"}
               </button>
             )}
           </div>

@@ -1,19 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Hanken_Grotesk } from "next/font/google";
 
 const hanken = Hanken_Grotesk({ subsets: ["latin"], weight: ["400", "600", "700", "800"] });
 
-export default function CorreoVerificadoPage() {
+function CorreoVerificadoInner() {
+  const searchParams = useSearchParams();
+  const estado = searchParams.get("estado"); // "expirado" | "falta" | null(=éxito)
+  const isError = estado === "expirado" || estado === "falta";
+
   // ¿Esta pestaña tiene una "hermana" abierta (la que la asesora ya estaba
   // usando)? Si el correo se abrió en el mismo navegador, sí — le avisamos por
-  // BroadcastChannel y ella se actualiza sin recargar. Si no hay otra pestaña
-  // (o verificó desde el teléfono), mostramos el botón para ir al panel.
+  // BroadcastChannel y ella se actualiza sin recargar.
   const [hasSibling, setHasSibling] = useState(false);
 
   useEffect(() => {
-    // Aviso a otras pestañas del mismo navegador — se actualizan en vivo.
+    if (isError) return; // en error NO avisamos "verificado" a nadie
     try {
       if (typeof BroadcastChannel !== "undefined") {
         const bc = new BroadcastChannel("referidoo-auth");
@@ -21,18 +25,15 @@ export default function CorreoVerificadoPage() {
         bc.close();
       }
     } catch {}
-    // Fallback para navegadores sin BroadcastChannel: el evento `storage` se
-    // dispara en las OTRAS pestañas cuando esta escribe la llave.
     try {
       localStorage.setItem("referidoo-email-verified", String(Date.now()));
     } catch {}
 
-    // Heurística para saber si esta pestaña se abrió aparte (hay otra activa):
-    // el correo casi siempre abre pestaña nueva, así que asumimos que sí salvo
-    // que esta sea claramente la única (sin historial previo y sin opener).
     const likelyStandalone = window.history.length <= 1 && !window.opener;
     setHasSibling(!likelyStandalone);
-  }, []);
+  }, [isError]);
+
+  const accent = isError ? "#D97706" : "#2563EB";
 
   return (
     <div
@@ -60,7 +61,7 @@ export default function CorreoVerificadoPage() {
             width: 60,
             height: 60,
             borderRadius: "50%",
-            background: "#2563EB",
+            background: accent,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -68,22 +69,40 @@ export default function CorreoVerificadoPage() {
             animation: "cvPop .5s cubic-bezier(.34,1.3,.5,1) both",
           }}
         >
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 6 9 17l-5-5" />
-          </svg>
+          {isError ? (
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 8v5M12 17h.01" />
+            </svg>
+          ) : (
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          )}
         </div>
 
-        <p style={{ fontSize: 20, fontWeight: 700, color: "#0d0d0d", marginBottom: 8 }}>¡Correo verificado!</p>
-
-        {hasSibling ? (
-          <p style={{ fontSize: 14, color: "#52525b", lineHeight: 1.55, marginBottom: 26 }}>
-            Ya puedes agregar clientes. <strong style={{ color: "#0d0d0d" }}>Vuelve a la pestaña</strong> donde estabas
-            trabajando — ya se actualizó sola, sin perder nada de lo que tenías. Puedes cerrar esta.
-          </p>
+        {isError ? (
+          <>
+            <p style={{ fontSize: 20, fontWeight: 700, color: "#0d0d0d", marginBottom: 8 }}>Este enlace ya no sirve</p>
+            <p style={{ fontSize: 14, color: "#52525b", lineHeight: 1.55, marginBottom: 26 }}>
+              Es probable que hayas reenviado el correo: cada reenvío deja fuera los enlaces anteriores. En el
+              dispositivo donde <strong style={{ color: "#0d0d0d" }}>creaste tu cuenta</strong>, toca “reenviar correo” y abre el
+              correo <strong style={{ color: "#0d0d0d" }}>más reciente</strong>. Si ya lo verificaste, ignora esto.
+            </p>
+          </>
         ) : (
-          <p style={{ fontSize: 14, color: "#52525b", lineHeight: 1.55, marginBottom: 26 }}>
-            Tu cuenta quedó lista. Ya puedes empezar a agregar clientes y activar tu programa de referidos.
-          </p>
+          <>
+            <p style={{ fontSize: 20, fontWeight: 700, color: "#0d0d0d", marginBottom: 8 }}>¡Correo verificado!</p>
+            {hasSibling ? (
+              <p style={{ fontSize: 14, color: "#52525b", lineHeight: 1.55, marginBottom: 26 }}>
+                Ya puedes agregar clientes. <strong style={{ color: "#0d0d0d" }}>Vuelve a la pestaña</strong> donde estabas
+                trabajando — ya se actualizó sola, sin perder nada de lo que tenías. Puedes cerrar esta.
+              </p>
+            ) : (
+              <p style={{ fontSize: 14, color: "#52525b", lineHeight: 1.55, marginBottom: 26 }}>
+                Tu cuenta quedó lista. Ya puedes empezar a agregar clientes y activar tu programa de referidos.
+              </p>
+            )}
+          </>
         )}
 
         <a
@@ -107,5 +126,13 @@ export default function CorreoVerificadoPage() {
 
       <style>{`@keyframes cvPop { 0% { transform: scale(.5); opacity: 0; } 60% { transform: scale(1.08); } 100% { transform: scale(1); opacity: 1; } }`}</style>
     </div>
+  );
+}
+
+export default function CorreoVerificadoPage() {
+  return (
+    <Suspense fallback={null}>
+      <CorreoVerificadoInner />
+    </Suspense>
   );
 }

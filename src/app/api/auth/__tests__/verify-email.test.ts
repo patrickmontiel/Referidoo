@@ -34,16 +34,20 @@ beforeEach(() => {
 });
 
 describe("GET /api/auth/verify-email", () => {
-  it("redirects with verify=missing when no token is provided", async () => {
+  it("redirects to the public page (not /admin/login) when no token is provided", async () => {
     const res = await GET(getRequest());
     expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toContain("verify=missing");
+    const loc = res.headers.get("location") ?? "";
+    expect(loc).toContain("/correo-verificado?estado=falta");
+    expect(loc).not.toContain("/admin");
   });
 
-  it("redirects with verify=invalid when the token doesn't match any advisor", async () => {
+  it("redirects to the public page when the token doesn't match any advisor (expired/reused)", async () => {
     mockFindUnique.mockResolvedValue(null);
     const res = await GET(getRequest("bad-token"));
-    expect(res.headers.get("location")).toContain("verify=invalid");
+    const loc = res.headers.get("location") ?? "";
+    expect(loc).toContain("/correo-verificado?estado=expirado");
+    expect(loc).not.toContain("/admin");
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 

@@ -7,13 +7,17 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://referidoo.com";
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
 
+  // Los errores aterrizan en una página PÚBLICA de confirmación (no en /admin,
+  // que sin sesión rebota a /login). El caso típico: el asesor reenvió el correo
+  // y cada reenvío invalida los links anteriores — al abrir uno viejo, el token
+  // ya no existe. Nunca debe pedir iniciar sesión: solo explicar y guiar.
   if (!token) {
-    return NextResponse.redirect(new URL("/admin?verify=missing", BASE_URL));
+    return NextResponse.redirect(new URL("/correo-verificado?estado=falta", BASE_URL));
   }
 
   const advisor = await db.advisor.findUnique({ where: { verificationToken: token } });
   if (!advisor) {
-    return NextResponse.redirect(new URL("/admin?verify=invalid", BASE_URL));
+    return NextResponse.redirect(new URL("/correo-verificado?estado=expirado", BASE_URL));
   }
 
   await db.advisor.update({
