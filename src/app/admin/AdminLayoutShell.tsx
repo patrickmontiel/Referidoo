@@ -48,102 +48,87 @@ type TourStepDef = {
   body: string;
 };
 
-const TOUR: TourStepDef[] = [
+// ── Primeros Pasos: las tareas de activación y su recorrido guiado ──
+export type TaskId = "email" | "client" | "tiers" | "share" | "agenda";
+
+export type TaskState = {
+  emailVerified: boolean;
+  hasClient: boolean;
+  hasTiers: boolean;
+  hasReferral: boolean;
+  hasScheduling: boolean;
+};
+
+type TaskDef = {
+  id: TaskId;
+  label: string;
+  done: (s: TaskState) => boolean;
+  flow: TourStepDef[];
+};
+
+export const TASKS: TaskDef[] = [
   {
-    intro: true,
-    title: "Te damos la bienvenida",
-    body: "En 2 minutos te mostramos todo lo que puedes hacer desde tu panel. Puedes saltar en cualquier momento.",
+    id: "email",
+    label: "Verifica tu correo",
+    done: (s) => s.emailVerified,
+    flow: [
+      { target: '[data-tour="verify-banner"]', page: "/admin", title: "Verifica tu correo",
+        body: "Abre el correo que te enviamos y toca “Verificar mi correo”. Puedes hacerlo desde tu celular — tu panel se actualiza solo." },
+    ],
   },
   {
-    target: '[data-tour="nav"]',
-    page: "/admin",
-    title: "Tu menú principal",
-    body: "Desde aquí navegas entre todas las secciones de tu panel. Te explicamos cada una.",
+    id: "client",
+    label: "Agrega tu primer cliente",
+    done: (s) => s.hasClient,
+    flow: [
+      { target: '[data-tour="nav-clientes"]', page: "/admin", tap: true, title: "Vamos a Clientes",
+        body: "Toca Clientes para registrar a tu primera persona." },
+      { target: '[aria-label="Agregar cliente"]', page: "/admin/clientes", title: "Agrega tu primer cliente",
+        body: "Toca “Agregar cliente” y llena sus datos. Esa persona será quien te mande referidos." },
+    ],
   },
   {
-    target: '[data-tour="stats"]',
-    page: "/admin",
-    title: "Resumen de actividad",
-    body: "De un vistazo: clientes activos, referidos totales, convertidos y pendientes — en tiempo real.",
+    id: "tiers",
+    label: "Configura tu escalera de premios",
+    done: (s) => s.hasTiers,
+    flow: [
+      { target: '[data-tour="nav-premios"]', page: "/admin", tap: true, title: "Vamos a Premios",
+        body: "Toca Premios para definir cuánto gana tu cliente." },
+      { target: '[data-tour="premios"]', page: "/admin/niveles", title: "Tu escalera de premios",
+        body: "Define cuánto gana tu cliente por cada referido que cierres. Puedes dejar los montos por defecto y guardar." },
+    ],
   },
   {
-    target: '[data-tour="link"]',
-    page: "/admin",
-    title: "Tu link de referidos",
-    body: "Este es tu link personal para invitar a otros asesores a unirse a Referidoo. Compártelo y gana cuando se registren.",
+    id: "share",
+    label: "Consigue tu primer referido",
+    done: (s) => s.hasReferral,
+    flow: [
+      { target: '[data-tour="link"]', page: "/admin", title: "Comparte tu link",
+        body: "Comparte el link de tus clientes para que empiecen a llegar referidos. En cuanto llegue el primero, esta tarea se marca sola." },
+    ],
   },
   {
-    target: '[data-tour="nav-referidos"]',
-    page: "/admin",
-    tap: true,
-    title: "Vamos a Referidos",
-    body: "En Referidos ves todo tu pipeline de leads. Toca el menú para ir ahí.",
+    id: "agenda",
+    label: "Pon tu link de agenda",
+    done: (s) => s.hasScheduling,
+    flow: [
+      { target: '[data-tour="nav-premios"]', page: "/admin", tap: true, title: "Vamos a Premios",
+        body: "Tu link de agenda vive en Premios. Toca para ir." },
+      { target: '[data-tour="agenda"]', page: "/admin/niveles", title: "Tu link de agenda",
+        body: "Pega tu Calendly o Cal.com para que tus referidos agenden cita contigo directo desde el formulario del referido." },
+    ],
   },
-  {
-    target: '[data-tour="filtros"]',
-    page: "/admin/referidos",
-    title: "Filtra tu pipeline",
-    body: "Ve solo los nuevos, los que ya contactaste o los que ya cerraron. Ideal cuando tienes varios al mismo tiempo.",
-  },
-  {
-    target: '[data-tour="lista-referidos"]',
-    page: "/admin/referidos",
-    tap: true,
-    title: "Tus leads",
-    body: "Cada tarjeta muestra nombre, quién lo refirió y su estado. Toca cualquiera para ver el detalle.",
-  },
-  {
-    target: '[data-tour="modal"]',
-    page: "/admin/referidos",
-    modal: true,
-    title: "Detalle del referido",
-    body: "Aquí ves el contacto, puedes llamar, mandar WhatsApp, cambiar el estado o marcar la conversión.",
-  },
-  {
-    target: '[data-tour="nav-clientes"]',
-    page: "/admin/referidos",
-    tap: true,
-    closeModal: true,
-    title: "Vamos a Clientes",
-    body: "En Clientes gestionas quiénes participan en tu programa. Toca para ir ahí.",
-  },
-  {
-    target: '[data-tour="sort"]',
-    page: "/admin/clientes",
-    title: "Tus clientes",
-    body: "Ordénalos como quieras. Desde cada tarjeta puedes copiar su link o contactarlos por WhatsApp.",
-  },
-  {
-    target: '[data-tour="nav-premios"]',
-    page: "/admin/clientes",
-    tap: true,
-    title: "Vamos a Premios",
-    body: "En Premios defines cuánto gana cada cliente por sus referidos. Toca para ir ahí.",
-  },
-  {
-    target: '[data-tour="premios"]',
-    page: "/admin/niveles",
-    title: "Escalera de premios",
-    body: "Define el monto de cada nivel. Por defecto $1,500 · $1,500 · $3,500. Cámbialo cuando quieras.",
-  },
-  {
-    target: '[data-tour="nav-perfil"]',
-    page: "/admin/niveles",
-    tap: true,
-    title: "Por último: Perfil",
-    body: "Tu cuenta y suscripción están aquí. Toca para ver.",
-  },
-  {
-    target: '[data-tour="perfil"]',
-    page: "/admin/perfil",
-    title: "Tu cuenta",
-    body: "Aquí ves tu plan, correo, clientes activos y gestionas tu suscripción. ¡Eso es todo el recorrido!",
-  },
-  {
-    outro: true,
-    title: "¡Todo listo!",
-    body: "Estás listo para que tus clientes refieran a todos sus amigos y familiares.",
-  },
+];
+
+// Onboarding corto tras la bienvenida: lleva de la mano a registrar el primer
+// cliente (nada de recorrido de 15 pasos). Al cerrar, aparece Primeros Pasos.
+const ONBOARDING_FLOW: TourStepDef[] = [
+  { intro: true, title: "Tu cuenta está lista",
+    body: "Vamos a lo importante en 30 segundos: registrar a tu primer cliente para que empiece a referir." },
+  { target: '[data-tour="nav-clientes"]', page: "/admin", tap: true, title: "Vamos a Clientes",
+    body: "Toca Clientes para registrar a tu primera persona." },
+  { target: '[aria-label="Agregar cliente"]', page: "/admin/clientes", title: "Agrega tu primer cliente",
+    body: "Toca “Agregar cliente” y llena sus datos. ¡Con eso tu programa de referidos queda andando!" },
 ];
 
 function getInitials(name: string) {
@@ -180,15 +165,38 @@ export default function AdminLayoutShell({
   const consumedWelcomeFlag = useRef(false);
   const avatarRef = useRef<HTMLDivElement>(null);
 
-  // Tour state
+  // Tour / flow state
   const [tourActive, setTourActive] = useState(false);
   const [tourStep, setTourStep] = useState(0);
   const [tourRect, setTourRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
   const [tourTip, setTourTip] = useState<{ top: number; left: number } | null>(null);
+  const [flow, setFlow] = useState<TourStepDef[]>([]);
+  const flowRef = useRef<TourStepDef[]>([]);
+  const flowSealsRef = useRef(false);
   const tourStepRef = useRef(0);
   const lockedElsRef = useRef<Array<[HTMLElement, string]>>([]);
   const confettiRef = useRef<React.CSSProperties[]>([]);
   const [reducedMotion, setReducedMotion] = useState(false);
+
+  // Primeros Pasos state
+  const [taskState, setTaskState] = useState<TaskState | null>(null);
+  const [showChecklist, setShowChecklist] = useState(false);
+  const [celebrate, setCelebrate] = useState(false);
+  const prevDoneRef = useRef<number | null>(null);
+  const checklistRef = useRef<HTMLDivElement>(null);
+
+  const refetchTasks = useCallback(() => {
+    fetch("/api/advisor/onboarding-tasks")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: TaskState | null) => {
+        if (d) {
+          setTaskState(d);
+          // Mantiene en sync la tarjeta del Resumen (otro componente).
+          window.dispatchEvent(new Event("referidoo:tasks-updated"));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -316,7 +324,7 @@ export default function AdminLayoutShell({
   }
 
   const measure = useCallback((s: number) => {
-    const step = TOUR[s];
+    const step = flowRef.current[s];
     if (!step?.target) return;
     const el = document.querySelector<HTMLElement>(step.target);
     if (!el) return;
@@ -344,8 +352,8 @@ export default function AdminLayoutShell({
   }, []);
 
   function goStep(next: number) {
-    if (next >= TOUR.length) { endTour(); return; }
-    const step = TOUR[next];
+    if (next >= flowRef.current.length) { endFlow(); return; }
+    const step = flowRef.current[next];
     const changingPage = !!step.page && step.page !== pathname;
     tourStepRef.current = next;
     setTourStep(next);
@@ -388,21 +396,31 @@ export default function AdminLayoutShell({
     }, step.modal ? 500 : 130);
   }
 
-  function startTour() {
+  // Arranca cualquier recorrido (onboarding o una tarea). sealOnboarding sella
+  // onboardedAt al terminar (solo el flujo de onboarding lo hace).
+  function startFlow(steps: TourStepDef[], sealOnboarding = false) {
+    if (!steps.length) return;
+    flowRef.current = steps;
+    setFlow(steps);
+    flowSealsRef.current = sealOnboarding;
+    setShowChecklist(false);
     setTourActive(true);
     setTourRect(null);
     setTourTip(null);
-    tourStepRef.current = 0;
-    setTourStep(0);
-    if (pathname !== "/admin") router.push("/admin");
+    goStep(0);
   }
 
-  function endTour() {
+  function endFlow() {
     unlockScroll();
     setTourActive(false);
     setTourRect(null);
     setTourTip(null);
-    fetch("/api/advisor/onboarded", { method: "POST" }).catch(() => {});
+    if (flowSealsRef.current) {
+      flowSealsRef.current = false;
+      fetch("/api/advisor/onboarded", { method: "POST" }).catch(() => {});
+    }
+    // Una tarea pudo haberse completado durante el recorrido — re-checa.
+    setTimeout(() => refetchTasks(), 400);
   }
 
   // Remeasure on resize during tour
@@ -418,8 +436,8 @@ export default function AdminLayoutShell({
   // sin esto, la instrucción "toca el menú" no hace avanzar nada y confunde.
   useEffect(() => {
     if (!tourActive) return;
-    const cur = TOUR[tourStepRef.current];
-    const next = TOUR[tourStepRef.current + 1];
+    const cur = flowRef.current[tourStepRef.current];
+    const next = flowRef.current[tourStepRef.current + 1];
     if (cur?.tap && next?.page === pathname && cur.page !== pathname) {
       goStep(tourStepRef.current + 1);
     }
@@ -430,7 +448,7 @@ export default function AdminLayoutShell({
   useEffect(() => {
     if (!tourActive) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") endTour();
+      if (e.key === "Escape") endFlow();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -447,6 +465,53 @@ export default function AdminLayoutShell({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Primeros Pasos: carga inicial + refresco al volver el foco / al verificar.
+  useEffect(() => { refetchTasks(); }, [refetchTasks]);
+  useEffect(() => {
+    const onFocus = () => { if (document.visibilityState === "visible") refetchTasks(); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
+  }, [refetchTasks]);
+  useEffect(() => { if (emailVerified) refetchTasks(); }, [emailVerified, refetchTasks]);
+
+  // Celebración al completar las 5 tareas — se dispara una sola vez, en la
+  // transición a completo (compara contra el conteo previo).
+  useEffect(() => {
+    if (!taskState) return;
+    const done = TASKS.filter((t) => t.done(taskState)).length;
+    const prev = prevDoneRef.current;
+    prevDoneRef.current = done;
+    if (prev !== null && prev < TASKS.length && done === TASKS.length) {
+      setCelebrate(true);
+    }
+  }, [taskState]);
+
+  // Lanzar el recorrido de una tarea desde la tarjeta del Resumen (evento).
+  useEffect(() => {
+    const onStartTask = (e: Event) => {
+      const id = (e as CustomEvent).detail as TaskId;
+      const task = TASKS.find((t) => t.id === id);
+      if (task) startFlow(task.flow);
+    };
+    window.addEventListener("referidoo:startTask", onStartTask as EventListener);
+    return () => window.removeEventListener("referidoo:startTask", onStartTask as EventListener);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Cerrar el checklist del chip al hacer click afuera.
+  useEffect(() => {
+    if (!showChecklist) return;
+    function onClick(e: MouseEvent) {
+      if (checklistRef.current && !checklistRef.current.contains(e.target as Node)) setShowChecklist(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [showChecklist]);
 
   // Welcome + onboarding — See CLAUDE.md: Strict Mode + sessionStorage + timer pattern.
   // Do NOT add a cleanup return — Strict Mode would cancel the timers.
@@ -465,10 +530,10 @@ export default function AdminLayoutShell({
       setTimeout(() => {
         setShowWelcome(false);
         setFadingOut(false);
-        if (needsOnboarding) startTour();
+        if (needsOnboarding) startFlow(ONBOARDING_FLOW, true);
       }, 4000);
     } else {
-      if (needsOnboarding) startTour();
+      if (needsOnboarding) startFlow(ONBOARDING_FLOW, true);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -504,8 +569,13 @@ export default function AdminLayoutShell({
     setTimeout(() => setShowVerifiedBanner(false), 5000);
   }
 
-  const curStep = TOUR[tourStep];
-  const isLastStep = tourStep === TOUR.length - 2;
+  const curStep = flow[tourStep];
+  const isLastStep = tourStep === flow.length - 1;
+  const spotSteps = flow.filter((s) => !s.intro && !s.outro);
+  const spotIndex = flow.slice(0, tourStep + 1).filter((s) => !s.intro && !s.outro).length - 1;
+  const doneCount = taskState ? TASKS.filter((t) => t.done(taskState)).length : 0;
+  const allTasksDone = !!taskState && doneCount === TASKS.length;
+  const showTasksChip = !!taskState && !allTasksDone;
 
   return (
     <div className={`min-h-screen bg-brand-surface flex flex-col ${hankenGrotesk.className}`}>
@@ -547,13 +617,66 @@ export default function AdminLayoutShell({
             </div>
           </div>
 
-          {/* Right: "?" tour button + bell + avatar */}
+          {/* Right: Primeros Pasos chip + "?" + bell + avatar */}
           <div className="flex items-center gap-2.5 px-5 ml-auto">
-            {/* Tour help button */}
+            <style>{`@keyframes ppPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); } 50% { box-shadow: 0 0 0 4px rgba(37,99,235,.10); } }`}</style>
+
+            {/* Chip de Primeros Pasos — persiste hasta 5/5, pulsa mientras haya pendientes */}
+            {showTasksChip && (
+              <div className="relative" ref={checklistRef}>
+                <button
+                  onClick={() => setShowChecklist((v) => !v)}
+                  className="relative flex items-center gap-1.5 h-9 pl-1.5 pr-3 rounded-full border border-[#ECEDEF] hover:bg-[#F4F5F7] transition"
+                  title="Primeros pasos"
+                  style={{ animation: reducedMotion ? undefined : "ppPulse 2.6s ease-in-out infinite" }}
+                >
+                  <span className="relative w-6 h-6 flex items-center justify-center">
+                    <svg width="24" height="24" viewBox="0 0 24 24" style={{ transform: "rotate(-90deg)" }}>
+                      <circle cx="12" cy="12" r="9" fill="none" stroke="#ECEDEF" strokeWidth="3" />
+                      <circle
+                        cx="12" cy="12" r="9" fill="none" stroke="#2563EB" strokeWidth="3" strokeLinecap="round"
+                        strokeDasharray={2 * Math.PI * 9}
+                        strokeDashoffset={2 * Math.PI * 9 * (1 - doneCount / TASKS.length)}
+                        style={{ transition: "stroke-dashoffset .5s ease" }}
+                      />
+                    </svg>
+                  </span>
+                  <span className="text-xs font-semibold text-[#0B0B0C]">{doneCount}/{TASKS.length}</span>
+                </button>
+
+                {showChecklist && (
+                  <div className="absolute right-0 top-11 bg-white border border-[#ECEDEF] rounded-2xl shadow-xl p-2 w-72 z-50">
+                    <div className="px-3 pt-2 pb-1">
+                      <p className="text-sm font-bold text-[#0B0B0C]">Primeros pasos</p>
+                      <p className="text-xs text-[#9098A2]">Completa tu cuenta — {doneCount} de {TASKS.length}</p>
+                    </div>
+                    {TASKS.map((t) => {
+                      const done = taskState ? t.done(taskState) : false;
+                      return (
+                        <button
+                          key={t.id}
+                          disabled={done}
+                          onClick={() => { setShowChecklist(false); startFlow(t.flow); }}
+                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-left transition ${done ? "text-[#9098A2] cursor-default" : "text-[#0B0B0C] hover:bg-[#F4F5F7]"}`}
+                        >
+                          <span className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${done ? "bg-[#1F9D5B]" : "border-2 border-[#DADCE0]"}`}>
+                            {done && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>}
+                          </span>
+                          <span className={done ? "line-through" : ""}>{t.label}</span>
+                          {!done && <span className="ml-auto text-[#2563EB] font-semibold">→</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Reabrir el onboarding corto */}
             <button
-              onClick={startTour}
+              onClick={() => startFlow(ONBOARDING_FLOW)}
               className="w-9 h-9 rounded-full border border-[#ECEDEF] flex items-center justify-center text-[#6B727D] hover:bg-[#F4F5F7] transition text-sm font-bold"
-              title="Iniciar recorrido guiado"
+              title="Ver de nuevo el recorrido"
             >
               ?
             </button>
@@ -617,7 +740,7 @@ export default function AdminLayoutShell({
       )}
 
       {!emailVerified && !showVerifiedBanner && (
-        <div className="bg-brand-blue-bg border-b border-brand-border-1 flex-shrink-0">
+        <div data-tour="verify-banner" className="bg-brand-blue-bg border-b border-brand-border-1 flex-shrink-0">
           <div className="max-w-5xl mx-auto px-5 py-2.5 text-sm text-brand-blue flex items-center justify-between gap-3">
             <span>
               {resentVerif
@@ -752,8 +875,8 @@ export default function AdminLayoutShell({
         </div>
       )}
 
-      {/* ── Tour ── */}
-      {tourActive && (
+      {/* ── Recorrido / celebración ── */}
+      {(tourActive || celebrate) && (
         <>
           <style>{`
             @keyframes tourPulse {
@@ -785,8 +908,8 @@ export default function AdminLayoutShell({
             }
           `}</style>
 
-          {/* Step 0: intro welcome card */}
-          {tourStep === 0 && (
+          {/* Paso intro: tarjeta de bienvenida (solo si el flujo la tiene) */}
+          {curStep?.intro && (
             <div
               className="fixed inset-0 z-[70] flex items-center justify-center"
               style={{ background: "rgba(13,13,15,.82)", backdropFilter: "blur(4px)" }}
@@ -795,26 +918,26 @@ export default function AdminLayoutShell({
                 <div className="flex justify-center mb-6">
                   <Logo size="md" />
                 </div>
-                <h2 className="text-xl font-bold text-[#0B0B0C] mb-2.5">{TOUR[0].title}</h2>
-                <p className="text-sm text-[#6B727D] leading-relaxed mb-8">{TOUR[0].body}</p>
+                <h2 className="text-xl font-bold text-[#0B0B0C] mb-2.5">{curStep.title}</h2>
+                <p className="text-sm text-[#6B727D] leading-relaxed mb-8">{curStep.body}</p>
                 <button
-                  onClick={() => goStep(1)}
+                  onClick={() => goStep(tourStep + 1)}
                   className="w-full bg-[#2563EB] text-white text-sm font-semibold py-3.5 rounded-full hover:bg-blue-700 active:scale-[.98] transition mb-3"
                 >
-                  Comenzar recorrido
+                  Empezar
                 </button>
                 <button
-                  onClick={endTour}
+                  onClick={endFlow}
                   className="text-sm text-[#9098A2] hover:text-[#6B727D] transition"
                 >
-                  Saltar el recorrido
+                  Ahora no
                 </button>
               </div>
             </div>
           )}
 
-          {/* Steps 1–13: spotlight */}
-          {tourStep > 0 && tourRect && (
+          {/* Spotlight de un paso normal */}
+          {curStep && !curStep.intro && !curStep.outro && tourRect && (
             <>
               {/* Spotlight (box-shadow as dim overlay) */}
               <div
@@ -854,8 +977,8 @@ export default function AdminLayoutShell({
             </>
           )}
 
-          {/* Tooltip (steps 1–13) */}
-          {tourStep > 0 && tourTip && (
+          {/* Tooltip del paso normal */}
+          {curStep && !curStep.intro && !curStep.outro && tourTip && (
             <div
               role="dialog"
               aria-label={curStep?.title}
@@ -874,19 +997,21 @@ export default function AdminLayoutShell({
               className="bg-white rounded-2xl p-5 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Progress dots (steps 1–13) */}
-              <div className="flex gap-1.5 mb-3 flex-wrap">
-                {TOUR.slice(1).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-1 rounded-full transition-all duration-300"
-                    style={{
-                      width: i + 1 === tourStep ? 20 : 8,
-                      background: i + 1 === tourStep ? "#0B0B0C" : i + 1 < tourStep ? "#DADCE0" : "#ECEDEF",
-                    }}
-                  />
-                ))}
-              </div>
+              {/* Progress dots — solo si el flujo tiene varios pasos */}
+              {spotSteps.length > 1 && (
+                <div className="flex gap-1.5 mb-3 flex-wrap">
+                  {spotSteps.map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-1 rounded-full transition-all duration-300"
+                      style={{
+                        width: i === spotIndex ? 20 : 8,
+                        background: i === spotIndex ? "#0B0B0C" : i < spotIndex ? "#DADCE0" : "#ECEDEF",
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
 
               <div
                 key={tourStep}
@@ -909,18 +1034,18 @@ export default function AdminLayoutShell({
                 </button>
                 {!isLastStep && (
                   <button
-                    onClick={endTour}
+                    onClick={endFlow}
                     className="px-4 text-xs py-2.5 rounded-full border border-[#ECEDEF] text-[#9098A2] hover:bg-[#F4F5F7] transition"
                   >
-                    Saltar
+                    Cerrar
                   </button>
                 )}
               </div>
             </div>
           )}
 
-          {/* Outro: pantalla de cierre con festejo */}
-          {curStep?.outro && (
+          {/* Celebración: se completaron las 5 tareas de Primeros Pasos */}
+          {celebrate && (
             <>
               <div
                 className="fixed inset-0 z-[70]"
@@ -968,14 +1093,14 @@ export default function AdminLayoutShell({
                 </div>
 
                 <div className="font-extrabold text-[27px] tracking-[-0.02em] text-[#0B0B0C]" style={{ marginBottom: 12 }}>
-                  {curStep.title}
+                  ¡Todo listo!
                 </div>
                 <div className="font-medium text-base leading-relaxed text-[#52525b]" style={{ marginBottom: 28 }}>
-                  {curStep.body}
+                  Completaste tus primeros pasos. Tu programa de referidos ya está en marcha.
                 </div>
 
                 <button
-                  onClick={endTour}
+                  onClick={() => setCelebrate(false)}
                   className="w-full text-white font-bold text-[15px] active:scale-[.98] transition-transform"
                   style={{ border: "none", background: "#2563EB", cursor: "pointer", padding: "15px 0", borderRadius: 999 }}
                 >

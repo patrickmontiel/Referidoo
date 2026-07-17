@@ -102,9 +102,9 @@ describe("AdminLayout onboarding tour", () => {
     vi.unstubAllGlobals();
   });
 
-  it("shows the onboarding tour when the advisor has never completed it (onboardedAt is null)", async () => {
+  it("shows the onboarding when the advisor has never completed it (onboardedAt is null)", async () => {
     renderShell(defaultProps({ initialOnboardedAt: null, initialAdvisorName: "Ana" }));
-    expect(await screen.findByText(/te damos la bienvenida/i)).toBeInTheDocument();
+    expect(await screen.findByText(/tu cuenta está lista/i)).toBeInTheDocument();
   });
 
   // Regresión: el estado "ya vio el tour" vivía solo en localStorage, así que
@@ -114,10 +114,10 @@ describe("AdminLayout onboarding tour", () => {
     localStorage.clear();
     renderShell(defaultProps({ initialOnboardedAt: "2026-01-01T00:00:00.000Z", initialAdvisorName: "Ana" }));
     await act(async () => {});
-    expect(screen.queryByText(/te damos la bienvenida/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/tu cuenta está lista/i)).not.toBeInTheDocument();
   });
 
-  it("calls POST /api/advisor/onboarded when the tour is dismissed", async () => {
+  it("calls POST /api/advisor/onboarded when the onboarding is dismissed", async () => {
     const fetchMock = vi.fn((url: string) => {
       if (url === "/api/advisor/onboarded") return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) });
       return Promise.resolve({ ok: true, json: () => Promise.resolve({ plan: "freemium" }) });
@@ -126,7 +126,7 @@ describe("AdminLayout onboarding tour", () => {
 
     renderShell(defaultProps({ initialOnboardedAt: null, initialAdvisorName: "Ana", initialPlan: "freemium" }));
 
-    const skipButton = await screen.findByRole("button", { name: /saltar el recorrido/i });
+    const skipButton = await screen.findByRole("button", { name: /ahora no/i });
     skipButton.click();
 
     await act(async () => {});

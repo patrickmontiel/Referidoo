@@ -364,7 +364,7 @@ export default function PremiosPage() {
               <code className="bg-[#F4F5F7] px-1.5 py-0.5 rounded-md">{"{nombre}"}</code> para el nombre del cliente.
             </p>
           </div>
-          <div>
+          <div data-tour="agenda" className="scroll-mt-24">
             <label className="block text-sm font-medium text-[#0B0B0C] mb-2">Link de agenda</label>
             <input
               type="url"

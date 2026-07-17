@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import PrimerosPasosCard from "./PrimerosPasosCard";
 
 type Referral = {
   id: string;
@@ -131,6 +132,9 @@ export default function AdminOverviewClient({ referrals, advisor, clientCount }:
         </h1>
         <p className="text-sm text-brand-gray-4 mt-0.5">Resumen de tu actividad · {monthYear}</p>
       </div>
+
+      {/* Primeros Pasos */}
+      <PrimerosPasosCard />
 
       {/* Stats */}
       <div data-tour="stats" className="mb-6">
