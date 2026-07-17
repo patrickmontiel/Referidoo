@@ -366,6 +366,26 @@ export default function PremiosPage() {
           </div>
           <div data-tour="agenda" className="scroll-mt-24">
             <label className="block text-sm font-medium text-[#0B0B0C] mb-2">Link de agenda</label>
+            <p className="text-xs text-brand-gray-4 mb-2.5">
+              ¿No tienes uno? Crea tu página de citas gratis (abre en otra pestaña), copia el link y pégalo abajo:
+            </p>
+            <div data-tour="agenda-options" className="grid grid-cols-3 gap-2 mb-3">
+              {[
+                { label: "Google Calendar", url: "https://calendar.google.com/calendar/u/0/r/settings/createappointmentschedule" },
+                { label: "Calendly", url: "https://calendly.com/signup" },
+                { label: "Cal.com", url: "https://cal.com/signup" },
+              ].map((opt) => (
+                <a
+                  key={opt.label}
+                  href={opt.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-center text-xs font-semibold px-2 py-2.5 rounded-xl border border-brand-border-4 text-[#0B0B0C] hover:border-[#2563EB] hover:text-[#2563EB] transition"
+                >
+                  {opt.label} →
+                </a>
+              ))}
+            </div>
             <input
               type="url"
               inputMode="url"
@@ -375,7 +395,7 @@ export default function PremiosPage() {
               className="w-full px-4 py-3 rounded-2xl border border-brand-border-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition text-[#3F4651] placeholder:text-brand-gray-4"
             />
             <p className="text-xs text-brand-gray-4 mt-2">
-              Pega tu link de Calendly, Cal.com o la página de citas de Google Calendar. Aparecerá como un botón{" "}
+              Pega aquí el link de tu página de citas. Aparecerá como botón{" "}
               <strong className="text-brand-gray-3">Agendar una cita</strong> en el formulario de tus referidos. Déjalo vacío para ocultarlo.
             </p>
           </div>

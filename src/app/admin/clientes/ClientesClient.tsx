@@ -186,6 +186,10 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.name.trim() || !form.phone.trim() || !form.email.trim()) {
+      setCreateError("Nombre, teléfono y correo son obligatorios.");
+      return;
+    }
     setSubmitting(true);
     setCreateError("");
     try {
@@ -530,13 +534,13 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
                 className="w-full px-3 py-2.5 rounded-xl border border-[#DADCE0] text-sm focus:outline-none focus:ring-2 focus:ring-[#0B0B0C] transition" />
             </div>
             <div>
-              <label className="block text-xs mb-1.5 uppercase tracking-wide" style={{ color: "#9098A2" }}>Teléfono</label>
-              <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="55 1234 5678"
+              <label className="block text-xs mb-1.5 uppercase tracking-wide" style={{ color: "#9098A2" }}>Teléfono *</label>
+              <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required placeholder="55 1234 5678"
                 className="w-full px-3 py-2.5 rounded-xl border border-[#DADCE0] text-sm focus:outline-none focus:ring-2 focus:ring-[#0B0B0C] transition" />
             </div>
             <div>
-              <label className="block text-xs mb-1.5 uppercase tracking-wide" style={{ color: "#9098A2" }}>Correo</label>
-              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="correo@ejemplo.com"
+              <label className="block text-xs mb-1.5 uppercase tracking-wide" style={{ color: "#9098A2" }}>Correo *</label>
+              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required placeholder="correo@ejemplo.com"
                 className="w-full px-3 py-2.5 rounded-xl border border-[#DADCE0] text-sm focus:outline-none focus:ring-2 focus:ring-[#0B0B0C] transition" />
             </div>
             <div className="col-span-2">
@@ -606,6 +610,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
 
             const waBtn = (
               <button
+                data-tour="client-whatsapp"
                 onClick={() => window.open(waUrl, "_blank")}
                 className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#22C55E] text-white text-sm px-4 py-2.5 rounded-full font-semibold transition"
               >

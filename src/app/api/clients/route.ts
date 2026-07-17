@@ -30,7 +30,9 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const { name, email, phone, policyNumber } = await req.json();
-  if (!name) return NextResponse.json({ error: "El nombre es requerido" }, { status: 400 });
+  if (!name || !phone || !email) {
+    return NextResponse.json({ error: "Nombre, teléfono y correo son obligatorios" }, { status: 400 });
+  }
 
   const gate = await canAdvisorAddClients(session.advisorId);
   if (!gate.allowed) {

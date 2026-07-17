@@ -85,10 +85,12 @@ const CLIENT_STEPS: TourStepDef[] = [
     body: "Toca Clientes: es donde vive tu cartera y desde donde cada persona empieza a referir." },
   { target: '[data-tour="add-client"]', page: "/admin/clientes", title: "Aquí agregas clientes",
     body: "Este botón abre el formulario de un nuevo cliente. Dale a Siguiente y te lo abro." },
-  { target: '[data-tour="client-name"]', page: "/admin/clientes", event: "referidoo:openClientForm", title: "Escribe su nombre",
-    body: "Pon el nombre de tu cliente (el teléfono y correo son opcionales). Con el nombre basta para empezar." },
+  { target: '[data-tour="client-name"]', page: "/admin/clientes", event: "referidoo:openClientForm", title: "Sus datos",
+    body: "Llena nombre, teléfono y correo — los tres son obligatorios. Con eso tu cliente queda bien registrado." },
   { target: '[data-tour="client-save"]', page: "/admin/clientes", title: "Guárdalo",
-    body: "Toca “Crear cliente”. Al guardarlo, esa persona ya tiene su propio link de referidos y puede mandarte amigos." },
+    body: "Toca “Crear cliente”. Al guardarlo, esa persona ya tiene su propio link de referidos." },
+  { target: '[data-tour="client-whatsapp"]', page: "/admin/clientes", title: "Mándale su link",
+    body: "Por último, tócale WhatsApp para enviarle su link. Cuando lo comparta con sus amigos, esos referidos te llegan solos. ¡Y listo!" },
 ];
 
 // Pasos para configurar la escalera de premios (ver → ajustar → guardar).
@@ -96,9 +98,11 @@ const TIERS_STEPS: TourStepDef[] = [
   { target: '[data-tour="nav-premios"]', page: "/admin", tap: true, title: "Vamos a Premios",
     body: "Toca Premios: aquí decides cuánto gana tu cliente por cada referido que le cierres." },
   { target: '[data-tour="premios"]', page: "/admin/niveles", title: "Tu escalera de premios",
-    body: "Cada nivel es lo que gana tu cliente por su 1er, 2º, 3er referido cerrado. Puedes dejar los montos por defecto o ajustarlos." },
+    body: "Cada nivel es lo que gana tu cliente por su 1er, 2º y 3er referido cerrado. Toca un monto para cambiarlo — por ejemplo, baja el 3er nivel de $3,500 a $2,500." },
+  { target: '[data-tour="bubble"]', page: "/admin/niveles", title: "Premios burbuja (Pro)",
+    body: "Estos son de los planes Pro (premios por Auto y Gastos Médicos). En tu plan no se editan — no necesitas tocar nada aquí." },
   { target: '[data-tour="save-premios"]', page: "/admin/niveles", title: "Guarda tu escalera",
-    body: "Toca “Guardar cambios” para dejarla lista. Es lo que verán tus clientes en su portal." },
+    body: "Baja y toca “Guardar cambios” para dejarla lista. Es lo que verán tus clientes en su portal." },
 ];
 
 export const TASKS: TaskDef[] = [
@@ -141,8 +145,10 @@ export const TASKS: TaskDef[] = [
     flow: [
       { target: '[data-tour="nav-premios"]', page: "/admin", tap: true, title: "Vamos a Premios",
         body: "Tu link de agenda vive en Premios. Toca para ir." },
-      { target: '[data-tour="agenda"]', page: "/admin/niveles", title: "Pega tu link de agenda",
-        body: "Pega tu Calendly o Cal.com aquí. Aparecerá como botón “Agendar una cita” en el formulario de tus referidos." },
+      { target: '[data-tour="agenda-options"]', page: "/admin/niveles", title: "Elige dónde crear tu agenda",
+        body: "Puedes usar Google Calendar, Calendly o Cal.com. Toca uno: se abre su página en otra pestaña, creas tu cuenta gratis y armas tu página de citas. Luego vuelve aquí." },
+      { target: '[data-tour="agenda"]', page: "/admin/niveles", title: "Pega tu link",
+        body: "Copia el link de tu página de citas y pégalo aquí. Aparecerá como botón “Agendar una cita” en el formulario de tus referidos." },
       { target: '[data-tour="save-premios"]', page: "/admin/niveles", title: "Guarda",
         body: "Toca “Guardar cambios” y listo — tus referidos ya pueden agendar contigo." },
     ],
@@ -209,6 +215,7 @@ export default function AdminLayoutShell({
   const [showChecklist, setShowChecklist] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
   const prevDoneRef = useRef<number | null>(null);
+  const taskStateRef = useRef<TaskState | null>(null);
   const checklistRef = useRef<HTMLDivElement>(null);
 
   const refetchTasks = useCallback(() => {
@@ -334,19 +341,21 @@ export default function AdminLayoutShell({
   }
 
   function scrollIntoCenter(el: HTMLElement) {
+    // Deslizamiento suave (no salto brusco) al centrar el elemento del paso.
+    const behavior: ScrollBehavior = reducedMotion ? "auto" : "smooth";
     let p = el.parentElement;
     while (p) {
       const s = getComputedStyle(p);
       if (/(auto|scroll)/.test(s.overflowY) && p.scrollHeight > p.clientHeight + 2) {
         const er = el.getBoundingClientRect();
         const pr = p.getBoundingClientRect();
-        p.scrollTop += er.top - pr.top - (pr.height - er.height) / 2;
+        p.scrollTo({ top: p.scrollTop + er.top - pr.top - (pr.height - er.height) / 2, behavior });
         return;
       }
       p = p.parentElement;
     }
     const r = el.getBoundingClientRect();
-    window.scrollTo({ top: Math.max(0, window.scrollY + r.top - (window.innerHeight - r.height) / 2) });
+    window.scrollTo({ top: Math.max(0, window.scrollY + r.top - (window.innerHeight - r.height) / 2), behavior });
   }
 
   const measure = useCallback((s: number) => {
@@ -418,7 +427,9 @@ export default function AdminLayoutShell({
         }
         scrollIntoCenter(el);
       }
-      setTimeout(() => { measure(next); lockScroll(); }, el ? 470 : 80);
+      // Con scroll suave hay que esperar a que asiente antes de medir el
+      // spotlight (si no, cae a media animación).
+      setTimeout(() => { measure(next); lockScroll(); }, el ? (reducedMotion ? 470 : 620) : 80);
     }, step.event ? 500 : 130);
   }
 
@@ -447,6 +458,23 @@ export default function AdminLayoutShell({
     }
     // Una tarea pudo haberse completado durante el recorrido — re-checa.
     setTimeout(() => refetchTasks(), 400);
+  }
+
+  // Lanza la tarea con la lógica correcta. "Consigue tu primer referido"
+  // necesita un cliente con link — si no hay, guía primero a agregar uno en vez
+  // de señalar un botón inexistente.
+  function launchTask(id: TaskId) {
+    const task = TASKS.find((t) => t.id === id);
+    if (!task) return;
+    if (id === "share" && taskStateRef.current && !taskStateRef.current.hasClient) {
+      startFlow([
+        { intro: true, title: "Primero, un cliente",
+          body: "Para conseguir referidos necesitas al menos un cliente con su link. Vamos a agregar uno." },
+        ...CLIENT_STEPS,
+      ]);
+      return;
+    }
+    startFlow(task.flow);
   }
 
   // Remeasure on resize during tour
@@ -508,6 +536,7 @@ export default function AdminLayoutShell({
   // Celebración al completar las 5 tareas — se dispara una sola vez, en la
   // transición a completo (compara contra el conteo previo).
   useEffect(() => {
+    taskStateRef.current = taskState;
     if (!taskState) return;
     const done = TASKS.filter((t) => t.done(taskState)).length;
     const prev = prevDoneRef.current;
@@ -521,8 +550,7 @@ export default function AdminLayoutShell({
   useEffect(() => {
     const onStartTask = (e: Event) => {
       const id = (e as CustomEvent).detail as TaskId;
-      const task = TASKS.find((t) => t.id === id);
-      if (task) startFlow(task.flow);
+      launchTask(id);
     };
     window.addEventListener("referidoo:startTask", onStartTask as EventListener);
     return () => window.removeEventListener("referidoo:startTask", onStartTask as EventListener);
@@ -682,7 +710,7 @@ export default function AdminLayoutShell({
                         <button
                           key={t.id}
                           disabled={done}
-                          onClick={() => { setShowChecklist(false); startFlow(t.flow); }}
+                          onClick={() => { setShowChecklist(false); launchTask(t.id); }}
                           className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-left transition ${done ? "text-[#9098A2] cursor-default" : "text-[#0B0B0C] hover:bg-[#F4F5F7]"}`}
                         >
                           <span className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${done ? "bg-[#1F9D5B]" : "border-2 border-[#DADCE0]"}`}>
@@ -979,7 +1007,7 @@ export default function AdminLayoutShell({
                   zIndex: 70,
                   pointerEvents: "none",
                   animation: curStep?.tap && !reducedMotion ? "tourPulse 2s ease-in-out infinite" : undefined,
-                  transition: "top .3s cubic-bezier(.22,1,.36,1), left .3s cubic-bezier(.22,1,.36,1), width .3s cubic-bezier(.22,1,.36,1), height .3s cubic-bezier(.22,1,.36,1)",
+                  transition: "top .45s cubic-bezier(.22,1,.36,1), left .45s cubic-bezier(.22,1,.36,1), width .45s cubic-bezier(.22,1,.36,1), height .45s cubic-bezier(.22,1,.36,1)",
                 }}
               />
 
@@ -1017,7 +1045,7 @@ export default function AdminLayoutShell({
                 zIndex: 72,
                 transition: reducedMotion
                   ? undefined
-                  : "top .34s cubic-bezier(.22,1,.36,1), left .34s cubic-bezier(.22,1,.36,1)",
+                  : "top .45s cubic-bezier(.22,1,.36,1), left .45s cubic-bezier(.22,1,.36,1)",
                 animation: reducedMotion ? undefined : "tipCardIn .28s cubic-bezier(.22,1,.36,1) both",
               }}
               className="bg-white rounded-2xl p-5 shadow-2xl"

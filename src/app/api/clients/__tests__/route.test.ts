@@ -57,7 +57,7 @@ describe("GET /api/clients", () => {
 describe("POST /api/clients", () => {
   it("returns 401 when there is no session", async () => {
     mockSession.mockResolvedValue(null);
-    const res = await POST(postRequest({ name: "Juan" }));
+    const res = await POST(postRequest({ name: "Juan", phone: "5551234567", email: "juan@x.com" }));
     expect(res.status).toBe(401);
   });
 
@@ -73,7 +73,7 @@ describe("POST /api/clients", () => {
     mockClientFindUnique.mockResolvedValue(null);
     mockClientCreate.mockResolvedValue({ id: "c1", name: "Juan" });
 
-    const res = await POST(postRequest({ name: "Juan" }));
+    const res = await POST(postRequest({ name: "Juan", phone: "5551234567", email: "juan@x.com" }));
     expect(res.status).toBe(201);
   });
 
@@ -83,7 +83,7 @@ describe("POST /api/clients", () => {
     mockClientFindUnique.mockResolvedValue(null);
     mockClientCreate.mockResolvedValue({ id: "c1", name: "Juan" });
 
-    const res = await POST(postRequest({ name: "Juan" }));
+    const res = await POST(postRequest({ name: "Juan", phone: "5551234567", email: "juan@x.com" }));
     expect(res.status).toBe(201);
   });
 
@@ -91,7 +91,7 @@ describe("POST /api/clients", () => {
     mockSession.mockResolvedValue({ advisorId: "adv1", email: "a@b.com" });
     mockAdvisorFindUnique.mockResolvedValue({ plan: "paid", emailVerified: false });
 
-    const res = await POST(postRequest({ name: "Juan" }));
+    const res = await POST(postRequest({ name: "Juan", phone: "5551234567", email: "juan@x.com" }));
     expect(res.status).toBe(403);
     expect(mockClientCreate).not.toHaveBeenCalled();
   });
