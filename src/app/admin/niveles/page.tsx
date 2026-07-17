@@ -438,6 +438,7 @@ export default function PremiosPage() {
       {/* SAVE FOOTER */}
       <div className="bg-white rounded-2xl border border-brand-border-1 px-5 py-4 flex justify-end">
         <button
+          data-tour="save-premios"
           onClick={saveAll}
           disabled={saving}
           className="bg-brand-ink text-white text-sm font-medium px-6 py-2.5 rounded-full hover:bg-[#26262a] disabled:opacity-50 transition"

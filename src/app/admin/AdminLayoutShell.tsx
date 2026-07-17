@@ -42,11 +42,23 @@ type TourStepDef = {
   target?: string;
   page?: string;
   tap?: boolean;
-  modal?: boolean;
+  event?: string;      // evento a disparar al entrar (p. ej. abrir un modal)
   closeModal?: boolean;
   title: string;
   body: string;
 };
+
+// Resuelve un selector al primer elemento VISIBLE (no de tamaño 0). Necesario
+// porque hay botones duplicados móvil/desktop (uno oculto por CSS) — sin esto
+// querySelector agarraría el oculto y el paso se saltaría.
+function findVisibleEl(selector: string): HTMLElement | null {
+  const els = Array.from(document.querySelectorAll<HTMLElement>(selector));
+  for (const el of els) {
+    const r = el.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) return el;
+  }
+  return els[0] ?? null;
+}
 
 // ── Primeros Pasos: las tareas de activación y su recorrido guiado ──
 export type TaskId = "email" | "client" | "tiers" | "share" | "agenda";
@@ -66,6 +78,29 @@ type TaskDef = {
   flow: TourStepDef[];
 };
 
+// Pasos que caminan el ciclo COMPLETO de registrar un cliente — reusados por el
+// onboarding y por la tarea "Agrega tu primer cliente".
+const CLIENT_STEPS: TourStepDef[] = [
+  { target: '[data-tour="nav-clientes"]', page: "/admin", tap: true, title: "Vamos a Clientes",
+    body: "Toca Clientes: es donde vive tu cartera y desde donde cada persona empieza a referir." },
+  { target: '[data-tour="add-client"]', page: "/admin/clientes", title: "Aquí agregas clientes",
+    body: "Este botón abre el formulario de un nuevo cliente. Dale a Siguiente y te lo abro." },
+  { target: '[data-tour="client-name"]', page: "/admin/clientes", event: "referidoo:openClientForm", title: "Escribe su nombre",
+    body: "Pon el nombre de tu cliente (el teléfono y correo son opcionales). Con el nombre basta para empezar." },
+  { target: '[data-tour="client-save"]', page: "/admin/clientes", title: "Guárdalo",
+    body: "Toca “Crear cliente”. Al guardarlo, esa persona ya tiene su propio link de referidos y puede mandarte amigos." },
+];
+
+// Pasos para configurar la escalera de premios (ver → ajustar → guardar).
+const TIERS_STEPS: TourStepDef[] = [
+  { target: '[data-tour="nav-premios"]', page: "/admin", tap: true, title: "Vamos a Premios",
+    body: "Toca Premios: aquí decides cuánto gana tu cliente por cada referido que le cierres." },
+  { target: '[data-tour="premios"]', page: "/admin/niveles", title: "Tu escalera de premios",
+    body: "Cada nivel es lo que gana tu cliente por su 1er, 2º, 3er referido cerrado. Puedes dejar los montos por defecto o ajustarlos." },
+  { target: '[data-tour="save-premios"]', page: "/admin/niveles", title: "Guarda tu escalera",
+    body: "Toca “Guardar cambios” para dejarla lista. Es lo que verán tus clientes en su portal." },
+];
+
 export const TASKS: TaskDef[] = [
   {
     id: "email",
@@ -73,38 +108,30 @@ export const TASKS: TaskDef[] = [
     done: (s) => s.emailVerified,
     flow: [
       { target: '[data-tour="verify-banner"]', page: "/admin", title: "Verifica tu correo",
-        body: "Abre el correo que te enviamos y toca “Verificar mi correo”. Puedes hacerlo desde tu celular — tu panel se actualiza solo." },
+        body: "Abre el correo que te enviamos y toca “Verificar mi correo”. Puedes hacerlo desde tu celular — tu panel se actualiza solo. ¿No llegó? Usa “reenviar correo” aquí mismo." },
     ],
   },
   {
     id: "client",
     label: "Agrega tu primer cliente",
     done: (s) => s.hasClient,
-    flow: [
-      { target: '[data-tour="nav-clientes"]', page: "/admin", tap: true, title: "Vamos a Clientes",
-        body: "Toca Clientes para registrar a tu primera persona." },
-      { target: '[aria-label="Agregar cliente"]', page: "/admin/clientes", title: "Agrega tu primer cliente",
-        body: "Toca “Agregar cliente” y llena sus datos. Esa persona será quien te mande referidos." },
-    ],
+    flow: CLIENT_STEPS,
   },
   {
     id: "tiers",
     label: "Configura tu escalera de premios",
     done: (s) => s.hasTiers,
-    flow: [
-      { target: '[data-tour="nav-premios"]', page: "/admin", tap: true, title: "Vamos a Premios",
-        body: "Toca Premios para definir cuánto gana tu cliente." },
-      { target: '[data-tour="premios"]', page: "/admin/niveles", title: "Tu escalera de premios",
-        body: "Define cuánto gana tu cliente por cada referido que cierres. Puedes dejar los montos por defecto y guardar." },
-    ],
+    flow: TIERS_STEPS,
   },
   {
     id: "share",
     label: "Consigue tu primer referido",
     done: (s) => s.hasReferral,
     flow: [
-      { target: '[data-tour="link"]', page: "/admin", title: "Comparte tu link",
-        body: "Comparte el link de tus clientes para que empiecen a llegar referidos. En cuanto llegue el primero, esta tarea se marca sola." },
+      { target: '[data-tour="nav-clientes"]', page: "/admin", tap: true, title: "Vamos a Clientes",
+        body: "Toca Clientes: cada uno tiene su propio link para referir." },
+      { target: '[data-tour="client-share"]', page: "/admin/clientes", title: "Copia y comparte su link",
+        body: "Copia el link de tu cliente y mándaselo por WhatsApp para que refiera a sus amigos y familiares. En cuanto llegue el primer referido, esta tarea se marca sola." },
     ],
   },
   {
@@ -114,21 +141,20 @@ export const TASKS: TaskDef[] = [
     flow: [
       { target: '[data-tour="nav-premios"]', page: "/admin", tap: true, title: "Vamos a Premios",
         body: "Tu link de agenda vive en Premios. Toca para ir." },
-      { target: '[data-tour="agenda"]', page: "/admin/niveles", title: "Tu link de agenda",
-        body: "Pega tu Calendly o Cal.com para que tus referidos agenden cita contigo directo desde el formulario del referido." },
+      { target: '[data-tour="agenda"]', page: "/admin/niveles", title: "Pega tu link de agenda",
+        body: "Pega tu Calendly o Cal.com aquí. Aparecerá como botón “Agendar una cita” en el formulario de tus referidos." },
+      { target: '[data-tour="save-premios"]', page: "/admin/niveles", title: "Guarda",
+        body: "Toca “Guardar cambios” y listo — tus referidos ya pueden agendar contigo." },
     ],
   },
 ];
 
-// Onboarding corto tras la bienvenida: lleva de la mano a registrar el primer
-// cliente (nada de recorrido de 15 pasos). Al cerrar, aparece Primeros Pasos.
+// Onboarding corto tras la bienvenida: mismo ciclo completo de primer cliente,
+// con una intro. Al cerrar, aparece Primeros Pasos.
 const ONBOARDING_FLOW: TourStepDef[] = [
   { intro: true, title: "Tu cuenta está lista",
-    body: "Vamos a lo importante en 30 segundos: registrar a tu primer cliente para que empiece a referir." },
-  { target: '[data-tour="nav-clientes"]', page: "/admin", tap: true, title: "Vamos a Clientes",
-    body: "Toca Clientes para registrar a tu primera persona." },
-  { target: '[aria-label="Agregar cliente"]', page: "/admin/clientes", title: "Agrega tu primer cliente",
-    body: "Toca “Agregar cliente” y llena sus datos. ¡Con eso tu programa de referidos queda andando!" },
+    body: "En 30 segundos registras a tu primer cliente para que empiece a referir. Te llevo paso a paso." },
+  ...CLIENT_STEPS,
 ];
 
 function getInitials(name: string) {
@@ -326,7 +352,7 @@ export default function AdminLayoutShell({
   const measure = useCallback((s: number) => {
     const step = flowRef.current[s];
     if (!step?.target) return;
-    const el = document.querySelector<HTMLElement>(step.target);
+    const el = findVisibleEl(step.target);
     if (!el) return;
     const r = el.getBoundingClientRect();
     const P = 8;
@@ -368,16 +394,16 @@ export default function AdminLayoutShell({
 
     if (step.closeModal) window.dispatchEvent(new Event("referidoo:closeModal"));
     if (changingPage) router.push(step.page!);
-    if (step.modal) {
-      // Small delay so the page has settled before opening modal
-      setTimeout(() => window.dispatchEvent(new Event("referidoo:openFirstReferido")), 300);
+    if (step.event) {
+      // Pequeño delay para que la página se asiente antes de abrir el modal/panel.
+      setTimeout(() => window.dispatchEvent(new Event(step.event!)), 300);
     }
 
     if (step.intro || step.outro) return;
 
     setTimeout(() => {
       unlockScroll();
-      const el = step.target ? document.querySelector<HTMLElement>(step.target) : null;
+      const el = step.target ? findVisibleEl(step.target) : null;
       if (!el && step.target) {
         // Element not found — skip this step
         goStep(next + 1);
@@ -393,7 +419,7 @@ export default function AdminLayoutShell({
         scrollIntoCenter(el);
       }
       setTimeout(() => { measure(next); lockScroll(); }, el ? 470 : 80);
-    }, step.modal ? 500 : 130);
+    }, step.event ? 500 : 130);
   }
 
   // Arranca cualquier recorrido (onboarding o una tarea). sealOnboarding sella

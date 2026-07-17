@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatCurrency, formatDate, REWARD_CUTOFF_DAYS } from "@/lib/utils";
 
 type Client = {
@@ -150,6 +150,14 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
   const [copiedField, setCopiedField] = useState<string>("");
   const [payingId, setPayingId] = useState<string | null>(null);
   const [deactivateId, setDeactivateId] = useState<string | null>(null);
+
+  // El recorrido de Primeros Pasos abre el form de "nuevo cliente" para
+  // señalar los campos por dentro.
+  useEffect(() => {
+    const open = () => setShowForm(true);
+    window.addEventListener("referidoo:openClientForm", open);
+    return () => window.removeEventListener("referidoo:openClientForm", open);
+  }, []);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", policyNumber: "" });
@@ -388,6 +396,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
             Ordenar:&nbsp;<span className="truncate">{SORT_LABELS[sortMode]}</span>
           </button>
           <button
+            data-tour="add-client"
             onClick={() => setShowForm(!showForm)}
             className="w-12 h-12 rounded-full bg-[#0B0B0C] text-white flex items-center justify-center text-2xl font-light flex-shrink-0 hover:bg-[#26262a] transition"
             aria-label="Agregar cliente"
@@ -415,6 +424,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
             Ordenar: {SORT_LABELS[sortMode]}
           </button>
           <button
+            data-tour="add-client"
             onClick={() => setShowForm(!showForm)}
             className="flex items-center gap-2 bg-[#0B0B0C] text-white text-sm px-5 py-2.5 rounded-full hover:bg-[#26262a] transition font-medium whitespace-nowrap"
           >
@@ -514,7 +524,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
         <form onSubmit={handleCreate} className="bg-white border border-[#ECEDEF] rounded-2xl p-5 mb-4 space-y-4">
           <h2 className="font-semibold text-[#0B0B0C]">Nuevo cliente</h2>
           <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2">
+            <div data-tour="client-name" className="col-span-2">
               <label className="block text-xs mb-1.5 uppercase tracking-wide" style={{ color: "#9098A2" }}>Nombre *</label>
               <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required placeholder="Nombre completo"
                 className="w-full px-3 py-2.5 rounded-xl border border-[#DADCE0] text-sm focus:outline-none focus:ring-2 focus:ring-[#0B0B0C] transition" />
@@ -537,7 +547,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
           </div>
           {createError && <p className="text-red-500 text-xs">{createError}</p>}
           <div className="flex gap-2 pt-1">
-            <button type="submit" disabled={submitting} className="flex-1 bg-[#0B0B0C] text-white text-sm py-2.5 rounded-full font-medium hover:bg-[#26262a] disabled:opacity-50 transition">
+            <button data-tour="client-save" type="submit" disabled={submitting} className="flex-1 bg-[#0B0B0C] text-white text-sm py-2.5 rounded-full font-medium hover:bg-[#26262a] disabled:opacity-50 transition">
               {submitting ? "Guardando..." : "Crear cliente"}
             </button>
             <button type="button" onClick={() => setShowForm(false)} className="px-5 text-sm py-2.5 rounded-full border border-[#DADCE0] hover:bg-[#F4F5F7] transition" style={{ color: "#6B727D" }}>
@@ -605,6 +615,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
 
             const copyBtn = (
               <button
+                data-tour="client-share"
                 onClick={() => copyLink(client)}
                 className="text-sm px-4 py-2.5 rounded-full border border-[#DADCE0] text-[#0B0B0C] hover:bg-[#F4F5F7] transition font-medium"
               >
