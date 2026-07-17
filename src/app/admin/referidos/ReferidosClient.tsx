@@ -115,6 +115,9 @@ export default function ReferidosClient({
   const [saleInput, setSaleInput] = useState("");
   const [productType, setProductType] = useState("");
   const [caratulaFile, setCaratulaFile] = useState<File | null>(null);
+  const [caratulaUrl, setCaratulaUrl] = useState<string | null>(null);
+  const [readingCaratula, setReadingCaratula] = useState(false);
+  const [aiRead, setAiRead] = useState<{ producto: string | null; prima: number | null } | null>(null);
   const [convertError, setConvertError] = useState("");
   const [payTarget, setPayTarget] = useState<{ id: string; referrerName: string; amount: number; clabe?: string | null; clabeBank?: string | null; clabeHolder?: string | null } | null>(null);
   const [copiedField, setCopiedField] = useState("");
@@ -159,6 +162,9 @@ export default function ReferidosClient({
     setSaleInput("");
     setProductType(initialProductType ?? "");
     setCaratulaFile(null);
+    setCaratulaUrl(null);
+    setAiRead(null);
+    setReadingCaratula(false);
     setConvertError("");
     setConvertTarget({ id, name });
   }
@@ -194,31 +200,70 @@ export default function ReferidosClient({
     setPayTarget(null);
   }
 
+  // Al elegir la carátula: se sube y la IA la lee para PRE-LLENAR producto +
+  // monto. El asesor solo confirma o corrige. Si la IA no puede leerla, no pasa
+  // nada — el asesor teclea a mano como siempre.
+  async function onCaratulaSelected(file: File | null) {
+    setCaratulaFile(file);
+    setCaratulaUrl(null);
+    setAiRead(null);
+    setConvertError("");
+    if (!file) return;
+    setReadingCaratula(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const up = await fetch("/api/referrals/caratula", { method: "POST", body: fd });
+      const upData = await up.json().catch(() => ({}));
+      if (up.ok && upData.url) {
+        setCaratulaUrl(upData.url);
+        const rd = await fetch("/api/referrals/read-caratula", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: upData.url }),
+        });
+        const rdData = await rd.json().catch(() => ({}));
+        if (rdData.reading) {
+          setAiRead(rdData.reading);
+          if (rdData.reading.producto) setProductType(rdData.reading.producto);
+          if (rdData.reading.prima) setSaleInput(formatNumberWithCommas(String(Math.round(rdData.reading.prima))));
+        }
+      } else {
+        setConvertError(upData.error ?? "No se pudo subir la carátula, intenta de nuevo");
+      }
+    } catch {
+      /* la lectura IA es best-effort — no bloquea */
+    }
+    setReadingCaratula(false);
+  }
+
   async function confirmConvert() {
     if (!convertTarget) return;
     const saleAmount = Number(saleInput.replace(/,/g, ""));
     if (!saleAmount) return;
     setConvertError("");
 
-    // Con Blob habilitado, la carátula es obligatoria: se sube primero y la
-    // conversión viaja con su evidencia.
-    let caratulaUrl: string | undefined;
+    // La carátula ya se subió al elegirla (onCaratulaSelected); reusamos su URL.
+    // Fallback: si por alguna razón no se subió, se sube aquí.
+    let uploadedUrl: string | undefined = caratulaUrl ?? undefined;
     if (initialCaratulaRequired) {
       if (!caratulaFile) {
         setConvertError("Sube la carátula de la póliza — es la evidencia del monto.");
         return;
       }
       setUpdating(true);
-      const fd = new FormData();
-      fd.append("file", caratulaFile);
-      const up = await fetch("/api/referrals/caratula", { method: "POST", body: fd });
-      const upData = await up.json().catch(() => ({}));
-      if (!up.ok) {
-        setUpdating(false);
-        setConvertError(upData.error ?? "No se pudo subir la carátula, intenta de nuevo");
-        return;
+      if (!uploadedUrl) {
+        const fd = new FormData();
+        fd.append("file", caratulaFile);
+        const up = await fetch("/api/referrals/caratula", { method: "POST", body: fd });
+        const upData = await up.json().catch(() => ({}));
+        if (!up.ok) {
+          setUpdating(false);
+          setConvertError(upData.error ?? "No se pudo subir la carátula, intenta de nuevo");
+          return;
+        }
+        uploadedUrl = upData.url;
       }
-      caratulaUrl = upData.url;
     }
 
     const usedProduct = productType;
@@ -227,11 +272,13 @@ export default function ReferidosClient({
       rewardStatus: "approved",
       saleAmount,
       productType: productType || null,
-      ...(caratulaUrl ? { caratulaUrl } : {}),
+      ...(uploadedUrl ? { caratulaUrl: uploadedUrl } : {}),
     });
     setConvertTarget(null);
     setProductType("");
     setCaratulaFile(null);
+    setCaratulaUrl(null);
+    setAiRead(null);
     if (advisorPlan === "freemium" && saleAmount && usedProduct) {
       const rates: Record<string, { freemium: number; paid: number }> = {
         PPR: { freemium: 0.0025, paid: 0.0015 },
@@ -550,9 +597,20 @@ export default function ReferidosClient({
                       type="file"
                       accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
                       className="hidden"
-                      onChange={(e) => setCaratulaFile(e.target.files?.[0] ?? null)}
+                      onChange={(e) => onCaratulaSelected(e.target.files?.[0] ?? null)}
                     />
                   </label>
+                  {readingCaratula && (
+                    <p className="text-xs text-[#2563EB] mt-2 flex items-center gap-1.5">
+                      <span className="inline-block w-3 h-3 border-2 border-[#2563EB] border-t-transparent rounded-full animate-spin" />
+                      Leyendo la carátula con IA…
+                    </p>
+                  )}
+                  {!readingCaratula && aiRead && (aiRead.producto || aiRead.prima) && (
+                    <p className="text-xs text-[#1F9D5B] mt-2 leading-snug">
+                      ✨ La IA leyó{aiRead.producto ? ` ${aiRead.producto}` : ""}{aiRead.prima ? ` · $${aiRead.prima.toLocaleString("es-MX")}` : ""} y lo llenó arriba. Confirma o corrige.
+                    </p>
+                  )}
                 </div>
               )}
               {convertError && (
