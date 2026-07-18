@@ -18,6 +18,19 @@ Un tercer usuario, el **dueño de la plataforma** (`/owner/*`), usa un dashboard
 
 Referidoo convierte a los clientes activos de un asesor en referidores activos, sin friction legal ni de datos. El asesor gestiona todo desde su dashboard; el sistema calcula y trackea la recompensa automáticamente cuando un referido convierte en venta. No existe competidor directo de referral tracking para asesores de seguros individuales en México — Referidoo compite contra Excel y WhatsApp, no contra otro SaaS. Éxito = el asesor deja de trackear referidos a mano y empieza a ver conversiones reales y predecibles desde su cliente base existente.
 
+## Capacidades actuales (jul 2026)
+
+Además del pipeline de referidos y la escalera/burbuja de premios, ya en producción:
+
+- **Onboarding "Primeros Pasos"** — bienvenida corta que lleva al asesor a registrar su primer cliente, y una cajita de tareas (tarjeta en Resumen + chip de progreso persistente en la barra superior) donde cada tarea dispara un recorrido guiado interactivo (motor de spotlight en `AdminLayoutShell`). Las 5 tareas se auto-marcan desde datos reales (correo verificado, ≥1 cliente, escalera configurada, ≥1 referido, link de agenda).
+- **Verificación de correo cross-device** — el link funciona desde cualquier dispositivo, aterriza en una página pública (`/correo-verificado`, nunca fuerza login), y la pestaña de origen se actualiza sola sin perder trabajo en curso.
+- **IA lee la carátula = autoridad de la comisión** — al convertir, la IA (OpenAI Vision) lee producto + prima de la foto de la póliza y **bloquea** esos campos: el asesor no teclea el monto ni lo puede bajar. Sin lectura legible no hay conversión. Cierra el fraude de subreportar para pagar menos comisión. (`lib/caratula-ai.ts` → `readCaratula`.)
+- **IA redacta el primer WhatsApp al referido** — botón que genera un primer mensaje personalizado y editable, con las mejores prácticas de outreach de referidos (menciona quién refirió, corto, un solo CTA suave). (`/api/referrals/[id]/suggest-message`.)
+- **Link de agenda** — el asesor pega su Calendly/Cal.com/página de citas de Google; aparece un botón "Agendar una cita" en el formulario del referido.
+- **Envío masivo del link (Pro)** — un botón manda a toda la cartera su link de portal por correo y marca cuáles ya se enviaron.
+
+**El diferenciador estratégico es la IA de conversión:** no "usamos GPT", sino que Referidoo se sienta sobre los datos de qué mensaje / timing / producto convierte — un efecto de red de datos que un competidor no puede copiar sin esos datos. El bucle de aprendizaje (moat, fase 2) está en `TODOS.md` y en el design doc `~/.gstack/projects/patrickmontiel-Referidoo/patri-master-design-20260717-ia-conversion.md`.
+
 ## Brand Personality
 
 Directo, confiable, sin relleno. El diseño no debe llamar la atención sobre sí mismo — debe sentirse como una herramienta de trabajo sólida, no como una pieza de marketing. Tono de copy: claro, en español de México, sin jerga corporativa ni "AI copywriting clichés".

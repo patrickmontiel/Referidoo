@@ -1,5 +1,24 @@
 # TODOS
 
+## IA / Onboarding (jul 2026)
+
+### Moat de IA — bucle de aprendizaje (fase 2)
+**What:** Registrar cada mensaje sugerido por la IA → si tuvo respuesta → si el referido cerró, y realimentar "qué convierte" al prompt por producto/asesor. Panel "qué mensaje convierte".
+**Why:** La V1 (GPT redacta con el contexto que ya tenemos) es copiable por cualquiera. Lo irreplicable es el bucle — y se gana ENVIANDO, por eso se shippeó la V1 primero. Design doc: `~/.gstack/projects/patrickmontiel-Referidoo/patri-master-design-20260717-ia-conversion.md`.
+**Effort:** L · **Priority:** P2 · **Depends on:** volumen real de mensajes enviados.
+
+### Carátula: manejo de PDF
+**What:** La lectura IA solo funciona con imágenes (visión). Con el candado duro, un PDF bloquearía la conversión, así que hoy la subida se restringe a foto. Si un asesor necesita PDF, convertir la 1a página a imagen server-side antes de leerla.
+**Effort:** M · **Priority:** P3 · **Depends on:** que un asesor real lo pida.
+
+### Envío masivo: personalizar por-cliente con IA + badge "enviado"
+**What:** El botón Pro "enviar link a todos" usa una plantilla; opcionalmente que la IA personalice cada correo (costo/latencia de N llamadas). Y agregar un indicador "✓ enviado" en cada tarjeta de cliente (hoy solo el contador del header lo refleja).
+**Effort:** S · **Priority:** P4.
+
+### "Dientes" cuando el asesor no le paga al cliente
+**What:** Hoy no pagar un premio vencido solo genera visibilidad (recordatorios día 7/14, moroso a 30 días en `/owner`, cuenta regresiva en el portal del cliente) — sin consecuencia automática. Decidir si deber premios vencidos debe tener enforcement real (p. ej. no poder convertir nuevos, marca pública).
+**Effort:** M · **Priority:** P3 · **Depends on:** decisión de negocio (es una decisión de producto pendiente, no técnica).
+
 ## Auth / Self-serve
 
 ### Rate limiting en /api/auth/register y /api/auth/login

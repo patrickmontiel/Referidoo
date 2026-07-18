@@ -76,6 +76,16 @@ La comisión varía por tipo de producto porque la estructura de ingreso del ase
 - Referidoo cobra un % sobre el valor de esa prima anual
 - Ejemplo Fase 0: Prima anual de $30,000 MXN → Referidoo cobra $24 MXN por ese referido convertido
 
+### Integridad del monto (antifraude, jul 2026)
+
+Como toda la comisión de Referidoo depende del monto que reporta el asesor,
+subreportar era el vector de fraude directo. Ya no: al convertir, la IA
+(OpenAI Vision) lee el producto y la prima de la **foto de la póliza** y bloquea
+esos campos — el asesor no teclea el monto ni lo puede bajar, y sin lectura
+legible no hay conversión. La carátula es la autoridad, no el asesor. (Antes ya
+existía verificación post-conversión que marcaba discrepancias en la cola del
+dueño; ahora además se bloquea de entrada.)
+
 ---
 
 ## Inteligencia competitiva (investigación junio 2026)
