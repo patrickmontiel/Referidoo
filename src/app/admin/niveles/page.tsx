@@ -355,7 +355,7 @@ export default function PremiosPage() {
               value={whatsappMessage}
               onChange={(e) => setWhatsappMessage(e.target.value)}
               rows={4}
-              placeholder={`Ej: ¡Hola! {nombre} te recomienda cotizar un seguro sin compromiso. Entra aquí: {link}`}
+              placeholder={`Ej: Hola, soy {nombre}. Te comparto algo que me ha servido mucho, échale un ojo sin compromiso: {link}`}
               className="w-full px-4 py-3 rounded-2xl border border-brand-border-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition resize-none text-[#3F4651] placeholder:text-brand-gray-4"
             />
             <p className="text-xs text-brand-gray-4 mt-2">
@@ -463,7 +463,7 @@ export default function PremiosPage() {
           disabled={saving}
           className="bg-brand-ink text-white text-sm font-medium px-6 py-2.5 rounded-full hover:bg-[#26262a] disabled:opacity-50 transition"
         >
-          {saving ? "Guardando..." : saved ? "¡Guardado ✓" : "Guardar cambios"}
+          {saving ? "Guardando..." : saved ? "Guardado" : "Guardar cambios"}
         </button>
       </div>
 

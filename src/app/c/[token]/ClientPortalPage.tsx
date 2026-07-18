@@ -351,7 +351,7 @@ export default function ClientPortalPage() {
     const firstName = client.name.split(" ")[0];
     const msg = advisor.whatsappMessage
       ? advisor.whatsappMessage.replace("{link}", referralLink).replace("{nombre}", firstName)
-      : `Hola 👋 Quiero compartirte algo que a mí me ha servido mucho.\n\nTengo un plan con ${advisor.name} que me está ayudando a cuidar mi patrimonio. Creo que a ti también te podría interesar.\n\nSin compromiso, solo entra y revisa: ${referralLink}`;
+      : `Hola, te quiero recomendar algo de corazón.\n\nYo tengo un plan con ${advisor.name} que me ha ayudado a cuidar mi patrimonio y a mi familia. Le pedí que te atienda directo, sin compromiso ni venta.\n\nSolo échale un ojo aquí: ${referralLink}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   }
 
@@ -647,7 +647,7 @@ export default function ClientPortalPage() {
               {/* Greeting */}
               <div style={{ marginBottom: 18, marginTop: 4 }}>
                 <h1 style={{ fontSize: 21, fontWeight: 800, color: "#0d0d0d", letterSpacing: "-.02em", lineHeight: 1.2 }}>
-                  Hola, {client.name.split(" ")[0]} 👋
+                  Hola, {client.name.split(" ")[0]}
                 </h1>
                 <p style={{ fontSize: 13, color: "#71717a", marginTop: 3 }}>Aquí va el progreso de tus referidos</p>
               </div>

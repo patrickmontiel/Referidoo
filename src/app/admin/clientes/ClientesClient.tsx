@@ -308,7 +308,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
         setSendResult("pro");
       } else if (res.ok) {
         const rem = data.remaining ? ` Quedan ${data.remaining} — vuelve a tocar para el siguiente lote.` : "";
-        setSendResult(`✓ Link enviado a ${data.sent} cliente${data.sent === 1 ? "" : "s"}.${data.noEmail ? ` ${data.noEmail} sin correo.` : ""}${rem}`);
+        setSendResult(`Link enviado a ${data.sent} cliente${data.sent === 1 ? "" : "s"}.${data.noEmail ? ` ${data.noEmail} sin correo.` : ""}${rem}`);
         // Marca como enviados solo los del lote (los que no quedaron pendientes).
         setClients((prev) => {
           if (data.remaining) return prev; // recargamos en el siguiente toque
@@ -339,7 +339,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
   // WhatsApp para avisar al cliente que ya se le depositó su premio.
   function buildPayWhatsApp(client: Client, amount: number) {
     const firstName = client.name.split(" ")[0];
-    const msg = `¡Hola ${firstName}! Te deposité tu premio de ${formatCurrency(amount)} por recomendarme. ¡Gracias! 🙌`;
+    const msg = `¡Hola ${firstName}! Ya te deposité tus ${formatCurrency(amount)} por tu recomendación. Gracias por confiar en mí y pasarme a tu gente. Tu link sigue activo por si conoces a alguien más.`;
     const phone = client.phone ? "52" + client.phone.replace(/\D/g, "").replace(/^(52|1)/, "") : "";
     return phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
   }
@@ -349,7 +349,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
     const base = typeof window !== "undefined" ? window.location.origin : "";
     const firstName = client.name.split(" ")[0];
     const portalLink = `${base}/c/${client.accessToken}`;
-    const msg = `¡Hola ${firstName}! Ya tengo listo tu premio. ¿Me compartes tu CLABE para depositarte? También puedes guardarla en tu portal:\n${portalLink}`;
+    const msg = `¡Hola ${firstName}! Tu premio por recomendar ya está listo. Pásame tu CLABE por aquí y te deposito hoy mismo. También la puedes guardar en tu portal:\n${portalLink}`;
     const phone = client.phone ? "52" + client.phone.replace(/\D/g, "").replace(/^(52|1)/, "") : "";
     return phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
   }
@@ -359,7 +359,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
     const portalLink = `${base}/c/${client.accessToken}`;
     const firstName = client.name.split(" ")[0];
     const advisorName = advisor?.name ?? "tu asesor";
-    const msg = `¡Hola ${firstName}! 👋 Habla ${advisorName}.\n\nQuiero invitarte a mi programa de referidos. Si compartes tu link con amigos y alguno contrata un plan, tú ganas en efectivo — hasta ${formatCurrency(maxTierAmount)} por referido.\n\nEntra aquí:\n${portalLink}`;
+    const msg = `¡Hola ${firstName}! Habla ${advisorName}.\n\nTe tengo algo: por cada amigo o familiar al que le pases tu link y contrate un plan conmigo, tú ganas en efectivo, hasta ${formatCurrency(maxTierAmount)} por persona. Sin costo y sin letra chica.\n\nEste es tu link, guárdalo:\n${portalLink}`;
     const phone = client.phone ? "52" + client.phone.replace(/\D/g, "").replace(/^(52|1)/, "") : "";
     return phone
       ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
@@ -491,7 +491,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
               disabled={sendingLinks}
               className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-full bg-[#EEF3FE] text-[#2563EB] hover:bg-[#E0EBFF] disabled:opacity-60 transition"
             >
-              {sendingLinks ? "Enviando…" : "✉️ Enviar link a todos por correo"}
+              {sendingLinks ? "Enviando…" : "Enviar link a todos por correo"}
               {advisor?.plan !== "paid" && (
                 <span className="text-[10px] font-bold bg-[#2563EB] text-white px-1.5 py-0.5 rounded-full">PRO</span>
               )}

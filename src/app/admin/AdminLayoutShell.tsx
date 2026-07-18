@@ -791,7 +791,7 @@ export default function AdminLayoutShell({
       {showVerifiedBanner && (
         <div className="bg-green-50 border-b border-green-100 flex-shrink-0">
           <div className="max-w-5xl mx-auto px-5 py-2.5 text-sm text-green-800">
-            ✓ Tu correo quedó verificado. Ya puedes agregar clientes.
+            Tu correo quedó verificado. Ya puedes agregar clientes.
           </div>
         </div>
       )}
@@ -805,7 +805,7 @@ export default function AdminLayoutShell({
                 : "Verifica tu correo para empezar a agregar clientes. Puedes abrirlo desde cualquier dispositivo."}
             </span>
             {resentVerif ? (
-              <span className="text-green-700 font-medium whitespace-nowrap flex-shrink-0">✓ reenviado</span>
+              <span className="text-green-700 font-medium whitespace-nowrap flex-shrink-0">reenviado</span>
             ) : (
               <button
                 onClick={resendVerification}
@@ -1087,7 +1087,7 @@ export default function AdminLayoutShell({
                   onClick={() => goStep(tourStep + 1)}
                   className="flex-1 bg-[#0B0B0C] text-white text-xs font-semibold py-2.5 rounded-full hover:bg-[#26262a] active:scale-[.98] transition"
                 >
-                  {isLastStep ? "¡Listo! ✓" : "Siguiente →"}
+                  {isLastStep ? "¡Listo!" : "Siguiente →"}
                 </button>
                 {!isLastStep && (
                   <button

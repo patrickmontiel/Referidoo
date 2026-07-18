@@ -596,7 +596,7 @@ export default function ReferidosClient({
               <h2 className="font-semibold mb-1">Marcar como convertido</h2>
               <p className="text-sm text-brand-gray-4 mb-5">{convertTarget.name}</p>
               <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">
-                Producto contratado {productLocked && <span className="text-[#1F9D5B] normal-case tracking-normal">· 🔒 leído de la póliza</span>}
+                Producto contratado {productLocked && <span className="text-[#1F9D5B] normal-case tracking-normal">· leído de la póliza</span>}
               </label>
               <div className="flex flex-wrap gap-2 mb-1">
                 {["PPR", "Vida", "Daños/Auto", "GMM", "Otro"].map((type) => (
@@ -617,7 +617,7 @@ export default function ReferidosClient({
               </div>
               <div className="mb-5" />
               <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">
-                {valueLabel} {amountLocked && <span className="text-[#1F9D5B] normal-case tracking-normal">· 🔒 leído de la póliza</span>}
+                {valueLabel} {amountLocked && <span className="text-[#1F9D5B] normal-case tracking-normal">· leído de la póliza</span>}
               </label>
               <div className="relative mb-2">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-gray-4 text-sm font-medium">$</span>
@@ -669,12 +669,12 @@ export default function ReferidosClient({
                   )}
                   {!readingCaratula && aiRead && (aiRead.producto || aiRead.prima) && (
                     <p className="text-xs text-[#1F9D5B] mt-2 leading-snug">
-                      ✨ La IA leyó{aiRead.producto ? ` ${aiRead.producto}` : ""}{aiRead.prima ? ` · $${aiRead.prima.toLocaleString("es-MX")}` : ""} de la póliza y lo dejó bloqueado arriba. Solo confirma.
+                      La IA leyó{aiRead.producto ? ` ${aiRead.producto}` : ""}{aiRead.prima ? ` · $${aiRead.prima.toLocaleString("es-MX")}` : ""} de la póliza y lo dejó bloqueado arriba. Solo confirma.
                     </p>
                   )}
                   {!readingCaratula && caratulaUrl && !aiRead?.prima && caratulaAiStatus === "unreadable" && (
                     <p className="text-xs text-amber-700 mt-2 leading-snug">
-                      ⚠️ No pudimos leer el monto de esta foto. Sube una más clara (bien iluminada, completa, sin reflejos) para poder convertir.
+                      No pudimos leer el monto de esta foto. Sube una más clara (bien iluminada, completa, sin reflejos) para poder convertir.
                     </p>
                   )}
                   {!readingCaratula && caratulaUrl && !aiRead?.prima && caratulaAiStatus === "unavailable" && (
@@ -916,14 +916,14 @@ export default function ReferidosClient({
                 const s = selected.caratulaStatus;
                 const cfg =
                   s === "validada"
-                    ? { bg: "bg-green-50", border: "border-green-200", text: "text-green-800", icon: "✓", title: "Carátula validada", body: "El monto y el producto coinciden con la póliza." }
+                    ? { bg: "bg-green-50", border: "border-green-200", text: "text-green-800", dot: "bg-[#1F9D5B]", title: "Carátula validada", body: "El monto y el producto coinciden con la póliza." }
                     : s === "discrepancia"
-                    ? { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-800", icon: "⚠️", title: "Revisar carátula", body: "La póliza no coincide con el producto o el monto que reportaste. Corrige el dato o vuelve a subir la carátula correcta." }
-                    : { bg: "bg-[#F4F5F7]", border: "border-brand-border-1", text: "text-brand-gray-2", icon: "⏳", title: "Carátula en revisión", body: "Estamos verificando la póliza contra lo que reportaste. Vuelve a abrir el referido en un momento." };
+                    ? { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-800", dot: "bg-amber-500", title: "Revisar carátula", body: "La póliza no coincide con el producto o el monto que reportaste. Corrige el dato o vuelve a subir la carátula correcta." }
+                    : { bg: "bg-[#F4F5F7]", border: "border-brand-border-1", text: "text-brand-gray-2", dot: "bg-brand-gray-4", title: "Carátula en revisión", body: "Estamos verificando la póliza contra lo que reportaste. Vuelve a abrir el referido en un momento." };
                 return (
                   <div className={`rounded-xl border ${cfg.bg} ${cfg.border} px-4 py-3`}>
-                    <p className={`text-sm font-semibold ${cfg.text} flex items-center gap-1.5`}>
-                      <span>{cfg.icon}</span> {cfg.title}
+                    <p className={`text-sm font-semibold ${cfg.text} flex items-center gap-2`}>
+                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} /> {cfg.title}
                     </p>
                     <p className={`text-xs ${cfg.text} opacity-90 mt-1 leading-relaxed`}>{cfg.body}</p>
                   </div>
@@ -1076,7 +1076,7 @@ export default function ReferidosClient({
                       Escribiendo…
                     </>
                   ) : (
-                    "✨ Sugerir primer mensaje"
+                    "Sugerir primer mensaje"
                   )}
                 </button>
               ) : (

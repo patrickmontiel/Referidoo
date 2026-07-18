@@ -478,7 +478,7 @@ export async function sendClientLinkEmail(payload: {
     html: emailShell(`
       ${header()}
       <tr><td style="padding:32px 32px 20px">
-        <h1 style="margin:0 0 10px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">Hola ${first} 👋</h1>
+        <h1 style="margin:0 0 10px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">Hola ${first}</h1>
         <p style="margin:0 0 22px;font-size:14px;color:#6B727D;line-height:1.6">${dePart} te comparte tu link personal. Compártelo con tus amigos y familiares: cuando alguno contrate, ganas premios. Desde aquí ves tu avance en cualquier momento.</p>
         ${pill(payload.portalUrl, "Ver mi link y mis premios →")}
         <p style="margin:14px 0 0;font-size:12px;color:#9098A2;text-align:center">Es tu link privado — no lo pierdas.</p>
