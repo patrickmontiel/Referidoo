@@ -145,7 +145,6 @@ export default async function Home() {
           <p className="text-[#5A626E] leading-[1.6] mb-8 max-w-md" style={{ fontSize: 18 }}>
             Cada recomendación que hoy muere en un chat de WhatsApp puede
             registrarse sola, calcular su premio sola y avisarte al momento.
-            Referidoo es para asesores de seguros y planes financieros en México.
           </p>
           <div className="flex items-center gap-3">
             <Link href="/registro" className="text-sm font-medium bg-[#0B0B0C] text-white px-5 py-3 rounded-full transition-[background-color,transform] duration-150 hover:bg-[#26262a] active:scale-[0.97]">
@@ -155,7 +154,11 @@ export default async function Home() {
               Ya tengo cuenta
             </Link>
           </div>
-          <p className="text-xs text-[#8A8F98] mt-4">Plan gratis — clientes ilimitados. Sin tarjeta para empezar.</p>
+          <p className="text-xs text-[#8A8F98] mt-4">
+            Para asesores de seguros y planes financieros en México.
+            <br />
+            Empieza con 30 días de Pro gratis, sin tarjeta.
+          </p>
         </div>
 
         <HeroDemo />
@@ -171,12 +174,9 @@ export default async function Home() {
             Cero cuentas a mano. Cero premios olvidados.
           </h2>
           <p className="text-[#5A626E] leading-[1.6]" style={{ fontSize: 18 }}>
-            Cuando un referido cierra, Referidoo ya hizo la cuenta del premio que
-            le toca a tu cliente: escalera para Vida y PPR, premios burbuja para
-            Auto y Gastos Médicos Mayores. Tu cliente ve su premio sin
-            preguntarte, y tu suscripción se cobra sola cada mes vía Mercado
-            Pago. Configuras tus reglas una vez — y te olvidas de las cuentas
-            para siempre.
+            Cuando un referido cierra, Referidoo ya calculó el premio de tu
+            cliente y se lo mostró. Configuras tus reglas una vez — y te olvidas
+            de las cuentas para siempre.
           </p>
         </ScrollReveal>
       </section>
@@ -189,8 +189,7 @@ export default async function Home() {
           </h2>
           <p className="text-[#5A626E] max-w-lg mx-auto leading-[1.6] mb-3" style={{ fontSize: 18 }}>
             Dos formas de premiar, según el producto — tú decides los números,
-            el sistema nunca se equivoca. Y el premio no es un gasto: es tu
-            costo de adquisición, mucho más barato que un lead comprado.
+            el sistema nunca se equivoca.
           </p>
           <Link href="/como-funciona" className="inline-flex items-center gap-1.5 text-sm font-medium text-[#2563EB] hover:gap-2.5 transition-[gap]">
             Ver cómo funciona, paso a paso
@@ -260,14 +259,10 @@ export default async function Home() {
               </div>
             </div>
 
-            <p className="text-xs text-[#8A8F98] leading-relaxed mb-3 flex items-start gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-[#2563EB] flex-shrink-0 mt-0.5" />
-              Auto y GMM suman al mismo fondo — montos y meta configurables.
-            </p>
             <p className="text-xs text-[#8A8F98] leading-relaxed">
-              Cada venta suma puntos a un mismo fondo. Al llegar al umbral que tú
-              definas, tu cliente ve el premio listo para reclamar directamente
-              desde su portal — sin que tengas que avisarle.
+              Auto y GMM suman al mismo fondo. Al llegar al umbral que tú definas,
+              tu cliente ve el premio listo para reclamar desde su portal — sin
+              que tengas que avisarle. Montos y meta, configurables.
             </p>
           </ScrollReveal>
         </div>
@@ -446,9 +441,13 @@ export default async function Home() {
       {/* Pricing */}
       <section id="precios" className="scroll-mt-24 max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal>
-          <h2 className={`${SECTION_HEADING} mb-10 text-center text-balance`} style={SECTION_HEADING_SIZE}>
+          <h2 className={`${SECTION_HEADING} mb-3 text-center text-balance`} style={SECTION_HEADING_SIZE}>
             Un precio simple, sin letras chiquitas
           </h2>
+          <p className="text-[#5A626E] text-center max-w-lg mx-auto leading-[1.6] mb-10" style={{ fontSize: 17 }}>
+            Empiezas con 30 días de Pro gratis. Al terminar, eliges: te quedas en
+            Pro por $539/mes o bajas al plan gratis para siempre.
+          </p>
         </ScrollReveal>
         <div className="grid md:grid-cols-2 gap-4 max-w-[760px] mx-auto">
 
@@ -500,7 +499,7 @@ export default async function Home() {
                 <p className="text-[42px] font-extrabold text-[#0B0B0C] leading-none mb-1">
                   $539 <span className="text-[22px] font-bold">MXN</span><span className="text-base font-normal text-[#8A8F98]">/mes</span>
                 </p>
-                <p className="text-sm text-[#8A8F98] mb-6">Clientes ilimitados</p>
+                <p className="text-sm text-[#2563EB] font-semibold mb-6">Primeros 30 días gratis</p>
                 <ul className="text-sm text-[#3F4651] space-y-2.5 mb-6">
                   {[
                     "Todo lo del plan gratis, y además:",
@@ -546,7 +545,7 @@ export default async function Home() {
           <Link href="/registro" className="inline-block text-sm font-medium bg-[#0B0B0C] text-white px-6 py-3.5 rounded-full transition-[background-color,transform] duration-150 hover:bg-[#26262a] active:scale-[0.97]">
             Crear cuenta gratis
           </Link>
-          <p className="text-xs text-[#8A8F98] mt-4">Plan gratis — clientes ilimitados. Sin tarjeta para empezar.</p>
+          <p className="text-xs text-[#8A8F98] mt-4">30 días de Pro gratis. Sin tarjeta para empezar.</p>
         </ScrollReveal>
       </section>
 

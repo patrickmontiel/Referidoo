@@ -452,6 +452,47 @@ export async function sendVerificationEmail(payload: {
   }
 }
 
+// ─── 7a-bis. Aviso de fin de prueba Pro ──────────────────────────────────────
+
+// El cron trial-ending lo dispara cuando a un asesor en prueba le faltan ≤3
+// días para bajar a freemium. Lo empuja a dejar su método de pago sin cortes.
+export async function sendTrialEndingEmail(payload: {
+  advisorEmail: string;
+  advisorName: string;
+  daysLeft: number;
+}) {
+  const url = `${BASE_URL}/admin/perfil?upgrade=pro`;
+
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY no configurado — aviso de fin de prueba no enviado a", payload.advisorEmail);
+    return;
+  }
+
+  const firstName = payload.advisorName.split(" ")[0];
+  const whenText = payload.daysLeft <= 0 ? "hoy" : payload.daysLeft === 1 ? "mañana" : `en ${payload.daysLeft} días`;
+
+  const result = await resend.emails.send({
+    from: FROM,
+    to: [payload.advisorEmail],
+    subject: `Tu prueba Pro de Referidoo termina ${whenText}`,
+    html: emailShell(`
+      ${header()}
+      <tr><td style="padding:32px 32px 20px">
+        <h1 style="margin:0 0 10px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">${firstName}, tu prueba Pro termina ${whenText}</h1>
+        <p style="margin:0 0 16px;font-size:14px;color:#6B727D;line-height:1.6">Cuando termine tu mes de prueba, tu cuenta baja al plan Gratis: conservas tus clientes y su portal, pero pierdes los leads ilimitados, los Premios Burbuja y las comisiones más bajas de Pro.</p>
+        <p style="margin:0 0 28px;font-size:14px;color:#6B727D;line-height:1.6">Deja tu método de pago para seguir en Pro sin cortes — $539 MXN/mes, cancelas cuando quieras.</p>
+        ${pill(url, "Seguir en Pro →")}
+        <p style="margin:14px 0 0;font-size:12px;color:#9098A2;text-align:center">Si prefieres quedarte en el plan Gratis, no tienes que hacer nada.</p>
+      </td></tr>
+      ${footer("Referidoo — plataforma de referidos para asesores de seguros")}
+    `),
+  });
+
+  if (result.error) {
+    console.error("[email] Resend rechazó aviso de fin de prueba:", JSON.stringify(result.error));
+  }
+}
+
 // ─── 7b. Link al cliente (envío masivo Pro) ──────────────────────────────────
 
 // Le manda a un cliente su link de portal para que empiece a referir. Lo usa

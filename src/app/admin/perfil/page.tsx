@@ -20,7 +20,7 @@ export default async function PerfilPage() {
   const [advisor, pendingCommissions, clientCount, leadCount, allConverted] = await Promise.all([
     db.advisor.findUnique({
       where: { id: session.advisorId },
-      select: { id: true, name: true, email: true, phone: true, companyName: true, createdAt: true, emailVerified: true, plan: true, paidUntil: true, onboardedAt: true },
+      select: { id: true, name: true, email: true, phone: true, companyName: true, createdAt: true, emailVerified: true, plan: true, paidUntil: true, mpPreapprovalId: true, onboardedAt: true },
     }),
     db.referral.findMany({
       where: { advisorId: session.advisorId, billedAt: null, lessioCommission: { not: null } },
@@ -42,6 +42,19 @@ export default async function PerfilPage() {
 
   if (!advisor) redirect("/login");
 
+  // Un "paid" sin suscripción de MP está en su trial; la fecha paidUntil es
+  // cuando BAJA a freemium, no un "próximo cobro". El cliente necesita saberlo.
+  const nowMs = Date.now();
+  const paidUntilMs = advisor.paidUntil ? advisor.paidUntil.getTime() : null;
+  const hasSubscription = !!advisor.mpPreapprovalId;
+  const billingStatus: "paid" | "trial" | "trial_expired" | "freemium" =
+    advisor.plan === "paid"
+      ? hasSubscription ? "paid" : "trial"
+      : !hasSubscription && paidUntilMs !== null && paidUntilMs <= nowMs ? "trial_expired" : "freemium";
+
+  // No filtramos el id de Mercado Pago al cliente.
+  const { mpPreapprovalId: _mpId, ...advisorPublic } = advisor;
+
   const pendingCommissionTotal = pendingCommissions.reduce((sum, r) => sum + (r.lessioCommission ?? 0), 0);
 
   const freemiumCommission = allConverted.reduce((sum, r) => {
@@ -56,7 +69,7 @@ export default async function PerfilPage() {
   const netWithPro = commissionDiff - MEMBERSHIP_COST;
 
   const serializedAdvisor = {
-    ...advisor,
+    ...advisorPublic,
     createdAt: advisor.createdAt.toISOString(),
     paidUntil: advisor.paidUntil?.toISOString() ?? null,
     onboardedAt: advisor.onboardedAt?.toISOString() ?? null,
@@ -78,6 +91,7 @@ export default async function PerfilPage() {
       commissionDiff={commissionDiff}
       netWithPro={netWithPro}
       convertedCount={allConverted.length}
+      billingStatus={billingStatus}
     />
   );
 }

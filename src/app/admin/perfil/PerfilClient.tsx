@@ -56,9 +56,10 @@ type PerfilClientProps = {
   commissionDiff: number;
   netWithPro: number;
   convertedCount: number;
+  billingStatus: "paid" | "trial" | "trial_expired" | "freemium";
 };
 
-export default function PerfilClient({ initialAdvisor, initialClientCount, initialLeadCount, freemiumCommission, proCommission, commissionDiff, netWithPro, convertedCount }: PerfilClientProps) {
+export default function PerfilClient({ initialAdvisor, initialClientCount, initialLeadCount, freemiumCommission, proCommission, commissionDiff, netWithPro, convertedCount, billingStatus }: PerfilClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [advisor, setAdvisor] = useState<Advisor | null>(initialAdvisor);
@@ -68,6 +69,7 @@ export default function PerfilClient({ initialAdvisor, initialClientCount, initi
   const [billingBusy, setBillingBusy] = useState(false);
   const [billingError, setBillingError] = useState("");
   const [showUpgradeForm, setShowUpgradeForm] = useState(false);
+  const [justSubscribed, setJustSubscribed] = useState(false);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [copied, setCopied] = useState(false);
   const [resending, setResending] = useState(false);
@@ -101,6 +103,7 @@ export default function PerfilClient({ initialAdvisor, initialClientCount, initi
 
   function handleUpgradeSuccess() {
     setShowUpgradeForm(false);
+    setJustSubscribed(true);
     setAdvisor((prev) => (prev ? { ...prev, plan: "paid" } : prev));
   }
 
@@ -132,6 +135,11 @@ export default function PerfilClient({ initialAdvisor, initialClientCount, initi
   }
 
   const isPaid = advisor.plan === "paid";
+  // Trial = "paid" sin suscripción de MP. Al pagar en el modal deja de serlo.
+  const isTrial = billingStatus === "trial" && !justSubscribed;
+  const trialDaysLeft = isTrial && advisor.paidUntil
+    ? Math.max(0, Math.ceil((new Date(advisor.paidUntil).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+    : null;
   const slug = nameToSlug(advisor.name);
 
   return (
@@ -236,24 +244,45 @@ export default function PerfilClient({ initialAdvisor, initialClientCount, initi
         {isPaid ? (
           <div>
             <div className="flex items-start justify-between mb-3">
-              <div>
-                <p className="font-bold text-[#0B0B0C] text-[17px]">Plan Pro</p>
-                <p className="text-brand-gray-4 text-sm mt-0.5">
-                  <span className="text-[#0B0B0C] font-semibold text-xl">${advisor.monthlyPriceMxn}</span>
-                  <span className="text-brand-gray-4"> /mes</span>
-                </p>
-                {advisor.paidUntil && (
-                  <p className="text-xs text-brand-gray-4 mt-1">
-                    Se cobra solo vía Mercado Pago · próximo cobro {formatDate(advisor.paidUntil)}
+              {isTrial ? (
+                <div>
+                  <p className="font-bold text-[#0B0B0C] text-[17px]">Prueba Pro</p>
+                  <p className="text-brand-gray-4 text-sm mt-0.5">
+                    <span className="text-[#0B0B0C] font-semibold text-xl">Gratis</span>
+                    <span className="text-brand-gray-4"> durante la prueba</span>
                   </p>
-                )}
-              </div>
-              <span className="text-xs font-semibold text-green-700 bg-green-50 px-2.5 py-1 rounded-full flex-shrink-0">
-                Activo
-              </span>
+                  {advisor.paidUntil && (
+                    <p className="text-xs text-brand-gray-4 mt-1">
+                      Termina el {formatDate(advisor.paidUntil)} · después ${advisor.monthlyPriceMxn}/mes, o bajas al plan Gratis. Agrega tu método de pago para seguir en Pro sin cortes.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <p className="font-bold text-[#0B0B0C] text-[17px]">Plan Pro</p>
+                  <p className="text-brand-gray-4 text-sm mt-0.5">
+                    <span className="text-[#0B0B0C] font-semibold text-xl">${advisor.monthlyPriceMxn}</span>
+                    <span className="text-brand-gray-4"> /mes</span>
+                  </p>
+                  {advisor.paidUntil && (
+                    <p className="text-xs text-brand-gray-4 mt-1">
+                      Se cobra solo vía Mercado Pago · próximo cobro {formatDate(advisor.paidUntil)}
+                    </p>
+                  )}
+                </div>
+              )}
+              {isTrial ? (
+                <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full flex-shrink-0 whitespace-nowrap">
+                  {trialDaysLeft === 0 ? "Termina hoy" : `Prueba · ${trialDaysLeft} ${trialDaysLeft === 1 ? "día" : "días"}`}
+                </span>
+              ) : (
+                <span className="text-xs font-semibold text-green-700 bg-green-50 px-2.5 py-1 rounded-full flex-shrink-0">
+                  Activo
+                </span>
+              )}
             </div>
 
-            {advisor.pendingCommissions.length > 0 && (
+            {!isTrial && advisor.pendingCommissions.length > 0 && (
               <div className="mt-3 pt-3 border-t border-brand-border-1">
                 <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-2">
                   Comisiones pendientes
@@ -276,7 +305,22 @@ export default function PerfilClient({ initialAdvisor, initialClientCount, initi
             )}
 
             <div className="flex gap-2 mt-5">
-              {confirmingCancel ? (
+              {isTrial ? (
+                <>
+                  <button
+                    onClick={() => setShowUpgradeForm(true)}
+                    className="flex-1 bg-brand-ink text-white text-sm font-medium py-3 rounded-full hover:bg-[#26262a] transition"
+                  >
+                    Agregar método de pago
+                  </button>
+                  <button
+                    onClick={logout}
+                    className="text-sm font-medium text-red-600 px-4 py-3 rounded-full border border-red-100 hover:bg-red-50 transition"
+                  >
+                    Cerrar sesión
+                  </button>
+                </>
+              ) : confirmingCancel ? (
                 <>
                   <button
                     onClick={handleCancel}
