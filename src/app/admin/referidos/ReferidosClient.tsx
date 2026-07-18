@@ -111,6 +111,8 @@ export default function ReferidosClient({
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState<Referral | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestedMsg, setSuggestedMsg] = useState<string | null>(null);
   const [convertTarget, setConvertTarget] = useState<{ id: string; name: string } | null>(null);
   const [saleInput, setSaleInput] = useState("");
   const [productType, setProductType] = useState("");
@@ -235,6 +237,22 @@ export default function ReferidosClient({
       /* la lectura IA es best-effort — no bloquea */
     }
     setReadingCaratula(false);
+  }
+
+  // Al cambiar de referido, olvida el mensaje sugerido del anterior.
+  useEffect(() => { setSuggestedMsg(null); }, [selected?.id]);
+
+  async function suggestMessage() {
+    if (!selected || suggesting) return;
+    setSuggesting(true);
+    try {
+      const res = await fetch(`/api/referrals/${selected.id}/suggest-message`, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (data.message) setSuggestedMsg(data.message);
+    } catch {
+      /* best-effort */
+    }
+    setSuggesting(false);
   }
 
   async function confirmConvert() {
@@ -1021,6 +1039,51 @@ export default function ReferidosClient({
                     +{selected.productType === "GMM" ? bubblePointsByProduct.gmmPoints : bubblePointsByProduct.autoPoints} pts burbuja
                   </span>{" "}
                   sumados a {selected.referrer.name} · acumulado: {selected.referrer.bubblePoints} pts
+                </div>
+              )}
+
+              {/* IA: sugerir el primer mensaje de WhatsApp */}
+              {suggestedMsg === null ? (
+                <button
+                  onClick={suggestMessage}
+                  disabled={suggesting}
+                  className="w-full mb-2 flex items-center justify-center gap-2 bg-[#EEF3FE] text-[#2563EB] text-sm py-3 rounded-full font-semibold hover:bg-[#E0EBFF] disabled:opacity-60 transition"
+                >
+                  {suggesting ? (
+                    <>
+                      <span className="inline-block w-3.5 h-3.5 border-2 border-[#2563EB] border-t-transparent rounded-full animate-spin" />
+                      Escribiendo…
+                    </>
+                  ) : (
+                    "✨ Sugerir primer mensaje"
+                  )}
+                </button>
+              ) : (
+                <div className="mb-2 rounded-2xl border border-[#DCE6FF] bg-[#F5F8FF] p-3">
+                  <textarea
+                    value={suggestedMsg}
+                    onChange={(e) => setSuggestedMsg(e.target.value)}
+                    rows={4}
+                    className="w-full bg-transparent text-sm text-[#0B0B0C] resize-none focus:outline-none leading-snug"
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <a
+                      href={`https://wa.me/${selected.leadPhone.replace(/\D/g, "")}?text=${encodeURIComponent(suggestedMsg)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 text-center bg-[#25D366] text-white text-sm py-2.5 rounded-full font-semibold hover:bg-[#22C55E] transition"
+                    >
+                      Enviar por WhatsApp
+                    </a>
+                    <button
+                      onClick={suggestMessage}
+                      disabled={suggesting}
+                      className="px-4 text-sm py-2.5 rounded-full border border-[#DADCE0] text-[#5A626E] hover:bg-white disabled:opacity-60 transition"
+                    >
+                      {suggesting ? "…" : "Otro"}
+                    </button>
+                  </div>
+                  <p className="text-[10.5px] text-brand-gray-4 mt-1.5">Sugerido por IA — revísalo y edítalo antes de enviar.</p>
                 </div>
               )}
 
