@@ -248,7 +248,13 @@ export default function ReferidosClient({
     let uploadedUrl: string | undefined = caratulaUrl ?? undefined;
     if (initialCaratulaRequired) {
       if (!caratulaFile) {
-        setConvertError("Sube la carátula de la póliza — es la evidencia del monto.");
+        setConvertError("Sube la foto de la póliza — de ahí se lee el monto.");
+        return;
+      }
+      // Candado duro: el monto sale SOLO de la IA leyendo la póliza. Si no se
+      // pudo leer, no se convierte — así el asesor nunca reporta un monto a mano.
+      if (!aiRead?.prima) {
+        setConvertError("No pudimos leer el monto de la póliza en la foto. Sube una foto más clara y legible (bien iluminada, completa, sin reflejos).");
         return;
       }
       setUpdating(true);
@@ -546,6 +552,9 @@ export default function ReferidosClient({
         // para que el asesor no pueda bajar el monto y pagar menos comisión.
         const productLocked = !!aiRead?.producto;
         const amountLocked = !!aiRead?.prima;
+        // En prod (carátula requerida) el monto NUNCA se teclea: sale solo de la
+        // IA. Así el asesor no puede reportar un número bajo.
+        const amountReadOnly = amountLocked || initialCaratulaRequired;
         return (
           <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
             <div className="absolute inset-0 bg-black/25" onClick={() => setConvertTarget(null)} />
@@ -581,17 +590,19 @@ export default function ReferidosClient({
                 <input
                   type="text"
                   inputMode="numeric"
-                  placeholder="0"
+                  placeholder={amountReadOnly && !amountLocked ? "Sube la foto de la póliza…" : "0"}
                   value={saleInput}
                   onChange={(e) => setSaleInput(formatNumberWithCommas(e.target.value))}
                   required
-                  readOnly={amountLocked}
+                  readOnly={amountReadOnly}
                   className={`w-full pl-8 pr-4 py-3 border rounded-xl text-sm focus:outline-none transition ${
                     amountLocked
                       ? "border-[#1F9D5B]/40 bg-[#1F9D5B]/5 text-[#0B0B0C] font-semibold cursor-not-allowed"
+                      : amountReadOnly
+                      ? "border-brand-border-4 bg-brand-surface text-brand-gray-4 cursor-not-allowed"
                       : "border-brand-border-4 focus:ring-2 focus:ring-brand-ink"
                   }`}
-                  autoFocus={!amountLocked}
+                  autoFocus={!amountReadOnly}
                 />
               </div>
               <p className="text-[11.5px] text-brand-gray-4 leading-snug mb-4">
@@ -602,7 +613,7 @@ export default function ReferidosClient({
               {initialCaratulaRequired && (
                 <div className="mb-5">
                   <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">
-                    Carátula de la póliza (foto o PDF)
+                    Foto de la póliza <span className="normal-case tracking-normal">(la IA lee el monto de aquí)</span>
                   </label>
                   <label className={`flex items-center justify-between gap-3 border rounded-xl px-4 py-3 cursor-pointer transition ${caratulaFile ? "border-brand-ink bg-brand-surface" : "border-brand-border-4 hover:border-brand-ink"}`}>
                     <span className={`text-sm truncate ${caratulaFile ? "text-brand-ink font-medium" : "text-brand-gray-4"}`}>
@@ -611,7 +622,7 @@ export default function ReferidosClient({
                     <span className="text-xs font-semibold text-[#2563EB] flex-shrink-0">{caratulaFile ? "Cambiar" : "Subir"}</span>
                     <input
                       type="file"
-                      accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
+                      accept="image/jpeg,image/png,image/webp,image/heic"
                       className="hidden"
                       onChange={(e) => onCaratulaSelected(e.target.files?.[0] ?? null)}
                     />
@@ -625,6 +636,11 @@ export default function ReferidosClient({
                   {!readingCaratula && aiRead && (aiRead.producto || aiRead.prima) && (
                     <p className="text-xs text-[#1F9D5B] mt-2 leading-snug">
                       ✨ La IA leyó{aiRead.producto ? ` ${aiRead.producto}` : ""}{aiRead.prima ? ` · $${aiRead.prima.toLocaleString("es-MX")}` : ""} de la póliza y lo dejó bloqueado arriba. Solo confirma.
+                    </p>
+                  )}
+                  {!readingCaratula && caratulaUrl && !aiRead?.prima && (
+                    <p className="text-xs text-amber-700 mt-2 leading-snug">
+                      ⚠️ No pudimos leer el monto de esta foto. Sube una más clara (bien iluminada, completa, sin reflejos) para poder convertir.
                     </p>
                   )}
                 </div>
