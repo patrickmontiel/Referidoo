@@ -12,6 +12,7 @@ type Client = {
   referralCode: string;
   accessToken: string;
   active: boolean;
+  linkSent?: boolean;
   createdAt: string;
   _count: { referrals: number };
   referrals: {
@@ -65,7 +66,7 @@ function owedLabel(o: Owed): string {
   return `Debe ${money} · ${o.daysLeft}d`;
 }
 
-type Advisor = { name: string; companyName: string | null };
+type Advisor = { name: string; companyName: string | null; plan?: string };
 type CsvRow = { name: string; phone: string; email: string; policyNumber: string };
 type ImportResult = { name: string; ok: boolean; error?: string };
 
@@ -140,6 +141,8 @@ type ClientesClientProps = {
 export default function ClientesClient({ initialClients, initialAdvisor, initialMaxTierAmount }: ClientesClientProps) {
   const [clients, setClients] = useState<Client[]>(initialClients);
   const [advisor, setAdvisor] = useState<Advisor | null>(initialAdvisor);
+  const [sendingLinks, setSendingLinks] = useState(false);
+  const [sendResult, setSendResult] = useState<string | null>(null);
   const [maxTierAmount, setMaxTierAmount] = useState(initialMaxTierAmount);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -284,6 +287,35 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
     navigator.clipboard.writeText(`${base}/c/${client.accessToken}`);
     setCopiedId(client.id);
     setTimeout(() => setCopiedId(null), 2000);
+  }
+
+  // Pro: manda a todos los clientes (con correo) su link de portal por correo.
+  async function sendLinksToAll() {
+    if (sendingLinks) return;
+    if (advisor?.plan !== "paid") { setSendResult("pro"); return; }
+    const unsent = clients.filter((c) => c.active && c.email && !c.linkSent).length;
+    if (unsent === 0) { setSendResult("Todos tus clientes con correo ya recibieron su link."); return; }
+    setSendingLinks(true);
+    setSendResult(null);
+    try {
+      const res = await fetch("/api/clients/send-links", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 403) {
+        setSendResult("pro");
+      } else if (res.ok) {
+        setSendResult(`✓ Link enviado a ${data.sent} cliente${data.sent === 1 ? "" : "s"}.${data.noEmail ? ` ${data.noEmail} sin correo.` : ""}`);
+        setClients((prev) => prev.map((c) => (c.active && c.email ? { ...c, linkSent: true } : c)));
+      } else {
+        setSendResult(data.error ?? "No se pudo enviar, intenta de nuevo.");
+      }
+    } catch {
+      setSendResult("Sin conexión. Intenta de nuevo.");
+    }
+    setSendingLinks(false);
   }
 
   function copyText(text: string, key: string) {
@@ -444,6 +476,41 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
           </button>
         </div>
       </div>
+
+      {/* Enviar link a todos (Pro) */}
+      {activeClients.length > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <button
+              onClick={sendLinksToAll}
+              disabled={sendingLinks}
+              className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-full bg-[#EEF3FE] text-[#2563EB] hover:bg-[#E0EBFF] disabled:opacity-60 transition"
+            >
+              {sendingLinks ? "Enviando…" : "✉️ Enviar link a todos por correo"}
+              {advisor?.plan !== "paid" && (
+                <span className="text-[10px] font-bold bg-[#2563EB] text-white px-1.5 py-0.5 rounded-full">PRO</span>
+              )}
+            </button>
+            {(() => {
+              const unsent = clients.filter((c) => c.active && c.email && !c.linkSent).length;
+              const noEmail = clients.filter((c) => c.active && !c.email).length;
+              return (
+                <span className="text-xs text-brand-gray-4">
+                  {unsent} sin enviar{noEmail ? ` · ${noEmail} sin correo` : ""}
+                </span>
+              );
+            })()}
+          </div>
+          {sendResult === "pro" ? (
+            <p className="text-xs text-[#6B727D] mt-2">
+              Enviar el link a todos de golpe es una función Pro.{" "}
+              <a href="/admin/perfil?upgrade=pro" className="text-[#2563EB] font-semibold underline">Actualiza a Pro</a>.
+            </p>
+          ) : sendResult ? (
+            <p className="text-xs text-[#1F9D5B] mt-2">{sendResult}</p>
+          ) : null}
+        </div>
+      )}
 
       {/* Resumen de deuda con corte obligatorio */}
       {owedSummary.count > 0 && (

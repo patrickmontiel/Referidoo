@@ -452,6 +452,48 @@ export async function sendVerificationEmail(payload: {
   }
 }
 
+// ─── 7b. Link al cliente (envío masivo Pro) ──────────────────────────────────
+
+// Le manda a un cliente su link de portal para que empiece a referir. Lo usa
+// el botón Pro "enviar link a todos". Devuelve ok para saber si contó el envío.
+export async function sendClientLinkEmail(payload: {
+  clientName: string;
+  clientEmail: string;
+  portalUrl: string;
+  advisorName: string;
+  companyName: string | null;
+}): Promise<{ ok: boolean }> {
+  const first = payload.clientName.split(" ")[0];
+  const dePart = payload.companyName ?? payload.advisorName;
+
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY no configurado — link no enviado a", payload.clientEmail);
+    return { ok: false };
+  }
+
+  const result = await resend.emails.send({
+    from: FROM,
+    to: [payload.clientEmail],
+    subject: `${first}, aquí está tu link para ganar premios`,
+    html: emailShell(`
+      ${header()}
+      <tr><td style="padding:32px 32px 20px">
+        <h1 style="margin:0 0 10px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">Hola ${first} 👋</h1>
+        <p style="margin:0 0 22px;font-size:14px;color:#6B727D;line-height:1.6">${dePart} te comparte tu link personal. Compártelo con tus amigos y familiares: cuando alguno contrate, ganas premios. Desde aquí ves tu avance en cualquier momento.</p>
+        ${pill(payload.portalUrl, "Ver mi link y mis premios →")}
+        <p style="margin:14px 0 0;font-size:12px;color:#9098A2;text-align:center">Es tu link privado — no lo pierdas.</p>
+      </td></tr>
+      ${footer("Referidoo — recompensas por recomendar a quienes quieres")}
+    `),
+  });
+
+  if (result.error) {
+    console.error("[email] Resend rechazó link de cliente:", JSON.stringify(result.error));
+    return { ok: false };
+  }
+  return { ok: true };
+}
+
 // ─── 8. Burbuja reclamada (aviso interno) ────────────────────────────────────
 
 export type BubbleClaimPayload = {
