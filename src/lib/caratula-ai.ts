@@ -95,9 +95,10 @@ export async function analyzeCaratula(params: {
   caratulaUrl: string;
   saleAmount: number;
   productType: string | null;
+  reading?: CaratulaReading | null; // A2: si ya se leyó al pre-llenar, se reusa (no re-llama a OpenAI)
 }) {
   try {
-    const reading = await readCaratula(params.caratulaUrl);
+    const reading = params.reading ?? (await readCaratula(params.caratulaUrl));
     if (!reading) return; // sin key / ilegible / PDF → queda "pendiente"
 
     // Verificación de PRODUCTO: si la IA leyó un ramo con claridad y NO cuadra

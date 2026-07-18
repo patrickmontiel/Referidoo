@@ -120,6 +120,8 @@ export default function ReferidosClient({
   const [caratulaUrl, setCaratulaUrl] = useState<string | null>(null);
   const [readingCaratula, setReadingCaratula] = useState(false);
   const [aiRead, setAiRead] = useState<{ producto: string | null; prima: number | null } | null>(null);
+  // "ok" leyó | "unreadable" foto mala | "unavailable" IA/blob caído (manual) | null
+  const [caratulaAiStatus, setCaratulaAiStatus] = useState<string | null>(null);
   const [convertError, setConvertError] = useState("");
   const [payTarget, setPayTarget] = useState<{ id: string; referrerName: string; amount: number; clabe?: string | null; clabeBank?: string | null; clabeHolder?: string | null } | null>(null);
   const [copiedField, setCopiedField] = useState("");
@@ -209,6 +211,7 @@ export default function ReferidosClient({
     setCaratulaFile(file);
     setCaratulaUrl(null);
     setAiRead(null);
+    setCaratulaAiStatus(null);
     setConvertError("");
     if (!file) return;
     setReadingCaratula(true);
@@ -224,17 +227,22 @@ export default function ReferidosClient({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: upData.url }),
         });
-        const rdData = await rd.json().catch(() => ({}));
-        if (rdData.reading) {
-          setAiRead(rdData.reading);
-          if (rdData.reading.producto) setProductType(rdData.reading.producto);
-          if (rdData.reading.prima) setSaleInput(formatNumberWithCommas(String(Math.round(rdData.reading.prima))));
+        if (rd.status === 429) {
+          setConvertError("Espera un momento e intenta de nuevo.");
+        } else {
+          const rdData = await rd.json().catch(() => ({}));
+          setCaratulaAiStatus(rdData.status ?? "unavailable");
+          if (rdData.reading) {
+            setAiRead(rdData.reading);
+            if (rdData.reading.producto) setProductType(rdData.reading.producto);
+            if (rdData.reading.prima) setSaleInput(formatNumberWithCommas(String(Math.round(rdData.reading.prima))));
+          }
         }
       } else {
         setConvertError(upData.error ?? "No se pudo subir la carátula, intenta de nuevo");
       }
     } catch {
-      /* la lectura IA es best-effort — no bloquea */
+      setCaratulaAiStatus("unavailable");
     }
     setReadingCaratula(false);
   }
@@ -269,9 +277,11 @@ export default function ReferidosClient({
         setConvertError("Sube la foto de la póliza — de ahí se lee el monto.");
         return;
       }
-      // Candado duro: el monto sale SOLO de la IA leyendo la póliza. Si no se
-      // pudo leer, no se convierte — así el asesor nunca reporta un monto a mano.
-      if (!aiRead?.prima) {
+      // Candado duro: el monto sale SOLO de la IA. Se bloquea solo cuando la
+      // FOTO es ilegible (unreadable). Si la IA/blob están CAÍDOS (unavailable),
+      // no bloqueamos — el asesor captura a mano y cae en la cola de revisión
+      // del dueño, para que una caída de OpenAI no tumbe todas las conversiones.
+      if (!aiRead?.prima && caratulaAiStatus !== "unavailable") {
         setConvertError("No pudimos leer el monto de la póliza en la foto. Sube una foto más clara y legible (bien iluminada, completa, sin reflejos).");
         return;
       }
@@ -297,12 +307,16 @@ export default function ReferidosClient({
       saleAmount,
       productType: productType || null,
       ...(uploadedUrl ? { caratulaUrl: uploadedUrl } : {}),
+      // A2: reusar la lectura que ya hizo la IA para NO leer la carátula dos
+      // veces. El servidor verifica sin una segunda llamada a OpenAI.
+      ...(aiRead?.prima ? { caratulaReading: aiRead } : {}),
     });
     setConvertTarget(null);
     setProductType("");
     setCaratulaFile(null);
     setCaratulaUrl(null);
     setAiRead(null);
+    setCaratulaAiStatus(null);
     if (advisorPlan === "freemium" && saleAmount && usedProduct) {
       const rates: Record<string, { freemium: number; paid: number }> = {
         PPR: { freemium: 0.0025, paid: 0.0015 },
@@ -570,9 +584,11 @@ export default function ReferidosClient({
         // para que el asesor no pueda bajar el monto y pagar menos comisión.
         const productLocked = !!aiRead?.producto;
         const amountLocked = !!aiRead?.prima;
-        // En prod (carátula requerida) el monto NUNCA se teclea: sale solo de la
-        // IA. Así el asesor no puede reportar un número bajo.
-        const amountReadOnly = amountLocked || initialCaratulaRequired;
+        // En prod el monto sale de la IA (readonly). Excepción: si la IA/blob
+        // están CAÍDOS (unavailable), se permite captura manual para no tumbar
+        // las conversiones — cae en la cola de revisión del dueño.
+        const aiUnavailable = caratulaAiStatus === "unavailable";
+        const amountReadOnly = amountLocked || (initialCaratulaRequired && !aiUnavailable);
         return (
           <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
             <div className="absolute inset-0 bg-black/25" onClick={() => setConvertTarget(null)} />
@@ -656,9 +672,14 @@ export default function ReferidosClient({
                       ✨ La IA leyó{aiRead.producto ? ` ${aiRead.producto}` : ""}{aiRead.prima ? ` · $${aiRead.prima.toLocaleString("es-MX")}` : ""} de la póliza y lo dejó bloqueado arriba. Solo confirma.
                     </p>
                   )}
-                  {!readingCaratula && caratulaUrl && !aiRead?.prima && (
+                  {!readingCaratula && caratulaUrl && !aiRead?.prima && caratulaAiStatus === "unreadable" && (
                     <p className="text-xs text-amber-700 mt-2 leading-snug">
                       ⚠️ No pudimos leer el monto de esta foto. Sube una más clara (bien iluminada, completa, sin reflejos) para poder convertir.
+                    </p>
+                  )}
+                  {!readingCaratula && caratulaUrl && !aiRead?.prima && caratulaAiStatus === "unavailable" && (
+                    <p className="text-xs text-[#6B727D] mt-2 leading-snug">
+                      La lectura automática no está disponible ahora. Captura el monto a mano — quedará marcado para revisión.
                     </p>
                   )}
                 </div>

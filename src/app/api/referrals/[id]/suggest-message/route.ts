@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
+import { onCooldown } from "@/lib/rate-limit";
 
 // Redacta el PRIMER mensaje de WhatsApp a un referido. El prompt codifica lo que
 // de verdad convierte en outreach de referidos (r/InsuranceAgent, r/sales, guías
@@ -10,6 +11,10 @@ import { getAdvisorSession } from "@/lib/auth";
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getAdvisorSession();
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+  if (onCooldown(`suggest:${session.advisorId}`, 3000)) {
+    return NextResponse.json({ error: "Espera un momento antes de generar otro." }, { status: 429 });
+  }
 
   const { id } = await params;
   const referral = await db.referral.findUnique({

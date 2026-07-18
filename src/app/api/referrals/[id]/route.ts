@@ -235,15 +235,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // sus propios errores — nunca truena la conversión.
     await grantUneteRewardsIfFirstConversion(referral.advisorId);
 
-    // Análisis IA de la carátula: corre DESPUÉS de responder (after()) para
-    // no frenar al asesor; si coincide con el monto se auto-valida.
+    // Análisis IA de la carátula: corre DESPUÉS de responder (after()) para no
+    // frenar al asesor. A2: si el cliente ya leyó la carátula al pre-llenar
+    // (caratulaReading), se reusa esa lectura en vez de re-llamar a OpenAI.
     if (typeof body.caratulaUrl === "string" && body.caratulaUrl && saleAmount) {
+      const preRead =
+        body.caratulaReading && typeof body.caratulaReading.prima === "number"
+          ? { prima: body.caratulaReading.prima, producto: body.caratulaReading.producto ?? null, confianza: "alta" as const, moneda: "MXN" }
+          : undefined;
       after(() =>
         analyzeCaratula({
           referralId: id,
           caratulaUrl: body.caratulaUrl,
           saleAmount,
           productType: productTypeForConversion,
+          reading: preRead,
         })
       );
     }

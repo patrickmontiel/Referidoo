@@ -307,8 +307,13 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
       if (res.status === 403) {
         setSendResult("pro");
       } else if (res.ok) {
-        setSendResult(`✓ Link enviado a ${data.sent} cliente${data.sent === 1 ? "" : "s"}.${data.noEmail ? ` ${data.noEmail} sin correo.` : ""}`);
-        setClients((prev) => prev.map((c) => (c.active && c.email ? { ...c, linkSent: true } : c)));
+        const rem = data.remaining ? ` Quedan ${data.remaining} — vuelve a tocar para el siguiente lote.` : "";
+        setSendResult(`✓ Link enviado a ${data.sent} cliente${data.sent === 1 ? "" : "s"}.${data.noEmail ? ` ${data.noEmail} sin correo.` : ""}${rem}`);
+        // Marca como enviados solo los del lote (los que no quedaron pendientes).
+        setClients((prev) => {
+          if (data.remaining) return prev; // recargamos en el siguiente toque
+          return prev.map((c) => (c.active && c.email ? { ...c, linkSent: true } : c));
+        });
       } else {
         setSendResult(data.error ?? "No se pudo enviar, intenta de nuevo.");
       }
