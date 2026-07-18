@@ -60,14 +60,14 @@ describe("POST /api/auth/register", () => {
     expect(res.status).toBe(409);
   });
 
-  it("creates an advisor on plan=freemium with emailVerified=false and sends a verification email", async () => {
+  it("creates an advisor on a 30-day Pro trial (plan=paid, paidUntil set) with emailVerified=false and sends a verification email", async () => {
     mockFindUnique.mockResolvedValue(null);
     mockCreate.mockResolvedValue({
       id: "adv1",
       name: "Ana",
       email: "a@b.com",
       emailVerified: false,
-      plan: "freemium",
+      plan: "paid",
       onboardedAt: null,
     });
 
@@ -76,12 +76,12 @@ describe("POST /api/auth/register", () => {
     expect(res.status).toBe(201);
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ plan: "freemium", emailVerified: false }),
+        data: expect.objectContaining({ plan: "paid", paidUntil: expect.any(Date), emailVerified: false }),
       })
     );
     expect(mockSendVerification).toHaveBeenCalledTimes(1);
     expect(mockSignToken).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "Ana", emailVerified: false, plan: "freemium", onboardedAt: null })
+      expect.objectContaining({ name: "Ana", emailVerified: false, plan: "paid", onboardedAt: null })
     );
     expect(mockSetAdvisorCookie).toHaveBeenCalledWith(expect.anything(), "token");
   });

@@ -189,6 +189,8 @@ export default function AdminLayoutShell({
   const [fadingOut, setFadingOut] = useState(false);
   const [welcomeName, setWelcomeName] = useState(initialAdvisorName);
   const [advisorPlan, setAdvisorPlan] = useState(initialPlan === "paid" ? "Plan Pro" : "Plan Gratis");
+  const [billingStatus, setBillingStatus] = useState<"paid" | "trial" | "trial_expired" | "freemium" | null>(null);
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [emailVerified, setEmailVerified] = useState(initialEmailVerified);
   const [showVerifiedBanner, setShowVerifiedBanner] = useState(false);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
@@ -254,6 +256,8 @@ export default function AdminLayoutShell({
         if (typeof d.plan === "string") {
           setAdvisorPlan(d.plan === "paid" ? "Plan Pro" : "Plan Gratis");
         }
+        if (typeof d.billingStatus === "string") setBillingStatus(d.billingStatus);
+        if (d.trialEndsAt !== undefined) setTrialEndsAt(d.trialEndsAt);
       })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -634,6 +638,14 @@ export default function AdminLayoutShell({
   const allTasksDone = !!taskState && doneCount === TASKS.length;
   const showTasksChip = !!taskState && !allTasksDone;
 
+  // Días restantes del trial Pro — solo avisamos en la recta final (≤7) para
+  // no molestar durante todo el mes.
+  const trialDaysLeft =
+    billingStatus === "trial" && trialEndsAt
+      ? Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+      : null;
+  const showTrialEnding = trialDaysLeft !== null && trialDaysLeft <= 7;
+
   return (
     <div className={`min-h-screen bg-brand-surface flex flex-col ${hankenGrotesk.className}`}>
       <Suspense fallback={null}>
@@ -815,6 +827,42 @@ export default function AdminLayoutShell({
                 {resendingVerif ? "enviando…" : "reenviar correo"}
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+      {billingStatus === "trial_expired" && (
+        <div className="bg-brand-blue-bg border-b border-brand-border-1 flex-shrink-0">
+          <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between gap-4">
+            <p className="text-sm text-brand-blue">
+              <span className="font-semibold">Tu mes de prueba terminó.</span>{" "}
+              Reactiva Pro para conservar comisiones más bajas, clientes ilimitados y los envíos por WhatsApp.
+            </p>
+            <Link
+              href="/admin/perfil?upgrade=pro"
+              className="flex-shrink-0 bg-brand-blue text-white text-sm font-semibold px-4 py-2 rounded-full hover:opacity-90 active:scale-[.98] transition whitespace-nowrap"
+            >
+              Reactivar Pro
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {showTrialEnding && (
+        <div className="bg-brand-blue-bg border-b border-brand-border-1 flex-shrink-0">
+          <div className="max-w-5xl mx-auto px-5 py-2.5 text-sm text-brand-blue flex items-center justify-between gap-3">
+            <span>
+              {trialDaysLeft! <= 0
+                ? "Tu prueba Pro termina hoy."
+                : `Tu prueba Pro termina en ${trialDaysLeft} ${trialDaysLeft === 1 ? "día" : "días"}.`}{" "}
+              Agrega tu método de pago para no perder los beneficios.
+            </span>
+            <Link
+              href="/admin/perfil?upgrade=pro"
+              className="underline whitespace-nowrap flex-shrink-0 text-brand-blue font-medium"
+            >
+              Agregar pago
+            </Link>
           </div>
         </div>
       )}

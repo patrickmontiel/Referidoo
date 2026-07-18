@@ -11,11 +11,26 @@ export async function POST() {
 
   const advisor = await db.advisor.findUnique({
     where: { id: session.advisorId },
-    select: { id: true, email: true, name: true, emailVerified: true, plan: true, onboardedAt: true, deletedAt: true },
+    select: { id: true, email: true, name: true, emailVerified: true, plan: true, paidUntil: true, mpPreapprovalId: true, onboardedAt: true, deletedAt: true },
   });
   if (!advisor || advisor.deletedAt) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
+
+  // Estado de facturación para el aviso del shell. Un "paid" sin suscripción
+  // de MP está en su trial; un freemium cuya fecha ya pasó y nunca dejó pago
+  // es un trial vencido → se le empuja a reactivar Pro.
+  const nowMs = Date.now();
+  const paidUntilMs = advisor.paidUntil ? advisor.paidUntil.getTime() : null;
+  const hasSubscription = !!advisor.mpPreapprovalId;
+  const billingStatus: "paid" | "trial" | "trial_expired" | "freemium" =
+    advisor.plan === "paid"
+      ? hasSubscription
+        ? "paid"
+        : "trial"
+      : !hasSubscription && paidUntilMs !== null && paidUntilMs <= nowMs
+        ? "trial_expired"
+        : "freemium";
 
   const token = signToken({
     advisorId: advisor.id,
@@ -31,6 +46,8 @@ export async function POST() {
     emailVerified: advisor.emailVerified,
     plan: advisor.plan,
     onboardedAt: advisor.onboardedAt?.toISOString() ?? null,
+    billingStatus,
+    trialEndsAt: advisor.paidUntil?.toISOString() ?? null,
   });
   setAdvisorCookie(res, token);
   return res;

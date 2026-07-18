@@ -6,6 +6,11 @@ import { sendVerificationEmail } from "@/lib/email";
 
 const MIN_PASSWORD_LENGTH = 8;
 
+// Todo asesor nuevo arranca con 30 días de Pro gratis (trial). Al vencer,
+// el cron billing-downgrade lo baja a freemium si no dejó una suscripción
+// de Mercado Pago activa. Un "paid" sin mpPreapprovalId = está en su trial.
+const TRIAL_MS = 30 * 24 * 60 * 60 * 1000;
+
 export async function POST(req: NextRequest) {
   const { name, email, password, companyName, ref } = await req.json();
 
@@ -42,7 +47,8 @@ export async function POST(req: NextRequest) {
         email,
         password: hashedPassword,
         companyName: companyName || null,
-        plan: "freemium",
+        plan: "paid",
+        paidUntil: new Date(Date.now() + TRIAL_MS),
         emailVerified: false,
         verificationToken,
       },
