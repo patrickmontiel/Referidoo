@@ -16,16 +16,16 @@ export async function POST(req: NextRequest) {
 
   try {
     const reading = await readCaratula(url);
-    if (!reading || (!reading.prima && !reading.producto)) {
+    // Solo devolvemos valores leídos con confianza — son los que se BLOQUEAN
+    // (el asesor no los puede bajar). Si la IA no está segura, van null y el
+    // campo queda editable con revisión del dueño.
+    const confident = reading && reading.confianza !== "baja";
+    const producto = confident ? reading!.producto : null;
+    const prima = confident ? reading!.prima : null;
+    if (!producto && !prima) {
       return NextResponse.json({ reading: null });
     }
-    return NextResponse.json({
-      reading: {
-        producto: reading.producto,
-        prima: reading.confianza === "baja" ? null : reading.prima,
-        confianza: reading.confianza,
-      },
-    });
+    return NextResponse.json({ reading: { producto, prima } });
   } catch (err) {
     console.error("[read-caratula] Error:", err);
     return NextResponse.json({ reading: null });

@@ -542,30 +542,40 @@ export default function ReferidosClient({
       {convertTarget && (() => {
         const isPPRVida = productType === "PPR" || productType === "Vida";
         const valueLabel = isPPRVida ? "Valor plan" : productType ? "Prima" : "Valor contratado";
+        // La lectura de la IA es la autoridad: lo que leyó de la póliza se BLOQUEA
+        // para que el asesor no pueda bajar el monto y pagar menos comisión.
+        const productLocked = !!aiRead?.producto;
+        const amountLocked = !!aiRead?.prima;
         return (
           <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
             <div className="absolute inset-0 bg-black/25" onClick={() => setConvertTarget(null)} />
             <div className="relative bg-white w-full max-w-sm rounded-t-3xl md:rounded-2xl p-6 shadow-2xl">
               <h2 className="font-semibold mb-1">Marcar como convertido</h2>
               <p className="text-sm text-brand-gray-4 mb-5">{convertTarget.name}</p>
-              <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">Producto contratado</label>
-              <div className="flex flex-wrap gap-2 mb-5">
+              <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">
+                Producto contratado {productLocked && <span className="text-[#1F9D5B] normal-case tracking-normal">· 🔒 leído de la póliza</span>}
+              </label>
+              <div className="flex flex-wrap gap-2 mb-1">
                 {["PPR", "Vida", "Daños/Auto", "GMM", "Otro"].map((type) => (
                   <button
                     key={type}
                     type="button"
+                    disabled={productLocked}
                     onClick={() => setProductType(type === productType ? "" : type)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition border ${
                       productType === type
                         ? "bg-brand-ink text-white border-brand-ink"
                         : "bg-white text-brand-gray-2 border-brand-border-4 hover:bg-brand-surface"
-                    }`}
+                    } ${productLocked ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     {type}
                   </button>
                 ))}
               </div>
-              <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">{valueLabel}</label>
+              <div className="mb-5" />
+              <label className="block text-xs text-brand-gray-4 uppercase tracking-wide mb-2">
+                {valueLabel} {amountLocked && <span className="text-[#1F9D5B] normal-case tracking-normal">· 🔒 leído de la póliza</span>}
+              </label>
               <div className="relative mb-2">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-gray-4 text-sm font-medium">$</span>
                 <input
@@ -575,13 +585,19 @@ export default function ReferidosClient({
                   value={saleInput}
                   onChange={(e) => setSaleInput(formatNumberWithCommas(e.target.value))}
                   required
-                  className="w-full pl-8 pr-4 py-3 border border-brand-border-4 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition"
-                  autoFocus
+                  readOnly={amountLocked}
+                  className={`w-full pl-8 pr-4 py-3 border rounded-xl text-sm focus:outline-none transition ${
+                    amountLocked
+                      ? "border-[#1F9D5B]/40 bg-[#1F9D5B]/5 text-[#0B0B0C] font-semibold cursor-not-allowed"
+                      : "border-brand-border-4 focus:ring-2 focus:ring-brand-ink"
+                  }`}
+                  autoFocus={!amountLocked}
                 />
               </div>
               <p className="text-[11.5px] text-brand-gray-4 leading-snug mb-4">
-                Usa el monto real de la carátula — define el premio de tu cliente y tu
-                comisión. Referidoo valida muestras contra carátula de póliza.
+                {amountLocked
+                  ? "El monto lo leyó la IA de la póliza y define tu comisión — no es editable. Si es incorrecto, cambia la carátula por una foto más clara."
+                  : "Usa el monto real de la carátula — define el premio de tu cliente y tu comisión. Referidoo valida contra la carátula."}
               </p>
               {initialCaratulaRequired && (
                 <div className="mb-5">
@@ -608,7 +624,7 @@ export default function ReferidosClient({
                   )}
                   {!readingCaratula && aiRead && (aiRead.producto || aiRead.prima) && (
                     <p className="text-xs text-[#1F9D5B] mt-2 leading-snug">
-                      ✨ La IA leyó{aiRead.producto ? ` ${aiRead.producto}` : ""}{aiRead.prima ? ` · $${aiRead.prima.toLocaleString("es-MX")}` : ""} y lo llenó arriba. Confirma o corrige.
+                      ✨ La IA leyó{aiRead.producto ? ` ${aiRead.producto}` : ""}{aiRead.prima ? ` · $${aiRead.prima.toLocaleString("es-MX")}` : ""} de la póliza y lo dejó bloqueado arriba. Solo confirma.
                     </p>
                   )}
                 </div>
