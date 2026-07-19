@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import PrimerosPasosCard from "./PrimerosPasosCard";
+import BolaDeNieveCard from "./BolaDeNieveCard";
 
 type Referral = {
   id: string;
@@ -153,6 +154,9 @@ export default function AdminOverviewClient({ referrals, advisor, clientCount }:
           </div>
         </div>
       </div>
+
+      {/* Tu bola de nieve — proyección de valor (arranque en frío) */}
+      <BolaDeNieveCard initialClientCount={clientCount} />
 
       {/* Recent referrals */}
       <div data-tour="recent" className="bg-white rounded-2xl border border-brand-border-1 mb-5">
