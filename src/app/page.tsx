@@ -55,8 +55,8 @@ const FEATURES = [
     body: "Cada referido que llega por el link de un cliente aparece en tu pipeline — quién lo mandó, cuándo, y en qué etapa está.",
   },
   {
-    title: "Premios automáticos",
-    body: "Escalera de premios para Vida y PPR, premios burbuja para Auto y GMM. Tú configuras los montos, Referidoo hace las cuentas.",
+    title: "Premios sin cuentas a mano",
+    body: "Escalera de premios para Vida y PPR, premios burbuja para Auto y GMM. Tú configuras los montos y tú pagas; nosotros llevamos la cuenta de a quién le toca cuánto y tu cliente lo ve, sin que persigas CLABEs.",
   },
   {
     title: "Portal para tus clientes",
@@ -70,8 +70,8 @@ const FEATURES = [
 
 const COMPARISON = [
   { antes: "Cuentas tus referidos a mano, en un chat de WhatsApp que ya nadie revisa", despues: "Cada referido se registra solo — su estatus siempre a la vista, sin perseguir a nadie" },
-  { antes: "Se te olvida quién te refirió a quién, o cuánto le debes", despues: "El premio se calcula solo, con tus propias reglas. Cero cuentas a mano" },
-  { antes: "Tu cliente no tiene idea de cuánto le falta para su premio, ni cómo reclamarlo", despues: "Tu cliente ve su progreso y reclama su premio solo, desde su propio portal" },
+  { antes: "Se te olvida quién te refirió a quién, o cuánto le debes", despues: "Siempre sabes quién refirió a quién y cuánto le debes. Nosotros lo llevamos, tú solo pagas" },
+  { antes: "Tu cliente no tiene idea de cuánto le falta para su premio, ni cómo reclamarlo", despues: "Tu cliente ve su progreso y pide su premio desde su portal, con sus datos listos para que le pagues" },
 ];
 
 const SALES_FAQ = [
@@ -174,9 +174,9 @@ export default async function Home() {
             Cero cuentas a mano. Cero premios olvidados.
           </h2>
           <p className="text-[#5A626E] leading-[1.6]" style={{ fontSize: 18 }}>
-            Cuando un referido cierra, Referidoo ya calculó el premio de tu
-            cliente y se lo mostró. Configuras tus reglas una vez — y te olvidas
-            de las cuentas para siempre.
+            Cuando un referido cierra, Referidoo ya sabe qué premio le toca a tu
+            cliente según tus reglas y se lo muestra. Tú configuras una vez, y
+            nosotros llevamos la cuenta de a quién le debes.
           </p>
         </ScrollReveal>
       </section>
@@ -185,7 +185,7 @@ export default async function Home() {
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal className="text-center mb-10">
           <h2 className={`${SECTION_HEADING} mb-4 max-w-xl mx-auto text-balance`} style={SECTION_HEADING_SIZE}>
-            Tú pones los montos. <BrandWord /> hace las cuentas.
+            Tú pones los montos. <BrandWord /> lleva la cuenta.
           </h2>
           <p className="text-[#5A626E] max-w-lg mx-auto leading-[1.6] mb-3" style={{ fontSize: 18 }}>
             Dos formas de premiar, según el producto — tú decides los números,
