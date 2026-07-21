@@ -7,8 +7,8 @@ import { formatCurrency } from "@/lib/utils";
 // Son estimaciones conservadoras, no promesas. Patrick: si tus números reales
 // de comisión o cierre son otros, cámbialos aquí — es lo único que hay que tocar.
 const REFERRALS_PER_CLIENT_6MO = 0.5;   // referidos que manda un cliente en 6 meses si se le pide
-const CLOSE_RATE = 0.35;                // los referidos cierran mucho mejor que un lead frío
-const AVG_COMMISSION_PER_CLOSE = 6500;  // comisión promedio del asesor por póliza cerrada (MXN)
+const CLOSE_RATE = 0.26;                // ~26%, alineado a la investigación citada en la landing (ReferralMath)
+const AVG_COMMISSION_PER_CLOSE = 13000; // comisión promedio del asesor por póliza cerrada (MXN)
 const DEFAULT_PRIZE_PER_CLOSE = 1500;   // premio promedio que el asesor paga al que refirió
 const HORIZON_MONTHS = 6;
 
