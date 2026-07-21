@@ -8,7 +8,6 @@ import { LandingFooter } from "@/components/LandingFooter";
 import { FaqAccordion } from "@/components/FaqAccordion";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { HeroDemo } from "@/components/landing/HeroDemo";
-import { ReferralMath } from "@/components/landing/ReferralMath";
 import { ChannelData } from "@/components/landing/ChannelData";
 import { LiquidBubble } from "@/components/landing/LiquidBubble";
 import { BrandWord } from "@/components/landing/BrandWord";
@@ -442,9 +441,6 @@ export default async function Home() {
           </div>
         </div>
       </section>
-
-      {/* La matemática de referidos */}
-      <ReferralMath />
 
       {/* Nota de acceso anticipado */}
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
