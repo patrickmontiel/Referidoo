@@ -164,6 +164,49 @@ export default async function Home() {
         <HeroDemo />
       </section>
 
+      {/* Cómo funciona — 3 pasos (condensado de /como-funciona) */}
+      <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
+        <ScrollReveal className="text-center mb-10">
+          <h2 className={`${SECTION_HEADING} mb-3 text-balance`} style={SECTION_HEADING_SIZE}>
+            Cómo funciona
+          </h2>
+          <p className="text-[#5A626E] max-w-lg mx-auto leading-[1.6]" style={{ fontSize: 18 }}>
+            De un referido a un premio, sin perseguir a nadie.
+          </p>
+        </ScrollReveal>
+        <div className="grid md:grid-cols-3 gap-4 max-w-[1000px] mx-auto">
+          {[
+            {
+              n: "01",
+              title: "Tu cliente comparte su link",
+              body: "Cada cliente tuyo tiene su propio link. Lo manda por WhatsApp a quien quiera; el referido deja su nombre y teléfono en menos de un minuto.",
+            },
+            {
+              n: "02",
+              title: "Cae solo en tu panel",
+              body: "El referido aparece directo en tu pipeline: quién lo mandó y en qué etapa va. Tú lo trabajas y lo cierras como siempre.",
+            },
+            {
+              n: "03",
+              title: "Cierras, y el premio queda claro",
+              body: "Al cerrar, subes una foto de la carátula de la póliza. Con eso calculamos nuestra comisión, una sola vez, y tu cliente ve en su portal el premio que tú configuraste, listo para que se lo pagues.",
+            },
+          ].map((s, i) => (
+            <ScrollReveal key={s.n} delayMs={i * 60} className="bg-[#F4F5F7] rounded-[20px] p-6 border border-[#ECEDEF]">
+              <span className="text-[#2563EB] font-extrabold text-2xl">{s.n}</span>
+              <h3 className="font-bold text-[19px] text-[#0B0B0C] mt-2 mb-2 text-balance">{s.title}</h3>
+              <p className="text-[#5A626E] leading-[1.6]" style={{ fontSize: 15 }}>{s.body}</p>
+            </ScrollReveal>
+          ))}
+        </div>
+        <ScrollReveal className="text-center mt-8">
+          <Link href="/como-funciona" className="inline-flex items-center gap-1.5 text-sm font-medium text-[#2563EB] hover:gap-2.5 transition-[gap]">
+            Ver los 5 pasos a detalle
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </Link>
+        </ScrollReveal>
+      </section>
+
       {/* Por qué referidos — data de la industria */}
       <ChannelData />
 
