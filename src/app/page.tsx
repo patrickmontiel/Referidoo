@@ -201,7 +201,7 @@ export default async function Home() {
         </div>
         <ScrollReveal className="text-center mt-8">
           <Link href="/como-funciona" className="inline-flex items-center gap-1.5 text-sm font-medium text-[#2563EB] hover:gap-2.5 transition-[gap]">
-            Ver los 5 pasos a detalle
+            Ver el flujo completo, desde los 3 lados
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </Link>
         </ScrollReveal>
