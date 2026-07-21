@@ -4,16 +4,22 @@ import { useState } from "react";
 import { formatCurrency } from "@/lib/utils";
 
 // ── Supuestos de la proyección (AJUSTABLES) ──────────────────────────────────
-// Son estimaciones conservadoras, no promesas. Patrick: si tus números reales
-// de comisión o cierre son otros, cámbialos aquí — es lo único que hay que tocar.
+// Estimaciones conservadoras, no promesas. Si tus números reales son otros,
+// cámbialos aquí — es lo único que hay que tocar.
 const REFERRALS_PER_CLIENT_6MO = 0.5;   // referidos que manda un cliente en 6 meses si se le pide
 const CLOSE_RATE = 0.26;                // ~26%, alineado a la investigación citada en la landing (ReferralMath)
-const AVG_COMMISSION_PER_CLOSE = 13000; // comisión promedio del asesor por póliza cerrada (MXN)
+const AVG_COMMISSION_PER_CLOSE = 13000; // ingreso (comisión) del asesor por póliza cerrada (MXN)
 const DEFAULT_PRIZE_PER_CLOSE = 1500;   // premio promedio que el asesor paga al que refirió
 const HORIZON_MONTHS = 6;
 
+// Comisión de Referidoo = sobre el "valor plan" de la venta (no la prima
+// mensual). Valor plan = prima mensual × 12 × años. Ej. PPR: $2,000 × 12 × 25 =
+// $600,000. Referidoo cobra un % chico, una sola vez.
+const AVG_SALE_VALUE_PER_CLOSE = 600000; // valor plan promedio por venta cerrada (MXN)
+const REFERIDOO_RATE_FREEMIUM = 0.0025;  // 0.25% (PPR/Vida, plan Gratis)
+const REFERIDOO_RATE_PRO = 0.0015;       // 0.15% (PPR/Vida, plan Pro)
+
 // Forma de la curva: fracción del ingreso de 6 meses acumulada mes a mes.
-// Arranca lento (los referidos tardan en llegar y cerrar) y acelera.
 const CUMULATIVE_SHAPE = [0.06, 0.14, 0.3, 0.52, 0.8, 1];
 
 type Props = {
@@ -33,6 +39,10 @@ export default function BolaDeNieveCard({ initialClientCount, avgPrizePerClose }
   const closes = Math.round(referrals * CLOSE_RATE);
   const commission = closes * AVG_COMMISSION_PER_CLOSE;
   const prizes = closes * prize;
+  const feeFreemium = Math.round(closes * AVG_SALE_VALUE_PER_CLOSE * REFERIDOO_RATE_FREEMIUM);
+  const feePro = Math.round(closes * AVG_SALE_VALUE_PER_CLOSE * REFERIDOO_RATE_PRO);
+  const netFreemium = commission - prizes - feeFreemium;
+  const netPro = commission - prizes - feePro;
 
   return (
     <div className="mb-5">
@@ -48,8 +58,8 @@ export default function BolaDeNieveCard({ initialClientCount, avgPrizePerClose }
             <div className="text-[clamp(2rem,7vw,42px)] font-extrabold tracking-[-0.03em] leading-none tabular-nums">
               ~<span className="text-[#2563EB]">{formatCurrency(commission)}</span>
             </div>
-            <p className="text-[13px] text-brand-gray-3 mt-2 max-w-[30ch]">
-              de ingreso estimado en {HORIZON_MONTHS} meses, con tus{" "}
+            <p className="text-[13px] text-brand-gray-3 mt-2 max-w-[32ch]">
+              de ingreso por esas ventas en {HORIZON_MONTHS} meses, con tus{" "}
               <span className="font-semibold text-[#0B0B0C]">{clients}</span> clientes.
             </p>
 
@@ -84,7 +94,23 @@ export default function BolaDeNieveCard({ initialClientCount, avgPrizePerClose }
             <div className="mt-5 flex flex-col gap-2">
               <Break dot="#2563EB" label="Referidos que cierran (est.)" value={`~${closes}`} />
               <Break dot="#1F9D5B" label="Tu comisión por esas ventas" value={`~${formatCurrency(commission)}`} />
-              <Break dot="#8A8F98" label="Premios a repartir a clientes" value={`~${formatCurrency(prizes)}`} />
+              <Break dot="#8A8F98" label="Premios a repartir a clientes" value={`−${formatCurrency(prizes)}`} />
+              <PlanBreak
+                dot="#8A8F98"
+                label="Comisión de Referidoo"
+                freemium={`−${formatCurrency(feeFreemium)}`}
+                pro={`−${formatCurrency(feePro)}`}
+              />
+              <div className="flex items-center justify-between pt-2.5 mt-1 border-t border-brand-border-1">
+                <span className="font-bold text-[#0B0B0C] text-[13.5px]">Lo que te llevas</span>
+                <span className="flex items-center gap-2 text-[12.5px] tabular-nums">
+                  <span className="text-brand-gray-3">
+                    Gratis <b className="text-[#0B0B0C]">{formatCurrency(netFreemium)}</b>
+                  </span>
+                  <span className="text-brand-gray-4">·</span>
+                  <span className="text-[#2563EB] font-bold">Pro {formatCurrency(netPro)}</span>
+                </span>
+              </div>
             </div>
           </div>
 
@@ -121,9 +147,10 @@ export default function BolaDeNieveCard({ initialClientCount, avgPrizePerClose }
           {showHow && (
             <p className="text-[12px] text-brand-gray-4 leading-relaxed mt-2">
               Estimación, no una promesa. Partimos de que cada cliente manda ~{REFERRALS_PER_CLIENT_6MO} referidos
-              en {HORIZON_MONTHS} meses si se le pide, que ~{Math.round(CLOSE_RATE * 100)}% cierra (los referidos
-              cierran mucho mejor que un lead frío), con una comisión promedio de {formatCurrency(AVG_COMMISSION_PER_CLOSE)}{" "}
-              por venta y un premio de {formatCurrency(prize)} por referido cerrado. Tus números reales mandan.
+              en {HORIZON_MONTHS} meses si se le pide, y que ~{Math.round(CLOSE_RATE * 100)}% cierra (los referidos
+              cierran mucho mejor que un lead frío). Nuestra comisión se calcula sobre el valor plan de la venta
+              ({Math.round(REFERIDOO_RATE_FREEMIUM * 10000) / 100}% en Gratis, {Math.round(REFERIDOO_RATE_PRO * 10000) / 100}% en Pro),
+              una sola vez. Tus números reales mandan.
             </p>
           )}
         </div>
@@ -140,6 +167,24 @@ function Break({ dot, label, value }: { dot: string; label: string; value: strin
         {label}
       </span>
       <span className="font-bold text-[#0B0B0C] tabular-nums">{value}</span>
+    </div>
+  );
+}
+
+function PlanBreak({ dot, label, freemium, pro }: { dot: string; label: string; freemium: string; pro: string }) {
+  return (
+    <div className="flex items-center justify-between text-[13px]">
+      <span className="text-brand-gray-2 flex items-center gap-2">
+        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: dot }} />
+        {label}
+      </span>
+      <span className="flex items-center gap-2 text-[12.5px] tabular-nums">
+        <span className="text-brand-gray-3">
+          Gratis <b className="text-[#0B0B0C]">{freemium}</b>
+        </span>
+        <span className="text-brand-gray-4">·</span>
+        <span className="text-[#2563EB]">Pro <b>{pro}</b></span>
+      </span>
     </div>
   );
 }

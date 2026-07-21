@@ -12,6 +12,7 @@ import { ReferralMath } from "@/components/landing/ReferralMath";
 import { ChannelData } from "@/components/landing/ChannelData";
 import { LiquidBubble } from "@/components/landing/LiquidBubble";
 import { BrandWord } from "@/components/landing/BrandWord";
+import BolaDeNieveCard from "@/components/BolaDeNieveCard";
 
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
@@ -308,6 +309,13 @@ export default async function Home() {
               que tengas que avisarle. Montos y meta, configurables.
             </p>
           </ScrollReveal>
+        </div>
+      </section>
+
+      {/* Tu bola de nieve — misma tarjeta interactiva que el panel del asesor */}
+      <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
+        <div className="max-w-[820px] mx-auto">
+          <BolaDeNieveCard initialClientCount={50} />
         </div>
       </section>
 

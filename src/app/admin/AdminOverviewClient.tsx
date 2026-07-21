@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import PrimerosPasosCard from "./PrimerosPasosCard";
-import BolaDeNieveCard from "./BolaDeNieveCard";
+import BolaDeNieveCard from "@/components/BolaDeNieveCard";
 
 type Referral = {
   id: string;
