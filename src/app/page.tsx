@@ -208,9 +208,6 @@ export default async function Home() {
         </ScrollReveal>
       </section>
 
-      {/* Por qué referidos — data de la industria */}
-      <ChannelData />
-
       {/* Feature highlight */}
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal className="max-w-[760px] mx-auto text-center">
@@ -390,6 +387,9 @@ export default async function Home() {
           </ScrollReveal>
         </div>
       </section>
+
+      {/* Por qué referidos — data de la industria (movido abajo: primero explicar, luego convencer) */}
+      <ChannelData />
 
       {/* Comparison */}
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
@@ -585,6 +585,22 @@ export default async function Home() {
           </ScrollReveal>
 
         </div>
+
+        {/* Qué tan baja es la comisión */}
+        <ScrollReveal className="max-w-[760px] mx-auto mt-4">
+          <div className="bg-[#F4F5F7] rounded-[20px] border border-[#ECEDEF] p-6">
+            <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-2">¿Qué tan baja es la comisión?</p>
+            <p className="text-[#3F4651] leading-[1.6]" style={{ fontSize: 15 }}>
+              Se calcula sobre el <strong className="text-[#0B0B0C]">valor plan</strong> de la venta — la prima mensual por 12 y por los años del plan — una sola vez, al emitir la póliza.
+            </p>
+            <p className="text-[#3F4651] leading-[1.6] mt-2" style={{ fontSize: 15 }}>
+              Ejemplo: un PPR de $2,000 al mes a 25 años son <strong className="text-[#0B0B0C]">$600,000 de valor plan</strong>. Nuestra comisión es <strong className="text-[#0B0B0C]">$1,500</strong> en Gratis o <strong className="text-[#2563EB]">$900</strong> en Pro. Una fracción de lo que tú ganas por esa venta.
+            </p>
+            <p className="text-[#8A8F98] leading-[1.6] mt-3" style={{ fontSize: 13 }}>
+              La sacamos de la carátula de la póliza — por eso te la pedimos al cerrar. Es una foto, nada más.
+            </p>
+          </div>
+        </ScrollReveal>
       </section>
 
       {/* CTA final */}

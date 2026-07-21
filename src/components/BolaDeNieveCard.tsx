@@ -18,6 +18,7 @@ const HORIZON_MONTHS = 6;
 const AVG_SALE_VALUE_PER_CLOSE = 600000; // valor plan promedio por venta cerrada (MXN)
 const REFERIDOO_RATE_FREEMIUM = 0.0025;  // 0.25% (PPR/Vida, plan Gratis)
 const REFERIDOO_RATE_PRO = 0.0015;       // 0.15% (PPR/Vida, plan Pro)
+const MEMBERSHIP_MONTHLY = 539;          // costo mensual del plan Pro (MXN)
 
 // Forma de la curva: fracción del ingreso de 6 meses acumulada mes a mes.
 const CUMULATIVE_SHAPE = [0.06, 0.14, 0.3, 0.52, 0.8, 1];
@@ -41,8 +42,9 @@ export default function BolaDeNieveCard({ initialClientCount, avgPrizePerClose }
   const prizes = closes * prize;
   const feeFreemium = Math.round(closes * AVG_SALE_VALUE_PER_CLOSE * REFERIDOO_RATE_FREEMIUM);
   const feePro = Math.round(closes * AVG_SALE_VALUE_PER_CLOSE * REFERIDOO_RATE_PRO);
+  const membershipPro = MEMBERSHIP_MONTHLY * HORIZON_MONTHS; // Pro paga membresía; Gratis no
   const netFreemium = commission - prizes - feeFreemium;
-  const netPro = commission - prizes - feePro;
+  const netPro = commission - prizes - feePro - membershipPro;
 
   return (
     <div className="mb-5">
@@ -101,6 +103,12 @@ export default function BolaDeNieveCard({ initialClientCount, avgPrizePerClose }
                 freemium={`−${formatCurrency(feeFreemium)}`}
                 pro={`−${formatCurrency(feePro)}`}
               />
+              <PlanBreak
+                dot="#8A8F98"
+                label={`Membresía Pro · ${HORIZON_MONTHS} meses`}
+                freemium="—"
+                pro={`−${formatCurrency(membershipPro)}`}
+              />
               <div className="flex items-center justify-between pt-2.5 mt-1 border-t border-brand-border-1">
                 <span className="font-bold text-[#0B0B0C] text-[13.5px]">Lo que te llevas</span>
                 <span className="flex items-center gap-2 text-[12.5px] tabular-nums">
@@ -150,7 +158,8 @@ export default function BolaDeNieveCard({ initialClientCount, avgPrizePerClose }
               en {HORIZON_MONTHS} meses si se le pide, y que ~{Math.round(CLOSE_RATE * 100)}% cierra (los referidos
               cierran mucho mejor que un lead frío). Nuestra comisión se calcula sobre el valor plan de la venta
               ({Math.round(REFERIDOO_RATE_FREEMIUM * 10000) / 100}% en Gratis, {Math.round(REFERIDOO_RATE_PRO * 10000) / 100}% en Pro),
-              una sola vez. Tus números reales mandan.
+              una sola vez. El neto de Pro ya descuenta la membresía ({formatCurrency(MEMBERSHIP_MONTHLY)}/mes).
+              Tus números reales mandan.
             </p>
           )}
         </div>
