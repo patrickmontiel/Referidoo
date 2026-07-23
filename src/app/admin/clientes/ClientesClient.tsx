@@ -644,6 +644,45 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
         </form>
       )}
 
+      {/* Recorrido del cliente de prueba: cuando el asesor se agregó a sí mismo,
+          lo llevamos a explorar su portal y a eliminarlo cuando termine. */}
+      {!showForm && advisor?.email && (() => {
+        const advEmail = advisor.email!.toLowerCase();
+        const sc = clients.find((c) => c.email && c.email.toLowerCase() === advEmail);
+        if (!sc) return null;
+        const base = typeof window !== "undefined" ? window.location.origin : "https://referidoo.com";
+        return (
+          <div className="bg-brand-blue-bg border border-[#DCE6FB] rounded-2xl p-4 mb-4">
+            <p className="text-sm font-semibold text-[#0B0B0C]">Tu cliente de prueba: {sc.name.split(" ")[0]} (eres tú)</p>
+            <p className="text-[13px] text-brand-gray-3 mt-1 leading-relaxed">
+              Así se ve un cliente registrado. Ábrelo como si fueras tu cliente para ver su portal, su link y sus premios — pícale a todo para entender el flujo completo. Cuando termines, elimínalo.
+            </p>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <a
+                href={`${base}/c/${sc.accessToken}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-semibold bg-brand-blue text-white px-4 py-2 rounded-full hover:opacity-90 active:scale-[.98] transition"
+              >
+                Abrir su portal
+              </a>
+              <button
+                onClick={() => copyLink(sc)}
+                className="text-sm font-semibold bg-white border border-[#DADCE0] text-[#3F4651] px-4 py-2 rounded-full hover:bg-[#F4F5F7] active:scale-[.98] transition"
+              >
+                {copiedId === sc.id ? "Copiado" : "Copiar su link"}
+              </button>
+              <button
+                onClick={() => deactivate(sc.id)}
+                className="text-sm font-medium text-red-600 px-4 py-2 rounded-full border border-red-100 hover:bg-red-50 active:scale-[.98] transition"
+              >
+                Ya probé, eliminar
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
       {loading ? (
         <div className="flex justify-center py-12">
           <div className="w-5 h-5 border-2 border-[#0B0B0C] border-t-transparent rounded-full animate-spin" />
