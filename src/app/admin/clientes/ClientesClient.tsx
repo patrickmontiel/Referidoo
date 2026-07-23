@@ -66,7 +66,7 @@ function owedLabel(o: Owed): string {
   return `Debe ${money} · ${o.daysLeft}d`;
 }
 
-type Advisor = { name: string; companyName: string | null; plan?: string };
+type Advisor = { name: string; companyName: string | null; plan?: string; email?: string | null; phone?: string | null };
 type CsvRow = { name: string; phone: string; email: string; policyNumber: string };
 type ImportResult = { name: string; ok: boolean; error?: string };
 
@@ -598,7 +598,18 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
       {/* New client form */}
       {showForm && (
         <form onSubmit={handleCreate} className="bg-white border border-[#ECEDEF] rounded-2xl p-5 mb-4 space-y-4">
-          <h2 className="font-semibold text-[#0B0B0C]">Nuevo cliente</h2>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h2 className="font-semibold text-[#0B0B0C]">Nuevo cliente</h2>
+            {clients.length === 0 && advisor?.email && (
+              <button
+                type="button"
+                onClick={() => setForm({ name: advisor.name, phone: advisor.phone ?? "", email: advisor.email ?? "", policyNumber: "" })}
+                className="text-xs font-medium text-[#2563EB] hover:underline bg-transparent border-0 p-0 cursor-pointer text-left"
+              >
+                ¿Solo probando? Agrégate a ti mismo para ver cómo funciona.
+              </button>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div data-tour="client-name" className="col-span-2">
               <label className="block text-xs mb-1.5 uppercase tracking-wide" style={{ color: "#9098A2" }}>Nombre *</label>
