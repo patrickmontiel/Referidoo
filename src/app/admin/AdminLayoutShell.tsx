@@ -473,6 +473,8 @@ export default function AdminLayoutShell({
   function launchTask(id: TaskId) {
     const task = TASKS.find((t) => t.id === id);
     if (!task) return;
+    // Paso 1 obligatorio: sin correo verificado, las demás tareas están bloqueadas.
+    if (id !== "email" && taskStateRef.current && !taskStateRef.current.emailVerified) return;
     if (id === "share" && taskStateRef.current && !taskStateRef.current.hasClient) {
       startFlow([
         { intro: true, title: "Primero, un cliente",
@@ -719,20 +721,37 @@ export default function AdminLayoutShell({
                       <p className="text-sm font-bold text-[#0B0B0C]">Primeros pasos</p>
                       <p className="text-xs text-[#9098A2]">Completa tu cuenta — {doneCount} de {TASKS.length}</p>
                     </div>
+                    {!(taskState?.emailVerified ?? false) && (
+                      <p className="text-xs text-[#2563EB] px-3 pb-1.5">Verifica tu correo para desbloquear el resto.</p>
+                    )}
                     {TASKS.map((t) => {
                       const done = taskState ? t.done(taskState) : false;
+                      const verified = taskState?.emailVerified ?? false;
+                      const locked = t.id !== "email" && !verified;
                       return (
                         <button
                           key={t.id}
-                          disabled={done}
-                          onClick={() => { setShowChecklist(false); launchTask(t.id); }}
-                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-left transition ${done ? "text-[#9098A2] cursor-default" : "text-[#0B0B0C] hover:bg-[#F4F5F7]"}`}
+                          disabled={done || locked}
+                          aria-disabled={done || locked}
+                          onClick={() => { if (locked) return; setShowChecklist(false); launchTask(t.id); }}
+                          className={cn(
+                            "w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-left transition",
+                            done || locked ? "text-[#9098A2] cursor-default" : "text-[#0B0B0C] hover:bg-[#F4F5F7]"
+                          )}
                         >
-                          <span className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${done ? "bg-[#1F9D5B]" : "border-2 border-[#DADCE0]"}`}>
-                            {done && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>}
+                          <span className={cn("flex items-center gap-2.5 flex-1 min-w-0", locked && "blur-[1.5px] opacity-55")}>
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${done ? "bg-[#1F9D5B]" : "border-2 border-[#DADCE0]"}`}>
+                              {done && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>}
+                            </span>
+                            <span className={done ? "line-through" : ""}>{t.label}</span>
                           </span>
-                          <span className={done ? "line-through" : ""}>{t.label}</span>
-                          {!done && <span className="ml-auto text-[#2563EB] font-semibold">→</span>}
+                          {done ? null : locked ? (
+                            <span className="text-[#9098A2] flex-shrink-0" aria-hidden="true">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            </span>
+                          ) : (
+                            <span className="text-[#2563EB] font-semibold">→</span>
+                          )}
                         </button>
                       );
                     })}
