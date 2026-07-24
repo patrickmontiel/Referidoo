@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatCurrency, formatDate, formatNumberWithCommas } from "@/lib/utils";
+import { DEFAULT_CLIENT_SHARE_MESSAGE, DEFAULT_ADVISOR_INVITE_MESSAGE } from "@/lib/message-templates";
 
 type Tier = { amount: number; label: string };
 
@@ -65,8 +66,8 @@ export default function PremiosPage() {
   ]);
   const [afterLastTier, setAfterLastTier] = useState("cycle");
   const [flatAmount, setFlatAmount] = useState(1500);
-  const [whatsappMessage, setWhatsappMessage] = useState("");
-  const [advisorInviteMessage, setAdvisorInviteMessage] = useState("");
+  const [whatsappMessage, setWhatsappMessage] = useState(DEFAULT_CLIENT_SHARE_MESSAGE);
+  const [advisorInviteMessage, setAdvisorInviteMessage] = useState(DEFAULT_ADVISOR_INVITE_MESSAGE);
   const [welcomeMessage, setWelcomeMessage] = useState("");
   const [schedulingUrl, setSchedulingUrl] = useState("");
   const [loadingTiers, setLoadingTiers] = useState(true);
@@ -94,8 +95,8 @@ export default function PremiosPage() {
         if (s) {
           setAfterLastTier(s.afterLastTier ?? "cycle");
           setFlatAmount(s.flatAmount ?? 1500);
-          setWhatsappMessage(s.whatsappMessage ?? "");
-          setAdvisorInviteMessage(s.advisorInviteMessage ?? "");
+          setWhatsappMessage(s.whatsappMessage || DEFAULT_CLIENT_SHARE_MESSAGE);
+          setAdvisorInviteMessage(s.advisorInviteMessage || DEFAULT_ADVISOR_INVITE_MESSAGE);
           setWelcomeMessage(s.welcomeMessage ?? "");
           setSchedulingUrl(s.schedulingUrl ?? "");
         }
@@ -362,8 +363,7 @@ export default function PremiosPage() {
             <textarea
               value={advisorInviteMessage}
               onChange={(e) => setAdvisorInviteMessage(e.target.value)}
-              rows={4}
-              placeholder={`Ej: ¡Hola {nombre}! Te paso tu link: por cada persona que entre por ahí y contrate conmigo, tú ganas hasta {premio}. {link}`}
+              rows={6}
               className="w-full px-4 py-3 rounded-2xl border border-brand-border-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition resize-none text-[#3F4651] placeholder:text-brand-gray-4"
             />
             <p className="text-xs text-brand-gray-4 mt-2">
@@ -384,8 +384,7 @@ export default function PremiosPage() {
             <textarea
               value={whatsappMessage}
               onChange={(e) => setWhatsappMessage(e.target.value)}
-              rows={4}
-              placeholder={`Ej: Hola, soy {nombre}. Te comparto algo que me ha servido mucho, échale un ojo sin compromiso: {link}`}
+              rows={6}
               className="w-full px-4 py-3 rounded-2xl border border-brand-border-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition resize-none text-[#3F4651] placeholder:text-brand-gray-4"
             />
             <p className="text-xs text-brand-gray-4 mt-2">

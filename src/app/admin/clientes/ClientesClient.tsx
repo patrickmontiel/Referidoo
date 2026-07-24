@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { formatCurrency, formatDate, REWARD_CUTOFF_DAYS } from "@/lib/utils";
+import { DEFAULT_ADVISOR_INVITE_MESSAGE, renderMessage } from "@/lib/message-templates";
 
 type Client = {
   id: string;
@@ -360,14 +361,13 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
     const portalLink = `${base}/c/${client.accessToken}`;
     const firstName = client.name.split(" ")[0];
     const advisorName = advisor?.name ?? "tu asesor";
-    // Si el asesor configuró su propio mensaje en Premios, ese manda.
-    const msg = initialInviteMessage
-      ? initialInviteMessage
-          .replace(/\{nombre\}/g, firstName)
-          .replace(/\{link\}/g, portalLink)
-          .replace(/\{premio\}/g, formatCurrency(maxTierAmount))
-          .replace(/\{asesor\}/g, advisorName)
-      : `¡Hola ${firstName}! Habla ${advisorName}.\n\nTe tengo algo: por cada amigo o familiar al que le pases tu link y contrate un plan conmigo, tú ganas en efectivo, hasta ${formatCurrency(maxTierAmount)} por persona. Sin costo y sin letra chica.\n\nEste es tu link, guárdalo:\n${portalLink}`;
+    // Lo que el asesor ve en Premios es exactamente lo que se manda: misma plantilla.
+    const msg = renderMessage(initialInviteMessage || DEFAULT_ADVISOR_INVITE_MESSAGE, {
+      nombre: firstName,
+      link: portalLink,
+      premio: formatCurrency(maxTierAmount),
+      asesor: advisorName,
+    });
     const phone = client.phone ? "52" + client.phone.replace(/\D/g, "").replace(/^(52|1)/, "") : "";
     return phone
       ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`

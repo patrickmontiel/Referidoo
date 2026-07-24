@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Hanken_Grotesk } from "next/font/google";
 import { formatCurrency, formatDate, getStatusLabel, getRewardStatusLabel } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
+import { DEFAULT_CLIENT_SHARE_MESSAGE, renderMessage } from "@/lib/message-templates";
 
 const DEFAULT_TIERS = [
   { position: 1, amount: 1500, label: "1er referido convertido" },
@@ -349,9 +350,11 @@ export default function ClientPortalPage() {
 
   function shareWhatsApp() {
     const firstName = client.name.split(" ")[0];
-    const msg = advisor.whatsappMessage
-      ? advisor.whatsappMessage.replace("{link}", referralLink).replace("{nombre}", firstName)
-      : `Hola, te quiero recomendar algo de corazón.\n\nYo tengo un plan con ${advisor.name} que me ha ayudado a cuidar mi patrimonio y a mi familia. Le pedí que te atienda directo, sin compromiso ni venta.\n\nSolo échale un ojo aquí: ${referralLink}`;
+    const msg = renderMessage(advisor.whatsappMessage || DEFAULT_CLIENT_SHARE_MESSAGE, {
+      nombre: firstName,
+      link: referralLink,
+      asesor: advisor.name,
+    });
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   }
 
