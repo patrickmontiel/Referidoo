@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatCurrency, formatDate, formatNumberWithCommas } from "@/lib/utils";
-import { DEFAULT_CLIENT_SHARE_MESSAGE, DEFAULT_ADVISOR_INVITE_MESSAGE } from "@/lib/message-templates";
+import { DEFAULT_CLIENT_SHARE_MESSAGE, DEFAULT_ADVISOR_INVITE_MESSAGE, DEFAULT_REFERRAL_WELCOME_MESSAGE } from "@/lib/message-templates";
 
 type Tier = { amount: number; label: string };
 
@@ -68,7 +68,7 @@ export default function PremiosPage() {
   const [flatAmount, setFlatAmount] = useState(1500);
   const [whatsappMessage, setWhatsappMessage] = useState(DEFAULT_CLIENT_SHARE_MESSAGE);
   const [advisorInviteMessage, setAdvisorInviteMessage] = useState(DEFAULT_ADVISOR_INVITE_MESSAGE);
-  const [welcomeMessage, setWelcomeMessage] = useState("");
+  const [welcomeMessage, setWelcomeMessage] = useState(DEFAULT_REFERRAL_WELCOME_MESSAGE);
   const [schedulingUrl, setSchedulingUrl] = useState("");
   const [loadingTiers, setLoadingTiers] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -97,7 +97,7 @@ export default function PremiosPage() {
           setFlatAmount(s.flatAmount ?? 1500);
           setWhatsappMessage(s.whatsappMessage || DEFAULT_CLIENT_SHARE_MESSAGE);
           setAdvisorInviteMessage(s.advisorInviteMessage || DEFAULT_ADVISOR_INVITE_MESSAGE);
-          setWelcomeMessage(s.welcomeMessage ?? "");
+          setWelcomeMessage(s.welcomeMessage || DEFAULT_REFERRAL_WELCOME_MESSAGE);
           setSchedulingUrl(s.schedulingUrl ?? "");
         }
         setLoadingTiers(false);
@@ -344,13 +344,19 @@ export default function PremiosPage() {
             <label className="block text-sm font-medium text-[#0B0B0C] mb-2">
               Bienvenida en el link de referido
             </label>
+            <p className="text-xs text-brand-gray-4 mb-2.5 leading-relaxed">
+              Es lo que ve la <b className="text-[#3F4651]">persona nueva</b> al abrir el link que le compartió tu cliente.
+            </p>
             <textarea
               value={welcomeMessage}
               onChange={(e) => setWelcomeMessage(e.target.value)}
               rows={3}
-              placeholder="Ej: Tu amigo te recomienda conocer los beneficios de un seguro sin comprometerte a nada."
               className="w-full px-4 py-3 rounded-2xl border border-brand-border-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition resize-none text-[#3F4651] placeholder:text-brand-gray-4"
             />
+            <p className="text-xs text-brand-gray-4 mt-2">
+              Usa{" "}
+              <code className="bg-[#F4F5F7] px-1.5 py-0.5 rounded-md">{"{nombre}"}</code> para el nombre del cliente que refirió.
+            </p>
           </div>
           <div>
             <label className="block text-sm font-medium text-[#0B0B0C] mb-2">

@@ -13,6 +13,11 @@ export const DEFAULT_CLIENT_SHARE_MESSAGE =
   "Le pedí que te atienda directo, sin compromiso ni venta.\n\n" +
   "Solo échale un ojo aquí: {link}";
 
+/** La bienvenida que ve el REFERIDO nuevo al abrir el link ({nombre} = el cliente que lo refirió). */
+export const DEFAULT_REFERRAL_WELCOME_MESSAGE =
+  "{nombre} ya tiene un plan de vida y retiro, y cree que a ti también te puede convenir. " +
+  "Sin compromiso — solo es información.";
+
 /** El que TÚ (el asesor) le mandas a tu cliente con su link. */
 export const DEFAULT_ADVISOR_INVITE_MESSAGE =
   "¡Hola {nombre}! Habla {asesor}.\n\n" +

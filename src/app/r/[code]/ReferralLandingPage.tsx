@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Hanken_Grotesk } from "next/font/google";
 import { Logo } from "@/components/Logo";
+import { DEFAULT_REFERRAL_WELCOME_MESSAGE, renderMessage } from "@/lib/message-templates";
 
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
@@ -379,8 +380,7 @@ export default function ReferralLandingPage() {
               Mensaje de {firstName}
             </p>
             <p className="text-sm text-white/90 leading-relaxed">
-              {info.welcomeMessage ||
-                `${firstName} ya tiene un plan de vida y retiro, y cree que a ti también te puede convenir. Sin compromiso — solo es información.`}
+              {renderMessage(info.welcomeMessage || DEFAULT_REFERRAL_WELCOME_MESSAGE, { nombre: firstName })}
             </p>
           </div>
 
