@@ -136,9 +136,10 @@ type ClientesClientProps = {
   initialClients: Client[];
   initialAdvisor: Advisor | null;
   initialMaxTierAmount: number;
+  initialInviteMessage?: string | null;
 };
 
-export default function ClientesClient({ initialClients, initialAdvisor, initialMaxTierAmount }: ClientesClientProps) {
+export default function ClientesClient({ initialClients, initialAdvisor, initialMaxTierAmount, initialInviteMessage }: ClientesClientProps) {
   const [clients, setClients] = useState<Client[]>(initialClients);
   const [advisor, setAdvisor] = useState<Advisor | null>(initialAdvisor);
   const [sendingLinks, setSendingLinks] = useState(false);
@@ -359,7 +360,14 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
     const portalLink = `${base}/c/${client.accessToken}`;
     const firstName = client.name.split(" ")[0];
     const advisorName = advisor?.name ?? "tu asesor";
-    const msg = `¡Hola ${firstName}! Habla ${advisorName}.\n\nTe tengo algo: por cada amigo o familiar al que le pases tu link y contrate un plan conmigo, tú ganas en efectivo, hasta ${formatCurrency(maxTierAmount)} por persona. Sin costo y sin letra chica.\n\nEste es tu link, guárdalo:\n${portalLink}`;
+    // Si el asesor configuró su propio mensaje en Premios, ese manda.
+    const msg = initialInviteMessage
+      ? initialInviteMessage
+          .replace(/\{nombre\}/g, firstName)
+          .replace(/\{link\}/g, portalLink)
+          .replace(/\{premio\}/g, formatCurrency(maxTierAmount))
+          .replace(/\{asesor\}/g, advisorName)
+      : `¡Hola ${firstName}! Habla ${advisorName}.\n\nTe tengo algo: por cada amigo o familiar al que le pases tu link y contrate un plan conmigo, tú ganas en efectivo, hasta ${formatCurrency(maxTierAmount)} por persona. Sin costo y sin letra chica.\n\nEste es tu link, guárdalo:\n${portalLink}`;
     const phone = client.phone ? "52" + client.phone.replace(/\D/g, "").replace(/^(52|1)/, "") : "";
     return phone
       ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`

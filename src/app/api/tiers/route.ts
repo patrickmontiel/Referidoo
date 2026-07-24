@@ -22,7 +22,7 @@ export async function PUT(req: NextRequest) {
   const session = await getAdvisorSession();
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const { tiers, afterLastTier, flatAmount, whatsappMessage, welcomeMessage, schedulingUrl } = await req.json();
+  const { tiers, afterLastTier, flatAmount, whatsappMessage, advisorInviteMessage, welcomeMessage, schedulingUrl } = await req.json();
 
   // Normaliza el link de agenda: acepta "calendly.com/x" sin esquema y le
   // antepone https:// para que el botón del formulario abra bien.
@@ -52,6 +52,7 @@ export async function PUT(req: NextRequest) {
       afterLastTier: afterLastTier ?? "cycle",
       flatAmount: Number(flatAmount) || 1500,
       whatsappMessage: whatsappMessage || null,
+      advisorInviteMessage: advisorInviteMessage || null,
       welcomeMessage: welcomeMessage || null,
       schedulingUrl: cleanSchedulingUrl,
     },
@@ -59,6 +60,7 @@ export async function PUT(req: NextRequest) {
       afterLastTier: afterLastTier ?? "cycle",
       flatAmount: Number(flatAmount) || 1500,
       whatsappMessage: whatsappMessage || null,
+      advisorInviteMessage: advisorInviteMessage || null,
       welcomeMessage: welcomeMessage || null,
       schedulingUrl: cleanSchedulingUrl,
     },

@@ -66,6 +66,7 @@ export default function PremiosPage() {
   const [afterLastTier, setAfterLastTier] = useState("cycle");
   const [flatAmount, setFlatAmount] = useState(1500);
   const [whatsappMessage, setWhatsappMessage] = useState("");
+  const [advisorInviteMessage, setAdvisorInviteMessage] = useState("");
   const [welcomeMessage, setWelcomeMessage] = useState("");
   const [schedulingUrl, setSchedulingUrl] = useState("");
   const [loadingTiers, setLoadingTiers] = useState(true);
@@ -94,6 +95,7 @@ export default function PremiosPage() {
           setAfterLastTier(s.afterLastTier ?? "cycle");
           setFlatAmount(s.flatAmount ?? 1500);
           setWhatsappMessage(s.whatsappMessage ?? "");
+          setAdvisorInviteMessage(s.advisorInviteMessage ?? "");
           setWelcomeMessage(s.welcomeMessage ?? "");
           setSchedulingUrl(s.schedulingUrl ?? "");
         }
@@ -144,7 +146,7 @@ export default function PremiosPage() {
       fetch("/api/tiers", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tiers, afterLastTier, flatAmount, whatsappMessage, welcomeMessage, schedulingUrl }),
+        body: JSON.stringify({ tiers, afterLastTier, flatAmount, whatsappMessage, advisorInviteMessage, welcomeMessage, schedulingUrl }),
       }),
       fetch("/api/bubble-settings", {
         method: "PUT",
@@ -348,6 +350,28 @@ export default function PremiosPage() {
               placeholder="Ej: Tu amigo te recomienda conocer los beneficios de un seguro sin comprometerte a nada."
               className="w-full px-4 py-3 rounded-2xl border border-brand-border-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition resize-none text-[#3F4651] placeholder:text-brand-gray-4"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-[#0B0B0C] mb-2">
+              Mensaje que tú le envías a tu cliente con su link
+            </label>
+            <p className="text-xs text-brand-gray-4 mb-2.5 leading-relaxed">
+              Es el texto que sale cuando <b className="text-[#3F4651]">tú</b> le mandas su link por WhatsApp desde
+              Clientes. Déjalo vacío para usar el de por defecto.
+            </p>
+            <textarea
+              value={advisorInviteMessage}
+              onChange={(e) => setAdvisorInviteMessage(e.target.value)}
+              rows={4}
+              placeholder={`Ej: ¡Hola {nombre}! Te paso tu link: por cada persona que entre por ahí y contrate conmigo, tú ganas hasta {premio}. {link}`}
+              className="w-full px-4 py-3 rounded-2xl border border-brand-border-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition resize-none text-[#3F4651] placeholder:text-brand-gray-4"
+            />
+            <p className="text-xs text-brand-gray-4 mt-2">
+              Usa{" "}
+              <code className="bg-[#F4F5F7] px-1.5 py-0.5 rounded-md">{"{nombre}"}</code> (tu cliente),{" "}
+              <code className="bg-[#F4F5F7] px-1.5 py-0.5 rounded-md">{"{link}"}</code> (su link) y{" "}
+              <code className="bg-[#F4F5F7] px-1.5 py-0.5 rounded-md">{"{premio}"}</code> (premio máximo).
+            </p>
           </div>
           <div>
             <label className="block text-sm font-medium text-[#0B0B0C] mb-2">

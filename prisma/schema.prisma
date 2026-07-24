@@ -37,6 +37,7 @@ model AdvisorSettings {
   afterLastTier        String  @default("cycle")
   flatAmount           Int     @default(1500)
   whatsappMessage      String?
+  advisorInviteMessage String?
   welcomeMessage       String?
   schedulingUrl        String?
   bubbleAutoPoints     Int     @default(150)

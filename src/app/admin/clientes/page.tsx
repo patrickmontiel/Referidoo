@@ -10,7 +10,7 @@ export default async function ClientesPage() {
   const [advisor, clients, tiers, sentEvents] = await Promise.all([
     db.advisor.findUnique({
       where: { id: session.advisorId },
-      select: { name: true, companyName: true, plan: true, email: true, phone: true },
+      select: { name: true, companyName: true, plan: true, email: true, phone: true, settings: { select: { advisorInviteMessage: true } } },
     }),
     db.client.findMany({
       where: { advisorId: session.advisorId },
@@ -56,6 +56,7 @@ export default async function ClientesPage() {
       initialClients={serializedClients}
       initialAdvisor={advisor}
       initialMaxTierAmount={maxTierAmount}
+      initialInviteMessage={advisor?.settings?.advisorInviteMessage ?? null}
     />
   );
 }
