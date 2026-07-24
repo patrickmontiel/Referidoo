@@ -163,5 +163,14 @@ export async function POST() {
     results.push("– schedulingUrl already exists");
   }
 
+  // Mensaje que el ASESOR le manda a su cliente con su link (distinto del
+  // whatsappMessage, que es el que el CLIENTE manda a sus conocidos). jul 2026
+  try {
+    await db.execute(`ALTER TABLE "AdvisorSettings" ADD COLUMN "advisorInviteMessage" TEXT`);
+    results.push("✓ advisorInviteMessage added");
+  } catch {
+    results.push("– advisorInviteMessage already exists");
+  }
+
   return NextResponse.json({ ok: true, results });
 }

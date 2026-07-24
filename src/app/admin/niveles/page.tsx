@@ -350,7 +350,13 @@ export default function PremiosPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#0B0B0C] mb-2">Mensaje de WhatsApp</label>
+            <label className="block text-sm font-medium text-[#0B0B0C] mb-2">
+              Mensaje que tu cliente enviará a sus conocidos
+            </label>
+            <p className="text-xs text-brand-gray-4 mb-2.5 leading-relaxed">
+              Es el texto que sale cuando <b className="text-[#3F4651]">tu cliente</b> toca “Compartir” en su portal
+              para invitar a sus amigos. <b className="text-[#3F4651]">No es el mensaje que tú le mandas a él</b> con su link.
+            </p>
             <textarea
               value={whatsappMessage}
               onChange={(e) => setWhatsappMessage(e.target.value)}
