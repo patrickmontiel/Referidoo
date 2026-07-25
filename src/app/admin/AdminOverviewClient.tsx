@@ -95,7 +95,9 @@ export default function AdminOverviewClient({ referrals, advisor, clientCount }:
     return sum + (rate ? Math.round(r.saleAmount! * rate.paid) : 0);
   }, 0);
   const commissionDiff = freemiumCommission - proCommission;
-  const netWithPro = commissionDiff - MEMBERSHIP_COST;
+  // Precio real del asesor (listo para grandfathering); MEMBERSHIP_COST es solo fallback.
+  const membershipCost = advisor?.monthlyPriceMxn ?? MEMBERSHIP_COST;
+  const netWithPro = commissionDiff - membershipCost;
   const showFreemiumCard = isFreemium && allConverted.length >= 1;
 
   const advisorSlug = advisor ? nameToSlug(advisor.name) : "";
@@ -235,57 +237,66 @@ export default function AdminOverviewClient({ referrals, advisor, clientCount }:
         </div>
       </div>
 
-      {/* Resumen mensual freemium — al fondo */}
+      {/* Resumen freemium acumulado — comparación honesta Gratis vs Pro, al fondo */}
       {showFreemiumCard && (
-        <div style={{ background: "#0d0d0d", borderRadius: 26, padding: 26, color: "#fff", position: "relative", overflow: "hidden" }}>
-          {/* Glow esquina superior derecha */}
-          <div style={{ position: "absolute", top: -70, right: -50, width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(43,87,240,.45), transparent 70%)", pointerEvents: "none" }} />
+        <section
+          aria-labelledby="freemium-card-title"
+          className="relative overflow-hidden rounded-[26px] bg-[#0d0d0d] p-6 sm:p-[26px] text-white"
+        >
+          <h2 id="freemium-card-title" className="sr-only">
+            Cuánto te cuesta el plan gratis comparado con Pro
+          </h2>
 
-          {/* Chip */}
-          <div style={{ background: "rgba(255,255,255,.08)", borderRadius: 999, padding: "6px 13px", width: "fit-content", marginBottom: 20, position: "relative" }}>
-            <span style={{ fontWeight: 700, fontSize: 12.5, color: "rgba(255,255,255,.7)" }}>Plan gratuito · acumulado</span>
-          </div>
+          {/* Glow que ancla la vista en el número héroe */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-[70px] -right-[50px] h-[220px] w-[220px] rounded-full bg-[radial-gradient(circle,rgba(43,87,240,0.45),transparent_70%)]"
+          />
 
-          {/* Contexto + número héroe */}
-          <div style={{ fontWeight: 500, fontSize: 14, color: "rgba(255,255,255,.66)", position: "relative" }}>
-            Te habrías ahorrado en total hasta ahora
-          </div>
-          <div style={{ marginTop: 4, marginBottom: 20, position: "relative" }}>
-            <span style={{ fontWeight: 800, fontSize: 52, letterSpacing: "-.03em", color: "#fff", lineHeight: .95, display: "inline-block" }}>
-              {formatCurrency(commissionDiff)}
+          <div className="relative">
+            {/* Chip */}
+            <span className="mb-5 inline-block rounded-full bg-white/[0.08] px-3.5 py-1.5 text-[12.5px] font-bold text-white/70">
+              Plan gratuito · acumulado
             </span>
-          </div>
 
-          {/* Dos mini-cards */}
-          <div style={{ display: "flex", gap: 12, marginBottom: 12, position: "relative" }}>
-            <div style={{ flex: 1, background: "rgba(255,255,255,.06)", borderRadius: 16, padding: "14px 16px" }}>
-              <div style={{ fontWeight: 500, fontSize: 12.5, color: "rgba(255,255,255,.5)", lineHeight: 1.3 }}>Comisiones en plan Gratuito</div>
-              <div style={{ fontWeight: 800, fontSize: 20, marginTop: 4 }}>{formatCurrency(freemiumCommission)}</div>
+            {/* Contexto + número héroe (ahorro) */}
+            <p className="text-sm font-medium text-white/[0.66]">
+              Te habrías ahorrado en total hasta ahora
+            </p>
+            <p className="mt-1 mb-5 text-[44px] sm:text-[52px] font-extrabold leading-[0.95] tracking-[-0.03em] tabular-nums">
+              {formatCurrency(commissionDiff)}
+            </p>
+
+            {/* Comparación Gratis → Pro (sin cards anidadas, hairline divisor) */}
+            <div className="mb-4 grid grid-cols-2">
+              <div className="pr-5">
+                <p className="text-[12.5px] font-medium leading-tight text-white/55">En Gratis pagas</p>
+                <p className="mt-1 text-xl font-extrabold tabular-nums">{formatCurrency(freemiumCommission)}</p>
+              </div>
+              <div className="border-l border-white/[0.12] pl-5">
+                <p className="text-[12.5px] font-medium leading-tight text-white/55">En Pro pagarías</p>
+                <p className="mt-1 text-xl font-extrabold tabular-nums text-[#9db4fb]">{formatCurrency(proCommission)}</p>
+              </div>
             </div>
-            <div style={{ flex: 1, background: "rgba(255,255,255,.06)", borderRadius: 16, padding: "14px 16px" }}>
-              <div style={{ fontWeight: 500, fontSize: 12.5, color: "rgba(255,255,255,.5)", lineHeight: 1.3 }}>Comisiones en plan Pro</div>
-              <div style={{ fontWeight: 800, fontSize: 20, marginTop: 4, color: "#9db4fb" }}>{formatCurrency(proCommission)}</div>
-            </div>
-          </div>
 
-          {/* Nota de cierre */}
-          <div style={{ fontWeight: 500, fontSize: 12.5, color: "rgba(255,255,255,.5)", marginBottom: 20, lineHeight: 1.5, position: "relative" }}>
-            {netWithPro >= 0 ? (
-              <>Con tus {allConverted.length} conversión{allConverted.length !== 1 ? "es" : ""} ya pagarías tu membresía y tendrías <b style={{ color: "#fff" }}>{formatCurrency(netWithPro)}</b> extra neto.</>
-            ) : (
-              <>Con tus {allConverted.length} conversión{allConverted.length !== 1 ? "es" : ""} te faltan <b style={{ color: "#fff" }}>{formatCurrency(Math.abs(netWithPro))}</b> para cubrir tu membresía.</>
-            )}
-          </div>
+            {/* Nota honesta de break-even */}
+            <p className="mb-5 text-[12.5px] font-medium leading-relaxed text-white/55">
+              {netWithPro >= 0 ? (
+                <>Con tus {allConverted.length} {allConverted.length === 1 ? "conversión" : "conversiones"} ya pagarías tu membresía y tendrías <b className="font-bold text-white">{formatCurrency(netWithPro)}</b> extra neto.</>
+              ) : (
+                <>Con tus {allConverted.length} {allConverted.length === 1 ? "conversión" : "conversiones"} te faltan <b className="font-bold text-white">{formatCurrency(Math.abs(netWithPro))}</b> para cubrir tu membresía.</>
+              )}
+            </p>
 
-          {/* CTA */}
-          <Link
-            href="/admin/perfil"
-            style={{ display: "block", width: "100%", textAlign: "center", textDecoration: "none", background: "#fff", color: "#0d0d0d", fontFamily: "inherit", fontWeight: 700, fontSize: 14.5, padding: "15px 0", borderRadius: 999, position: "relative" }}
-            className="hover:bg-white/90 active:scale-95 transition"
-          >
-            Actualizar a Pro · $539/mes
-          </Link>
-        </div>
+            {/* CTA */}
+            <Link
+              href="/admin/perfil"
+              className="block w-full rounded-full bg-white py-[15px] text-center text-[14.5px] font-bold text-[#0d0d0d] transition hover:bg-white/90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d0d0d]"
+            >
+              Actualizar a Pro · ${membershipCost}/mes
+            </Link>
+          </div>
+        </section>
       )}
     </div>
   );
