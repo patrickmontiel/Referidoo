@@ -727,7 +727,7 @@ export default function AdminLayoutShell({
                     {TASKS.map((t) => {
                       const done = taskState ? t.done(taskState) : false;
                       const verified = taskState?.emailVerified ?? false;
-                      const locked = t.id !== "email" && !verified;
+                      const locked = t.id !== "email" && !verified && !done;
                       return (
                         <button
                           key={t.id}

@@ -79,7 +79,7 @@ export default function PrimerosPasosCard() {
       <div className="space-y-1.5">
         {TASKS.map((t) => {
           const done = t.done(taskState);
-          const locked = t.id !== "email" && !taskState.emailVerified;
+          const locked = t.id !== "email" && !taskState.emailVerified && !done;
           return (
             <button
               key={t.id}
