@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Confetti from "@/components/Confetti";
 import { useParams } from "next/navigation";
 import { Hanken_Grotesk } from "next/font/google";
 import { Logo } from "@/components/Logo";
@@ -150,8 +151,11 @@ export default function ReferralLandingPage() {
     return (
       <div className={`min-h-screen bg-white flex flex-col items-center justify-center px-6 text-center ${hankenGrotesk.className}`}
            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+        <Confetti originY={0.32} />
+        <style>{`@keyframes popIn { 0% { opacity: 0; transform: scale(.6); } 60% { transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }`}</style>
         <div className="max-w-xs w-full">
-          <div className="w-16 h-16 bg-brand-ink rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-16 h-16 bg-brand-ink rounded-full flex items-center justify-center mx-auto mb-6"
+               style={{ animation: "popIn .5s cubic-bezier(.34,1.3,.5,1) both" }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
               <path d="M5 12L10 17L19 8" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import PrimerosPasosCard from "./PrimerosPasosCard";
+import LeadFestejo from "./LeadFestejo";
 import BolaDeNieveCard from "@/components/BolaDeNieveCard";
 
 type Referral = {
@@ -135,6 +136,9 @@ export default function AdminOverviewClient({ referrals, advisor, clientCount }:
         </h1>
         <p className="text-sm text-brand-gray-4 mt-0.5">Resumen de tu actividad · {monthYear}</p>
       </div>
+
+      {/* Festejo: referido nuevo desde la última visita */}
+      <LeadFestejo referrals={referrals} />
 
       {/* Primeros Pasos */}
       <PrimerosPasosCard />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useMemo } from "react";
+import Confetti from "@/components/Confetti";
 import { useParams } from "next/navigation";
 import { Hanken_Grotesk } from "next/font/google";
 import { formatCurrency, formatDate, getStatusLabel, getRewardStatusLabel } from "@/lib/utils";
@@ -603,6 +604,7 @@ export default function ClientPortalPage() {
                 boxShadow: "0 16px 48px rgba(0,0,0,.28)",
                 textAlign: "center",
               }}>
+                <Confetti originY={0.35} zIndex={64} />
                 <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#2B57F0", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px", animation: "popIn .5s cubic-bezier(.34,1.3,.5,1) both" }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                     <path d="M5 12L10 17L19 8" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
