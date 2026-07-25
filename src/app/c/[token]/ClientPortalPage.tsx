@@ -354,6 +354,7 @@ export default function ClientPortalPage() {
       nombre: firstName,
       link: referralLink,
       asesor: advisor.name,
+      premio: formatCurrency(Math.max(...tiers.map((t) => t.amount))),
     });
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   }
