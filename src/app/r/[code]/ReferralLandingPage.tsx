@@ -166,7 +166,7 @@ export default function ReferralLandingPage() {
           {info.schedulingUrl ? (
             <>
               <p className="text-brand-gray-4 text-sm leading-relaxed mb-5">
-                Tus datos ya le llegaron a tu asesor. Si quieres, aparta tu cita ahora mismo — o él te contacta.
+                Tus datos ya le llegaron. Si quieres, aparta tu radiografía ahora mismo — o él te escribe.
               </p>
               <a
                 href={buildBookingUrl(info.schedulingUrl, form.name, form.email)}
@@ -174,12 +174,12 @@ export default function ReferralLandingPage() {
                 rel="noopener noreferrer"
                 className="block w-full bg-[#2563EB] text-white text-base font-semibold py-4 rounded-full shadow-[0_8px_24px_rgba(37,99,235,.28)] hover:bg-[#1D4ED8] active:scale-[0.98] transition mb-8"
               >
-                Agendar una cita ahora →
+                Aparta mi radiografía →
               </a>
             </>
           ) : (
             <p className="text-brand-gray-4 text-sm leading-relaxed mb-8">
-              Tu asesor te contactará pronto para platicar sobre tu situación patrimonial sin ningún compromiso.
+              {info.advisorName.split(" ")[0]} te va a escribir por WhatsApp para agendar tu radiografía. Sin compromiso — tú decides si sigues.
             </p>
           )}
           <div className="bg-brand-surface rounded-[20px] p-4 text-left">
@@ -210,19 +210,19 @@ export default function ReferralLandingPage() {
           </button>
 
           <p className="text-xs font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
-            Un paso más
+            Último paso
           </p>
-          <h2 className="text-2xl font-bold mb-5 text-brand-ink">Tus datos</h2>
+          <h2 className="text-2xl font-bold mb-5 text-brand-ink">¿Cómo te contactamos?</h2>
           <div className="bg-brand-ink rounded-[20px] p-4 mb-8">
             <p className="text-sm text-white/90 leading-relaxed">
-              Tu asesor te contacta para explicarte cómo funciona. Sin formularios largos, sin compromiso.
+              Tu asesor te escribe por WhatsApp para agendar tu radiografía cuando te acomode. Sin llamadas sorpresa, sin compromiso.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
-                Nombre completo *
+                Tu nombre *
               </label>
               <input
                 type="text"
@@ -236,7 +236,7 @@ export default function ReferralLandingPage() {
             </div>
             <div>
               <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
-                WhatsApp / Teléfono *
+                Tu WhatsApp *
               </label>
               <input
                 type="tel"
@@ -247,6 +247,7 @@ export default function ReferralLandingPage() {
                 placeholder="55 1234 5678"
                 className="w-full px-4 py-3.5 rounded-2xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition"
               />
+              <p className="text-[11px] text-brand-gray-4 mt-1.5">Ahí te escribe tu asesor.</p>
             </div>
             <div>
               <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
@@ -346,10 +347,10 @@ export default function ReferralLandingPage() {
               disabled={submitting || !form.name || !form.phone || !form.email}
               className="w-full bg-[#2563EB] text-white text-base font-semibold py-4 rounded-full shadow-[0_8px_24px_rgba(37,99,235,.28)] hover:bg-[#1D4ED8] active:scale-[0.98] disabled:opacity-40 disabled:shadow-none transition mt-2"
             >
-              {submitting ? "Enviando..." : "Quiero que me contacten"}
+              {submitting ? "Enviando..." : "Aparta mi radiografía gratis"}
             </button>
             <p className="text-[11px] text-brand-gray-4 text-center">
-              Tu información solo será usada para contactarte. Nada más.
+              Solo la usamos para contactarte. Nada de spam.
             </p>
           </form>
         </div>

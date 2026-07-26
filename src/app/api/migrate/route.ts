@@ -172,5 +172,27 @@ export async function POST() {
     results.push("– advisorInviteMessage already exists");
   }
 
+  // Credibilidad del asesor mostrada en la landing del referido: credencial
+  // real (cédula), años de experiencia y personas atendidas de por vida.
+  // Distinta por asesor; la captura en /admin/perfil. (jul 2026)
+  try {
+    await db.execute(`ALTER TABLE "AdvisorSettings" ADD COLUMN "credential" TEXT`);
+    results.push("✓ credential added");
+  } catch {
+    results.push("– credential already exists");
+  }
+  try {
+    await db.execute(`ALTER TABLE "AdvisorSettings" ADD COLUMN "yearsExperience" INTEGER`);
+    results.push("✓ yearsExperience added");
+  } catch {
+    results.push("– yearsExperience already exists");
+  }
+  try {
+    await db.execute(`ALTER TABLE "AdvisorSettings" ADD COLUMN "peopleServed" INTEGER`);
+    results.push("✓ peopleServed added");
+  } catch {
+    results.push("– peopleServed already exists");
+  }
+
   return NextResponse.json({ ok: true, results });
 }
