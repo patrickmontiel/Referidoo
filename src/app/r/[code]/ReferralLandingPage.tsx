@@ -1,28 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Confetti from "@/components/Confetti";
-import { useParams } from "next/navigation";
 import { Hanken_Grotesk } from "next/font/google";
 import { Logo } from "@/components/Logo";
 import { DEFAULT_REFERRAL_WELCOME_MESSAGE, renderMessage } from "@/lib/message-templates";
+import type { ReferralInfo } from "@/lib/referral-info";
 
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
-
-type ReferralInfo = {
-  referrerName: string;
-  advisorName: string;
-  companyName: string | null;
-  welcomeMessage: string | null;
-  schedulingUrl: string | null;
-  credential: string | null;
-  yearsExperience: number | null;
-  peopleServed: number | null;
-  nextReward: number;
-};
 
 // Abre el link de agenda del asesor con el nombre/correo del lead prellenados
 // donde el proveedor lo soporta (Calendly y Cal.com usan ?name=&email=; Google
@@ -78,28 +66,13 @@ function ChatIcon() {
   );
 }
 
-export default function ReferralLandingPage() {
-  const { code } = useParams<{ code: string }>();
-  const [info, setInfo] = useState<ReferralInfo | null>(null);
+export default function ReferralLandingPage({ initialInfo, code }: { initialInfo: ReferralInfo | null; code: string }) {
+  const info = initialInfo;
   const [step, setStep] = useState<Step>("landing");
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [showMore, setShowMore] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", email: "", interest: "", preferredDays: "", preferredHours: "" });
-
-  useEffect(() => {
-    fetch(`/api/referral-info/${code}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) setError("Este enlace no es válido.");
-        else setInfo(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError("Error al cargar.");
-        setLoading(false);
-      });
-  }, [code]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -128,21 +101,20 @@ export default function ReferralLandingPage() {
     setSubmitting(false);
   }
 
-  if (loading) {
-    return (
-      <div className={`min-h-screen bg-white flex items-center justify-center ${hankenGrotesk.className}`}>
-        <div className="w-5 h-5 border-2 border-brand-ink border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (error || !info) {
+  if (!info) {
     return (
       <div className={`min-h-screen bg-white flex items-center justify-center px-6 text-center ${hankenGrotesk.className}`}>
-        <div>
-          <p className="text-5xl mb-5">🔗</p>
-          <h1 className="text-xl font-bold mb-2 text-brand-ink">Enlace no válido</h1>
-          <p className="text-brand-gray-4 text-sm">{error || "Este enlace ya no está activo."}</p>
+        <div className="max-w-xs">
+          <div className="w-14 h-14 rounded-full bg-brand-surface flex items-center justify-center mx-auto mb-5">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-brand-gray-4">
+              <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+              <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <h1 className="text-xl font-bold mb-2 text-brand-ink">Este enlace ya no sirve</h1>
+          <p className="text-brand-gray-4 text-sm leading-relaxed">
+            Puede que haya cambiado o caducado. Pídele a quien te lo compartió que te reenvíe su enlace — es de un solo toque para él.
+          </p>
         </div>
       </div>
     );
@@ -151,6 +123,16 @@ export default function ReferralLandingPage() {
   const firstName = info.referrerName.split(" ")[0];
 
   if (step === "success") {
+    // El lead YA quedó capturado (Referral creado en el submit). Este WhatsApp
+    // solo le deja adelantarse por su canal — no reemplaza la captura.
+    let waDigits: string | null = null;
+    if (info.advisorPhone) {
+      const d = info.advisorPhone.replace(/\D/g, "");
+      waDigits = d.length === 10 ? `52${d}` : d; // MX sin lada → prepende 52
+    }
+    const waText = encodeURIComponent(
+      `¡Hola! Soy ${form.name.split(" ")[0]}. ${firstName} me recomendó contigo y me interesa mi radiografía de dinero.`
+    );
     return (
       <div className={`min-h-screen bg-white flex flex-col items-center justify-center px-6 text-center ${hankenGrotesk.className}`}
            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
@@ -184,6 +166,17 @@ export default function ReferralLandingPage() {
             <p className="text-brand-gray-4 text-sm leading-relaxed mb-8">
               {info.advisorName.split(" ")[0]} te va a escribir por WhatsApp para agendar tu radiografía. Sin compromiso — tú decides si sigues.
             </p>
+          )}
+          {waDigits && (
+            <a
+              href={`https://wa.me/${waDigits}?text=${waText}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full bg-[#1FAE54] text-white text-base font-semibold py-4 rounded-full active:scale-[0.98] transition mb-6"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+              Adelántate y escríbele por WhatsApp
+            </a>
           )}
           <div className="bg-brand-surface rounded-[20px] p-4 text-left">
             <p className="text-[11px] text-brand-gray-4 uppercase tracking-[0.08em] font-bold mb-1">
@@ -267,7 +260,22 @@ export default function ReferralLandingPage() {
               />
             </div>
 
-            {/* Producto de interés (opcional) — le llega al asesor como interestProductType */}
+            {/* Opcionales colapsados tras un toggle: el form se ve de 3 campos;
+                quien quiera afinar revela interés + días + horas. */}
+            <button
+              type="button"
+              onClick={() => setShowMore((v) => !v)}
+              className="flex items-center justify-between w-full text-sm font-medium text-brand-gray-2 py-1"
+            >
+              <span>Cuéntale más para que te atienda mejor <span className="text-brand-gray-4">(opcional)</span></span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className={`text-brand-gray-4 transition-transform ${showMore ? "rotate-180" : ""}`}>
+                <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+
+            {showMore && (
+            <div className="space-y-4">
+            {/* Producto de interés — le llega al asesor como interestProductType */}
             <div>
               <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
                 ¿Sobre qué te gustaría platicar?
@@ -342,6 +350,8 @@ export default function ReferralLandingPage() {
                 })}
               </div>
             </div>
+            </div>
+            )}
 
             {error && <p className="text-brand-danger-ink text-sm">{error}</p>}
 
