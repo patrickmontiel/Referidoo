@@ -138,13 +138,14 @@ export default async function Home() {
       <section className="max-w-[1180px] mx-auto px-8 pt-16 pb-12 grid md:grid-cols-2 gap-16 items-center">
         <div className="landing-stagger">
           <h1 className="font-extrabold tracking-[-0.03em] leading-[1.04] mb-5 text-[#0B0B0C] text-balance" style={{ fontSize: "clamp(2.5rem, 5.5vw, 60px)" }}>
-            Tus clientes ya te recomiendan.
+            No compres más leads.
             <br />
-            Tú no te estás enterando.
+            Tus próximos clientes ya están en tu cartera.
           </h1>
           <p className="text-[#5A626E] leading-[1.6] mb-8 max-w-md" style={{ fontSize: 18 }}>
-            Cada recomendación que hoy muere en un chat de WhatsApp puede
-            registrarse sola, calcular su premio sola y avisarte al momento.
+            Cada recomendación que hoy se esfuma en una plática al aire se vuelve
+            un cliente en tu pipeline — y tú obtienes leads que sí cierran, a una
+            fracción del costo de comprarlos.
           </p>
           <div className="flex items-center gap-3">
             <Link href="/registro" className="text-sm font-medium bg-[#0B0B0C] text-white px-5 py-3 rounded-full transition-[background-color,transform] duration-150 hover:bg-[#26262a] active:scale-[0.97]">
@@ -154,10 +155,16 @@ export default async function Home() {
               Ya tengo cuenta
             </Link>
           </div>
+          {/* Reversión de riesgo visible + ruta a precios */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-5">
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#3F4651]">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F9D5B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              30 días de Pro gratis · sin tarjeta
+            </span>
+            <Link href="#precios" className="text-sm font-medium text-[#2563EB] hover:underline">Ver precios</Link>
+          </div>
           <p className="text-xs text-[#8A8F98] mt-4">
             Para asesores de seguros y planes financieros en México.
-            <br />
-            Empieza con 30 días de Pro gratis, sin tarjeta.
           </p>
         </div>
 
@@ -446,9 +453,9 @@ export default async function Home() {
       <section className="max-w-[1180px] mx-auto px-8 py-16 border-t border-[#EFEFF1]">
         <ScrollReveal className="max-w-[640px] mx-auto text-center">
           <p className="text-[20px] leading-[1.55] text-[#0B0B0C] font-medium mb-5 text-balance">
-            Referidoo está en acceso anticipado. Lo estamos construyendo mano a
-            mano con asesores reales en México — cada función sale de una
-            necesidad de su semana, no de una junta de producto.
+            Referidoo está en acceso anticipado. Lo construyo mano a mano con los
+            primeros asesores en México — cada función sale de su semana real, no
+            de una junta de producto. Entra ahora y ayúdame a moldearlo.
           </p>
           <p className="text-sm text-[#8A8F98] mb-6">Patrick — fundador de Referidoo</p>
           <a
