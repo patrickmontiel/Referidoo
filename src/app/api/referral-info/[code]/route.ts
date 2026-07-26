@@ -33,6 +33,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ cod
     companyName: client.advisor.companyName,
     welcomeMessage: client.advisor.settings?.welcomeMessage,
     schedulingUrl: client.advisor.settings?.schedulingUrl ?? null,
+    credential: client.advisor.settings?.credential ?? null,
+    yearsExperience: client.advisor.settings?.yearsExperience ?? null,
+    peopleServed: client.advisor.settings?.peopleServed ?? null,
     nextReward: amount,
   });
 }

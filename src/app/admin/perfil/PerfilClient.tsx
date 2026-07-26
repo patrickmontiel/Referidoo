@@ -57,9 +57,10 @@ type PerfilClientProps = {
   netWithPro: number;
   convertedCount: number;
   billingStatus: "paid" | "trial" | "trial_expired" | "freemium";
+  initialCredibility: { credential: string | null; yearsExperience: number | null; peopleServed: number | null };
 };
 
-export default function PerfilClient({ initialAdvisor, initialClientCount, initialLeadCount, freemiumCommission, proCommission, commissionDiff, netWithPro, convertedCount, billingStatus }: PerfilClientProps) {
+export default function PerfilClient({ initialAdvisor, initialClientCount, initialLeadCount, freemiumCommission, proCommission, commissionDiff, netWithPro, convertedCount, billingStatus, initialCredibility }: PerfilClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [advisor, setAdvisor] = useState<Advisor | null>(initialAdvisor);
@@ -74,6 +75,31 @@ export default function PerfilClient({ initialAdvisor, initialClientCount, initi
   const [copied, setCopied] = useState(false);
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
+  // Credibilidad mostrada en la landing del referido (números como string para
+  // permitir el campo vacío).
+  const [credential, setCredential] = useState(initialCredibility.credential ?? "");
+  const [yearsExperience, setYearsExperience] = useState(initialCredibility.yearsExperience != null ? String(initialCredibility.yearsExperience) : "");
+  const [peopleServed, setPeopleServed] = useState(initialCredibility.peopleServed != null ? String(initialCredibility.peopleServed) : "");
+  const [savingCred, setSavingCred] = useState(false);
+  const [savedCred, setSavedCred] = useState(false);
+
+  async function saveCredibility() {
+    if (savingCred) return;
+    setSavingCred(true);
+    setSavedCred(false);
+    await fetch("/api/advisor/credibility", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        credential: credential.trim(),
+        yearsExperience: yearsExperience === "" ? null : Number(yearsExperience),
+        peopleServed: peopleServed === "" ? null : Number(peopleServed),
+      }),
+    }).catch(() => {});
+    setSavingCred(false);
+    setSavedCred(true);
+    setTimeout(() => setSavedCred(false), 2000);
+  }
 
   // Intención Pro desde la landing (/registro?plan=pro → aquí): abre el
   // modal de upgrade directo para que la compra no se pierda en el camino.
@@ -219,6 +245,64 @@ export default function PerfilClient({ initialAdvisor, initialClientCount, initi
           className="bg-white text-[#0B0B0C] text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-white/90 active:scale-95 transition"
         >
           {copied ? "¡Copiado ✓" : "Copiar link"}
+        </button>
+      </div>
+
+      {/* Credibilidad — aparece en la landing que ve el referido */}
+      <div className="bg-white rounded-2xl border border-brand-border-1 p-5 mb-4">
+        <p className="font-bold text-[#0B0B0C] text-[15px]">Tu credibilidad</p>
+        <p className="text-sm text-brand-gray-4 mt-0.5 mb-4">
+          Esto aparece en la página que ve el amigo de tu cliente. Datos reales generan confianza — lo que tu cliente recomienda, tú lo respaldas.
+        </p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
+              Credencial o cédula
+            </label>
+            <input
+              value={credential}
+              onChange={(e) => setCredential(e.target.value)}
+              placeholder="Ej. Cédula CNSF A-12345"
+              className="w-full px-4 py-3 rounded-xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition"
+            />
+          </div>
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
+                Años de experiencia
+              </label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={yearsExperience}
+                onChange={(e) => setYearsExperience(e.target.value)}
+                placeholder="Ej. 8"
+                className="w-full px-4 py-3 rounded-xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">
+                Personas atendidas
+              </label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={peopleServed}
+                onChange={(e) => setPeopleServed(e.target.value)}
+                placeholder="Ej. 240"
+                className="w-full px-4 py-3 rounded-xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition"
+              />
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={saveCredibility}
+          disabled={savingCred}
+          className="mt-4 bg-[#0B0B0C] text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:opacity-90 active:scale-95 disabled:opacity-50 transition"
+        >
+          {savingCred ? "Guardando..." : savedCred ? "Guardado ✓" : "Guardar"}
         </button>
       </div>
 

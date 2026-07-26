@@ -40,6 +40,12 @@ model AdvisorSettings {
   advisorInviteMessage String?
   welcomeMessage       String?
   schedulingUrl        String?
+  // Credibilidad mostrada en la landing del referido (la captura el asesor en
+  // /admin/perfil): credencial real (cédula), años de experiencia y personas
+  // atendidas de por vida. Distinta por asesor.
+  credential           String?
+  yearsExperience      Int?
+  peopleServed         Int?
   bubbleAutoPoints     Int     @default(150)
   bubbleGmmPoints      Int     @default(300)
   bubbleClaimThreshold Int     @default(500)

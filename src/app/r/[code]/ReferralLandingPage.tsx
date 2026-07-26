@@ -18,6 +18,9 @@ type ReferralInfo = {
   companyName: string | null;
   welcomeMessage: string | null;
   schedulingUrl: string | null;
+  credential: string | null;
+  yearsExperience: number | null;
+  peopleServed: number | null;
   nextReward: number;
 };
 
@@ -405,6 +408,46 @@ export default function ReferralLandingPage() {
               {renderMessage(info.welcomeMessage || DEFAULT_REFERRAL_WELCOME_MESSAGE, { nombre: firstName })}
             </p>
           </div>
+
+          {/* Credibilidad del asesor — quién te va a atender (solo si la capturó) */}
+          {(info.credential || info.yearsExperience != null || info.peopleServed != null) && (
+            <div className="rounded-[22px] border border-brand-border-1 bg-white p-5 mb-7 shadow-[0_2px_22px_rgba(0,0,0,.05)]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-brand-ink text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+                  {info.advisorName.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-brand-ink truncate">{info.advisorName}</p>
+                  <p className="text-[11px] text-brand-gray-4 truncate">Quien te va a atender · {company}</p>
+                </div>
+              </div>
+              {(info.yearsExperience != null || info.peopleServed != null) && (
+                <div className="flex gap-8 mt-4">
+                  {info.yearsExperience != null && (
+                    <div>
+                      <p className="text-xl font-extrabold text-brand-ink tabular-nums leading-none">{info.yearsExperience}</p>
+                      <p className="text-[11px] text-brand-gray-4 mt-1 leading-tight">años de<br />experiencia</p>
+                    </div>
+                  )}
+                  {info.peopleServed != null && (
+                    <div>
+                      <p className="text-xl font-extrabold text-brand-ink tabular-nums leading-none">{info.peopleServed.toLocaleString("es-MX")}</p>
+                      <p className="text-[11px] text-brand-gray-4 mt-1 leading-tight">personas<br />atendidas</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {info.credential && (
+                <div className="flex items-center gap-1.5 mt-4 pt-3 border-t border-brand-border-1">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" className="text-brand-success-ink flex-shrink-0">
+                    <path d="M12 2L20 5V11C20 16 16.5 19.5 12 21C7.5 19.5 4 16 4 11V5L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M9 12L11.5 14.5L15.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <p className="text-[11px] text-brand-gray-3">{info.credential}</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Qué vas a ver — el valor, en beneficios concretos */}
           <div className="rounded-[22px] border border-brand-border-1 bg-white p-5 mb-6 shadow-[0_2px_22px_rgba(0,0,0,.05)]">

@@ -39,6 +39,7 @@ function renderPerfil(advisorOverrides: Record<string, unknown> = {}, clientCoun
       initialAdvisor: baseAdvisor(advisorOverrides),
       initialClientCount: clientCount,
       initialLeadCount: leadCount,
+      initialCredibility: { credential: null, yearsExperience: null, peopleServed: null },
     })
   );
 }

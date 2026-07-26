@@ -20,7 +20,7 @@ export default async function PerfilPage() {
   const [advisor, pendingCommissions, clientCount, leadCount, allConverted] = await Promise.all([
     db.advisor.findUnique({
       where: { id: session.advisorId },
-      select: { id: true, name: true, email: true, phone: true, companyName: true, createdAt: true, emailVerified: true, plan: true, paidUntil: true, mpPreapprovalId: true, onboardedAt: true },
+      select: { id: true, name: true, email: true, phone: true, companyName: true, createdAt: true, emailVerified: true, plan: true, paidUntil: true, mpPreapprovalId: true, onboardedAt: true, settings: { select: { credential: true, yearsExperience: true, peopleServed: true } } },
     }),
     db.referral.findMany({
       where: { advisorId: session.advisorId, billedAt: null, lessioCommission: { not: null } },
@@ -52,8 +52,9 @@ export default async function PerfilPage() {
       ? hasSubscription ? "paid" : "trial"
       : !hasSubscription && paidUntilMs !== null && paidUntilMs <= nowMs ? "trial_expired" : "freemium";
 
-  // No filtramos el id de Mercado Pago al cliente.
-  const { mpPreapprovalId: _mpId, ...advisorPublic } = advisor;
+  // No filtramos el id de Mercado Pago al cliente. `settings` se pasa aparte
+  // como initialCredibility, no dentro del objeto advisor.
+  const { mpPreapprovalId: _mpId, settings: advisorSettings, ...advisorPublic } = advisor;
 
   const pendingCommissionTotal = pendingCommissions.reduce((sum, r) => sum + (r.lessioCommission ?? 0), 0);
 
@@ -92,6 +93,11 @@ export default async function PerfilPage() {
       netWithPro={netWithPro}
       convertedCount={allConverted.length}
       billingStatus={billingStatus}
+      initialCredibility={{
+        credential: advisorSettings?.credential ?? null,
+        yearsExperience: advisorSettings?.yearsExperience ?? null,
+        peopleServed: advisorSettings?.peopleServed ?? null,
+      }}
     />
   );
 }
