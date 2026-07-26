@@ -357,81 +357,100 @@ export default function ReferralLandingPage() {
     );
   }
 
-  // Landing step — FOMO financiero
+  // Landing step — el amigo te abre una puerta: una radiografía de tu dinero, gratis
+  const company = info.companyName ?? info.advisorName;
   return (
-    <div className={`min-h-screen bg-white flex flex-col ${hankenGrotesk.className}`}
+    <div className={`relative min-h-screen bg-white ${hankenGrotesk.className}`}
          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-      <div className="flex-1 flex flex-col justify-between px-6 max-w-sm mx-auto w-full pt-14 pb-8">
+      {/* Glow premium superior */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(37,99,235,0.10),transparent_70%)]" />
 
-        {/* Top */}
+      <div className="relative px-6 max-w-sm mx-auto w-full pt-12 pb-36">
         <div className="landing-stagger">
           {/* Brand */}
-          <div className="flex items-center gap-2 mb-8">
+          <div className="flex items-center gap-2 mb-9">
             <Logo size="sm" />
-            <span className="text-[11px] text-brand-gray-4">
-              · {info.companyName ?? info.advisorName}
-            </span>
+            <span className="text-[11px] text-brand-gray-4">· {company}</span>
           </div>
 
-          <p className="text-sm text-brand-gray-4 mb-2">{firstName} te quiere compartir algo</p>
-          <h1 className="text-[2rem] font-extrabold leading-[1.1] tracking-[-0.02em] mb-5 text-brand-ink">
-            Tu amigo ya está cuidando su futuro.
-            <span className="text-brand-gray-4"> ¿Y el tuyo?</span>
-          </h1>
+          {/* El amigo primero — confianza antes que nada */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-11 h-11 rounded-full bg-brand-ink text-white flex items-center justify-center text-[15px] font-bold flex-shrink-0 ring-[3px] ring-white shadow-[0_4px_14px_rgba(0,0,0,.12)]">
+              {firstName.charAt(0).toUpperCase()}
+            </div>
+            <p className="text-sm text-brand-gray-2"><b className="font-semibold text-brand-ink">{firstName}</b> pensó en ti</p>
+          </div>
 
-          <div className="bg-brand-ink rounded-[20px] p-4 mb-8">
-            <p className="text-[11px] font-bold text-brand-gray-5 uppercase tracking-[0.08em] mb-2">
-              Mensaje de {firstName}
-            </p>
-            <p className="text-sm text-white/90 leading-relaxed">
+          <h1 className="text-[2rem] font-extrabold leading-[1.08] tracking-[-0.02em] text-brand-ink mb-3">
+            Una radiografía de tu dinero, <span className="text-brand-blue">sin costo.</span>
+          </h1>
+          <p className="text-[15px] text-brand-gray-2 leading-relaxed mb-7">
+            {firstName} trabaja con {company} y le pidió que te dé la misma revisión que a {firstName} le abrió los ojos. 20 minutos, sin venta.
+          </p>
+
+          {/* La recomendación del amigo — protagonista y creíble */}
+          <div className="relative overflow-hidden bg-brand-ink rounded-[22px] p-5 mb-7">
+            <div aria-hidden="true" className="pointer-events-none absolute -top-12 -right-8 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgba(37,99,235,0.35),transparent_70%)]" />
+            <div className="relative flex items-center gap-2.5 mb-3">
+              <div className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                {firstName.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{info.referrerName}</p>
+                <p className="text-[11px] text-white/45">te lo recomienda de corazón</p>
+              </div>
+            </div>
+            <p className="relative text-[15px] text-white/90 leading-relaxed">
               {renderMessage(info.welcomeMessage || DEFAULT_REFERRAL_WELCOME_MESSAGE, { nombre: firstName })}
             </p>
           </div>
 
-          {/* Social proof row */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="flex -space-x-2">
-              <div className="w-7 h-7 rounded-full bg-brand-ink border-2 border-white flex items-center justify-center text-[10px] font-bold text-white">
-                {firstName.charAt(0).toUpperCase()}
-              </div>
-              {["A", "M"].map((l) => (
-                <div key={l} className="w-7 h-7 rounded-full bg-brand-border-1 border-2 border-white flex items-center justify-center text-[10px] font-bold text-brand-gray-3">
-                  {l}
+          {/* Qué vas a ver — el valor, en beneficios concretos */}
+          <div className="rounded-[22px] border border-brand-border-1 bg-white p-5 mb-6 shadow-[0_2px_22px_rgba(0,0,0,.05)]">
+            <p className="text-[13px] font-bold text-brand-ink mb-4">En tu radiografía vas a ver:</p>
+            <div className="space-y-3.5">
+              {[
+                { icon: <GrowthIcon />, text: "Cuánto podrías estar ahorrando en impuestos cada año" },
+                { icon: <ShieldIcon />, text: "Si tu familia quedaría protegida si algo te pasara hoy" },
+                { icon: <ChatIcon />, text: "Un plan claro para tu dinero, en español y sin tecnicismos" },
+              ].map((item) => (
+                <div key={item.text} className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-brand-blue-bg text-brand-blue flex items-center justify-center flex-shrink-0">
+                    {item.icon}
+                  </div>
+                  <p className="text-sm text-brand-gray-1 leading-snug">{item.text}</p>
                 </div>
               ))}
             </div>
-            <p className="text-xs text-brand-gray-4">
-              {firstName} y otras personas ya cuidan su futuro financiero con {info.companyName ?? info.advisorName}
-            </p>
           </div>
 
-          {/* What you'll learn */}
-          <div className="space-y-3">
-            {[
-              { icon: <GrowthIcon />, text: "Qué es un PPR y cómo te ayuda a pagar menos impuestos" },
-              { icon: <ShieldIcon />, text: "Cómo funciona un seguro de vida con valor en inversión" },
-              { icon: <ChatIcon />, text: "Una plática de 20 minutos, sin compromiso ni presión" },
-            ].map((item) => (
-              <div key={item.text} className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-2xl bg-brand-surface text-brand-gray-1 flex items-center justify-center flex-shrink-0">
-                  {item.icon}
-                </div>
-                <p className="text-sm text-brand-gray-1 leading-snug">{item.text}</p>
-              </div>
+          {/* Cero riesgo */}
+          <div className="flex flex-wrap gap-2">
+            {["Gratis", "Sin compromiso", "20 minutos", "Tú decides"].map((t) => (
+              <span key={t} className="inline-flex items-center gap-1.5 rounded-full bg-brand-surface px-3 py-1.5 text-xs font-medium text-brand-gray-2">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-brand-success-ink"><path d="M20 6 9 17l-5-5"/></svg>
+                {t}
+              </span>
             ))}
           </div>
         </div>
 
-        {/* Bottom CTA */}
-        <div className="landing-cta mt-10">
+      </div>
+
+      {/* CTA fija — siempre alcanzable con el pulgar, sin depender de scroll */}
+      <div
+        className="fixed inset-x-0 bottom-0 z-20 px-6 pt-8 bg-gradient-to-t from-white via-white to-transparent"
+        style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="landing-cta max-w-sm mx-auto">
           <button
             onClick={() => setStep("form")}
-            className="w-full bg-[#2563EB] text-white text-base font-semibold py-4 rounded-full shadow-[0_8px_24px_rgba(37,99,235,.28)] hover:bg-[#1D4ED8] active:scale-[0.98] transition"
+            className="w-full bg-brand-blue text-white text-base font-semibold py-4 rounded-full shadow-[0_8px_24px_rgba(37,99,235,.28)] hover:bg-[#1D4ED8] active:scale-[0.98] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2"
           >
-            Quiero conocer mi oportunidad
+            Quiero mi radiografía gratis
           </button>
-          <p className="text-center text-[11px] text-brand-gray-4 mt-3">
-            Te lo recomienda <strong className="text-brand-gray-3">{info.referrerName}</strong>
+          <p className="text-center text-[11px] text-brand-gray-4 mt-2.5">
+            Te la recomienda <strong className="text-brand-gray-3">{info.referrerName}</strong>
           </p>
         </div>
       </div>
