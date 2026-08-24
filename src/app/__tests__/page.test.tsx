@@ -30,7 +30,7 @@ describe("Home (landing page)", () => {
     const jsx = await Home();
     render(jsx);
 
-    expect(screen.getByText(/no compres más leads/i)).toBeInTheDocument();
+    expect(screen.getByText(/deja de perseguir clientes/i)).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /crear cuenta gratis/i }).length).toBeGreaterThan(0);
     expect(document.body.textContent?.replace(/\s+/g, " ")).toContain("$539 MXN");
     expect(mockRedirect).not.toHaveBeenCalled();

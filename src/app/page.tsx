@@ -138,14 +138,14 @@ export default async function Home() {
       <section className="max-w-[1180px] mx-auto px-8 pt-16 pb-12 grid md:grid-cols-2 gap-16 items-center">
         <div className="landing-stagger">
           <h1 className="font-extrabold tracking-[-0.03em] leading-[1.04] mb-5 text-[#0B0B0C] text-balance" style={{ fontSize: "clamp(2.5rem, 5.5vw, 60px)" }}>
-            No compres más leads.
+            Deja de perseguir clientes.
             <br />
-            Tus próximos clientes ya están en tu cartera.
+            Los que ya tienes te los traen.
           </h1>
           <p className="text-[#5A626E] leading-[1.6] mb-8 max-w-md" style={{ fontSize: 18 }}>
-            Cada recomendación que hoy se esfuma en una plática al aire se vuelve
-            un cliente en tu pipeline — y tú obtienes leads que sí cierran, a una
-            fracción del costo de comprarlos.
+            Tus clientes felices conocen a quien necesita lo que vendes. Referidoo
+            hace que te recomienden de verdad, porque ven lo que ganan, y te caen
+            tibios en tu pipeline. Sin comprar un solo lead.
           </p>
           <div className="flex items-center gap-3">
             <Link href="/registro" className="text-sm font-medium bg-[#0B0B0C] text-white px-5 py-3 rounded-full transition-[background-color,transform] duration-150 hover:bg-[#26262a] active:scale-[0.97]">
