@@ -50,18 +50,30 @@ export default function RegistroPage() {
   return (
     <div className={`min-h-screen bg-white flex items-center justify-center px-4 ${hankenGrotesk.className}`}>
       <div className="w-full max-w-sm">
-        <div className="mb-10 text-center flex flex-col items-center">
+        <div className="mb-6 text-center flex flex-col items-center">
           <div className="mb-4">
             <Link href="/" aria-label="Ir al inicio">
               <Logo size="md" />
             </Link>
           </div>
-          <p className="text-sm text-brand-gray-4">Crea tu cuenta de asesor</p>
+          <h1 className="text-2xl font-bold text-brand-ink">Crea tu cuenta</h1>
+          <p className="text-sm text-brand-gray-4 mt-1">Gratis, en menos de un minuto.</p>
           {wantsPro && (
             <p className="mt-3 text-xs font-semibold text-[#2563EB] bg-[#EEF3FE] rounded-full px-4 py-1.5">
               Vas por el plan Pro — al crear tu cuenta te llevamos directo a activarlo
             </p>
           )}
+        </div>
+
+        {/* Reaseguro: mantiene el "gratis · sin tarjeta" que prometió la home,
+            justo en el momento de comprometerse. */}
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 mb-7">
+          {["30 días de Pro gratis", "Sin tarjeta", "Cancela cuando quieras"].map((t) => (
+            <span key={t} className="inline-flex items-center gap-1 text-xs font-medium text-brand-gray-2">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1F9D5B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+              {t}
+            </span>
+          ))}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -141,8 +153,11 @@ export default function RegistroPage() {
             disabled={loading}
             className="w-full min-h-11 bg-brand-ink text-white text-sm font-medium py-3 rounded-full hover:bg-[#26262a] disabled:opacity-50 disabled:cursor-not-allowed transition-[background-color,transform,opacity] duration-150 active:scale-[0.98]"
           >
-            {loading ? "Creando cuenta..." : "Crear cuenta"}
+            {loading ? "Creando tu cuenta..." : "Crear mi cuenta gratis"}
           </button>
+          <p className="text-xs text-brand-gray-4 text-center">
+            Te enviamos un correo para confirmar tu cuenta. Nada de spam.
+          </p>
         </form>
 
         <div className="text-center mt-5 text-sm text-brand-gray-2">
