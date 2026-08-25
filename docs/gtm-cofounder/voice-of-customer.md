@@ -40,6 +40,32 @@ O sea: el mecanismo del premio visible **elimina la incomodidad de pedir.** Ese 
 3. **"Comprar leads es una apuesta; mejor pagar al cerrar"** — validado, y es tu oferta.
 4. "La fuga de referidos" (leak) — plausible, pero menos visto verbatim; probarlo contra el #1.
 
+## Citas TEXTUALES de asesores MX (Reddit r/Changarrito, vía opencli) — 25-ago
+
+Voz real de agentes de vida mexicanos. Esto es copy-listo.
+
+**Los referidos son EL único camino (villano confirmado):**
+> *"Referidos, no hay de otra, que tus conocidos te den referidos. Antes la gente trabajaba mucho con la compra de bases de datos... pero ya no es factible, **la gente cada vez confía menos y nadie te dará una cita si no eres referido por alguien de su confianza**."* — MakotoRitter
+
+**Pedir referidos QUEMA tu círculo (tu ángulo "refiere sin pedir", validado literal):**
+> *"Luego la gente (como tus conocidos o amigos) **se harta de que le intentes vender cosas o les pidas referencias**, aguas."* — jitachi
+
+**El mercado natural se acaba (la angustia):**
+> *"Estoy pensando en **cómo conseguir referidos desde ahorita antes que se me acabe el mercado natural.**"* — OP
+
+**Un asesor MX de 10 años valida tu ICP entero:**
+> *"Me enfoco solo en esos ramos (**Seguro de vida y GMM**)... **vender seguros de autos... trata de evitar el ramo, es una trampa sin fondo**... Al día de hoy llegué a un punto en el que **ya consigo más referidos como clientes que como externos.**"* — Technical-Barber-711
+> → Confirma: (1) foco vida/GMM, (2) evitar autos (justo tu decisión), (3) el endgame ES que los referidos dominen. Todo tu thesis, dicho por un veterano.
+
+**Ya piensan en pagar por referir (tu mecanismo del premio):**
+> *"**¿Cuánto porcentaje le das a los que te envían leads?**"* — TerrenoTerreneitor
+
+**Prospectar en frío = grind que odian:**
+> *"Hay que ser más como **Saul Goodman**... personalidades con mucho carisma"* (OP) · *"Esas sí son ventas de verdad, **tienes que empujar el producto**"* (Rough_Bet6203) · *"No hay mucha diferencia a vender Herbalife... si ni al médico van, menos comprar seguros"* (jitachi)
+
+**Insight para la landing del CLIENTE:**
+> *"La neta la raza tiene la idea de que **un seguro es inalcanzable y carísimo**."* — The1AndOnlyJohnny
+
 ## Qué falta (lo que esto NO da)
 - Voz MX específica y a fondo (mucho es EE.UU. o contenido de marketers, no asesores crudos).
 - Confirmación de que TU solución les hace sentido (eso solo sale de enseñárselo).
