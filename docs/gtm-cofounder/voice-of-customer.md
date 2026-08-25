@@ -66,6 +66,17 @@ Voz real de agentes de vida mexicanos. Esto es copy-listo.
 **Insight para la landing del CLIENTE:**
 > *"La neta la raza tiene la idea de que **un seguro es inalcanzable y carísimo**."* — The1AndOnlyJohnny
 
+## Citas de r/InsuranceAgent (US, en inglés) — refuerzan "no compres leads"
+
+Mercado distinto (EE.UU.) pero el villano es idéntico:
+> *"they're all about the same so you just have to hope the sweet aroma of your money burning on leads is pleasing to the insurance gods."* (leads = quemar dinero) — lonestardem
+> *"Don't buy leads. Most of them recycled and running ads just burn your money... I'd rather build a pipeline... referrals."* — Content-Concert-1437
+> *"For up market insurance... Leads don't exist and **referrals dominate.**"* — Monskiactual
+> *"[lead companies produce] tire kickers that waste everyone's time."* — suppliezz
+
+## Nota de método (Facebook)
+Los grupos FB (Agentes de seguros México, Seguros de Vida y GMM) se pudieron UNIR pero NO leer con las herramientas actuales (opencli no tiene lector de posts de grupo y su feed/join de FB están rotos por DOM drift). El research de valor salió de Reddit. Los grupos FB son para ACTUAR (postear el Mensaje C, DM), no para raspar.
+
 ## Qué falta (lo que esto NO da)
 - Voz MX específica y a fondo (mucho es EE.UU. o contenido de marketers, no asesores crudos).
 - Confirmación de que TU solución les hace sentido (eso solo sale de enseñárselo).
