@@ -25,6 +25,15 @@ Todos los asesores venden pólizas casi idénticas al mismo precio. El diferenci
 
 Eso es héroe (asesor) + villano (muerte de lo frío / economía de la confianza) + arma (Referidoo). Es lo que le da urgencia.
 
+**Actualización por social listening (25-ago-2026) — re-rankeo del villano:**
+La voz real del asesor (ver `voice-of-customer.md`) mueve el villano #1 hacia algo más caliente que "la fuga": **pedir referidos es incómodo, así que no lo haces.** Está literal en su vocabulario ("conseguir referidos... llega a ser incómodo"; blogs titulados "pedir referidos y no morir en el intento"). El nuevo ángulo líder:
+> **"Referir deja de ser un favor incómodo que tienes que pedir. Tu cliente ve lo que gana y refiere solo, tú no pides nada."**
+El premio visible **elimina la incomodidad de pedir.** Ese es el villano más respaldado por su voz. Sigue probando "la fuga" contra este, pero este arranca con ventaja.
+
+**Prueba en su propia voz (para el pitch):** un asesor en Reddit sobre comprar leads: *"mejor pagar solo cuando cierras el trato que comprar un montón de leads que capaz sí, capaz no cierren."* Es tu oferta de reversión de riesgo, dicha por el cliente. Úsala.
+
+**Diferenciación vs figuro.la** (ver `competitors.md`): figuro ordena y cotiza a los prospectos que YA tienes; Referidoo te trae prospectos nuevos de tu cartera. Otro trabajo. No compitas como CRM; sé profundo en el loop de referidos.
+
 ## 2. La escalera de diferenciación (dónde estás → a dónde ir)
 
 Compite lo más arriba posible. La guerra de features es una carrera al fondo.
