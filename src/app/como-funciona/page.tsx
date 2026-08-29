@@ -5,6 +5,7 @@ import { LandingFooter } from "@/components/LandingFooter";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { LiquidBubble } from "@/components/landing/LiquidBubble";
 import { BrandWord } from "@/components/landing/BrandWord";
+import { SHOW_BUBBLE_REWARDS } from "@/lib/product-visibility";
 
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
@@ -99,7 +100,7 @@ export default function ComoFuncionaPage() {
             items={[
               {
                 title: "Configuras tus premios una vez",
-                body: "Defines cuánto gana tu cliente por cada referido (escalera o burbuja), y cada cliente recibe su link. Se configura una sola vez.",
+                body: "Defines cuánto gana tu cliente por cada referido, y cada cliente recibe su link. Se configura una sola vez.",
               },
               {
                 title: "Los referidos caen solos en tu pipeline",
@@ -191,12 +192,11 @@ export default function ComoFuncionaPage() {
             Así crece el premio de tu cliente
           </h2>
           <p className="text-[#5A626E] max-w-md mx-auto leading-[1.6]" style={{ fontSize: 17 }}>
-            Tú pones los montos; el sistema lleva la cuenta según tus reglas. Dos
-            formas, según el producto.
+            Tú pones los montos; el sistema lleva la cuenta según tus reglas.
           </p>
         </ScrollReveal>
 
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className={`grid gap-4 ${SHOW_BUBBLE_REWARDS ? "md:grid-cols-2" : "max-w-md mx-auto"}`}>
           <ScrollReveal className="bg-[#F4F5F7] rounded-[20px] p-6 border border-[#ECEDEF]">
             <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-1">Vida y PPR</p>
             <h3 className="font-bold text-[20px] text-[#0B0B0C] mb-4">Escalera de premios</h3>
@@ -221,6 +221,8 @@ export default function ComoFuncionaPage() {
             </p>
           </ScrollReveal>
 
+          {/* Premios burbuja — ocultos en Fase 1 (SHOW_BUBBLE_REWARDS). */}
+          {SHOW_BUBBLE_REWARDS && (
           <ScrollReveal delayMs={60} className="bg-[#F4F5F7] rounded-[20px] p-6 border border-[#ECEDEF]">
             <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-1">Auto y Gastos Médicos Mayores</p>
             <h3 className="font-bold text-[20px] text-[#0B0B0C] mb-4">Premios burbuja</h3>
@@ -238,6 +240,7 @@ export default function ComoFuncionaPage() {
               definas, el premio queda listo para que tu cliente lo pida.
             </p>
           </ScrollReveal>
+          )}
         </div>
       </section>
 

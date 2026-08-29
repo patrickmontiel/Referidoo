@@ -11,6 +11,7 @@ import { HeroDemo } from "@/components/landing/HeroDemo";
 import { ChannelData } from "@/components/landing/ChannelData";
 import { LiquidBubble } from "@/components/landing/LiquidBubble";
 import { BrandWord } from "@/components/landing/BrandWord";
+import { SHOW_BUBBLE_REWARDS, SHOW_NON_CORE_PRODUCTS } from "@/lib/product-visibility";
 import BolaDeNieveCard from "@/components/BolaDeNieveCard";
 
 const hankenGrotesk = Hanken_Grotesk({
@@ -56,7 +57,7 @@ const FEATURES = [
   },
   {
     title: "Premios sin cuentas a mano",
-    body: "Escalera de premios para Vida y PPR, premios burbuja para Auto y GMM. Tú configuras los montos y tú pagas; nosotros llevamos la cuenta de a quién le toca cuánto y tu cliente lo ve, sin que persigas CLABEs.",
+    body: "Escalera de premios para Vida y PPR. Tú configuras los montos y tú pagas; nosotros llevamos la cuenta de a quién le toca cuánto y tu cliente lo ve, sin que persigas CLABEs.",
   },
   {
     title: "Portal para tus clientes",
@@ -235,8 +236,8 @@ export default async function Home() {
             Tú pones los montos. <BrandWord /> lleva la cuenta.
           </h2>
           <p className="text-[#5A626E] max-w-lg mx-auto leading-[1.6] mb-3" style={{ fontSize: 18 }}>
-            Dos formas de premiar, según el producto — tú decides los números,
-            el sistema nunca se equivoca.
+            Premia a tus clientes por cada referido que cierres — tú decides los
+            números, el sistema nunca se equivoca.
           </p>
           <Link href="/como-funciona" className="inline-flex items-center gap-1.5 text-sm font-medium text-[#2563EB] hover:gap-2.5 transition-[gap]">
             Ver cómo funciona, paso a paso
@@ -244,7 +245,7 @@ export default async function Home() {
           </Link>
         </ScrollReveal>
 
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className={`grid gap-4 ${SHOW_BUBBLE_REWARDS ? "md:grid-cols-2" : ""}`}>
           <ScrollReveal className="bg-[#F4F5F7] rounded-[20px] p-6 border border-[#ECEDEF]">
             <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-1">Vida y PPR</p>
             <h3 className="font-bold text-[20px] text-[#0B0B0C] mb-4">Escalera de premios</h3>
@@ -271,6 +272,8 @@ export default async function Home() {
             </p>
           </ScrollReveal>
 
+          {/* Premios burbuja — ocultos en Fase 1 (SHOW_BUBBLE_REWARDS). */}
+          {SHOW_BUBBLE_REWARDS && (
           <ScrollReveal delayMs={60} className="bg-[#F4F5F7] rounded-[20px] p-6 border border-[#ECEDEF]">
             <p className="text-xs font-bold text-[#6B727D] uppercase tracking-[0.08em] mb-1">Auto y Gastos Médicos Mayores</p>
             <h3 className="font-bold text-[20px] text-[#0B0B0C] mb-4">Premios burbuja</h3>
@@ -312,6 +315,7 @@ export default async function Home() {
               que tengas que avisarle. Montos y meta, configurables.
             </p>
           </ScrollReveal>
+          )}
         </div>
       </section>
 
@@ -368,6 +372,7 @@ export default async function Home() {
                   <p className="text-lg font-bold text-[#0B0B0C]">$1,500</p>
                 </div>
               </div>
+              {SHOW_BUBBLE_REWARDS && (
               <div className="sr-item bg-white rounded-2xl border border-[#ECEDEF] p-3 mb-2 flex items-center gap-3">
                 <LiquidBubble size={44} fill={70} className="flex-shrink-0" />
                 <div className="flex-1 min-w-0">
@@ -375,6 +380,7 @@ export default async function Home() {
                   <p className="text-[11px] text-[#8A8F98]">350 / 500 pts — ya casi</p>
                 </div>
               </div>
+              )}
               <div className="sr-item bg-white rounded-2xl border border-[#ECEDEF] p-3 mb-2 flex items-center justify-between">
                 <span className="text-xs font-medium text-[#0B0B0C]">Premio listo para reclamar</span>
                 <span className="claim-pulse text-[11px] font-bold text-white bg-[#2563EB] px-2 py-1 rounded-full">Reclamar</span>
@@ -530,7 +536,7 @@ export default async function Home() {
                 <div className="space-y-1.5 mb-6">
                   {[
                     { label: "PPR/Vida",             pct: "0.25%" },
-                    { label: "Daños/Auto/GMM/Otro",  pct: "1.5%"  },
+                    ...(SHOW_NON_CORE_PRODUCTS ? [{ label: "Daños/Auto/GMM/Otro", pct: "1.5%" }] : []),
                   ].map((r) => (
                     <div key={r.label} className="flex items-center justify-between text-sm">
                       <span className="text-[#5A626E]">{r.label}</span>
@@ -558,7 +564,7 @@ export default async function Home() {
                   {[
                     "Todo lo del plan gratis, y además:",
                     "Leads ilimitados en el pipeline",
-                    "Premios Burbuja configurables (Auto y GMM)",
+                    ...(SHOW_BUBBLE_REWARDS ? ["Premios Burbuja configurables (Auto y GMM)"] : []),
                     "Comisiones más bajas en todos los productos",
                   ].map((item) => (
                     <li key={item} className="flex items-center gap-2">
@@ -572,7 +578,7 @@ export default async function Home() {
                 <div className="space-y-1.5 mb-6">
                   {[
                     { label: "PPR/Vida",             pct: "0.15%" },
-                    { label: "Daños/Auto/GMM/Otro",  pct: "0.80%" },
+                    ...(SHOW_NON_CORE_PRODUCTS ? [{ label: "Daños/Auto/GMM/Otro", pct: "0.80%" }] : []),
                   ].map((r) => (
                     <div key={r.label} className="flex items-center justify-between text-sm">
                       <span className="text-[#5A626E]">{r.label}</span>

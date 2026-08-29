@@ -5,6 +5,7 @@ import Confetti from "@/components/Confetti";
 import { Hanken_Grotesk } from "next/font/google";
 import { Logo } from "@/components/Logo";
 import { DEFAULT_REFERRAL_WELCOME_MESSAGE, renderMessage } from "@/lib/message-templates";
+import { VISIBLE_INTERESTS } from "@/lib/product-visibility";
 import type { ReferralInfo } from "@/lib/referral-info";
 
 const hankenGrotesk = Hanken_Grotesk({
@@ -29,15 +30,9 @@ function buildBookingUrl(base: string, name: string, email: string): string {
 type Step = "landing" | "form" | "success";
 
 // Etiquetas amigables para el lead → valor canónico que ve el asesor en su
-// panel (interestProductType usa el mismo vocabulario que productType:
-// PPR / Vida / GMM / Daños/Auto). "Aún no sé" no fija ningún producto.
-const INTERESTS: { label: string; value: string }[] = [
-  { label: "Plan de retiro / ahorro", value: "PPR" },
-  { label: "Seguro de vida", value: "Vida" },
-  { label: "Gastos médicos mayores", value: "GMM" },
-  { label: "Seguro de auto", value: "Daños/Auto" },
-  { label: "Aún no sé", value: "" },
-];
+// panel (interestProductType usa el mismo vocabulario que productType).
+// Fase 1: solo core (PPR/Vida). Los tipos no-core viven en product-visibility.
+const INTERESTS = VISIBLE_INTERESTS;
 
 function GrowthIcon() {
   return (

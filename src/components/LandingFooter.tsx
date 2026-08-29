@@ -6,7 +6,7 @@ const WHATSAPP_URL =
 
 const PRODUCT_LINKS = [
   { label: "Cómo funciona", href: "/como-funciona" },
-  { label: "Premios escalera y burbuja", href: "/como-funciona#paso-3" },
+  { label: "Escalera de premios", href: "/como-funciona#paso-3" },
   { label: "Precios", href: "/#precios" },
   { label: "Portal del cliente", href: "/como-funciona#paso-4" },
 ];

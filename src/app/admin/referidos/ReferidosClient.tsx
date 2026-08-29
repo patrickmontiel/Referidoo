@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { formatCurrency, formatDate, formatNumberWithCommas } from "@/lib/utils";
+import { VISIBLE_PRODUCT_TYPES, SHOW_BUBBLE_REWARDS } from "@/lib/product-visibility";
 
 type Referral = {
   id: string;
@@ -478,7 +479,7 @@ export default function ReferidosClient({
 
               let amountNode: React.ReactNode;
               if (isConverted) {
-                if (noEscaleraReward && isBubble) {
+                if (SHOW_BUBBLE_REWARDS && noEscaleraReward && isBubble) {
                   const pts = r.productType === "GMM" ? bubblePointsByProduct.gmmPoints : bubblePointsByProduct.autoPoints;
                   amountNode = <span className="text-xs font-semibold text-blue-600">+{pts} pts</span>;
                 } else if (!noEscaleraReward) {
@@ -599,7 +600,7 @@ export default function ReferidosClient({
                 Producto contratado {productLocked && <span className="text-[#1F9D5B] normal-case tracking-normal">· leído de la póliza</span>}
               </label>
               <div className="flex flex-wrap gap-2 mb-1">
-                {["PPR", "Vida", "Daños/Auto", "GMM", "Otro"].map((type) => (
+                {VISIBLE_PRODUCT_TYPES.map((type) => (
                   <button
                     key={type}
                     type="button"
@@ -848,7 +849,7 @@ export default function ReferidosClient({
                     <>
                       <div>
                         <p className="text-xs text-brand-gray-4 mb-0.5">Premio al cliente</p>
-                        {noEscalera && isBubble ? (
+                        {SHOW_BUBBLE_REWARDS && noEscalera && isBubble ? (
                           <p className="text-xl font-bold text-blue-600">+{pts} pts</p>
                         ) : noEscalera ? (
                           <p className="text-sm text-brand-gray-4">Sin premio en efectivo</p>
@@ -935,7 +936,7 @@ export default function ReferidosClient({
                 <div>
                   <p className="text-xs font-medium text-[#6B727D] mb-2.5">¿En qué está interesado?</p>
                   <div className="flex flex-wrap gap-2">
-                    {["PPR", "Vida", "Daños/Auto", "GMM", "Otro"].map((type) => (
+                    {VISIBLE_PRODUCT_TYPES.map((type) => (
                       <button
                         key={type}
                         disabled={updating}
@@ -1051,8 +1052,9 @@ export default function ReferidosClient({
                 </div>
               )}
 
-              {/* Bubble pts info (non-escalera conversions) */}
-              {selected.status === "converted" &&
+              {/* Bubble pts info (non-escalera conversions) — oculto en Fase 1 */}
+              {SHOW_BUBBLE_REWARDS &&
+               selected.status === "converted" &&
                selected.tierPosition === 0 &&
                (selected.productType === "Daños/Auto" || selected.productType === "GMM" || selected.productType === "Otro") && (
                 <div className="bg-blue-50 rounded-xl px-4 py-3 text-sm text-blue-700">

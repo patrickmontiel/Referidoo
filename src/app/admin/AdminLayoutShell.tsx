@@ -6,6 +6,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Hanken_Grotesk } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { computeTipPosition } from "@/lib/tour-position";
+import { SHOW_BUBBLE_REWARDS } from "@/lib/product-visibility";
 import { Logo } from "@/components/Logo";
 
 const hankenGrotesk = Hanken_Grotesk({
@@ -99,8 +100,9 @@ const TIERS_STEPS: TourStepDef[] = [
     body: "Toca Premios: aquí decides cuánto gana tu cliente por cada referido que le cierres." },
   { target: '[data-tour="premios"]', page: "/admin/niveles", title: "Tu escalera de premios",
     body: "Cada nivel es lo que gana tu cliente por su 1er, 2º y 3er referido cerrado. Toca un monto para cambiarlo — por ejemplo, baja el 3er nivel de $3,500 a $2,500." },
-  { target: '[data-tour="bubble"]', page: "/admin/niveles", title: "Premios burbuja (Pro)",
-    body: "Estos son de los planes Pro (premios por Auto y Gastos Médicos). En tu plan no se editan — no necesitas tocar nada aquí." },
+  // Burbuja oculta en Fase 1 — el paso solo aparece si SHOW_BUBBLE_REWARDS.
+  ...(SHOW_BUBBLE_REWARDS ? [{ target: '[data-tour="bubble"]', page: "/admin/niveles", title: "Premios burbuja (Pro)",
+    body: "Estos son de los planes Pro (premios por Auto y Gastos Médicos). En tu plan no se editan — no necesitas tocar nada aquí." } as TourStepDef] : []),
   { target: '[data-tour="save-premios"]', page: "/admin/niveles", title: "Guarda tu escalera",
     body: "Baja y toca “Guardar cambios” para dejarla lista. Es lo que verán tus clientes en su portal." },
 ];

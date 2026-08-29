@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { formatCurrency, formatDate, formatNumberWithCommas } from "@/lib/utils";
 import { DEFAULT_CLIENT_SHARE_MESSAGE, DEFAULT_ADVISOR_INVITE_MESSAGE, DEFAULT_REFERRAL_WELCOME_MESSAGE } from "@/lib/message-templates";
+import { SHOW_BUBBLE_REWARDS } from "@/lib/product-visibility";
 
 type Tier = { amount: number; label: string };
 
@@ -282,7 +283,8 @@ export default function PremiosPage() {
         </div>
       </div>
 
-      {/* BURBUJA */}
+      {/* BURBUJA — oculta en Fase 1 (solo core PPR/Vida). Reactivar: SHOW_BUBBLE_REWARDS. */}
+      {SHOW_BUBBLE_REWARDS && (
       <div data-tour="bubble" className="relative bg-white rounded-2xl border border-brand-border-1 p-6 mb-4 overflow-hidden">
         {advisorPlan === "freemium" && (
           <div className="absolute inset-0 z-10 backdrop-blur-[2px] bg-white/70 flex flex-col items-center justify-center rounded-2xl">
@@ -334,6 +336,7 @@ export default function PremiosPage() {
           </span>
         </div>
       </div>
+      )}
 
       {/* MENSAJES */}
       <div className="bg-white rounded-2xl border border-brand-border-1 p-6 mb-4">

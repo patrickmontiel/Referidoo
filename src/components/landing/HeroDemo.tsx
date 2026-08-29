@@ -11,7 +11,7 @@ import { Count } from "./Count";
 const ROW_H = 46;
 
 const ROWS = [
-  { id: "sofia", name: "Sofía Torres", sub: "Auto · por María L." },
+  { id: "sofia", name: "Sofía Torres", sub: "Vida · por María L." },
   { id: "maria", name: "María López", sub: "Vida · Alejandro R." },
   { id: "carlos", name: "Carlos Pérez", sub: "PPR · Ana G." },
   { id: "rosa", name: "Rosa Flores", sub: "por Javier M." },

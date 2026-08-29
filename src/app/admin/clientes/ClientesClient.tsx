@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { formatCurrency, formatDate, REWARD_CUTOFF_DAYS } from "@/lib/utils";
 import { DEFAULT_ADVISOR_INVITE_MESSAGE, renderMessage } from "@/lib/message-templates";
+import { SHOW_BUBBLE_REWARDS } from "@/lib/product-visibility";
 
 type Client = {
   id: string;
@@ -993,8 +994,8 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
                         )}
                       </div>
                     )}
-                    {/* Financial grid */}
-                    <div className="px-5 py-4 grid grid-cols-3 gap-4">
+                    {/* Financial grid — Puntos burbuja oculto en Fase 1 (SHOW_BUBBLE_REWARDS) */}
+                    <div className={`px-5 py-4 grid gap-4 ${SHOW_BUBBLE_REWARDS ? "grid-cols-3" : "grid-cols-2"}`}>
                       <div>
                         <p className="text-xs text-[#8A8F98] mb-1.5">Se le debe</p>
                         <p className={`text-[22px] font-bold leading-none ${owed.overdue ? "text-red-600" : totalOwed > 0 ? "text-amber-600" : "text-[#0B0B0C]"}`}>
@@ -1014,12 +1015,14 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
                           {formatCurrency(totalPaid)}
                         </p>
                       </div>
+                      {SHOW_BUBBLE_REWARDS && (
                       <div>
                         <p className="text-xs text-[#8A8F98] mb-1.5">Puntos burbuja</p>
                         <p className={`text-[22px] font-bold leading-none ${client.bubblePoints > 0 ? "text-[#2563EB]" : "text-[#0B0B0C]"}`}>
                           {client.bubblePoints} <span className="text-sm font-medium text-[#8A8F98]">pts</span>
                         </p>
                       </div>
+                      )}
                     </div>
 
                     {/* Pagar premio — conveniencia: el dinero se mueve por fuera (CLABE), esto cierra el ciclo */}

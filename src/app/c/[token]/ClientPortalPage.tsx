@@ -7,6 +7,7 @@ import { Hanken_Grotesk } from "next/font/google";
 import { formatCurrency, formatDate, getStatusLabel, getRewardStatusLabel } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
 import { DEFAULT_CLIENT_SHARE_MESSAGE, renderMessage } from "@/lib/message-templates";
+import { SHOW_BUBBLE_REWARDS } from "@/lib/product-visibility";
 
 const DEFAULT_TIERS = [
   { position: 1, amount: 1500, label: "1er referido convertido" },
@@ -81,7 +82,8 @@ const TOUR_STEPS: TourStep[] = [
   { view: "inicio",    target: '[data-tour="tabs"]',      noScroll: true, title: "Tus dos vistas",        desc: "Cambia entre Inicio (tus premios) y Mis Referidos (a quién invitaste)." },
   { view: "inicio",    target: '[data-tour="bono"]',                      title: "Bono de inicio",         desc: "Si invitas a 3 personas esta semana y una contrata Vida o PPR, tu primer premio sube a $2,500." },
   { view: "inicio",    target: '[data-tour="saldos"]',                    title: "Tu dinero",              desc: "Lo que ya cobraste y lo que está aprobado, listo por cobrar." },
-  { view: "inicio",    target: '[data-tour="burbuja"]',                   title: "Tu burbuja",             desc: "Cada venta de Auto, GMM u otros la llena. Reviéntala y cobra en cúmulos de $500." },
+  // Burbuja oculta en Fase 1 — el paso solo aparece si SHOW_BUBBLE_REWARDS.
+  ...(SHOW_BUBBLE_REWARDS ? [{ view: "inicio", target: '[data-tour="burbuja"]', title: "Tu burbuja", desc: "Cada venta de Auto, GMM u otros la llena. Reviéntala y cobra en cúmulos de $500." } as TourStep] : []),
   { view: "inicio",    target: '[data-tour="enlace"]',                    title: "Tu enlace personal",     desc: "Compártelo por WhatsApp. Quien entre y contrate, te genera premios." },
   { view: "inicio",    target: '[data-tour="go-ref"]',   noScroll: true, tap: true, title: "Sigue a tus invitados", desc: "Abre \"Mis Referidos\" para ver a cada persona que invitaste. (Pulsa Siguiente.)" },
   { view: "historial", target: '[data-tour="ref-empty"]',                 title: "Mis Referidos",          desc: "Aquí verás quién entró, quién está en proceso y quién ya contrató." },
@@ -876,7 +878,8 @@ export default function ClientPortalPage() {
                     </div>
                   </div>
 
-                  {/* Tu burbuja */}
+                  {/* Tu burbuja — oculta en Fase 1. Reactivar: SHOW_BUBBLE_REWARDS. */}
+                  {SHOW_BUBBLE_REWARDS && (
                   <div data-tour="burbuja" style={{ background: "#fff", border: "1px solid rgba(0,0,0,.06)", borderRadius: 20, padding: "20px 19px" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
                       <h2 style={{ fontSize: 14, fontWeight: 700, color: "#0d0d0d" }}>Tu burbuja</h2>
@@ -927,6 +930,7 @@ export default function ClientPortalPage() {
                       </>
                     )}
                   </div>
+                  )}
 
                   {/* Datos para recibir premios */}
                   <div style={{ background: "#fff", border: "1px solid rgba(0,0,0,.06)", borderRadius: 20, padding: "20px 19px" }}>
@@ -1090,7 +1094,7 @@ export default function ClientPortalPage() {
                             </div>
                             <div style={{ textAlign: "right", flexShrink: 0 }}>
                               {r.status === "converted" && r.tierPosition === 0 ? (
-                                r.productType === "Daños/Auto" || r.productType === "GMM" || r.productType === "Otro" ? (
+                                SHOW_BUBBLE_REWARDS && (r.productType === "Daños/Auto" || r.productType === "GMM" || r.productType === "Otro") ? (
                                   <><p style={{ fontSize: 13, fontWeight: 700, color: "#2B57F0" }}>+{formatCurrency(r.productType === "GMM" ? settings.bubbleGmmPoints : settings.bubbleAutoPoints)}</p><p style={{ fontSize: 11, color: "#2B57F0", marginTop: 3 }}>Burbuja</p></>
                                 ) : (
                                   <><p style={{ fontSize: 13, fontWeight: 700, color: "#a1a1aa" }}>—</p><p style={{ fontSize: 11, color: "#a1a1aa", marginTop: 3 }}>Sin premio</p></>
