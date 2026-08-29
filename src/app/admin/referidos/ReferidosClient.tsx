@@ -454,6 +454,28 @@ export default function ReferidosClient({
         })}
       </div>
 
+      {/* Momento de paywall: aparece SOLO cuando ya hay referidos bloqueados
+          (los leads están llegando = valor ya probado). Value-before-ask. */}
+      {advisorPlan === "freemium" && lockedCount > 0 && (
+        <div className="rounded-2xl border border-[#BBD0FF] bg-[#EEF3FE] p-4 mb-5 flex items-start gap-3">
+          <div className="w-9 h-9 rounded-full bg-[#2563EB] text-white flex items-center justify-center flex-shrink-0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-[#0B0B0C]">Tus referidos ya te están llegando solos</p>
+            <p className="text-xs text-brand-gray-3 mt-0.5 leading-relaxed">
+              Tienes {lockedCount} referido{lockedCount === 1 ? "" : "s"} bloqueado{lockedCount === 1 ? "" : "s"} por el tope del plan Gratis (5). No se pierden — con Pro los desbloqueas todos y quitas el límite.
+            </p>
+          </div>
+          <a
+            href="/admin/perfil?upgrade=pro"
+            className="flex-shrink-0 bg-[#2563EB] text-white text-sm font-semibold px-4 py-2.5 rounded-full hover:bg-blue-700 active:scale-[.98] transition whitespace-nowrap self-center"
+          >
+            Desbloquear con Pro
+          </a>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-12">
           <div className="w-5 h-5 border-2 border-brand-ink border-t-transparent rounded-full animate-spin" />
