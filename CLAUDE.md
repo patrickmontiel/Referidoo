@@ -4,6 +4,17 @@
 
 Referidoo — dashboard de referidos para asesores de seguros. Ver [README.md](./README.md) (arquitectura, stack, setup) y [NEGOCIO.md](./NEGOCIO.md) (modelo de negocio). Estado: MVP, Fase 0 (asistido por Patrick, sin self-service de pagos todavía — no proponer/construir pasarela de pagos o UI de suscripción salvo que se pida explícitamente).
 
+## Productos ocultos a propósito (NO es bug)
+
+Decisión de producto (ago-2026): la etapa actual de venta muestra **solo el core, PPR y Vida**. Están **ocultos intencionalmente** — no faltan, no están rotos:
+
+- Los tipos de producto **Daños/Auto** y **GMM** como opción seleccionable y en el marketing.
+- Todo el sistema de **premios burbuja** (Pro, ligado a Auto/GMM) en asesor, portal del cliente y landing.
+
+Gateado por flags en [`src/lib/product-visibility.ts`](./src/lib/product-visibility.ts): `SHOW_BUBBLE_REWARDS`, `SHOW_NON_CORE_PRODUCTS`, `VISIBLE_PRODUCT_TYPES`, `VISIBLE_INTERESTS`. El **backend, `COMMISSION_RATES` y los datos siguen intactos** — los registros históricos con gmm/auto se siguen mostrando bien; solo se ocultan selección y superficies visibles.
+
+**Para agentes (QA / investigate / review / design-review):** que no aparezca la burbuja, ni Auto/GMM en dropdowns/precios, es lo esperado — **no lo reportes como defecto ni lo "restaures".** Reactivar (cuando se pida): flags a `true` + devolver los tipos a `VISIBLE_PRODUCT_TYPES` / `VISIBLE_INTERESTS`. (Ojo: "Fase 1" en `NEGOCIO.md` es otra cosa — el freemium/app —, no confundir con esta ocultación.)
+
 ## Convenciones específicas de este repo
 
 - **Sin flujo de PRs.** Un solo desarrollador, push directo a `master`. No crear branches/PRs salvo que se pida.
