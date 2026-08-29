@@ -479,7 +479,7 @@ export async function sendTrialEndingEmail(payload: {
       ${header()}
       <tr><td style="padding:32px 32px 20px">
         <h1 style="margin:0 0 10px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">${firstName}, tu prueba Pro termina ${whenText}</h1>
-        <p style="margin:0 0 16px;font-size:14px;color:#6B727D;line-height:1.6">Cuando termine tu mes de prueba, tu cuenta baja al plan Gratis: conservas tus clientes y su portal, pero pierdes los leads ilimitados, los Premios Burbuja y las comisiones más bajas de Pro.</p>
+        <p style="margin:0 0 16px;font-size:14px;color:#6B727D;line-height:1.6">Cuando termine tu mes de prueba, tu cuenta baja al plan Gratis: conservas tus clientes y su portal, pero pierdes los leads ilimitados y las comisiones más bajas de Pro.</p>
         <p style="margin:0 0 28px;font-size:14px;color:#6B727D;line-height:1.6">Deja tu método de pago para seguir en Pro sin cortes — $539 MXN/mes, cancelas cuando quieras.</p>
         ${pill(url, "Seguir en Pro →")}
         <p style="margin:14px 0 0;font-size:12px;color:#9098A2;text-align:center">Si prefieres quedarte en el plan Gratis, no tienes que hacer nada.</p>
