@@ -122,8 +122,8 @@ export default function AdminOverviewClient({ referrals, advisor, clientCount }:
   }
 
   const statCards = [
-    { value: clientCount,       label: "Clientes activos" },
     { value: referrals.length,  label: "Referidos totales" },
+    { value: clientCount,       label: "Clientes activos" },
     { value: converted,         label: "Convertidos" },
   ];
 
@@ -174,9 +174,9 @@ export default function AdminOverviewClient({ referrals, advisor, clientCount }:
         </div>
         {referrals.length === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-brand-gray-4 text-sm">Aun no hay referidos.</p>
+            <p className="text-brand-gray-4 text-sm">Aún no te cae ningún referido — pasa cuando un cliente comparte su link.</p>
             <Link href="/admin/clientes" className="text-xs text-brand-ink underline mt-2 inline-block">
-              Agrega tu primer cliente
+              Empieza: agrega un cliente y mándale su link
             </Link>
           </div>
         ) : (

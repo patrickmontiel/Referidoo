@@ -155,6 +155,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
   const [copiedField, setCopiedField] = useState<string>("");
   const [payingId, setPayingId] = useState<string | null>(null);
   const [deactivateId, setDeactivateId] = useState<string | null>(null);
+  const [justCreated, setJustCreated] = useState<Client | null>(null);
 
   // El recorrido de Primeros Pasos abre el form de "nuevo cliente" para
   // señalar los campos por dentro.
@@ -204,8 +205,12 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
         body: JSON.stringify(form),
       });
       if (res.ok) {
+        const created: Client = await res.json().catch(() => null);
         setForm({ name: "", email: "", phone: "", policyNumber: "" });
         setShowForm(false);
+        // El paso que de verdad importa es que el cliente COMPARTA su link.
+        // En vez de caer en la lista ("mete otro"), forzamos el handoff.
+        if (created?.accessToken) setJustCreated(created);
         load();
       } else {
         const data = await res.json().catch(() => ({}));
@@ -382,6 +387,10 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
   }
 
   const activeClients = clients.filter((c) => c.active);
+  // ¿El asesor ya se agregó a sí mismo como cliente de prueba? Mientras no, le
+  // ofrecemos correr el loop sin riesgo — aunque ya haya metido a un familiar.
+  const advisorEmailLc = advisor?.email?.toLowerCase() ?? null;
+  const selfAdded = advisorEmailLc ? clients.some((c) => c.email?.toLowerCase() === advisorEmailLc) : false;
 
   // Resumen de deuda: a cuántos clientes se les debe, cuánto, y cuántos vencidos.
   const owedSummary = activeClients.reduce(
@@ -489,6 +498,32 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
           </button>
         </div>
       </div>
+
+      {/* Handoff forzado: tras crear un cliente, el paso que importa es que
+          COMPARTA su link — no "meter otro". Elevamos ese único CTA. */}
+      {justCreated && (
+        <div className="bg-[#0B0B0C] rounded-2xl p-5 mb-4 text-white">
+          <p className="text-[15px] font-bold">Listo, {justCreated.name.split(" ")[0]} ya está en tu cartera.</p>
+          <p className="text-[13px] text-white/70 mt-1 leading-relaxed">
+            Ahora el paso que de verdad importa: mándale su link para que empiece a recomendarte.
+            Sin esto no pasa nada; con esto arranca tu primer referido.
+          </p>
+          <div className="flex flex-wrap gap-2 mt-4">
+            <button
+              onClick={() => window.open(buildWhatsAppUrl(justCreated), "_blank")}
+              className="flex items-center gap-2 bg-[#25D366] hover:bg-[#22C55E] text-white text-sm font-semibold px-5 py-2.5 rounded-full transition"
+            >
+              <WhatsAppIcon /> Mándale su link ahora
+            </button>
+            <button
+              onClick={() => setJustCreated(null)}
+              className="text-sm font-medium text-white/70 hover:text-white px-4 py-2.5 rounded-full border border-white/20 transition"
+            >
+              Ahora no
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Enviar link a todos (Pro) */}
       {activeClients.length > 0 && (
@@ -608,13 +643,13 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
         <form onSubmit={handleCreate} className="bg-white border border-[#ECEDEF] rounded-2xl p-5 mb-4 space-y-4">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <h2 className="font-semibold text-[#0B0B0C]">Nuevo cliente</h2>
-            {clients.length === 0 && advisor?.email && (
+            {!selfAdded && advisor?.email && (
               <button
                 type="button"
                 onClick={() => setForm({ name: advisor.name, phone: advisor.phone ?? "", email: advisor.email ?? "", policyNumber: "" })}
                 className="text-xs font-medium text-[#2563EB] hover:underline bg-transparent border-0 p-0 cursor-pointer text-left"
               >
-                ¿Solo probando? Agrégate a ti mismo para ver cómo funciona.
+                ¿Aún no lo pruebas? Agrégate a ti mismo y haz el recorrido completo sin arriesgar a un cliente.
               </button>
             )}
           </div>
@@ -663,7 +698,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
           <div className="bg-brand-blue-bg border border-[#DCE6FB] rounded-2xl p-4 mb-4">
             <p className="text-sm font-semibold text-[#0B0B0C]">Tu cliente de prueba: {sc.name.split(" ")[0]} (eres tú)</p>
             <p className="text-[13px] text-brand-gray-3 mt-1 leading-relaxed">
-              Así se ve un cliente registrado. Ábrelo como si fueras tu cliente para ver su portal, su link y sus premios — pícale a todo para entender el flujo completo. Cuando termines, elimínalo.
+              Así se ve un cliente registrado. Ábrelo como si fueras tu cliente, pícale a todo y siente el flujo completo. Cuando lo tengas claro, hazlo con un cliente real que te recomendaría — ese es el que te va a traer tu primer referido.
             </p>
             <div className="flex flex-wrap gap-2 mt-3">
               <a
@@ -681,10 +716,10 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
                 {copiedId === sc.id ? "Copiado" : "Copiar su link"}
               </button>
               <button
-                onClick={() => deactivate(sc.id)}
-                className="text-sm font-medium text-red-600 px-4 py-2 rounded-full border border-red-100 hover:bg-red-50 active:scale-[.98] transition"
+                onClick={() => { deactivate(sc.id); setShowForm(true); }}
+                className="text-sm font-medium text-brand-blue px-4 py-2 rounded-full border border-[#DCE6FB] hover:bg-white active:scale-[.98] transition"
               >
-                Ya probé, eliminar
+                Ya lo entendí, ahora con un cliente real
               </button>
             </div>
           </div>
@@ -696,7 +731,29 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
           <div className="w-5 h-5 border-2 border-[#0B0B0C] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : sorted.length === 0 ? (
-        <div className="text-center py-16 text-sm" style={{ color: "#9098A2" }}>Agrega tu primer cliente para comenzar.</div>
+        <div className="bg-brand-blue-bg border border-[#DCE6FB] rounded-2xl p-6 text-center">
+          <p className="text-[17px] font-bold text-[#0B0B0C]">Pruébalo contigo primero</p>
+          <p className="text-sm text-brand-gray-3 mt-1.5 max-w-sm mx-auto leading-relaxed">
+            Antes de invitar a un cliente real, haz el recorrido completo tú mismo en 2 minutos,
+            sin arriesgar a nadie. Así lo entiendes de principio a fin y lo enseñas sin pena.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center mt-4">
+            {advisor?.email && (
+              <button
+                onClick={() => { setForm({ name: advisor.name, phone: advisor.phone ?? "", email: advisor.email ?? "", policyNumber: "" }); setShowForm(true); }}
+                className="bg-brand-blue text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:opacity-90 active:scale-[.98] transition"
+              >
+                Agregarme como cliente de prueba
+              </button>
+            )}
+            <button
+              onClick={() => setShowForm(true)}
+              className="text-sm font-semibold px-5 py-2.5 rounded-full border border-[#DADCE0] text-[#0B0B0C] hover:bg-[#F4F5F7] transition"
+            >
+              Agregar un cliente real
+            </button>
+          </div>
+        </div>
       ) : (
         <div data-tour="client-list" className="space-y-3">
           {sorted.map((client) => {
