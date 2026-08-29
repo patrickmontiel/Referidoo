@@ -58,6 +58,6 @@ describe("gateErrorMessage", () => {
 
 describe("FREEMIUM_LEAD_LIMIT", () => {
   it("is 12", () => {
-    expect(FREEMIUM_LEAD_LIMIT).toBe(12);
+    expect(FREEMIUM_LEAD_LIMIT).toBe(5);
   });
 });

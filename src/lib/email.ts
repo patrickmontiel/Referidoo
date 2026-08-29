@@ -143,7 +143,7 @@ function freemiumLimitHtml(p: FreemiumLimitPayload) {
     <tr><td style="padding:32px 32px 20px">
       <p style="margin:0 0 8px;font-size:13px;color:#6B727D;font-weight:500">Límite de leads alcanzado</p>
       <h1 style="margin:0 0 10px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">Tienes un lead esperando — y no puedes verlo</h1>
-      <p style="margin:0 0 28px;font-size:14px;color:#6B727D;line-height:1.6"><strong style="color:#0B0B0C">${p.referrerName}</strong> acaba de referirte un contacto, pero ya alcanzaste los 12 leads del Plan Gratis. Necesitas Plan Pro para desbloquear sus datos y seguir recibiendo referidos.</p>
+      <p style="margin:0 0 28px;font-size:14px;color:#6B727D;line-height:1.6"><strong style="color:#0B0B0C">${p.referrerName}</strong> acaba de referirte un contacto, pero ya alcanzaste los 5 leads del Plan Gratis. Necesitas Plan Pro para desbloquear sus datos y seguir recibiendo referidos.</p>
 
       <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F7;border-radius:12px;margin-bottom:20px;border:2px dashed #DADCE0">
         <tr><td style="padding:24px;text-align:center">
@@ -490,6 +490,47 @@ export async function sendTrialEndingEmail(payload: {
 
   if (result.error) {
     console.error("[email] Resend rechazó aviso de fin de prueba:", JSON.stringify(result.error));
+  }
+}
+
+// ─── 7a-bis. Prueba terminada → ya estás en Gratis ───────────────────────────
+
+// Se manda UNA vez, cuando el cron billing-downgrade baja a un asesor de su
+// trial a freemium. Antes el downgrade era silencioso; este correo lo avisa
+// sin alarmar (conserva todo, solo cambian los límites) y ofrece reactivar Pro.
+export async function sendTrialDowngradedEmail(payload: {
+  advisorEmail: string;
+  advisorName: string;
+}) {
+  const url = `${BASE_URL}/admin/perfil?upgrade=pro`;
+
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY no configurado — aviso de downgrade no enviado a", payload.advisorEmail);
+    return;
+  }
+
+  const firstName = payload.advisorName.split(" ")[0];
+
+  const result = await resend.emails.send({
+    from: FROM,
+    to: [payload.advisorEmail],
+    subject: "Tu prueba Pro terminó — seguimos en el plan Gratis",
+    html: emailShell(`
+      ${header()}
+      <tr><td style="padding:32px 32px 20px">
+        <h1 style="margin:0 0 10px;font-size:24px;font-weight:700;color:#0B0B0C;line-height:1.25;letter-spacing:-0.02em">${firstName}, tu mes de prueba terminó</h1>
+        <p style="margin:0 0 16px;font-size:14px;color:#6B727D;line-height:1.6">Tu cuenta pasó al plan Gratis. No perdiste nada: <strong style="color:#0B0B0C">conservas todos tus clientes y sus portales</strong>, y sigues recibiendo referidos.</p>
+        <p style="margin:0 0 16px;font-size:14px;color:#6B727D;line-height:1.6">Lo que cambia en Gratis: tu pipeline se limita a <strong style="color:#0B0B0C">5 leads</strong> (los demás se guardan bloqueados, no se pierden) y las comisiones vuelven a la tarifa estándar.</p>
+        <p style="margin:0 0 28px;font-size:14px;color:#6B727D;line-height:1.6">Si quieres recuperar los leads ilimitados y las comisiones más bajas, reactiva Pro cuando quieras — $539 MXN/mes, cancelas cuando quieras.</p>
+        ${pill(url, "Reactivar Pro →")}
+        <p style="margin:14px 0 0;font-size:12px;color:#9098A2;text-align:center">¿Prefieres seguir en Gratis? No tienes que hacer nada.</p>
+      </td></tr>
+      ${footer("Referidoo — plataforma de referidos para asesores de seguros")}
+    `),
+  });
+
+  if (result.error) {
+    console.error("[email] Resend rechazó aviso de downgrade:", JSON.stringify(result.error));
   }
 }
 
@@ -914,7 +955,7 @@ export async function sendPreviewEmailsTo(to: string): Promise<Record<string, st
   };
 
   await send("1-nuevo-referido", `Nuevo referido: ${ref.leadName} vía ${ref.referrerName}`, newReferralHtml(ref, false));
-  await send("2-limite-freemium", "Tienes un nuevo lead esperando — activa Plan Pro", freemiumLimitHtml({ advisorName: ref.advisorName, advisorEmail: to, referrerName: ref.referrerName, leadName: ref.leadName, totalLeads: 13 }));
+  await send("2-limite-freemium", "Tienes un nuevo lead esperando — activa Plan Pro", freemiumLimitHtml({ advisorName: ref.advisorName, advisorEmail: to, referrerName: ref.referrerName, leadName: ref.leadName, totalLeads: 6 }));
   await send("3-conversion-cerrada", `[Comisión] ${ref.advisorName} cerró — ${ref.leadName} · Plan ${formatMXN(18000)}`, referralApprovedHtml({ ...ref, saleAmount: 18000, productType: "Vida PPR", lessioCommission: 2700 }, true));
   await send("4-premio-enviado", `¡Tu premio de ${formatMXN(pay.rewardAmount)} está en camino!`, paymentSentHtml(pay));
   await send("5-solicitud-confirmacion", `¿Recibiste tu premio de ${formatMXN(pay.rewardAmount)}?`, confirmationRequestHtml({ ...pay, nextTierPosition: null, nextTierAmount: null }));

@@ -81,8 +81,8 @@ const SALES_FAQ = [
     answer: "Tú — y tú defines los montos desde tu panel. Referidoo los calcula, los trackea y le avisa a tu cliente; tú solo envías el pago. Piénsalo así: el premio es tu costo de adquisición, y sale mucho más barato que comprar leads que cierran al 1–5%.",
   },
   {
-    question: "¿Qué pasa cuando llego a 12 leads en el plan gratis?",
-    answer: "Los leads del 13 en adelante se guardan bloqueados — no se pierden. Subes a Pro cuando quieras y se desbloquean todos. Tus clientes y sus premios nunca se bloquean.",
+    question: "¿Qué pasa cuando llego a 5 leads en el plan gratis?",
+    answer: "Los leads del 6 en adelante se guardan bloqueados — no se pierden. Subes a Pro cuando quieras y se desbloquean todos. Tus clientes y sus premios nunca se bloquean.",
   },
   {
     question: "¿Mis clientes necesitan bajar una app?",
@@ -521,7 +521,7 @@ export default async function Home() {
                 <ul className="text-sm text-[#3F4651] space-y-2.5 mb-6">
                   {[
                     "Clientes ilimitados",
-                    "Hasta 12 leads en tu pipeline",
+                    "Hasta 5 leads en tu pipeline",
                     "Premios Escalera configurables (PPR/Vida)",
                     "Portal para tus clientes",
                   ].map((item) => (

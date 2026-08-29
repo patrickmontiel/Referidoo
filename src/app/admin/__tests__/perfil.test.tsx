@@ -56,7 +56,7 @@ describe("PerfilPage", () => {
   it("shows the freemium upgrade CTA when plan=freemium and verified", async () => {
     renderPerfil({ plan: "freemium", emailVerified: true });
 
-    expect(await screen.findByText(/hasta 12 leads/i)).toBeInTheDocument();
+    expect(await screen.findByText(/hasta 5 leads/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /subir a plan pro/i })).toBeEnabled();
   });
 

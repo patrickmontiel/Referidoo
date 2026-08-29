@@ -31,7 +31,7 @@ const BULLETS = [
   },
   {
     title: "Gratis para empezar",
-    body: "Cartera ilimitada y hasta 12 leads sin pagar nada. Sin tarjeta.",
+    body: "Cartera ilimitada y hasta 5 leads sin pagar nada. Sin tarjeta.",
   },
 ];
 

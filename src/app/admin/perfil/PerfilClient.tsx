@@ -444,7 +444,7 @@ export default function PerfilClient({ initialAdvisor, initialClientCount, initi
             <div className="flex items-start justify-between mb-4">
               <div>
                 <p className="font-bold text-[#0B0B0C] text-[17px]">Plan Gratis</p>
-                <p className="text-sm text-brand-gray-4 mt-0.5">Clientes ilimitados · hasta 12 leads</p>
+                <p className="text-sm text-brand-gray-4 mt-0.5">Clientes ilimitados · hasta 5 leads</p>
               </div>
             </div>
             <p className="text-sm text-brand-gray-4 mb-4">

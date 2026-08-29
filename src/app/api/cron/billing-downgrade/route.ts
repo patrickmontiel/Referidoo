@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { sendTrialDowngradedEmail } from "@/lib/email";
 
 const GRACE_PERIOD_MS = 3 * 24 * 60 * 60 * 1000;
 const TRIAL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
   // de cada asesor downgradeado.
   const expiredAdvisors = await db.advisor.findMany({
     where: { plan: "paid", paidUntil: { lt: now } },
-    select: { id: true },
+    select: { id: true, name: true, email: true, mpPreapprovalId: true },
   });
   const expired = await db.advisor.updateMany({
     where: { plan: "paid", paidUntil: { lt: now } },
@@ -31,6 +32,14 @@ export async function GET(req: NextRequest) {
   await db.planEvent.createMany({
     data: expiredAdvisors.map((a) => ({ advisorId: a.id, event: "cancelled" })),
   }).catch((err) => console.error("[cron/billing-downgrade] Error registrando PlanEvent cancelled (expired):", err));
+
+  // Aviso de downgrade (antes era silencioso). Solo a quienes estaban en su
+  // trial (sin suscripción de MP); a un suscriptor que lapsó el pago no le
+  // mandamos "tu prueba terminó". Fire-and-forget: no bloquea el cron.
+  for (const a of expiredAdvisors.filter((x) => !x.mpPreapprovalId)) {
+    sendTrialDowngradedEmail({ advisorEmail: a.email, advisorName: a.name })
+      .catch((err) => console.error("[cron/billing-downgrade] Error avisando downgrade a", a.email, err));
+  }
 
   const failedTooLongAdvisors = await db.advisor.findMany({
     where: { plan: "paid", paymentFailedAt: { lt: graceCutoff } },

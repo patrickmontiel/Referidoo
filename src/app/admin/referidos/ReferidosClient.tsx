@@ -411,7 +411,7 @@ export default function ReferidosClient({
 
   const filtered = referrals.filter((r) => matchesFilter(r, filter));
 
-  const FREEMIUM_LEAD_LIMIT = 12;
+  const FREEMIUM_LEAD_LIMIT = 5;
   const allLeadsSorted = [...referrals].sort(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   );

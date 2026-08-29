@@ -33,7 +33,7 @@ const SECTIONS = [
   {
     title: "Precios y cobros",
     body: [
-      "El plan gratuito incluye clientes ilimitados y hasta 12 leads en el pipeline. El plan Pro cuesta $539 MXN al mes e incluye leads ilimitados y comisiones reducidas.",
+      "El plan gratuito incluye clientes ilimitados y hasta 5 leads en el pipeline. El plan Pro cuesta $539 MXN al mes e incluye leads ilimitados y comisiones reducidas.",
       "Referidoo cobra además una comisión por contrato cerrado, según las tasas publicadas en la tabla de precios del sitio. Los cobros se procesan automáticamente vía Mercado Pago.",
       "Puedes cancelar tu suscripción en cualquier momento desde tu perfil, sin penalización. Al cancelar, conservas el acceso Pro hasta el final del periodo ya pagado.",
     ],

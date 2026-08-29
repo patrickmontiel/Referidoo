@@ -1,6 +1,6 @@
 import { db } from "./db";
 
-export const FREEMIUM_LEAD_LIMIT = 12;
+export const FREEMIUM_LEAD_LIMIT = 5;
 
 export type ClientGateResult =
   | { allowed: true }
