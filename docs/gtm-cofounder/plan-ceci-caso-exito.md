@@ -66,3 +66,40 @@ Check-in con Ceci **cada 1–2 días** hasta que el loop cierre. No la sueltes. 
 
 ## Cómo sabes que ganaste
 **Un referido real, cerrado por Ceci, y su premio pagado.** Ahí tienes: producto validado, el loop asesor→asesor listo para dispararse, y tu primer testimonio. Ese día, todo lo demás (hero-gratis, barrera, first-50) arranca con viento a favor.
+
+---
+
+# Capa 1 — Acompañamiento (skill `customer-success`)
+
+Trata a Ceci como tu cliente #1 en onboarding de alto contacto. La meta de la fase de "launch" en customer-success es literal: **"first value achieved"** = tu aha. Y su gatillo de "health improvement" es literal: al lograr valor, **pide el testimonio/referido.**
+
+## Plan de éxito de Ceci (una hoja, compártela con ella)
+| Hito | Qué significa | Dueño | Fecha |
+|---|---|---|---|
+| Kickoff | Corrió el loop consigo misma + eligió al cliente ideal | Tú + Ceci | Sesión 1 |
+| Handoff | El cliente recibió su link (mensaje pulido) | Ceci | Sesión 1, ahí mismo |
+| Activación del cliente | El cliente abrió su portal y compartió con 2–3 | Cliente (Ceci empuja) | +48–72 h |
+| **Primer valor** | Cayó un referido real | El sistema | cuando pase |
+| Cierre | Ceci cerró al referido y pagó el premio | Ceci | +días |
+| Testimonio | Documentado en sus palabras | Tú | mismo día del cierre |
+
+## Señales de salud de Ceci (revísalas en cada check-in)
+- 🟢 **Verde:** metió al cliente, mandó el link, el cliente abrió el portal. Va.
+- 🟡 **Amarillo:** metió al cliente pero no mandó el link, o el cliente no abrió en 48 h. → llamada de re-enganche (tú a Ceci, Ceci al cliente).
+- 🔴 **Rojo:** no metió a nadie / metió a un familiar de compromiso / dejó de contestarte. → interviene directo: siéntate de nuevo, re-elige cliente, no la sueltes.
+
+> El objetivo de las señales: detectar la fuga ANTES de que se enfríe, no después.
+
+# Capa 2 — Cierre de fundador (skill `founder-sales`)
+
+Aunque a Ceci la estás compando (sin cobrarle aún), esto es una venta: le vendes **hacer el trabajo** y la confianza de que va a funcionar. Principios:
+
+- **Tú eres el producto.** Sin marca ni casos aún, lo que cierra es Patrick presente, confiable, hombro con hombro. Tu involucramiento no es "soporte", es el producto en esta etapa.
+- **Construye confianza humana.** "Mírala a los ojos" y hazle creer que va a funcionar — porque adoptar algo no probado exige una relación de alta confianza.
+- **Pesimismo interno / optimismo externo.** Por fuera, total convicción. Por dentro, caza señales que descalifiquen: ¿Ceci de verdad va a hacerlo? ¿su cliente de verdad refiere? Si ves banderas rojas, corrígelas ya — no las ignores por optimismo.
+- **Vende la visión y el dolor, no las features.** No le enumeres funciones; véndele el mundo donde sus clientes felices le traen clientes solos. El feature es el cómo, no el porqué.
+- **Haz el "ask" de compromiso** (versión del $1 Invoice Test — cruza la barrera de pedir). No cierres la sesión sin un compromiso concreto y con fecha: *"¿Te comprometes a mandarle el link a [cliente] hoy y a recordarle en 2 días?"* El "sí" con fecha es tu contrato.
+- **El ask financiero viene DESPUÉS del valor.** Cuando Ceci cierre su primer referido y pague el premio, ahí haces el ask real: *"¿le entras a Pro para seguir sin límite?"*. El valor primero, el cobro después — pero el cobro sí llega (valida intención real).
+
+## El error de fundador que NO debes cometer
+De `founder-sales`: **no te quedes eternamente en "discovery/acompañamiento" sin pedir el compromiso.** Es fácil ser el amigo que ayuda y nunca pide nada. Pide el compromiso de acción en cada sesión, y el de pago después del primer éxito.
