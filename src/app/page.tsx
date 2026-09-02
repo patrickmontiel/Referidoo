@@ -160,7 +160,7 @@ export default async function Home() {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-5">
             <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#3F4651]">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F9D5B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-              30 días de Pro gratis · sin tarjeta
+              Empieza gratis, sin tarjeta · 30 días de Pro incluidos
             </span>
             <Link href="#precios" className="text-sm font-medium text-[#2563EB] hover:underline">Ver precios</Link>
           </div>
