@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { formatCurrency, formatDate, formatNumberWithCommas } from "@/lib/utils";
 import { VISIBLE_PRODUCT_TYPES, SHOW_BUBBLE_REWARDS } from "@/lib/product-visibility";
+import { FREEMIUM_LEAD_LIMIT } from "@/lib/limits";
 
 type Referral = {
   id: string;
@@ -411,7 +412,6 @@ export default function ReferidosClient({
 
   const filtered = referrals.filter((r) => matchesFilter(r, filter));
 
-  const FREEMIUM_LEAD_LIMIT = 5;
   const allLeadsSorted = [...referrals].sort(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   );

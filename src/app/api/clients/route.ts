@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
 import { generateReferralCode } from "@/lib/utils";
 import { canAdvisorAddClients, gateErrorMessage } from "@/lib/plan";
+import { trackProductEvent } from "@/lib/track";
 
 export async function GET() {
   const session = await getAdvisorSession();
@@ -58,6 +59,9 @@ export async function POST(req: NextRequest) {
       referralCode,
     },
   });
+
+  // Funnel: cliente creado (paso 1). Best-effort, no bloquea la respuesta.
+  await trackProductEvent("client_created", { advisorId: session.advisorId, clientId: client.id });
 
   return NextResponse.json(client, { status: 201 });
 }

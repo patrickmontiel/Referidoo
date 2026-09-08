@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { formatCurrency, formatDate, REWARD_CUTOFF_DAYS } from "@/lib/utils";
 import { DEFAULT_ADVISOR_INVITE_MESSAGE, renderMessage } from "@/lib/message-templates";
 import { SHOW_BUBBLE_REWARDS } from "@/lib/product-visibility";
+import { trackEvent } from "@/lib/track-client";
 
 type Client = {
   id: string;
@@ -295,6 +296,14 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
     navigator.clipboard.writeText(`${base}/c/${client.accessToken}`);
     setCopiedId(client.id);
     setTimeout(() => setCopiedId(null), 2000);
+    // Funnel: el asesor copió el link del portal (intención de envío).
+    trackEvent("portal_link_sent", { clientId: client.id, channel: "copy" });
+  }
+
+  // Abre WhatsApp con el link del portal del cliente y registra el envío.
+  function openPortalWA(client: Client) {
+    trackEvent("portal_link_sent", { clientId: client.id, channel: "whatsapp" });
+    window.open(buildWhatsAppUrl(client), "_blank");
   }
 
   // Pro: manda a todos los clientes (con correo) su link de portal por correo.
@@ -511,7 +520,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
           </p>
           <div className="flex flex-wrap gap-2 mt-4">
             <button
-              onClick={() => window.open(buildWhatsAppUrl(justCreated), "_blank")}
+              onClick={() => openPortalWA(justCreated)}
               className="flex items-center gap-2 bg-[#25D366] hover:bg-[#22C55E] text-white text-sm font-semibold px-5 py-2.5 rounded-full transition"
             >
               <WhatsAppIcon /> Mándale su link ahora
@@ -799,7 +808,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
             const waBtn = (
               <button
                 data-tour="client-whatsapp"
-                onClick={() => window.open(waUrl, "_blank")}
+                onClick={() => openPortalWA(client)}
                 className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#22C55E] text-white text-sm px-4 py-2.5 rounded-full font-semibold transition"
               >
                 <WhatsAppIcon /> WhatsApp
@@ -952,7 +961,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
                   ) : (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => window.open(waUrl, "_blank")}
+                        onClick={() => openPortalWA(client)}
                         className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#22C55E] text-white text-sm py-2.5 rounded-full font-semibold transition"
                       >
                         <WhatsAppIcon /> WhatsApp

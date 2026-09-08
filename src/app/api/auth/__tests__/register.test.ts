@@ -17,6 +17,7 @@ vi.mock("@/lib/auth", async () => {
 import { db } from "@/lib/db";
 import { sendVerificationEmail } from "@/lib/email";
 import { signToken, setAdvisorCookie } from "@/lib/auth";
+import { __resetRateLimit } from "@/lib/rate-limit";
 import { POST } from "../register/route";
 
 const mockFindUnique = db.advisor.findUnique as unknown as ReturnType<typeof vi.fn>;
@@ -39,6 +40,7 @@ beforeEach(() => {
   mockSignToken.mockReset();
   mockSignToken.mockReturnValue("token");
   mockSetAdvisorCookie.mockReset();
+  __resetRateLimit();
 });
 
 describe("POST /api/auth/register", () => {

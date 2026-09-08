@@ -1,14 +1,16 @@
 import { db } from "./db";
 
-export const FREEMIUM_LEAD_LIMIT = 5;
+// Re-export de la fuente única (src/lib/limits.ts). No redefinir aquí: los
+// clientes deben importar de "@/lib/limits" para no arrastrar Prisma al bundle.
+export { FREEMIUM_LEAD_LIMIT } from "./limits";
 
 export type ClientGateResult =
   | { allowed: true }
   | { allowed: false; reason: "unverified" };
 
 // Clientes ilimitados en freemium — la presión de conversión viene del lead
-// cap (12 totales, sin reciclaje) y del diferencial de comisiones, no de
-// bloquear el registro de cartera.
+// cap (5 leads en el pipeline, sin reciclaje) y del diferencial de comisiones,
+// no de bloquear el registro de cartera.
 export async function canAdvisorAddClients(advisorId: string): Promise<ClientGateResult> {
   const advisor = await db.advisor.findUnique({
     where: { id: advisorId },

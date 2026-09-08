@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyPassword, signToken, isPlatformOwner, setAdvisorCookie } from "@/lib/auth";
+import { isRateLimited, clientIp } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  // Rate limit por IP: 10 intentos / 5 min. Frena fuerza bruta sin bloquear al
+  // usuario legítimo por mucho tiempo. Clave por IP (no por email) para no
+  // permitir que un atacante deje sin acceso el correo de una víctima.
+  if (isRateLimited(`login:${clientIp(req)}`, 10, 5 * 60_000)) {
+    return NextResponse.json({ error: "Demasiados intentos. Espera unos minutos e intenta de nuevo." }, { status: 429 });
+  }
+
   const { email, password } = await req.json();
 
   if (!email || !password) {

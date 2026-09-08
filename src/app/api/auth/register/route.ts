@@ -3,6 +3,7 @@ import { randomBytes } from "crypto";
 import { db } from "@/lib/db";
 import { hashPassword, signToken, setAdvisorCookie } from "@/lib/auth";
 import { sendVerificationEmail } from "@/lib/email";
+import { isRateLimited, clientIp } from "@/lib/rate-limit";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -12,6 +13,11 @@ const MIN_PASSWORD_LENGTH = 8;
 const TRIAL_MS = 30 * 24 * 60 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
+  // Rate limit por IP: 5 registros / 15 min. Frena la creación masiva de cuentas.
+  if (isRateLimited(`register:${clientIp(req)}`, 5, 15 * 60_000)) {
+    return NextResponse.json({ error: "Demasiados intentos. Espera unos minutos e intenta de nuevo." }, { status: 429 });
+  }
+
   const { name, email, password, companyName, ref } = await req.json();
 
   if (!name || !email || !password) {

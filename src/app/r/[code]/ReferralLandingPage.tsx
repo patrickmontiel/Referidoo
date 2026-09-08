@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Confetti from "@/components/Confetti";
 import { Hanken_Grotesk } from "next/font/google";
 import { Logo } from "@/components/Logo";
 import { DEFAULT_REFERRAL_WELCOME_MESSAGE, renderMessage } from "@/lib/message-templates";
 import { VISIBLE_INTERESTS } from "@/lib/product-visibility";
+import { trackEventOnce } from "@/lib/track-client";
 import type { ReferralInfo } from "@/lib/referral-info";
 
 const hankenGrotesk = Hanken_Grotesk({
@@ -68,6 +69,22 @@ export default function ReferralLandingPage({ initialInfo, code }: { initialInfo
   const [error, setError] = useState("");
   const [showMore, setShowMore] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", email: "", interest: "", preferredDays: "", preferredHours: "" });
+
+  // Funnel: vista de la landing (una vez por sesión de pestaña, solo si el code
+  // resuelve a un referidor válido). El endpoint deriva asesor/cliente del code.
+  useEffect(() => {
+    if (info) trackEventOnce(`landing_${code}`, "referral_landing_viewed", { code });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Funnel: el visitante EMPEZÓ a llenar el formulario (primer cambio en un
+  // campo). Una vez por carga (ref) + una vez por sesión (trackEventOnce).
+  const formStartedRef = useRef(false);
+  function markFormStarted() {
+    if (formStartedRef.current) return;
+    formStartedRef.current = true;
+    trackEventOnce(`formstart_${code}`, "referral_form_started", { code });
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -219,7 +236,7 @@ export default function ReferralLandingPage({ initialInfo, code }: { initialInfo
                 type="text"
                 autoComplete="name"
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onChange={(e) => { markFormStarted(); setForm({ ...form, name: e.target.value }); }}
                 required
                 placeholder="Tu nombre"
                 className="w-full px-4 py-3.5 rounded-2xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition"
@@ -233,7 +250,7 @@ export default function ReferralLandingPage({ initialInfo, code }: { initialInfo
                 type="tel"
                 autoComplete="tel"
                 value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                onChange={(e) => { markFormStarted(); setForm({ ...form, phone: e.target.value }); }}
                 required
                 placeholder="55 1234 5678"
                 className="w-full px-4 py-3.5 rounded-2xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition"
@@ -248,7 +265,7 @@ export default function ReferralLandingPage({ initialInfo, code }: { initialInfo
                 type="email"
                 autoComplete="email"
                 value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onChange={(e) => { markFormStarted(); setForm({ ...form, email: e.target.value }); }}
                 required
                 placeholder="tu@correo.com"
                 className="w-full px-4 py-3.5 rounded-2xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink transition"

@@ -4,6 +4,7 @@ import { getAdvisorSession } from "@/lib/auth";
 import { calculateRewardForNextReferral } from "@/lib/rewards";
 import { sendNewReferralNotification, sendFreemiumLimitEmail } from "@/lib/email";
 import { FREEMIUM_LEAD_LIMIT } from "@/lib/plan";
+import { trackProductEvent } from "@/lib/track";
 import { normalizePhone } from "@/lib/utils";
 
 export async function GET(req: NextRequest) {
@@ -93,6 +94,13 @@ export async function POST(req: NextRequest) {
       tierPosition,
       rewardAmount: amount,
     },
+  });
+
+  // Funnel: referido creado (paso final, server-side, una vez por referral).
+  await trackProductEvent("referral_created", {
+    advisorId: referrer.advisorId,
+    clientId: referrer.id,
+    referralId: referral.id,
   });
 
   const isFreemiumOverLimit =

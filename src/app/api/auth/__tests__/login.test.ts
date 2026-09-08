@@ -11,6 +11,7 @@ vi.mock("@/lib/auth", async () => {
 
 import { db } from "@/lib/db";
 import { verifyPassword, signToken } from "@/lib/auth";
+import { __resetRateLimit } from "@/lib/rate-limit";
 import { POST } from "../login/route";
 
 const mockFindUnique = db.advisor.findUnique as unknown as ReturnType<typeof vi.fn>;
@@ -32,6 +33,7 @@ beforeEach(() => {
   mockSignToken.mockReset();
   mockSignToken.mockReturnValue("token");
   process.env.PLATFORM_OWNER_EMAIL = "patrick@referidoo.com";
+  __resetRateLimit();
 });
 
 afterEach(() => {

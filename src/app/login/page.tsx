@@ -19,11 +19,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Solo prellenamos el correo desde la URL. La contraseña NUNCA se lee de
+    // query string (fuga por historial/logs/Referer) — siempre se teclea local.
     const search = new URLSearchParams(window.location.search);
     const e = search.get("email");
-    const p = search.get("p");
     if (e) setEmail(e);
-    if (p) setPassword(p);
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {

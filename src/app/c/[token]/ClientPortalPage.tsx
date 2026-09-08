@@ -8,6 +8,7 @@ import { formatCurrency, formatDate, getStatusLabel, getRewardStatusLabel } from
 import { Logo } from "@/components/Logo";
 import { DEFAULT_CLIENT_SHARE_MESSAGE, renderMessage } from "@/lib/message-templates";
 import { SHOW_BUBBLE_REWARDS } from "@/lib/product-visibility";
+import { trackEvent } from "@/lib/track-client";
 
 const DEFAULT_TIERS = [
   { position: 1, amount: 1500, label: "1er referido convertido" },
@@ -146,6 +147,10 @@ export default function ClientPortalPage() {
   const [scrollLocked, setScrollLocked] = useState(false);
   const t1 = useRef<ReturnType<typeof setTimeout>>(undefined);
   const t2 = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // Funnel: garantiza registrar la apertura del portal una sola vez por carga
+  // (StrictMode monta dos veces; el polling NO re-monta). El endpoint además
+  // deduplica a la primera apertura de por vida por cliente.
+  const openedTrackedRef = useRef(false);
 
   const confetti = useMemo(() => {
     const C = ["#2B57F0","#0d0d0d","#1FAE54","#F5B53F","#5B86F7","#E7395A"];
@@ -188,6 +193,12 @@ export default function ClientPortalPage() {
           if (isInitial) {
             const key = `referidos_seen_${token}`;
             if (!localStorage.getItem(key)) setShowOnboarding(true);
+            // Funnel: portal abierto (una sola vez por carga; el server deduplica
+            // a la primera apertura de por vida por cliente).
+            if (!openedTrackedRef.current) {
+              openedTrackedRef.current = true;
+              trackEvent("client_portal_opened", { token });
+            }
           }
         }
         if (isInitial) setLoading(false);
@@ -349,6 +360,8 @@ export default function ClientPortalPage() {
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    // Funnel: el cliente pulsó compartir (copiar). No implica envío efectivo.
+    trackEvent("referral_share_clicked", { token, channel: "copy" });
   }
 
   function shareWhatsApp() {
@@ -359,6 +372,8 @@ export default function ClientPortalPage() {
       asesor: advisor.name,
       premio: formatCurrency(Math.max(...tiers.map((t) => t.amount))),
     });
+    // Funnel: el cliente pulsó compartir por WhatsApp. No implica envío efectivo.
+    trackEvent("referral_share_clicked", { token, channel: "whatsapp" });
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   }
 

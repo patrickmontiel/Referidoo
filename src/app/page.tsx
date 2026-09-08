@@ -98,7 +98,7 @@ const SALES_FAQ = [
   },
   {
     question: "¿Mis clientes tienen que dar información sensible?",
-    answer: "No. Solo nombre, teléfono y correo — lo mismo que ya te comparten por WhatsApp. Nunca pedimos RFC, cuentas bancarias ni datos de la póliza.",
+    answer: "Para dejar sus datos, tus referidos solo dan nombre, teléfono y correo — lo mismo que ya te comparten por WhatsApp. Si un cliente gana un premio, puede agregar su CLABE en su portal para que tú se lo deposites; nunca pedimos RFC ni datos de tarjetas.",
   },
   {
     question: "¿Quién puede ver los datos de mis clientes?",

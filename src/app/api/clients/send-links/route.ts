@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
 import { sendClientLinkEmail } from "@/lib/email";
+import { trackProductEvent } from "@/lib/track";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://referidoo.com";
 
@@ -57,6 +58,8 @@ export async function POST(req: NextRequest) {
       if (r.ok) {
         sent++;
         await db.planEvent.create({ data: { advisorId: session.advisorId, event: `linksent:${c.id}` } }).catch(() => {});
+        // Funnel: envío del portal por correo (canal email).
+        await trackProductEvent("portal_link_sent", { advisorId: session.advisorId, clientId: c.id, channel: "email" });
       }
     } catch (err) {
       console.error("[send-links] Error con cliente", c.id, err);

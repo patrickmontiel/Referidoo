@@ -22,7 +22,9 @@ const SECTIONS = [
     title: "Qué datos recopilamos",
     body: [
       "De los asesores que crean una cuenta: nombre, correo electrónico, teléfono y, opcionalmente, nombre de su empresa.",
-      "De los clientes y referidos que un asesor registra en su cuenta: nombre, teléfono y, opcionalmente, correo electrónico. Nunca pedimos RFC, cuentas bancarias ni datos de pólizas.",
+      "De los clientes y referidos que un asesor registra en su cuenta: nombre, teléfono y, opcionalmente, correo electrónico.",
+      "Cuando un cliente gana un premio por recomendar, puede capturar su CLABE en su portal, únicamente para que su asesor sepa a dónde depositarle. Referidoo no realiza la transferencia — el pago lo hace el asesor por fuera; la CLABE se usa solo dentro del flujo de premios.",
+      "Para calcular la comisión, el asesor puede registrar el número de póliza y subir la carátula del contrato cerrado. No pedimos RFC.",
     ],
   },
   {

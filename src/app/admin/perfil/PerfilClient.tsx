@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatDate, formatCurrency } from "@/lib/utils";
+import { FREEMIUM_LEAD_LIMIT } from "@/lib/limits";
 import { UpgradeCardForm } from "@/components/UpgradeCardForm";
 
 type PendingCommission = {
@@ -219,11 +220,18 @@ export default function PerfilClient({ initialAdvisor, initialClientCount, initi
           },
           {
             label: "Leads",
-            value: (
-              <span className="font-bold text-[#0B0B0C]">
-                {leadCount ?? "—"}<span className="font-normal text-brand-gray-4">/12</span>
-              </span>
-            ),
+            // El tope de 5 solo aplica en freemium (y trial vencido). En trial y
+            // Pro los leads son ilimitados → no mostramos un cap incorrecto.
+            value:
+              billingStatus === "freemium" || billingStatus === "trial_expired" ? (
+                <span className="font-bold text-[#0B0B0C]">
+                  {leadCount ?? "—"}<span className="font-normal text-brand-gray-4">/{FREEMIUM_LEAD_LIMIT}</span>
+                </span>
+              ) : (
+                <span className="font-bold text-[#0B0B0C]">
+                  {leadCount ?? "—"} <span className="font-normal text-brand-gray-4">· Ilimitados</span>
+                </span>
+              ),
           },
         ].map((row, i, arr) => (
           <div

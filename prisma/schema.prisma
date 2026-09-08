@@ -175,3 +175,27 @@ model Referral {
   @@index([referrerId])
   @@index([status])
 }
+
+// Eventos de producto para instrumentar el funnel de activación de dos lados:
+// client_created → portal_link_sent → client_portal_opened →
+// referral_share_clicked → referral_landing_viewed → referral_form_started →
+// referral_created. Guarda solo IDs internos (nunca PII, ni accessToken, ni
+// contenido de formularios). Sin relaciones a propósito: los eventos deben
+// sobrevivir aunque un Client/Referral se borre (rastro del funnel). `channel`
+// es metadata opcional (whatsapp | copy | email). Ver deduplicación en lib/track.ts
+// y el doc 11-INSTRUMENTACION-FUNNEL.md.
+model ProductEvent {
+  id           String   @id @default(cuid())
+  event        String
+  advisorId    String?
+  clientId     String?
+  referralId   String?
+  referralCode String?
+  channel      String?
+  createdAt    DateTime @default(now())
+
+  @@index([event])
+  @@index([advisorId])
+  @@index([clientId])
+  @@index([createdAt])
+}
