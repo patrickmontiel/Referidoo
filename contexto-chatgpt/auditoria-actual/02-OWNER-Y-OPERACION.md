@@ -64,5 +64,5 @@ Layout `owner/layout.tsx`: 6 pestañas (Resumen, Asesores, Pagos, Inteligencia, 
 ## Operaciones manuales que Patrick hace hoy `[CV]`
 - Validar carátulas (Coincide/No coincide) → antifraude.
 - Togglear plan / dar de baja / reenviar verificación de asesores.
-- **Comp de trial "a mano"**: el toggle a "paid" NO fija `paidUntil` (el cron lo revierte). El comp correcto es SQL/script (ver `prisma/comp-advisor.ts`): `plan='paid'` + `paidUntil=+30d` + `paymentFailedAt=null`.
+- **Comp de trial "a mano" (p. ej. para Ceci / casos de éxito)**: usar **por ahora `prisma/comp-advisor.ts`**, NO el toggle de plan del owner (ambiguo: no fija `paidUntil` y el cron lo revierte, y no emite PlanEvent). El comp correcto que aplica el script: `plan='paid'` + `paidUntil=+30d` + `paymentFailedAt=null` (+ PlanEvent `owner_comp` recomendado). El toggle queda **sin tocar** en este scope (decisión documentada: no adivinar entre "activar Pro permanente" vs "comp 30 días").
 - Backup diario JSON llega por email (`cron/backup`).

@@ -105,4 +105,55 @@ describe("POST /api/events", () => {
     );
     expect(mTrack).not.toHaveBeenCalled(); // no usa la versión sin dedupe
   });
+
+  it("un token de Cliente A NO puede atribuirse a Cliente B (se ignoran clientId/advisorId del browser)", async () => {
+    // El token resuelve a cli-A/adv-A; el browser intenta colar cli-B/adv-B/referralId falsos.
+    mFindUnique.mockResolvedValue({ id: "cli-A", advisorId: "adv-A" });
+    const res = await POST(
+      post({ event: "referral_share_clicked", token: "tokA", clientId: "cli-B", advisorId: "adv-B", referralId: "ref-falso", channel: "whatsapp" })
+    );
+    expect(res.status).toBe(204);
+    expect(mTrack).toHaveBeenCalledWith(
+      "referral_share_clicked",
+      expect.objectContaining({ advisorId: "adv-A", clientId: "cli-A", channel: "whatsapp" })
+    );
+    // Nunca escribe el clientId/advisorId/referralId enviados por el browser.
+    const ctx = mTrack.mock.calls[0]![1];
+    expect(ctx.clientId).toBe("cli-A");
+    expect(ctx.advisorId).toBe("adv-A");
+    expect(ctx.referralId).toBeUndefined();
+  });
+
+  it("un token inválido es un no-op silencioso (204, sin evento) — no filtra existencia", async () => {
+    mFindUnique.mockResolvedValue(null);
+    const res = await POST(post({ event: "client_portal_opened", token: "no-existe" }));
+    expect(res.status).toBe(204);
+    expect(mTrack).not.toHaveBeenCalled();
+    expect(mTrackOnce).not.toHaveBeenCalled();
+  });
+
+  it("un channel arbitrario se normaliza a null (no se inyecta metadata libre)", async () => {
+    mFindUnique.mockResolvedValue({ id: "cli1", advisorId: "adv1" });
+    const res = await POST(post({ event: "referral_share_clicked", token: "tok", channel: "<script>evil</script>" }));
+    expect(res.status).toBe(204);
+    expect(mTrack).toHaveBeenCalledWith(
+      "referral_share_clicked",
+      expect.objectContaining({ channel: null })
+    );
+  });
+
+  it("referral_landing_viewed ignora referralId/PII extra del browser (solo persiste lo derivado del code)", async () => {
+    mFindFirst.mockResolvedValue({ id: "cli1", advisorId: "adv1", referralCode: "codigo" });
+    const res = await POST(
+      post({ event: "referral_landing_viewed", code: "codigo", referralId: "ref-falso", leadName: "Fulano", leadPhone: "5551234567" })
+    );
+    expect(res.status).toBe(204);
+    const ctx = mTrack.mock.calls[0]![1];
+    expect(ctx.referralId).toBeUndefined(); // referralId nunca viene del browser
+    expect(ctx.referralCode).toBe("codigo"); // derivado del servidor
+    // No hay ningún campo de PII en el contexto persistido.
+    expect(Object.keys(ctx)).toEqual(expect.arrayContaining(["advisorId", "clientId", "referralCode"]));
+    expect(ctx).not.toHaveProperty("leadName");
+    expect(ctx).not.toHaveProperty("leadPhone");
+  });
 });

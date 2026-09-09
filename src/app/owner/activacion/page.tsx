@@ -65,7 +65,10 @@ export default async function OwnerActivacionPage({
     .filter((r) => STEPS.some((s) => r.counts[s.key] > 0))
     .sort((a, b) => b.counts.client_created - a.counts.client_created || b.counts.referral_created - a.counts.referral_created);
 
-  const pct = (num: number, den: number) => (den > 0 ? Math.round((num / den) * 100) : null);
+  // Solo mostramos % cuando es una tasa real (num ≤ den). Los eventos de cliente
+  // son best-effort (se pueden perder por adblock/red), así que el denominador
+  // puede quedar subcontado; un % >100% sería engañoso → en ese caso mostramos "—".
+  const pct = (num: number, den: number) => (den > 0 && num <= den ? Math.round((num / den) * 100) : null);
 
   return (
     <div className="w-full max-w-[1100px]">
@@ -121,7 +124,8 @@ export default async function OwnerActivacionPage({
         </div>
         <p className="text-xs text-brand-gray-4 mt-4 leading-relaxed">
           El % es la conversión desde el paso anterior <b>solo donde el denominador aplica limpio</b> (apertura/cliente, forma/vista, referido/forma).
-          En los demás pasos se muestra el conteo: una acción de envío puede repetirse por cliente, y una vista de landing puede venir de varios shares.
+          En los demás pasos se muestra el conteo: una acción de envío puede repetirse por cliente, y una vista de landing puede venir de varios shares (no es un lead único).
+          Si un % saliera &gt;100% (el denominador quedó subcontado porque los eventos de cliente son best-effort), se muestra <b>—</b> en vez de un número engañoso.
         </p>
       </div>
 
