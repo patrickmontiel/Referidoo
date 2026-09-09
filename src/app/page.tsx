@@ -114,7 +114,7 @@ const SALES_FAQ = [
   },
   {
     question: "¿Dónde se guarda toda la información?",
-    answer: "En un servicio de base de datos administrado en la nube, con conexión cifrada (HTTPS) en todo momento. El acceso está restringido a tu cuenta.",
+    answer: "La información se almacena en un servicio de base de datos administrado en la nube y se transmite mediante conexiones HTTPS. El acceso al panel privado del asesor requiere autenticación.",
   },
   {
     question: "¿Qué pasa si cancelo mi cuenta?",
