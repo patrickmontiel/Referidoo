@@ -114,7 +114,7 @@ const SALES_FAQ = [
   },
   {
     question: "¿Dónde se guarda toda la información?",
-    answer: "En una base de datos cifrada, con conexión segura (HTTPS) en todo momento — la misma infraestructura que usan miles de aplicaciones reales todos los días.",
+    answer: "En un servicio de base de datos administrado en la nube, con conexión cifrada (HTTPS) en todo momento. El acceso está restringido a tu cuenta.",
   },
   {
     question: "¿Qué pasa si cancelo mi cuenta?",
