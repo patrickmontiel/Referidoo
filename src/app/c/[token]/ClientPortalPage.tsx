@@ -184,6 +184,13 @@ export default function ClientPortalPage() {
     return () => clearInterval(tick);
   }, []);
 
+  // ID opaco del campaignRecipient (?cr=), si el portal se abrió desde una
+  // campaña. Se lee en el cliente (nunca en SSR) y el servidor lo valida contra
+  // este cliente. Best-effort: si no está, los eventos van sin campaña.
+  const getCr = (): string | undefined => {
+    try { return new URLSearchParams(window.location.search).get("cr") ?? undefined; } catch { return undefined; }
+  };
+
   function fetchData(isInitial = false) {
     fetch(`/api/portal/${token}`)
       .then((r) => r.json())
@@ -197,7 +204,7 @@ export default function ClientPortalPage() {
             // a la primera apertura de por vida por cliente).
             if (!openedTrackedRef.current) {
               openedTrackedRef.current = true;
-              trackEvent("client_portal_opened", { token });
+              trackEvent("client_portal_opened", { token, cr: getCr() });
             }
           }
         }
@@ -355,25 +362,30 @@ export default function ClientPortalPage() {
 
   const paidCount = referrals.filter(r => r.rewardStatus === "paid" && r.tierPosition > 0).length;
   const referralLink = `${baseUrl}/r/${client.referralCode}`;
+  // Al compartir, propaga la atribución de campaña al link del referido: /r/[code]?cr=
+  const shareLink = (): string => {
+    const cr = getCr();
+    return cr ? `${referralLink}?cr=${cr}` : referralLink;
+  };
 
   function copyLink() {
-    navigator.clipboard.writeText(referralLink);
+    navigator.clipboard.writeText(shareLink());
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     // Funnel: el cliente pulsó compartir (copiar). No implica envío efectivo.
-    trackEvent("referral_share_clicked", { token, channel: "copy" });
+    trackEvent("referral_share_clicked", { token, channel: "copy", cr: getCr() });
   }
 
   function shareWhatsApp() {
     const firstName = client.name.split(" ")[0];
     const msg = renderMessage(advisor.whatsappMessage || DEFAULT_CLIENT_SHARE_MESSAGE, {
       nombre: firstName,
-      link: referralLink,
+      link: shareLink(),
       asesor: advisor.name,
       premio: formatCurrency(Math.max(...tiers.map((t) => t.amount))),
     });
     // Funnel: el cliente pulsó compartir por WhatsApp. No implica envío efectivo.
-    trackEvent("referral_share_clicked", { token, channel: "whatsapp" });
+    trackEvent("referral_share_clicked", { token, channel: "whatsapp", cr: getCr() });
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   }
 

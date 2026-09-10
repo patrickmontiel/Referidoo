@@ -70,10 +70,17 @@ export default function ReferralLandingPage({ initialInfo, code }: { initialInfo
   const [showMore, setShowMore] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", email: "", interest: "", preferredDays: "", preferredHours: "" });
 
+  // ID opaco del campaignRecipient (?cr=), si la landing se abrió desde un share
+  // de campaña. Se lee en el cliente; el servidor lo valida contra el cliente
+  // referidor. Best-effort: si no está, los eventos van sin campaña.
+  const getCr = (): string | undefined => {
+    try { return new URLSearchParams(window.location.search).get("cr") ?? undefined; } catch { return undefined; }
+  };
+
   // Funnel: vista de la landing (una vez por sesión de pestaña, solo si el code
   // resuelve a un referidor válido). El endpoint deriva asesor/cliente del code.
   useEffect(() => {
-    if (info) trackEventOnce(`landing_${code}`, "referral_landing_viewed", { code });
+    if (info) trackEventOnce(`landing_${code}`, "referral_landing_viewed", { code, cr: getCr() });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -83,7 +90,7 @@ export default function ReferralLandingPage({ initialInfo, code }: { initialInfo
   function markFormStarted() {
     if (formStartedRef.current) return;
     formStartedRef.current = true;
-    trackEventOnce(`formstart_${code}`, "referral_form_started", { code });
+    trackEventOnce(`formstart_${code}`, "referral_form_started", { code, cr: getCr() });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -102,6 +109,7 @@ export default function ReferralLandingPage({ initialInfo, code }: { initialInfo
         interestProductType: INTERESTS.find((i) => i.label === form.interest)?.value || null,
         preferredDays: form.preferredDays,
         preferredHours: form.preferredHours,
+        cr: getCr(), // atribución de campaña (server valida contra el referidor)
       }),
     });
 

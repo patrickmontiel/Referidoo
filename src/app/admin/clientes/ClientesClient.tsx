@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { formatCurrency, formatDate, REWARD_CUTOFF_DAYS } from "@/lib/utils";
 import { DEFAULT_ADVISOR_INVITE_MESSAGE, renderMessage } from "@/lib/message-templates";
 import { SHOW_BUBBLE_REWARDS } from "@/lib/product-visibility";
@@ -472,6 +473,9 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
             +
           </button>
         </div>
+        <Link href="/admin/campanas/nueva" className="mt-3 flex items-center justify-center gap-2 w-full bg-[#2563EB] text-white text-sm font-semibold py-3 rounded-full">
+          Activar mi cartera →
+        </Link>
       </div>
 
       {/* ── Desktop header ── */}
@@ -483,6 +487,12 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
           </p>
         </div>
         <div data-tour="actions" className="flex items-center gap-3 flex-shrink-0">
+          <Link
+            href="/admin/campanas/nueva"
+            className="flex items-center gap-2 bg-[#2563EB] text-white text-sm px-5 py-2.5 rounded-full hover:bg-[#1D4ED8] transition font-semibold whitespace-nowrap"
+          >
+            Activar mi cartera
+          </Link>
           <button
             data-tour="sort"
             onClick={cycleSortMode}

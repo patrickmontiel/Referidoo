@@ -192,10 +192,52 @@ model ProductEvent {
   referralId   String?
   referralCode String?
   channel      String?
+  // Atribución de campaña (aditivo). Se derivan/validan SIEMPRE en el servidor
+  // desde el ID opaco del recipient (?cr=), nunca de un campaignId del browser.
+  campaignId          String?
+  campaignRecipientId String?
   createdAt    DateTime @default(now())
 
   @@index([event])
   @@index([advisorId])
   @@index([clientId])
   @@index([createdAt])
+  @@index([campaignId])
+}
+
+// Portfolio Activation Campaign: el asesor "activa su cartera" contactando a un
+// grupo de clientes con su link de portal. Unidad principal de validación de la
+// tesis (ver 08-PORTFOLIO-CAMPAIGNS.md). Sin relaciones Prisma a propósito
+// (mismo criterio que ProductEvent): IDs string + índices, robusto ante
+// soft-delete y consistente con el patrón de migración Turso del repo.
+model ReferralCampaign {
+  id              String    @id @default(cuid())
+  advisorId       String
+  name            String
+  messageTemplate String
+  channel         String // "email" | "whatsapp"
+  status          String    @default("draft") // draft | sending | sent
+  createdAt       DateTime  @default(now())
+  startedAt       DateTime?
+  completedAt     DateTime?
+
+  @@index([advisorId])
+}
+
+model CampaignRecipient {
+  id          String    @id @default(cuid()) // ID opaco usado en los links (?cr=)
+  campaignId  String
+  clientId    String
+  advisorId   String // denormalizado: validación de ownership + query rápida
+  status      String    @default("pending") // pending | contacted | failed
+  stage       String    @default("initial") // initial | reminder_1 | reminder_2 (futuro)
+  channel     String?
+  error       String?
+  createdAt   DateTime  @default(now())
+  contactedAt DateTime?
+
+  @@unique([campaignId, clientId])
+  @@index([campaignId])
+  @@index([clientId])
+  @@index([advisorId])
 }

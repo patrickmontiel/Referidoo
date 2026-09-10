@@ -23,6 +23,9 @@ Y la **activación profunda** (deep activation):
 
 Es provisional: se revisa cuando tengamos evidencia de loops reales (no antes).
 
+## Unidad de experimento (cambio de tesis, sep-2026)
+La unidad principal de validación pasa a ser la **Portfolio Activation Campaign**: el asesor "activa su cartera" contactando a un grupo de clientes a la vez. Cada `Client` sigue siendo la **unidad diagnóstica dentro** de la campaña. Métricas nuevas: **Productive Referrer Rate** (recipients con ≥1 referido / contactados), **Lead Yield** (referidos / contactados), **Referral Multiplier** (referidos / productive referrers). Hipótesis de trabajo ~10% de productive referrers — **NO es un target demostrado**. Feature construida en local (sin deploy): ver **`08-PORTFOLIO-CAMPAIGNS.md`**.
+
 ## Métricas auxiliares (la cadena)
 Cada eslabón es un handoff que puede romperse. Origen de datos: `ProductEvent` (después del deploy) + timestamps de `Referral`.
 

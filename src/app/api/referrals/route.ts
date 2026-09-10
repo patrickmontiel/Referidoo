@@ -5,6 +5,7 @@ import { calculateRewardForNextReferral } from "@/lib/rewards";
 import { sendNewReferralNotification, sendFreemiumLimitEmail } from "@/lib/email";
 import { FREEMIUM_LEAD_LIMIT } from "@/lib/plan";
 import { trackProductEvent } from "@/lib/track";
+import { resolveCampaignAttribution } from "@/lib/campaign";
 import { normalizePhone } from "@/lib/utils";
 
 export async function GET(req: NextRequest) {
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
 
 // Public — no advisor auth needed. Called when a referred friend submits the form.
 export async function POST(req: NextRequest) {
-  const { referralCode, leadName, leadPhone, leadEmail, leadNotes, interestProductType, preferredDays, preferredHours } = await req.json();
+  const { referralCode, leadName, leadPhone, leadEmail, leadNotes, interestProductType, preferredDays, preferredHours, cr } = await req.json();
 
   if (!referralCode || !leadName || !leadPhone) {
     return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
@@ -97,10 +98,13 @@ export async function POST(req: NextRequest) {
   });
 
   // Funnel: referido creado (paso final, server-side, una vez por referral).
+  // Atribución de campaña: solo si el ?cr pertenece al cliente referidor (server-side).
+  const crAttr = await resolveCampaignAttribution(cr, referrer.id);
   await trackProductEvent("referral_created", {
     advisorId: referrer.advisorId,
     clientId: referrer.id,
     referralId: referral.id,
+    ...(crAttr ?? {}),
   });
 
   const isFreemiumOverLimit =

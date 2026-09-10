@@ -9,6 +9,7 @@ import {
   trackProductEventOnce,
   type ProductEventName,
 } from "@/lib/track";
+import { resolveCampaignAttribution } from "@/lib/campaign";
 
 // Endpoint de instrumentación para eventos disparados en el navegador.
 // Whitelist ESTRICTA de eventos. El asesor/cliente se derivan en el servidor
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
     return new NextResponse(null, { status: 429 });
   }
 
-  let body: { event?: string; token?: string; code?: string; clientId?: string; channel?: string };
+  let body: { event?: string; token?: string; code?: string; clientId?: string; channel?: string; cr?: string };
   try {
     body = await req.json();
   } catch {
@@ -59,11 +60,13 @@ export async function POST(req: NextRequest) {
         select: { id: true, advisorId: true },
       });
       if (!client) return new NextResponse(null, { status: 204 }); // token inválido → no-op silencioso
+      // Atribución de campaña: solo si el ?cr pertenece a ESTE cliente (server-side).
+      const attr = await resolveCampaignAttribution(body.cr, client.id);
       if (event === "client_portal_opened") {
         // Solo la primera apertura por cliente (evita inflar por polling/refresh).
-        await trackProductEventOnce("client_portal_opened", { clientId: client.id }, { advisorId: client.advisorId, clientId: client.id });
+        await trackProductEventOnce("client_portal_opened", { clientId: client.id }, { advisorId: client.advisorId, clientId: client.id, ...(attr ?? {}) });
       } else {
-        await trackProductEvent("referral_share_clicked", { advisorId: client.advisorId, clientId: client.id, channel });
+        await trackProductEvent("referral_share_clicked", { advisorId: client.advisorId, clientId: client.id, channel, ...(attr ?? {}) });
       }
       return new NextResponse(null, { status: 204 });
     }
@@ -77,10 +80,12 @@ export async function POST(req: NextRequest) {
         select: { id: true, advisorId: true, referralCode: true },
       });
       if (!client) return new NextResponse(null, { status: 204 }); // code inválido → no-op silencioso
+      const attr = await resolveCampaignAttribution(body.cr, client.id);
       await trackProductEvent(event as ProductEventName, {
         advisorId: client.advisorId,
         clientId: client.id,
         referralCode: client.referralCode,
+        ...(attr ?? {}),
       });
       return new NextResponse(null, { status: 204 });
     }

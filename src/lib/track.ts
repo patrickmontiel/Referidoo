@@ -39,6 +39,10 @@ type EventCtx = {
   referralId?: string | null;
   referralCode?: string | null;
   channel?: string | null;
+  // Atribución de campaña (opcional). Se llena solo cuando el servidor validó el
+  // ID opaco del recipient (?cr=) contra el cliente resuelto — nunca desde el browser.
+  campaignId?: string | null;
+  campaignRecipientId?: string | null;
 };
 
 export async function trackProductEvent(event: ProductEventName, ctx: EventCtx = {}): Promise<void> {
@@ -51,6 +55,8 @@ export async function trackProductEvent(event: ProductEventName, ctx: EventCtx =
         referralId: ctx.referralId ?? null,
         referralCode: ctx.referralCode ?? null,
         channel: ctx.channel ?? null,
+        campaignId: ctx.campaignId ?? null,
+        campaignRecipientId: ctx.campaignRecipientId ?? null,
       },
     });
   } catch (err) {

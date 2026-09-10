@@ -576,6 +576,52 @@ export async function sendClientLinkEmail(payload: {
   return { ok: true };
 }
 
+// ─── 7b. Campaña "Activar mi cartera" (email transport) ──────────────────────
+// Reutiliza la misma infra Resend/shell. El cuerpo es el MENSAJE DEL ASESOR ya
+// renderizado ({nombre}/{asesor} sustituidos y {link} = URL del portal), para
+// que el preview del asesor sea exactamente lo que se envía.
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+export async function sendCampaignEmail(payload: {
+  clientName: string;
+  clientEmail: string;
+  portalUrl: string; // ya incluye ?cr=<recipientId>
+  renderedMessage: string; // mensaje del asesor con {nombre}/{asesor}/{link} ya sustituidos
+  subject: string;
+}): Promise<{ ok: boolean }> {
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY no configurado — campaña no enviada a", payload.clientEmail);
+    return { ok: false };
+  }
+  // El mensaje ya trae la URL sustituida en {link}: la escapamos y la volvemos
+  // clickable; los saltos de línea → <br>. Además dejamos el botón por claridad.
+  const safe = escapeHtml(payload.renderedMessage)
+    .replace(new RegExp(escapeHtml(payload.portalUrl).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+      `<a href="${payload.portalUrl}" style="color:#2563EB">${payload.portalUrl}</a>`)
+    .replace(/\n/g, "<br>");
+
+  const result = await resend.emails.send({
+    from: FROM,
+    to: [payload.clientEmail],
+    subject: payload.subject,
+    html: emailShell(`
+      ${header()}
+      <tr><td style="padding:32px 32px 20px">
+        <p style="margin:0 0 22px;font-size:14px;color:#6B727D;line-height:1.7">${safe}</p>
+        ${pill(payload.portalUrl, "Ver mi link y mis premios →")}
+        <p style="margin:14px 0 0;font-size:12px;color:#9098A2;text-align:center">Es tu link privado — no lo pierdas.</p>
+      </td></tr>
+      ${footer("Referidoo — recompensas por recomendar a quienes quieres")}
+    `),
+  });
+  if (result.error) {
+    console.error("[email] Resend rechazó campaña:", JSON.stringify(result.error));
+    return { ok: false };
+  }
+  return { ok: true };
+}
+
 // ─── 8. Burbuja reclamada (aviso interno) ────────────────────────────────────
 
 export type BubbleClaimPayload = {

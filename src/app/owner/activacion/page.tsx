@@ -3,7 +3,9 @@ import Link from "next/link";
 import { getAdvisorSession, isPlatformOwner } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { aggregateFunnel, perAdvisorFunnel } from "@/lib/activation-funnel";
+import { computeCampaignMetrics } from "@/lib/campaign-metrics";
 import { ActivacionTable } from "./ActivacionTable";
+import { OwnerCampaignsTable } from "./OwnerCampaignsTable";
 
 // Cockpit de activación: ¿dónde se muere el loop de dos lados?
 // client_created → portal_link_sent → client_portal_opened →
@@ -58,6 +60,39 @@ export default async function OwnerActivacionPage({
   // Agregado global + por asesor (funciones puras, testeadas en activation-funnel.test.ts).
   const agg = aggregateFunnel(events);
   const perAdvisor = perAdvisorFunnel(events);
+
+  // ── Campañas (Portfolio Activation) del periodo ──
+  const campaigns = await db.referralCampaign.findMany({
+    where: { createdAt: { gte: since } },
+    orderBy: { createdAt: "desc" },
+  });
+  const campaignIds = campaigns.map((c) => c.id);
+  const [campRecipients, campEvents] = campaignIds.length
+    ? await Promise.all([
+        db.campaignRecipient.findMany({ where: { campaignId: { in: campaignIds } }, select: { id: true, campaignId: true, status: true } }),
+        db.productEvent.findMany({ where: { campaignId: { in: campaignIds } }, select: { event: true, campaignId: true, campaignRecipientId: true } }),
+      ])
+    : [[] as { id: string; campaignId: string; status: string }[], [] as { event: string; campaignId: string | null; campaignRecipientId: string | null }[]];
+  const advNameById = new Map(advisors.map((a) => [a.id, a.name]));
+  const campaignRows = campaigns.map((c) => {
+    const recs = campRecipients.filter((r) => r.campaignId === c.id);
+    const evs = campEvents.filter((e) => e.campaignId === c.id);
+    const m = computeCampaignMetrics(recs, evs);
+    return {
+      id: c.id,
+      name: c.name,
+      advisorName: advNameById.get(c.advisorId) ?? "—",
+      channel: c.channel,
+      audience: m.audience,
+      contacted: m.contacted,
+      opens: m.opens,
+      shares: m.shares,
+      productiveReferrers: m.productiveReferrers,
+      referrals: m.referrals,
+      productiveReferrerRate: m.productiveReferrerRate,
+      leadYield: m.leadYield,
+    };
+  });
 
   const nameById = new Map(advisors.map((a) => [a.id, a.name]));
   const rows = [...perAdvisor.entries()]
@@ -136,6 +171,19 @@ export default async function OwnerActivacionPage({
           <p className="text-sm text-brand-gray-4 px-5 py-8 text-center">Sin eventos de activación en este periodo.</p>
         ) : (
           <ActivacionTable rows={rows} steps={STEPS.map((s) => ({ key: s.key, label: s.label }))} />
+        )}
+      </div>
+
+      {/* Campañas de activación de cartera (Portfolio Activation) */}
+      <div className="bg-white rounded-2xl border border-brand-border-1 overflow-hidden mt-6">
+        <div className="px-5 pt-5 pb-1">
+          <p className="text-xs font-bold uppercase tracking-[0.08em] text-brand-gray-3">Campañas de cartera</p>
+          <p className="text-xs text-brand-gray-4 mt-0.5">Contact. = enviados (email) o acciones de envío (WhatsApp), no entrega. Rate = productive referrers / contactados. Yield = referidos / contactados.</p>
+        </div>
+        {campaignRows.length === 0 ? (
+          <p className="text-sm text-brand-gray-4 px-5 py-8 text-center">Sin campañas en este periodo.</p>
+        ) : (
+          <OwnerCampaignsTable rows={campaignRows} />
         )}
       </div>
     </div>

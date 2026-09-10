@@ -13,6 +13,7 @@ type EventPayload = {
   code?: string;         // referralCode de /r/[code]
   clientId?: string;     // solo para portal_link_sent (asesor autenticado)
   channel?: "whatsapp" | "copy" | "email";
+  cr?: string;           // ID opaco del campaignRecipient (?cr=) — el server lo valida
 };
 
 export function trackEvent(event: string, payload: EventPayload = {}): void {

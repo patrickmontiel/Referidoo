@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 vi.mock("@/lib/db", () => ({
   db: {
     client: { findUnique: vi.fn(), findFirst: vi.fn() },
+    campaignRecipient: { findUnique: vi.fn() },
   },
 }));
 vi.mock("@/lib/auth", () => ({
@@ -23,6 +24,7 @@ import { POST } from "../route";
 
 const mFindUnique = db.client.findUnique as unknown as ReturnType<typeof vi.fn>;
 const mFindFirst = db.client.findFirst as unknown as ReturnType<typeof vi.fn>;
+const mRecipientFind = db.campaignRecipient.findUnique as unknown as ReturnType<typeof vi.fn>;
 const mSession = getAdvisorSession as unknown as ReturnType<typeof vi.fn>;
 const mTrack = trackProductEvent as unknown as ReturnType<typeof vi.fn>;
 const mTrackOnce = trackProductEventOnce as unknown as ReturnType<typeof vi.fn>;
@@ -38,6 +40,7 @@ function post(body: unknown) {
 beforeEach(() => {
   mFindUnique.mockReset();
   mFindFirst.mockReset();
+  mRecipientFind.mockReset();
   mSession.mockReset();
   mTrack.mockReset();
   mTrackOnce.mockReset();
@@ -140,6 +143,29 @@ describe("POST /api/events", () => {
       "referral_share_clicked",
       expect.objectContaining({ channel: null })
     );
+  });
+
+  it("referral_share_clicked con ?cr VÁLIDO adjunta la atribución de campaña (derivada en servidor)", async () => {
+    mFindUnique.mockResolvedValue({ id: "cliA", advisorId: "advA" });
+    // El recipient del cr pertenece a cliA → atribución válida.
+    mRecipientFind.mockResolvedValue({ id: "cr1", campaignId: "camp1", clientId: "cliA" });
+    const res = await POST(post({ event: "referral_share_clicked", token: "tokA", cr: "cr1", channel: "whatsapp" }));
+    expect(res.status).toBe(204);
+    expect(mTrack).toHaveBeenCalledWith(
+      "referral_share_clicked",
+      expect.objectContaining({ campaignId: "camp1", campaignRecipientId: "cr1", clientId: "cliA" })
+    );
+  });
+
+  it("un ?cr de OTRO cliente se ignora — el evento se registra SIN campaña (no cross-attribution)", async () => {
+    mFindUnique.mockResolvedValue({ id: "cliA", advisorId: "advA" });
+    // El recipient del cr pertenece a cliB, no a cliA → se ignora.
+    mRecipientFind.mockResolvedValue({ id: "cr1", campaignId: "camp1", clientId: "cliB" });
+    const res = await POST(post({ event: "referral_share_clicked", token: "tokA", cr: "cr1" }));
+    expect(res.status).toBe(204);
+    const ctx = mTrack.mock.calls[0]![1];
+    expect(ctx.campaignId).toBeUndefined();
+    expect(ctx.campaignRecipientId).toBeUndefined();
   });
 
   it("referral_landing_viewed ignora referralId/PII extra del browser (solo persiste lo derivado del code)", async () => {
