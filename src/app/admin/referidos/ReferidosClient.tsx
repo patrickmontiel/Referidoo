@@ -426,7 +426,7 @@ export default function ReferidosClient({
     <div className="w-full">
 
       <div data-tour="header" className="mb-6">
-        <h1 className="text-2xl font-bold text-brand-ink">Referidos</h1>
+        <h1 className="text-2xl font-bold text-brand-ink">Oportunidades</h1>
         <p className="text-sm text-brand-gray-4 mt-0.5">
           {referrals.length} referidos en tu pipeline
           {thisMonthConverted > 0 && ` · ${thisMonthConverted} convertidos este mes`}

@@ -16,10 +16,10 @@ export default function CampanasListClient() {
     <div className="w-full max-w-[820px]">
       <div className="flex items-end justify-between gap-4 mb-5 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-brand-ink">Campañas</h1>
-          <p className="text-sm text-brand-gray-4 mt-0.5">Activa tu cartera: manda a tus clientes su link para que te refieran.</p>
+          <h1 className="text-2xl font-bold text-brand-ink">Activaciones</h1>
+          <p className="text-sm text-brand-gray-4 mt-0.5">Cada vez que activas un grupo de tu cartera queda registrado aquí. Tu cartera no se vuelve a cargar.</p>
         </div>
-        <Link href="/admin/campanas/nueva" className="text-sm font-semibold text-white bg-[#2563EB] rounded-full px-5 py-2.5">Activar mi cartera</Link>
+        <Link href="/admin/campanas/nueva" className="text-sm font-semibold text-white bg-[#2563EB] rounded-full px-5 py-2.5">Activar clientes</Link>
       </div>
 
       {campaigns === null ? (
@@ -28,7 +28,7 @@ export default function CampanasListClient() {
         <div className="bg-white rounded-2xl border border-brand-border-1 p-8 text-center">
           <p className="text-sm text-brand-ink font-medium mb-1">Aún no activas tu cartera</p>
           <p className="text-sm text-brand-gray-4 mb-4">Elige a tus mejores clientes y mándales su link de una vez. Es el primer paso para que te empiecen a referir.</p>
-          <Link href="/admin/campanas/nueva" className="inline-block text-sm font-semibold text-white bg-brand-ink rounded-full px-5 py-2.5">Activar mi cartera →</Link>
+          <Link href="/admin/campanas/nueva" className="inline-block text-sm font-semibold text-white bg-brand-ink rounded-full px-5 py-2.5">Activar clientes →</Link>
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-brand-border-1 overflow-hidden divide-y divide-brand-border-1">

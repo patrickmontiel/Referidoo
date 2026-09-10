@@ -72,7 +72,23 @@ function owedLabel(o: Owed): string {
 
 type Advisor = { name: string; companyName: string | null; plan?: string; email?: string | null; phone?: string | null };
 type CsvRow = { name: string; phone: string; email: string; policyNumber: string };
-type ImportResult = { name: string; ok: boolean; error?: string };
+type ImportResult = { name: string; action: "created" | "updated" | "skipped"; reason?: string };
+
+// Clasificación que devuelve el preview del servidor (sin escribir nada).
+type RowStatus = "NUEVO" | "YA_EXISTE" | "POSIBLE_DUPLICADO" | "FALTA_DATO" | "NO_CONTACTABLE";
+type PreviewRow = { index: number; name: string; status: RowStatus; reason: string | null; matchedClientName: string | null };
+type ImportPreview = {
+  summary: { total: number; nuevos: number; yaExisten: number; posiblesDuplicados: number; faltaDato: number; noContactables: number };
+  rows: PreviewRow[];
+};
+
+const STATUS_LABEL: Record<RowStatus, { label: string; cls: string }> = {
+  NUEVO: { label: "Nuevo", cls: "bg-[#E7F3EC] text-[#1F7A45]" },
+  YA_EXISTE: { label: "Ya existe", cls: "bg-[#EAF0FB] text-[#2563EB]" },
+  POSIBLE_DUPLICADO: { label: "Posible duplicado", cls: "bg-[#FDF3E3] text-[#8A5A00]" },
+  FALTA_DATO: { label: "Falta dato", cls: "bg-[#FBEAEA] text-[#A32222]" },
+  NO_CONTACTABLE: { label: "No contactable", cls: "bg-[#F0F1F3] text-[#6B727D]" },
+};
 
 const SORT_MODES = ["debe", "converted", "referrals", "name"] as const;
 type SortMode = typeof SORT_MODES[number];
@@ -178,6 +194,11 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
   const [csvRows, setCsvRows] = useState<CsvRow[] | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResults, setImportResults] = useState<ImportResult[] | null>(null);
+  // Preview de "conectar cartera" (clasificación server-side antes de escribir).
+  const [preview, setPreview] = useState<ImportPreview | null>(null);
+  const [previewing, setPreviewing] = useState(false);
+  const [resolutions, setResolutions] = useState<Record<string, "update" | "create" | "skip">>({});
+  const [importSummary, setImportSummary] = useState<{ created: number; updated: number; skipped: number } | null>(null);
 
   function load() {
     fetch("/api/admin/clients-data")
@@ -226,14 +247,32 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
     }
   }
 
+  // CONECTAR CARTERA: el CSV nunca se escribe directo. Primero se clasifica
+  // contra la cartera existente (preview) y el asesor resuelve los posibles
+  // duplicados; solo entonces se confirma. Reimportar NO duplica.
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       const rows = parseCsv(ev.target?.result as string);
       setCsvRows(rows);
       setImportResults(null);
+      setPreview(null);
+      setResolutions({});
+      if (!rows.length) return;
+      setPreviewing(true);
+      try {
+        const res = await fetch("/api/clients/import", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rows, preview: true }),
+        });
+        if (res.ok) setPreview(await res.json());
+      } catch {
+        /* si falla el preview, el asesor puede reintentar */
+      }
+      setPreviewing(false);
     };
     reader.readAsText(file, "utf-8");
     e.target.value = "";
@@ -245,11 +284,14 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
     const res = await fetch("/api/clients/import", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rows: csvRows }),
+      body: JSON.stringify({ rows: csvRows, resolutions }),
     });
     const data = await res.json();
     setImportResults(data.results);
+    setImportSummary({ created: data.created ?? 0, updated: data.updated ?? 0, skipped: data.skipped ?? 0 });
     setCsvRows(null);
+    setPreview(null);
+    setResolutions({});
     setImporting(false);
     load();
   }
@@ -398,6 +440,12 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
   }
 
   const activeClients = clients.filter((c) => c.active);
+  // MI CARTERA — el activo persistente. Conteos honestos con datos existentes:
+  // "contactable" = tiene al menos un canal; "activado" = ya se le mandó su link.
+  const contactables = activeClients.filter((c) => c.phone || c.email).length;
+  const activados = activeClients.filter((c) => c.linkSent).length;
+  const sinActivar = activeClients.length - activados;
+  const hanReferido = activeClients.filter((c) => c._count.referrals > 0).length;
   // ¿El asesor ya se agregó a sí mismo como cliente de prueba? Mientras no, le
   // ofrecemos correr el loop sin riesgo — aunque ya haya metido a un familiar.
   const advisorEmailLc = advisor?.email?.toLowerCase() ?? null;
@@ -451,9 +499,9 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
 
       {/* ── Mobile header ── */}
       <div className="md:hidden mb-5">
-        <h1 className="text-2xl font-bold text-[#0B0B0C]">Clientes</h1>
+        <h1 className="text-2xl font-bold text-[#0B0B0C]">Mi cartera</h1>
         <p className="text-sm mt-0.5" style={{ color: "#6B727D" }}>
-          {activeClients.length} clientes activos · cada uno con su link de referido
+          {activeClients.length} clientes conectados · {contactables} contactables · {activados} activados · {sinActivar} sin activar
         </p>
         <div data-tour="actions" className="flex items-center gap-3 mt-4">
           <button
@@ -474,16 +522,17 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
           </button>
         </div>
         <Link href="/admin/campanas/nueva" className="mt-3 flex items-center justify-center gap-2 w-full bg-[#2563EB] text-white text-sm font-semibold py-3 rounded-full">
-          Activar mi cartera →
+          Activar clientes →
         </Link>
       </div>
 
       {/* ── Desktop header ── */}
       <div className="hidden md:flex items-end justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#0B0B0C]">Clientes</h1>
+          <h1 className="text-2xl font-bold text-[#0B0B0C]">Mi cartera</h1>
           <p className="text-sm mt-0.5" style={{ color: "#6B727D" }}>
-            {activeClients.length} clientes activos · cada uno con su link de referido
+            {activeClients.length} clientes conectados · {contactables} contactables · {activados} activados · {sinActivar} sin activar
+            {hanReferido > 0 && ` · ${hanReferido} ya refirieron`}
           </p>
         </div>
         <div data-tour="actions" className="flex items-center gap-3 flex-shrink-0">
@@ -491,7 +540,13 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
             href="/admin/campanas/nueva"
             className="flex items-center gap-2 bg-[#2563EB] text-white text-sm px-5 py-2.5 rounded-full hover:bg-[#1D4ED8] transition font-semibold whitespace-nowrap"
           >
-            Activar mi cartera
+            Activar clientes
+          </Link>
+          <Link
+            href="/admin/campanas"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-[#DADCE0] text-[#0B0B0C] text-sm font-medium hover:bg-[#F4F5F7] transition whitespace-nowrap"
+          >
+            Activaciones
           </Link>
           <button
             data-tour="sort"
@@ -512,7 +567,7 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
             onClick={() => fileRef.current?.click()}
             className="text-xs px-3 py-2.5 rounded-full border border-[#DADCE0] hover:bg-[#F4F5F7] transition flex-shrink-0"
             style={{ color: "#6B727D" }}
-            title="Importar CSV"
+            title="Conectar cartera desde CSV"
           >
             CSV
           </button>
@@ -609,32 +664,73 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
         </div>
       )}
 
-      {/* CSV preview */}
+      {/* Conectar cartera — preview con resolución de duplicados */}
       {csvRows && csvRows.length > 0 && (
         <div className="bg-white border border-[#ECEDEF] rounded-2xl p-5 mb-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-medium text-sm">{csvRows.length} clientes listos para importar</h2>
-            <button onClick={() => setCsvRows(null)} className="text-lg leading-none" style={{ color: "#9098A2" }}>×</button>
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="font-medium text-sm">Revisa antes de conectar</h2>
+            <button onClick={() => { setCsvRows(null); setPreview(null); }} className="text-lg leading-none" style={{ color: "#9098A2" }}>×</button>
           </div>
-          <div className="space-y-0 max-h-52 overflow-y-auto mb-4">
-            {csvRows.map((row, i) => {
-              const meta = [row.phone, row.email, row.policyNumber].filter(Boolean);
-              return (
-                <div key={i} className="flex items-start gap-3 py-2.5 border-b border-[#ECEDEF] last:border-0">
-                  <span className="w-5 h-5 bg-[#ECEDEF] rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0 mt-0.5" style={{ color: "#9098A2" }}>{i + 1}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: "#0B0B0C" }}>{row.name}</p>
-                    {meta.length > 0 && (
-                      <p className="text-xs truncate mt-0.5" style={{ color: "#9098A2" }}>{meta.join(" · ")}</p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <button onClick={runImport} disabled={importing} className="w-full bg-[#0B0B0C] text-white text-sm py-2.5 rounded-full font-medium hover:bg-[#26262a] disabled:opacity-50 transition">
-            {importing ? "Importando..." : `Importar ${csvRows.length} clientes`}
-          </button>
+
+          {previewing && <p className="text-sm py-4" style={{ color: "#6B727D" }}>Revisando tu archivo…</p>}
+
+          {preview && (
+            <>
+              <p className="text-sm mb-3" style={{ color: "#6B727D" }}>
+                <b style={{ color: "#0B0B0C" }}>{preview.summary.total} encontrados</b> ·{" "}
+                {preview.summary.nuevos} nuevos · {preview.summary.yaExisten} ya existen
+                {preview.summary.posiblesDuplicados > 0 && ` · ${preview.summary.posiblesDuplicados} posibles duplicados`}
+                {preview.summary.faltaDato > 0 && ` · ${preview.summary.faltaDato} sin nombre`}
+                {preview.summary.noContactables > 0 && ` · ${preview.summary.noContactables} sin canal`}
+              </p>
+              <p className="text-xs mb-3" style={{ color: "#9098A2" }}>
+                No creamos duplicados: si el cliente ya está, actualizamos sus datos y conserva su mismo link.
+              </p>
+
+              <div className="max-h-64 overflow-y-auto mb-4 -mx-1 px-1">
+                {preview.rows.map((row) => {
+                  const badge = STATUS_LABEL[row.status];
+                  const needsDecision = row.status === "POSIBLE_DUPLICADO";
+                  const decision = resolutions[String(row.index)] ?? "skip";
+                  return (
+                    <div key={row.index} className="py-2.5 border-b border-[#ECEDEF] last:border-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium truncate" style={{ color: "#0B0B0C" }}>{row.name || "—"}</span>
+                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${badge.cls}`}>{badge.label}</span>
+                      </div>
+                      {row.reason && <p className="text-xs mt-0.5" style={{ color: "#9098A2" }}>{row.reason}</p>}
+                      {needsDecision && (
+                        <div className="flex gap-1.5 mt-2">
+                          {([
+                            ["update", "Es la misma persona"],
+                            ["create", "Es alguien distinto"],
+                            ["skip", "Omitir"],
+                          ] as const).map(([value, label]) => (
+                            <button
+                              key={value}
+                              onClick={() => setResolutions((p) => ({ ...p, [String(row.index)]: value }))}
+                              className={`text-xs px-2.5 py-1 rounded-full border transition ${
+                                decision === value ? "bg-[#0B0B0C] text-white border-[#0B0B0C]" : "bg-white border-[#DADCE0]"
+                              }`}
+                              style={decision === value ? undefined : { color: "#6B727D" }}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <button onClick={runImport} disabled={importing} className="w-full bg-[#2563EB] text-white text-sm py-2.5 rounded-full font-medium hover:bg-[#1D4ED8] disabled:opacity-50 transition">
+                {importing
+                  ? "Conectando…"
+                  : `Conectar ${preview.summary.nuevos + preview.summary.yaExisten + preview.summary.noContactables} clientes`}
+              </button>
+            </>
+          )}
         </div>
       )}
 
@@ -643,15 +739,16 @@ export default function ClientesClient({ initialClients, initialAdvisor, initial
         <div className="bg-white border border-[#ECEDEF] rounded-2xl p-5 mb-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-medium text-sm">
-              {importResults.filter((r) => r.ok).length} importados
-              {importResults.filter((r) => !r.ok).length > 0 && ` · ${importResults.filter((r) => !r.ok).length} con error`}
+              {importSummary
+                ? `${importSummary.created} conectados${importSummary.updated > 0 ? ` · ${importSummary.updated} actualizados` : ""}${importSummary.skipped > 0 ? ` · ${importSummary.skipped} omitidos` : ""}`
+                : "Cartera conectada"}
             </h2>
-            <button onClick={() => setImportResults(null)} className="text-lg leading-none" style={{ color: "#9098A2" }}>×</button>
+            <button onClick={() => { setImportResults(null); setImportSummary(null); }} className="text-lg leading-none" style={{ color: "#9098A2" }}>×</button>
           </div>
           <div className="space-y-1 max-h-36 overflow-y-auto">
-            {importResults.filter((r) => !r.ok).map((r, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs text-red-600">
-                <span>✗</span><span>{r.name} — {r.error}</span>
+            {importResults.filter((r) => r.action === "skipped").map((r, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs" style={{ color: "#9098A2" }}>
+                <span>·</span><span>{r.name} — {r.reason ?? "omitido"}</span>
               </div>
             ))}
           </div>

@@ -31,9 +31,12 @@ function VerifiedBannerWatcher({ onVerified }: { onVerified: () => void }) {
 
 const nav = [
   { href: "/admin",           label: "Resumen",   tourId: "nav-resumen",   icon: "M3 12L12 3L21 12V20C21 20.6 20.6 21 20 21H15V16H9V21H4C3.4 21 3 20.6 3 20V12Z" },
-  { href: "/admin/clientes",  label: "Clientes",  tourId: "nav-clientes",  icon: "M17 21V19C17 17.9 16.1 17 15 17H9C7.9 17 7 17.9 7 19V21M12 13C14.2 13 16 11.2 16 9C16 6.8 14.2 5 12 5C9.8 5 8 6.8 8 9C8 11.2 9.8 13 12 13Z" },
-  { href: "/admin/campanas",  label: "Campañas",  tourId: "nav-campanas",  icon: "M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z" },
-  { href: "/admin/referidos", label: "Referidos", tourId: "nav-referidos", icon: "M3 4H21L14 12.5V19L10 21V12.5L3 4Z" },
+  // IA centrada en el ACTIVO: la cartera es lo persistente; las activaciones
+  // viven DENTRO de Cartera (no como módulo de "campañas" aparte), y los
+  // referidos son "Oportunidades" para el asesor. Internamente el modelo sigue
+  // siendo ReferralCampaign/Referral — esto es reencuadre de UI.
+  { href: "/admin/clientes",  label: "Cartera",   tourId: "nav-clientes",  icon: "M17 21V19C17 17.9 16.1 17 15 17H9C7.9 17 7 17.9 7 19V21M12 13C14.2 13 16 11.2 16 9C16 6.8 14.2 5 12 5C9.8 5 8 6.8 8 9C8 11.2 9.8 13 12 13Z" },
+  { href: "/admin/referidos", label: "Oportunidades", tourId: "nav-referidos", icon: "M3 4H21L14 12.5V19L10 21V12.5L3 4Z" },
   { href: "/admin/niveles",   label: "Premios",   tourId: "nav-premios",   icon: "M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" },
   { href: "/admin/perfil",    label: "Perfil",    tourId: "nav-perfil",    icon: "M12 8a4 4 0 100 8 4 4 0 000-8zM19.4 13a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33 1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82 1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" },
 ];

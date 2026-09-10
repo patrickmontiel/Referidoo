@@ -37,7 +37,7 @@ export default function CampanaResultadosClient({ campaignId }: { campaignId: st
   }
 
   if (loading) return <div className="w-full max-w-[900px] text-sm text-brand-gray-4">Cargando…</div>;
-  if (!data) return <div className="w-full max-w-[900px] text-sm text-brand-gray-4">No se encontró la campaña.</div>;
+  if (!data) return <div className="w-full max-w-[900px] text-sm text-brand-gray-4">No se encontró la activación.</div>;
 
   const { campaign, metrics, recipients, whatsappQueue } = data;
   const isWhatsapp = campaign.channel === "whatsapp";
@@ -57,7 +57,7 @@ export default function CampanaResultadosClient({ campaignId }: { campaignId: st
   return (
     <div className="w-full max-w-[900px]">
       <div className="flex items-center gap-2 mb-1">
-        <Link href="/admin/campanas" className="text-sm text-brand-gray-4 hover:text-brand-ink">Campañas</Link>
+        <Link href="/admin/campanas" className="text-sm text-brand-gray-4 hover:text-brand-ink">Activaciones</Link>
         <span className="text-brand-gray-4">/</span>
         <span className="text-sm text-brand-ink font-medium">{campaign.name}</span>
       </div>

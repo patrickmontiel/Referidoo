@@ -55,7 +55,7 @@ export default function NuevaCampanaClient({ advisorName, clients }: { advisorNa
         body: JSON.stringify({ name: name.trim(), channel, messageTemplate: template, clientIds: [...selected] }),
       });
       const created = await createRes.json();
-      if (!createRes.ok) { setError(created.error ?? "No se pudo crear la campaña"); setBusy(false); return; }
+      if (!createRes.ok) { setError(created.error ?? "No se pudo crear la activación"); setBusy(false); return; }
       // Ejecuta (email → envío real; whatsapp → cola en la página de resultados).
       await fetch(`/api/campaigns/${created.campaignId}/send`, { method: "POST" }).catch(() => {});
       router.push(`/admin/campanas/${created.campaignId}`);
@@ -78,7 +78,7 @@ export default function NuevaCampanaClient({ advisorName, clients }: { advisorNa
   return (
     <div className="w-full max-w-[680px]">
       <div className="flex items-center gap-2 mb-1">
-        <Link href="/admin/campanas" className="text-sm text-brand-gray-4 hover:text-brand-ink">Campañas</Link>
+        <Link href="/admin/campanas" className="text-sm text-brand-gray-4 hover:text-brand-ink">Activaciones</Link>
         <span className="text-brand-gray-4">/</span>
         <span className="text-sm text-brand-ink font-medium">Activar mi cartera</span>
       </div>
@@ -114,7 +114,7 @@ export default function NuevaCampanaClient({ advisorName, clients }: { advisorNa
       {step === 2 && (
         <div className="bg-white rounded-2xl border border-brand-border-1 p-5 space-y-5">
           <div>
-            <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">Nombre de la campaña</label>
+            <label className="block text-[11px] font-bold text-brand-gray-3 uppercase tracking-[0.08em] mb-2">Nombre de la activación</label>
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Cartera septiembre" className="w-full px-4 py-3 rounded-xl border border-brand-border-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-ink" />
           </div>
           <div>
@@ -146,7 +146,7 @@ export default function NuevaCampanaClient({ advisorName, clients }: { advisorNa
         <div className="bg-white rounded-2xl border border-brand-border-1 p-5">
           <p className="text-sm font-semibold text-brand-ink mb-4">Confirma antes de activar</p>
           <dl className="space-y-2.5 text-sm">
-            <div className="flex justify-between"><dt className="text-brand-gray-4">Campaña</dt><dd className="text-brand-ink font-medium">{name}</dd></div>
+            <div className="flex justify-between"><dt className="text-brand-gray-4">Activación</dt><dd className="text-brand-ink font-medium">{name}</dd></div>
             <div className="flex justify-between"><dt className="text-brand-gray-4">Canal</dt><dd className="text-brand-ink font-medium">{channel === "email" ? "Email (automático)" : "WhatsApp (asistido)"}</dd></div>
             <div className="flex justify-between"><dt className="text-brand-gray-4">Clientes</dt><dd className="text-brand-ink font-medium">{selected.size}</dd></div>
           </dl>
