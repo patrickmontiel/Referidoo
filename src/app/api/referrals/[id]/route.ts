@@ -35,6 +35,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   // (el asesor tiene REWARD_CUTOFF_DAYS para pagarle al cliente desde aquí).
   const r2 = referral as typeof referral & { rewardApprovedAt?: Date | null };
   const isApproving = newRewardStatus === "approved" && referral.rewardStatus !== "approved";
+  // Fecha de cierre inmutable: se sella una sola vez (ver schema.prisma).
+  const r3 = referral as typeof referral & { convertedAt?: Date | null };
 
   // Regla dura (whitepaper cap. 11 / playbook 9): sin monto real no hay
   // conversión — el monto define el premio del cliente y la comisión.
@@ -182,6 +184,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(finalRewardAmount !== referral.rewardAmount ? { rewardAmount: finalRewardAmount } : {}),
       ...(isPaid ? { rewardPaidAt: new Date(), paymentNote: body.paymentNote ?? null } : {}),
       ...(isApproving && !r2.rewardApprovedAt ? { rewardApprovedAt: new Date() } : {}),
+      // Cierre inmutable: se sella en la PRIMERA transición a converted y no se
+      // vuelve a tocar (`!r3.convertedAt` lo protege de sobrescrituras).
+      ...(isConverting && !r3.convertedAt ? { convertedAt: new Date() } : {}),
       ...(lessioCommission !== undefined ? { lessioCommission } : {}),
       ...(typeof body.caratulaUrl === "string" && body.caratulaUrl
         ? { caratulaUrl: body.caratulaUrl, caratulaStatus: "pendiente" }

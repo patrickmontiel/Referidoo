@@ -65,6 +65,9 @@ export async function GET(req: NextRequest) {
         lessioCommission: true,
         createdAt: true,
         updatedAt: true,
+        // Fecha de cierre INMUTABLE. `updatedAt` es mutable (validar una
+        // carátula movía el cierre de periodo) → toda métrica temporal usa esta.
+        convertedAt: true,
         // Sin leadName ni referrer.name: PII de cliente/lead fuera de analytics.
       },
     }),
@@ -85,7 +88,13 @@ export async function GET(req: NextRequest) {
   const advisorName = new Map(advisors.map((a) => [a.id, a.name]));
   const inPeriod = (d: Date) => (start ? d >= start : true);
   const converted = referrals.filter((r) => r.status === "converted");
-  const convertedInPeriod = converted.filter((r) => inPeriod(r.updatedAt));
+  // MÉTRICAS TEMPORALES: solo cierres con fecha inmutable conocida. Los que
+  // tienen convertedAt = null (cerrados antes de que existiera la columna, con
+  // edición posterior) NO se ubican en el tiempo → se excluyen de los periodos,
+  // pero siguen contando en el total histórico (`converted`).
+  const convertedDated = converted.filter((r): r is typeof r & { convertedAt: Date } => r.convertedAt != null);
+  const convertedUndated = converted.length - convertedDated.length;
+  const convertedInPeriod = convertedDated.filter((r) => inPeriod(r.convertedAt));
 
   // ── Stat cards ──
   // MRR REAL: `plan="paid"` SIN mpPreapprovalId es trial o comp manual, NO
@@ -128,8 +137,8 @@ export async function GET(req: NextRequest) {
       const bEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
       weekly.push({
         label: `${monthShort(bStart)} ${String(bStart.getFullYear()).slice(2)}`,
-        commission: converted
-          .filter((r) => r.updatedAt >= bStart && r.updatedAt < bEnd)
+        commission: convertedDated
+          .filter((r) => r.convertedAt >= bStart && r.convertedAt < bEnd)
           .reduce((s, r) => s + (r.lessioCommission ?? 0), 0),
         mrr:
           planEvents.filter((e) => e.event === "activated" && e.createdAt >= bStart && e.createdAt < bEnd).length *
@@ -146,8 +155,8 @@ export async function GET(req: NextRequest) {
       const labelEnd = new Date(bEnd.getTime() - 24 * 60 * 60 * 1000);
       weekly.push({
         label: weekLabel(bStart, labelEnd),
-        commission: converted
-          .filter((r) => r.updatedAt >= bStart && r.updatedAt < bEnd)
+        commission: convertedDated
+          .filter((r) => r.convertedAt >= bStart && r.convertedAt < bEnd)
           .reduce((s, r) => s + (r.lessioCommission ?? 0), 0),
         mrr:
           planEvents.filter((e) => e.event === "activated" && e.createdAt >= bStart && e.createdAt < bEnd).length *
@@ -180,10 +189,11 @@ export async function GET(req: NextRequest) {
   const ranking = advisors
     .map((a) => {
       const mine = referrals.filter((r) => r.advisorId === a.id);
-      const myConverted = mine.filter((r) => r.status === "converted" && inPeriod(r.updatedAt));
-      const closes = mine.filter((r) => r.status === "converted");
-      const lastClose = closes.length
-        ? closes.reduce((max, r) => (r.updatedAt > max ? r.updatedAt : max), closes[0].updatedAt)
+      // Periodo y "último cierre" usan la fecha INMUTABLE de cierre.
+      const myDated = mine.filter((r): r is typeof r & { convertedAt: Date } => r.status === "converted" && r.convertedAt != null);
+      const myConverted = myDated.filter((r) => inPeriod(r.convertedAt));
+      const lastClose = myDated.length
+        ? myDated.reduce((max, r) => (r.convertedAt > max ? r.convertedAt : max), myDated[0].convertedAt)
         : null;
       return {
         id: a.id,
@@ -212,14 +222,14 @@ export async function GET(req: NextRequest) {
         type: "conversion",
         text: `${advisorName.get(r.advisorId) ?? "Asesor"} cerró un ${r.productType ?? "contrato"} referido`,
         amount: r.lessioCommission,
-        date: r.updatedAt.toISOString(),
+        date: (r.convertedAt ?? r.updatedAt).toISOString(),
       });
     } else {
       activity.push({
         type: "alert",
         text: `${advisorName.get(r.advisorId) ?? "Asesor"} registró una conversión sin monto`,
         amount: 0,
-        date: r.updatedAt.toISOString(),
+        date: (r.convertedAt ?? r.updatedAt).toISOString(),
       });
     }
   }
@@ -267,6 +277,10 @@ export async function GET(req: NextRequest) {
     commissionTotal,
     commissionSince: LESSIO_COMMISSION_SINCE,
     conversionsCount,
+    // Cierres SIN fecha inmutable conocida: cuentan en el histórico pero no se
+    // pueden ubicar en un periodo. Se expone para poder decirlo, no esconderlo.
+    convertedUndated,
+    convertedAllTime: converted.length,
     salesValue,
     weekly,
     weeklyHasData,

@@ -51,7 +51,11 @@ export async function computeMorosos(now: Date): Promise<Map<string, MorosoInfo>
         status: "converted",
         rewardStatus: "approved",
         tierPosition: { gt: 0 },
-        updatedAt: { lt: overdueCutoff },
+        // Ancla INMUTABLE del corte: la fecha en que se aprobó el premio.
+        // Antes usaba `updatedAt` (mutable), así que validar una carátula o
+        // editar el referido REINICIABA el reloj de morosidad. Las filas sin
+        // rewardApprovedAt no se pueden evaluar con certeza → no se acusan.
+        rewardApprovedAt: { not: null, lt: overdueCutoff },
         // Alcance real: asesor vivo/no-interno Y referido NO borrado.
         ...REAL_REFERRAL_WHERE,
       },

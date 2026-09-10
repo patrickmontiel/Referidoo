@@ -26,6 +26,7 @@ export default async function OwnerInteligenciaPage() {
         status: true,
         createdAt: true,
         updatedAt: true,
+        convertedAt: true,
         contactedAt: true,
         saleAmount: true,
         productType: true,
@@ -45,8 +46,12 @@ export default async function OwnerInteligenciaPage() {
   const converted = active.filter((r) => r.status === "converted");
   const closeRate = active.length > 0 ? (converted.length / active.length) * 100 : 0;
 
+  // Días a cierre con la fecha INMUTABLE: antes usaba updatedAt, así que
+  // validar una carátula meses después inflaba el promedio retroactivamente.
+  // Los cierres sin convertedAt conocido se excluyen (no se inventa la fecha).
   const daysToClose = converted
-    .map((r) => (r.updatedAt.getTime() - r.createdAt.getTime()) / DAY_MS)
+    .filter((r) => r.convertedAt != null)
+    .map((r) => (r.convertedAt!.getTime() - r.createdAt.getTime()) / DAY_MS)
     .filter((d) => d >= 0);
   const avgDays = daysToClose.length
     ? daysToClose.reduce((s, d) => s + d, 0) / daysToClose.length

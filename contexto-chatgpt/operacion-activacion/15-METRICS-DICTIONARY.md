@@ -4,6 +4,21 @@
 >
 > Esta es la **fuente única** de definiciones. Si una métrica no está aquí, no se muestra.
 
+## ⏱ Fecha de cierre: SIEMPRE `Referral.convertedAt` (nunca `updatedAt`)
+`updatedAt` es **mutable**: cualquier escritura lo mueve. Validar una carátula en septiembre movía un cierre de julio a septiembre, reescribiendo cierres del mes, GWP por periodo, ranking temporal, días-a-cierre y atribución de ingreso **de forma retroactiva**.
+
+- **`convertedAt`** se sella en la **primera** transición `no-converted → converted` y **ninguna** edición posterior lo modifica (carátula, premio, notas, corrección de producto).
+- Si un referido se "des-convierte" por corrección, `convertedAt` **no se borra** (V1: representa el primer cierre). Un `conversionReversedAt` **no se construyó** — no hay necesidad demostrada.
+- **`convertedAt = null`** = cierre con fecha **desconocida** (convertido antes de que existiera la columna, con edición posterior). **No se inventa la fecha.**
+
+**Regla de uso:**
+| Tipo de métrica | Qué usa |
+|---|---|
+| **Temporal** (por periodo/mes/semana): close rate del periodo, GWP del periodo, revenue del periodo, días-a-cierre, ranking del periodo, mix de producto del periodo, último cierre | **`convertedAt`**. Los `null` se **excluyen** (no se pueden ubicar en el tiempo) y se reporta cuántos son (`convertedUndated`). |
+| **All-time / histórico**: total de convertidos | `status = 'converted'`. **Sí** incluye los de fecha desconocida. |
+
+El corte de morosidad del premio usa **`rewardApprovedAt`** (también inmutable), no `updatedAt`, por la misma razón: editar un referido reiniciaba el reloj del corte.
+
 ## Filtro global de alcance (aplica a TODAS las métricas de Owner)
 ```
 Advisor:  deletedAt = null  AND  analyticsExcluded = false

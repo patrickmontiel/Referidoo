@@ -41,6 +41,7 @@ export async function GET() {
         lessioCommission: true,
         createdAt: true,
         updatedAt: true,
+        convertedAt: true, // fecha de cierre inmutable
       },
     }),
   ]);
@@ -51,7 +52,8 @@ export async function GET() {
   // MRR real: solo suscripciones MP vivas (paid sin mpPreapprovalId = trial/comp).
   const proCount = advisors.filter((a) => a.plan === "paid" && a.mpPreapprovalId).length;
   const mrr = proCount * MONTHLY_PRICE_MXN;
-  const convertedThisMonth = referrals.filter((r) => r.status === "converted" && r.updatedAt >= monthStart);
+  // Usa la fecha INMUTABLE: editar un referido ya no lo mueve de mes.
+  const convertedThisMonth = referrals.filter((r) => r.status === "converted" && r.convertedAt != null && r.convertedAt >= monthStart);
   const commissionTotal = convertedThisMonth.reduce((s, r) => s + (r.lessioCommission ?? 0), 0);
 
   const narrative = await generateOwnerNarrative({
