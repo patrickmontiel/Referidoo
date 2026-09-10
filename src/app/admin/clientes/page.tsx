@@ -37,9 +37,18 @@ export default async function ClientesPage() {
   const maxTierAmount = tiers.length ? Math.max(...tiers.map((t) => t.amount)) : 3500;
   const sentIds = new Set(sentEvents.map((e) => e.event.slice("linksent:".length)));
 
+  // "Activado" = el cliente ya fue incluido y CONTACTADO en alguna activación.
+  // (El PlanEvent `linksent:` es la señal legacy del envío suelto; una activación
+  //  moderna se registra en CampaignRecipient, así que hay que mirar ambas.)
+  const activatedRecipients = await db.campaignRecipient.findMany({
+    where: { advisorId: session.advisorId, status: "contacted" },
+    select: { clientId: true },
+  });
+  const activatedIds = new Set(activatedRecipients.map((r) => r.clientId));
+
   const serializedClients = clients.map((c) => ({
     ...c,
-    linkSent: sentIds.has(c.id),
+    linkSent: sentIds.has(c.id) || activatedIds.has(c.id),
     createdAt: c.createdAt.toISOString(),
     referrals: c.referrals.map((r) => ({
       ...r,
