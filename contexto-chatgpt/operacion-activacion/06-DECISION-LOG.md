@@ -24,6 +24,15 @@
 | D16 | **WhatsApp = ASSISTED** (wa.me, el asesor manda); no hay API oficial y no se integra todavía | Evita automation frágil/prohibida y el problema de consentimiento; honesto: acción de envío ≠ entrega. Ver `07`. | Vigente |
 | D17 | **Campaigns NO se gatea por Pro en V1** (envío disponible a asesor verificado) | No decidir pricing antes de evidencia de valor; gating diferido. | Vigente |
 | D18 | **Atribución de campaña por ID opaco de recipient (`?cr=`), validado server-side** contra el cliente resuelto; sin FKs en los modelos nuevos | Un cliente puede estar en varias campañas → hace falta atribución explícita; sin relaciones para sobrevivir soft-delete (mismo criterio que `ProductEvent`). | Vigente |
+| D19 | **Un número de Owner solo existe si se puede explicar** (registros, denominador, cuentas incluidas, significado). Sin dato real → `0` o "Sin datos suficientes" | Los números visibles eran humo: MRR fantasma, referidos borrados contados, benchmark sin fuente. Ver `12`. | Vigente |
+| D20 | **Aislamiento de cuentas internas por propiedad explícita** (`Advisor.analyticsExcluded`), nunca por email hardcodeado en queries | No existía NINGÚN mecanismo: seeds, e2e y la cuenta del owner contaban como negocio real. | Vigente |
+| D21 | **MRR real = suscripción MP viva.** `plan='paid'` sin `mpPreapprovalId` es trial/comp, NO ingreso | Un backfill histórico convirtió a todos los advisors legacy en "paid" → $539 fantasma por cabeza. | Vigente |
+| D22 | **Privacy boundary:** Owner ve *performance* de la cartera, NUNCA *identidad* de los clientes de sus asesores | El nombre de clientes/leads salía en 24 lugares e incluso llegaba al prompt de OpenAI. Operaciones (abrir un documento) es la única excepción, explícita y separada. | Vigente |
+| D23 | **Se elimina todo benchmark sin fuente verificable** (empezando por "industria 25.6% · Focus Digital 2025") | Grep exhaustivo: la afirmación existe, la fuente no. Además comparaba denominadores distintos. | Vigente |
+| D24 | **La cartera es un activo persistente:** identidad por `(advisorId, normalizedPhone)` → email; reimportar ACTUALIZA, nunca duplica, y conserva `referralCode`/`accessToken` | Sin dedupe, reimportar rompía los links ya compartidos y empujaba la metáfora Mailchimp. Ver `11`. | Vigente |
+| D25 | **Posible duplicado (email igual, teléfono distinto) NUNCA se auto-fusiona** — lo resuelve el asesor (default: omitir) | Fusionar a dos personas distintas es irreversible y destruye historial. | Vigente |
+| D26 | **Scripts destructivos solo contra base local** (`prisma/_guard.ts`); `prisma.seed` desenganchado; `/api/demo/reset` 404 en prod | `reset-demo.ts` hacía `DELETE` sin WHERE contra Turso PROD y `prisma db seed` auto-invocaba un script que borra 5 tablas. | Vigente |
+| D27 | **No se borra nada de producción sin aprobación explícita**; lo que no se pueda demostrar falso se marca UNKNOWN | Eduardo Neri aparece como asesor real Y como cuenta de seed — no se adivina. Ver `13`. | Vigente |
 
 ## Pendientes de decisión (requieren evidencia real, NO decidir aún)
 - Pricing / estructura de comisión → depende de Economics Audit (trigger en `00`).
