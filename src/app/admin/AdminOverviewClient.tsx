@@ -66,9 +66,11 @@ type AdminOverviewClientProps = {
   referrals: Referral[];
   advisor: Advisor | null;
   clientCount: number;
+  /** En RECOVERY la checklist genérica estorba: manda la tarjeta de recovery. */
+  hideSetupChecklist?: boolean;
 };
 
-export default function AdminOverviewClient({ referrals, advisor, clientCount }: AdminOverviewClientProps) {
+export default function AdminOverviewClient({ referrals, advisor, clientCount, hideSetupChecklist }: AdminOverviewClientProps) {
   const [copiedLink, setCopiedLink] = useState(false);
 
   const pending = referrals.filter((r) => r.status === "pending" || r.status === "contacted" || r.status === "in_process").length;
@@ -141,7 +143,7 @@ export default function AdminOverviewClient({ referrals, advisor, clientCount }:
       <LeadFestejo referrals={referrals} />
 
       {/* Primeros Pasos */}
-      <PrimerosPasosCard />
+      {!hideSetupChecklist && <PrimerosPasosCard />}
 
       {/* Stats */}
       <div data-tour="stats" className="mb-6">

@@ -55,8 +55,19 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     }
   }
 
+  // RECOVERY tiene precedencia sobre el onboarding legacy: un asesor que YA
+  // tiene cartera no debe recibir el welcome de cuenta nueva ni el tour de
+  // "registra tu primer cliente". Se detecta con un conteo barato.
+  let hasPortfolio = false;
+  try {
+    hasPortfolio = (await db.client.count({ where: { advisorId: session.advisorId, active: true } })) > 0;
+  } catch {
+    // si falla el conteo, se comporta como antes (no bloquea el layout)
+  }
+
   return (
     <AdminLayoutShell
+      suppressLegacyOnboarding={hasPortfolio}
       initialAdvisorName={name}
       initialEmailVerified={emailVerified ?? false}
       initialPlan={plan ?? "freemium"}

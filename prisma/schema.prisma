@@ -51,6 +51,12 @@ model AdvisorSettings {
   credential           String?
   yearsExperience      Int?
   peopleServed         Int?
+  // Perfil de negocio mínimo (solo lo que CAMBIA el producto — ver 09/10):
+  //   products: "PPR" | "Vida" | "Ambos"  → superficies/copy de producto
+  //   defaultChannel: "whatsapp" | "email" | "ambos" → canal sugerido al activar
+  // null = todavía no se preguntó (el flujo de recovery lo pide una sola vez).
+  products             String?
+  defaultChannel       String?
   bubbleAutoPoints     Int     @default(150)
   bubbleGmmPoints      Int     @default(300)
   bubbleClaimThreshold Int     @default(500)

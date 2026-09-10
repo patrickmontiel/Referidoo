@@ -179,6 +179,8 @@ type AdminLayoutShellProps = {
   initialEmailVerified: boolean;
   initialPlan: string;
   initialOnboardedAt: string | null;
+  /** true = el asesor ya tiene cartera → RECOVERY manda, sin welcome ni tour. */
+  suppressLegacyOnboarding?: boolean;
 };
 
 export default function AdminLayoutShell({
@@ -187,6 +189,7 @@ export default function AdminLayoutShell({
   initialEmailVerified,
   initialPlan,
   initialOnboardedAt,
+  suppressLegacyOnboarding,
 }: AdminLayoutShellProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -592,7 +595,10 @@ export default function AdminLayoutShell({
     if (hasWelcome) sessionStorage.removeItem("referidoo_welcome");
     if (hasWelcome) setShowWelcome(true);
 
-    const needsOnboarding = !initialOnboardedAt;
+    // RECOVERY tiene precedencia: si el asesor YA tiene cartera, el onboarding
+    // de cuenta nueva (welcome + tour "registra tu primer cliente") no aplica —
+    // la superficie correcta es la tarjeta de recovery en /admin.
+    const needsOnboarding = !initialOnboardedAt && !suppressLegacyOnboarding;
 
     if (hasWelcome) {
       setTimeout(() => setFadingOut(true), 3200);

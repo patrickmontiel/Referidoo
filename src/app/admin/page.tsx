@@ -3,6 +3,8 @@ import { getAdvisorSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { MONTHLY_PRICE_MXN } from "@/lib/mercadopago";
 import AdminOverviewClient from "./AdminOverviewClient";
+import { RecoveryCard } from "./RecoveryCard";
+import { deriveAdvisorState, shouldShowRecovery, computeSetupProgress, suggestedFirstActivationSize } from "@/lib/advisor-state";
 
 export default async function AdminOverviewPage() {
   const session = await getAdvisorSession();
@@ -23,6 +25,35 @@ export default async function AdminOverviewPage() {
     db.client.count({ where: { advisorId: session.advisorId, active: true } }),
   ]);
 
+  // ── ESTADO DEL ASESOR (derivado, no persistido) ──
+  // Un asesor con cartera y sin activaciones entra a RECOVERY, no al
+  // onboarding de cuenta nueva. Ver src/lib/advisor-state.ts.
+  const [activationCount, settings, tierCount, contactableCount] = await Promise.all([
+    db.referralCampaign.count({ where: { advisorId: session.advisorId } }),
+    db.advisorSettings.findUnique({
+      where: { advisorId: session.advisorId },
+      select: { products: true, defaultChannel: true },
+    }),
+    db.rewardTier.count({ where: { advisorId: session.advisorId } }),
+    db.client.count({
+      where: { advisorId: session.advisorId, active: true, OR: [{ phone: { not: null } }, { email: { not: null } }] },
+    }),
+  ]);
+
+  const advisorState = deriveAdvisorState({
+    clientCount,
+    activationCount,
+    referralCount: referrals.length,
+  });
+  const showRecovery = shouldShowRecovery(advisorState);
+  const setupProgress = computeSetupProgress({
+    clientCount,
+    hasProducts: !!settings?.products,
+    hasTiers: tierCount > 0,
+    hasChannel: !!settings?.defaultChannel,
+    activationCount,
+  });
+
   if (!advisor) redirect("/login");
 
   const serializedReferrals = referrals.map((r) => ({
@@ -35,10 +66,22 @@ export default async function AdminOverviewPage() {
   }));
 
   return (
-    <AdminOverviewClient
+    <>
+      {showRecovery && (
+        <RecoveryCard
+          clientCount={clientCount}
+          contactableCount={contactableCount}
+          progress={setupProgress}
+          needsProfile={!settings?.products || !settings?.defaultChannel}
+          suggestedSize={suggestedFirstActivationSize(clientCount)}
+        />
+      )}
+      <AdminOverviewClient
       advisor={{ ...advisor, monthlyPriceMxn: MONTHLY_PRICE_MXN, onboardedAt: advisor.onboardedAt?.toISOString() ?? null }}
       referrals={serializedReferrals}
       clientCount={clientCount}
+      hideSetupChecklist={showRecovery}
     />
+    </>
   );
 }

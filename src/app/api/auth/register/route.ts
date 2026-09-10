@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { db } from "@/lib/db";
-import { hashPassword, signToken, setAdvisorCookie } from "@/lib/auth";
+import { hashPassword, signToken, setAdvisorCookie, isPlatformOwner } from "@/lib/auth";
 import { sendVerificationEmail } from "@/lib/email";
 import { isRateLimited, clientIp } from "@/lib/rate-limit";
 
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Demasiados intentos. Espera unos minutos e intenta de nuevo." }, { status: 429 });
   }
 
-  const { name, email, password, companyName, ref } = await req.json();
+  const { name, email, password, companyName, ref, internalToken } = await req.json();
 
   if (!name || !email || !password) {
     return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
@@ -47,6 +47,20 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await hashPassword(password);
     const verificationToken = randomBytes(32).toString("hex");
 
+    // ── ALCANCE DE ANALYTICS ──────────────────────────────────────────────
+    // Un registro público NORMAL es negocio real: `analyticsExcluded = false`
+    // (el default del schema). NO se decide por nombre ni por dominio de correo.
+    // Solo dos casos quedan FUERA, y ambos son explícitos:
+    //   1) La cuenta del DUEÑO de la plataforma (config `PLATFORM_OWNER_EMAIL`).
+    //   2) Un alta marcada como interna con `internalToken`, que solo funciona
+    //      si el entorno define INTERNAL_SIGNUP_SECRET (nunca en producción).
+    // Así un asesor real que se registra solo entra a métricas sin aprobación
+    // manual, y QA/e2e/owner no contaminan.
+    const internalSecret = process.env.INTERNAL_SIGNUP_SECRET;
+    const isInternalSignup =
+      !!internalSecret && typeof internalToken === "string" && internalToken === internalSecret;
+    const analyticsExcluded = isPlatformOwner(email) || isInternalSignup;
+
     const advisor = await db.advisor.create({
       data: {
         name,
@@ -57,6 +71,7 @@ export async function POST(req: NextRequest) {
         paidUntil: new Date(Date.now() + TRIAL_MS),
         emailVerified: false,
         verificationToken,
+        analyticsExcluded,
       },
     });
 
