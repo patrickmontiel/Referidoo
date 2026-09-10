@@ -4,6 +4,7 @@ import { getAdvisorSession, isPlatformOwner } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { aggregateFunnel, perAdvisorFunnel } from "@/lib/activation-funnel";
 import { computeCampaignMetrics } from "@/lib/campaign-metrics";
+import { REAL_ADVISOR_WHERE } from "@/lib/analytics-scope";
 import { ActivacionTable } from "./ActivacionTable";
 import { OwnerCampaignsTable } from "./OwnerCampaignsTable";
 
@@ -49,23 +50,30 @@ export default async function OwnerActivacionPage({
   const since =
     period === "all" ? new Date(0) : new Date(Date.now() - Number(period === "90" ? 90 : 30) * 24 * 60 * 60 * 1000);
 
-  const [events, advisors] = await Promise.all([
-    db.productEvent.findMany({
-      where: { createdAt: { gte: since } },
-      select: { event: true, advisorId: true },
-    }),
-    db.advisor.findMany({ where: { deletedAt: null }, select: { id: true, name: true } }),
-  ]);
+  // DATA TRUTH: el funnel agregado contaba eventos de TODOS los asesores
+  // (incluidos borrados, QA y smoke tests) porque ProductEvent no tiene
+  // relación. Ahora se restringe a los IDs de asesores reales.
+  const advisors = await db.advisor.findMany({ where: REAL_ADVISOR_WHERE, select: { id: true, name: true } });
+  const realAdvisorIds = advisors.map((a) => a.id);
+  const events = realAdvisorIds.length
+    ? await db.productEvent.findMany({
+        where: { createdAt: { gte: since }, advisorId: { in: realAdvisorIds } },
+        select: { event: true, advisorId: true },
+      })
+    : [];
 
   // Agregado global + por asesor (funciones puras, testeadas en activation-funnel.test.ts).
   const agg = aggregateFunnel(events);
   const perAdvisor = perAdvisorFunnel(events);
 
   // ── Campañas (Portfolio Activation) del periodo ──
-  const campaigns = await db.referralCampaign.findMany({
-    where: { createdAt: { gte: since } },
-    orderBy: { createdAt: "desc" },
-  });
+  // ReferralCampaign no tiene relación Prisma → filtrar por IDs reales.
+  const campaigns = realAdvisorIds.length
+    ? await db.referralCampaign.findMany({
+        where: { createdAt: { gte: since }, advisorId: { in: realAdvisorIds } },
+        orderBy: { createdAt: "desc" },
+      })
+    : [];
   const campaignIds = campaigns.map((c) => c.id);
   const [campRecipients, campEvents] = campaignIds.length
     ? await Promise.all([

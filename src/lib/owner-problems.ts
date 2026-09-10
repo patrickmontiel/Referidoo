@@ -1,6 +1,11 @@
 import { db } from "@/lib/db";
 import { MONTHLY_PRICE_MXN } from "@/lib/mercadopago";
 import { REWARD_CUTOFF_DAYS } from "@/lib/utils";
+import { REAL_ADVISOR_WHERE, REAL_REFERRAL_WHERE } from "@/lib/analytics-scope";
+
+// PRIVACIDAD: este módulo alimenta el UI del owner Y el prompt de la narrativa
+// IA. NUNCA debe contener nombres de CLIENTES ni de LEADS — solo nombres de
+// ASESORES (que son los clientes de Referidoo) y agregados. Ver 12-OWNER-DATA-TRUTH-REDESIGN.md.
 
 const OPEN_STATUSES = ["pending", "contacted", "in_process"];
 const STALE_LEAD_MS = 7 * 24 * 60 * 60 * 1000;
@@ -9,9 +14,10 @@ const STALE_LEAD_MS = 7 * 24 * 60 * 60 * 1000;
 // de día 7 y 14 (cron) son recordatorios previos, no morosidad.
 const OVERDUE_MS = REWARD_CUTOFF_DAYS * 24 * 60 * 60 * 1000;
 
-// Umbrales = primas anuales mínimas plausibles por producto en MX — la
-// comisión de Referidoo depende del monto que reporta el asesor, así que
-// subreportar es el vector de fraude directo.
+// HEURÍSTICA DE TRIAGE (no es una métrica publicada): primas anuales mínimas
+// plausibles por producto en MX. Sirve para levantar una revisión manual de
+// carátula, NO para afirmar fraude. Umbrales estimados, sin fuente externa —
+// por eso el texto del problema dice "revisar", nunca acusa.
 const MIN_PLAUSIBLE: Record<string, number> = {
   PPR: 15000,
   Vida: 8000,
@@ -19,12 +25,13 @@ const MIN_PLAUSIBLE: Record<string, number> = {
   "Daños/Auto": 4000,
 };
 
-export type MorosoInfo = { count: number; total: number; ejemplo: string };
+// Sin `ejemplo`: antes traía el NOMBRE del cliente/referidor (PII) hasta el UI
+// del owner y hasta el prompt de OpenAI. Ahora solo agregados.
+export type MorosoInfo = { count: number; total: number };
 
 type Advisor = { id: string; name: string; plan: string; createdAt: Date; paymentFailedAt: Date | null };
 type Referral = {
   advisorId: string;
-  leadName: string;
   status: string;
   saleAmount: number | null;
   productType: string | null;
@@ -45,23 +52,25 @@ export async function computeMorosos(now: Date): Promise<Map<string, MorosoInfo>
         rewardStatus: "approved",
         tierPosition: { gt: 0 },
         updatedAt: { lt: overdueCutoff },
-        advisor: { deletedAt: null },
+        // Alcance real: asesor vivo/no-interno Y referido NO borrado.
+        ...REAL_REFERRAL_WHERE,
       },
-      select: { advisorId: true, rewardAmount: true, referrer: { select: { name: true } } },
+      // Sin nombre del referidor: solo lo necesario para agregar por asesor.
+      select: { advisorId: true, rewardAmount: true },
     }),
     db.bubbleClaim.findMany({
-      where: { status: "pending", createdAt: { lt: overdueCutoff }, client: { advisor: { deletedAt: null } } },
-      select: { amount: true, client: { select: { name: true, advisorId: true } } },
+      where: { status: "pending", createdAt: { lt: overdueCutoff }, client: { advisor: REAL_ADVISOR_WHERE } },
+      select: { amount: true, client: { select: { advisorId: true } } },
     }),
   ]);
 
   for (const r of overdueEscalera) {
-    const prev = morosos.get(r.advisorId) ?? { count: 0, total: 0, ejemplo: "" };
-    morosos.set(r.advisorId, { count: prev.count + 1, total: prev.total + r.rewardAmount, ejemplo: r.referrer.name });
+    const prev = morosos.get(r.advisorId) ?? { count: 0, total: 0 };
+    morosos.set(r.advisorId, { count: prev.count + 1, total: prev.total + r.rewardAmount });
   }
   for (const c of overdueClaims) {
-    const prev = morosos.get(c.client.advisorId) ?? { count: 0, total: 0, ejemplo: "" };
-    morosos.set(c.client.advisorId, { count: prev.count + 1, total: prev.total + c.amount, ejemplo: c.client.name });
+    const prev = morosos.get(c.client.advisorId) ?? { count: 0, total: 0 };
+    morosos.set(c.client.advisorId, { count: prev.count + 1, total: prev.total + c.amount });
   }
 
   return morosos;
@@ -111,7 +120,7 @@ export function computeOwnerProblems(params: {
     problems.push({
       id: `moroso-${advisorId}`,
       title: `Premios vencidos: ${info.count} sin pagar +${REWARD_CUTOFF_DAYS} días ($${info.total.toLocaleString("es-MX")})`,
-      detail: `${advisorName.get(advisorId) ?? "Un asesor"} pasó el corte obligatorio de ${REWARD_CUTOFF_DAYS} días sin pagarle a sus clientes (ej. ${info.ejemplo}) — la promesa rota quema el canal. El cron ya le mandó recordatorios (día 7 y 14) antes del corte.`,
+      detail: `${advisorName.get(advisorId) ?? "Un asesor"} pasó el corte obligatorio de ${REWARD_CUTOFF_DAYS} días sin pagarle a sus clientes — la promesa rota quema el canal. El cron ya le mandó recordatorios (día 7 y 14) antes del corte.`,
     });
   }
 
@@ -123,14 +132,15 @@ export function computeOwnerProblems(params: {
     const prev = lowByAdvisor.get(r.advisorId) ?? { count: 0, worst: "" };
     lowByAdvisor.set(r.advisorId, {
       count: prev.count + 1,
-      worst: `${r.productType} de ${r.leadName} por $${r.saleAmount.toLocaleString("es-MX")}`,
+      // Sin nombre del lead (PII): producto + monto bastan para el triage.
+      worst: `${r.productType} por $${r.saleAmount.toLocaleString("es-MX")}`,
     });
   }
   for (const [advisorId, info] of lowByAdvisor) {
     problems.push({
       id: `lowamt-${advisorId}`,
-      title: `${info.count} conversión${info.count !== 1 ? "es" : ""} con monto atípicamente bajo`,
-      detail: `${advisorName.get(advisorId) ?? "Un asesor"} reportó ${info.worst} — pedir carátula de póliza para validar el monto y la comisión.`,
+      title: `${info.count} conversión${info.count !== 1 ? "es" : ""} por debajo del umbral de revisión`,
+      detail: `${advisorName.get(advisorId) ?? "Un asesor"} reportó ${info.worst} — por debajo de la prima mínima estimada para ese producto. Pedir carátula para validar (umbral heurístico, no es una acusación).`,
     });
   }
 

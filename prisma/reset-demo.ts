@@ -1,10 +1,13 @@
 import "dotenv/config";
 import { createClient } from "@libsql/client";
+import { assertLocalDatabase } from "./_guard";
 
-const client = createClient({
-  url: process.env.DATABASE_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN!,
-});
+// ⚠️ DESTRUCTIVO: `DELETE FROM Referral` + `DELETE FROM Client` SIN WHERE.
+// Antes apuntaba explícitamente a Turso PRODUCCIÓN (DATABASE_URL! +
+// TURSO_AUTH_TOKEN!) sin ninguna confirmación — un solo comando borraba la
+// cartera y los referidos de TODOS los asesores reales. Ahora solo corre local.
+const url = assertLocalDatabase("reset-demo.ts");
+const client = createClient({ url });
 
 async function main() {
   await client.execute("DELETE FROM Referral");

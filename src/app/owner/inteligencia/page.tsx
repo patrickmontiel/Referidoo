@@ -2,14 +2,17 @@ import { redirect } from "next/navigation";
 import { getAdvisorSession, isPlatformOwner } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatCurrency } from "@/lib/utils";
+import { REAL_REFERRAL_WHERE, REAL_CLIENT_WHERE, safeRate } from "@/lib/analytics-scope";
 
-// Grafo v0: la inteligencia agregada de la plataforma. Cada número de esta
-// página es (1) un benchmark que ninguna aseguradora tiene a nivel asesor
-// individual y (2) materia prima del Loop 3 (contenido/autoridad). A escala,
-// esto se convierte en el producto de datos — agregado y anónimo hacia
-// afuera, nunca datos personales.
-const INDUSTRY_CLOSE_RATE = 25.6; // Focus Digital 2025 — referidos, promedio multisector
-
+// Inteligencia agregada de la plataforma.
+//
+// DATA TRUTH (ver 15-METRICS-DICTIONARY.md):
+//  - Solo asesores reales (sin internos/QA) y referidos NO borrados.
+//  - Se ELIMINÓ la comparación contra "industria 25.6% (Focus Digital 2025)":
+//    era una constante sin ninguna fuente en el repo, y además medía otra cosa
+//    que nuestra tasa (denominadores distintos). No se compara sin fuente.
+//  - PRIVACIDAD: nunca nombres de clientes. Los referidores se muestran como
+//    DISTRIBUCIÓN anónima, no como una lista de personas.
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export default async function OwnerInteligenciaPage() {
@@ -18,7 +21,7 @@ export default async function OwnerInteligenciaPage() {
 
   const [referrals, clients] = await Promise.all([
     db.referral.findMany({
-      where: { advisor: { deletedAt: null } },
+      where: REAL_REFERRAL_WHERE,
       select: {
         status: true,
         createdAt: true,
@@ -32,8 +35,9 @@ export default async function OwnerInteligenciaPage() {
       },
     }),
     db.client.findMany({
-      where: { active: true, advisor: { deletedAt: null } },
-      select: { id: true, name: true, advisor: { select: { name: true } } },
+      where: REAL_CLIENT_WHERE,
+      // Sin `name`: el owner no necesita la identidad de los clientes.
+      select: { id: true },
     }),
   ]);
 
@@ -57,8 +61,14 @@ export default async function OwnerInteligenciaPage() {
     ? hoursToContact.reduce((s, h) => s + h, 0) / hoursToContact.length
     : null;
 
-  const sharers = new Set(active.map((r) => r.referrerId));
-  const pctSharing = clients.length > 0 ? (sharers.size / clients.length) * 100 : 0;
+  // FIX: antes el numerador salía de TODOS los referrerId (incluyendo clientes
+  // inactivos o de asesores excluidos) y el denominador solo de clientes
+  // activos → la tasa podía pasar de 100%. Ahora se intersecta con la MISMA
+  // población del denominador.
+  const clientIdSet = new Set(clients.map((c) => c.id));
+  const sharers = new Set(active.map((r) => r.referrerId).filter((id) => clientIdSet.has(id)));
+  const pctSharingRate = safeRate(sharers.size, clients.length);
+  const pctSharing = pctSharingRate === null ? null : pctSharingRate * 100;
 
   const withSale = converted.filter((r) => r.saleAmount);
   const gwp = withSale.reduce((s, r) => s + (r.saleAmount ?? 0), 0);
@@ -75,26 +85,28 @@ export default async function OwnerInteligenciaPage() {
     .map(([product, v]) => ({ product, ...v }))
     .sort((a, b) => b.count - a.count);
 
-  // Top referidores (los nodos más valiosos del grafo)
-  const byReferrer = new Map<string, { referidos: number; conversiones: number; premios: number }>();
+  // DISTRIBUCIÓN DE REFERIDORES (sin identidad).
+  // Antes esto era una tabla "Top referidores" con NOMBRES de clientes — lo que
+  // contradecía la promesa de la propia página. El owner necesita saber cómo se
+  // reparte la producción, no quién es cada persona.
+  const byReferrer = new Map<string, number>();
   for (const r of active) {
-    const prev = byReferrer.get(r.referrerId) ?? { referidos: 0, conversiones: 0, premios: 0 };
-    prev.referidos += 1;
-    if (r.status === "converted") {
-      prev.conversiones += 1;
-      if (r.tierPosition > 0) prev.premios += r.rewardAmount;
-    }
-    byReferrer.set(r.referrerId, prev);
+    byReferrer.set(r.referrerId, (byReferrer.get(r.referrerId) ?? 0) + 1);
   }
-  const clientById = new Map(clients.map((c) => [c.id, c]));
-  const topReferrers = [...byReferrer.entries()]
-    .map(([clientId, v]) => ({
-      name: clientById.get(clientId)?.name ?? "(cliente dado de baja)",
-      advisorName: clientById.get(clientId)?.advisor.name ?? "—",
-      ...v,
-    }))
-    .sort((a, b) => b.conversiones - a.conversiones || b.referidos - a.referidos)
-    .slice(0, 8);
+  const buckets = { uno: 0, dos: 0, tresCinco: 0, seisMas: 0 };
+  for (const [, n] of byReferrer) {
+    if (n >= 6) buckets.seisMas += 1;
+    else if (n >= 3) buckets.tresCinco += 1;
+    else if (n === 2) buckets.dos += 1;
+    else buckets.uno += 1;
+  }
+  const referrerDistribution = [
+    { label: "1 referido", count: buckets.uno },
+    { label: "2 referidos", count: buckets.dos },
+    { label: "3–5 referidos", count: buckets.tresCinco },
+    { label: "6+ referidos", count: buckets.seisMas },
+  ];
+  const productiveReferrers = byReferrer.size;
 
   const nf = (n: number, d = 0) => n.toLocaleString("es-MX", { maximumFractionDigits: d });
 
@@ -103,32 +115,37 @@ export default async function OwnerInteligenciaPage() {
       <div>
         <h1 className="text-[26px] font-bold text-brand-ink">Inteligencia</h1>
         <p className="text-sm text-brand-gray-4 mt-1">
-          Grafo v0 — los benchmarks agregados de la plataforma. Cada número de aquí es contenido
-          para el Loop 3 y la semilla del producto de datos.
+          Agregados de la plataforma, solo de asesores reales. Sin identidad de clientes.
         </p>
       </div>
 
-      {/* Benchmark hero: nuestra tasa vs la industria */}
+      {/* Tasa de cierre — SIN comparación contra "la industria": la constante
+          anterior (25.6%) no tenía ninguna fuente en el repo y medía otra cosa. */}
       <div className="bg-brand-ink text-white rounded-2xl p-6">
-        <p className="text-sm text-brand-gray-5 mb-4">Tasa de cierre de referidos en Referidoo vs. industria</p>
-        <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
+        <p className="text-sm text-brand-gray-5 mb-4">Tasa de cierre de referidos</p>
+        {active.length === 0 ? (
+          <p className="text-sm text-brand-gray-5">Sin datos suficientes.</p>
+        ) : (
           <div>
             <p className="text-[42px] font-bold leading-none">{nf(closeRate, 1)}%</p>
-            <p className="text-sm text-brand-gray-5 mt-2">nuestra plataforma ({converted.length} de {active.length} referidos)</p>
+            <p className="text-sm text-brand-gray-5 mt-2">
+              {converted.length} cerrados de {active.length} referidos no rechazados (incluye los que siguen abiertos)
+            </p>
           </div>
-          <div>
-            <p className="text-[42px] font-bold leading-none text-[#93b4fb]">{INDUSTRY_CLOSE_RATE}%</p>
-            <p className="text-sm text-brand-gray-5 mt-2">promedio de la industria (Focus Digital 2025)</p>
-          </div>
-        </div>
+        )}
+        <p className="text-xs text-brand-gray-5 mt-4">
+          Aún no hay suficiente volumen para comparar contra un benchmark de industria con fuente verificable.
+        </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl border border-brand-border-1 p-5">
-          <p className="text-sm text-brand-gray-3 mb-3">Cartera que comparte</p>
-          <p className="text-[34px] font-bold text-brand-ink leading-none mb-3">{nf(pctSharing)}%</p>
-          <p className="text-sm text-brand-gray-4">{sharers.size} de {clients.length} clientes activos han referido</p>
+          <p className="text-sm text-brand-gray-3 mb-3">Cartera que ha referido</p>
+          <p className="text-[34px] font-bold text-brand-ink leading-none mb-3">{pctSharing === null ? "—" : `${nf(pctSharing)}%`}</p>
+          <p className="text-sm text-brand-gray-4">
+            {clients.length === 0 ? "Sin datos suficientes" : `${sharers.size} de ${clients.length} clientes activos han generado al menos un referido`}
+          </p>
         </div>
         <div className="bg-white rounded-2xl border border-brand-border-1 p-5">
           <p className="text-sm text-brand-gray-3 mb-3">Días a cierre (aprox.)</p>
@@ -152,36 +169,33 @@ export default async function OwnerInteligenciaPage() {
       </div>
 
       <div className="grid lg:grid-cols-5 gap-4 items-start">
-        {/* Top referidores */}
+        {/* Distribución de referidores — SIN identidad (antes era una tabla con
+            nombres de clientes, que contradecía la promesa de esta página). */}
         <div className="lg:col-span-3 bg-white rounded-2xl border border-brand-border-1 p-6">
-          <p className="font-bold text-brand-ink text-[15px] mb-1">Top referidores — los nodos del grafo</p>
-          <p className="text-xs text-brand-gray-4 mb-3">Quiénes mueven el canal. A escala, esto se vuelve scoring de referidores.</p>
-          {topReferrers.length === 0 ? (
+          <p className="font-bold text-brand-ink text-[15px] mb-1">Distribución de referidores</p>
+          <p className="text-xs text-brand-gray-4 mb-3">
+            Cómo se reparte la producción entre quienes ya refirieron. Agregado y anónimo — el dueño ve
+            performance, no identidad de los clientes de sus asesores.
+          </p>
+          {productiveReferrers === 0 ? (
             <p className="text-sm text-brand-gray-4 py-4">Aún no hay referidores con actividad.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm" style={{ minWidth: 460 }}>
-                <thead>
-                  <tr className="text-left text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray-4">
-                    <th className="py-2.5 pr-4 font-bold">Cliente</th>
-                    <th className="py-2.5 pr-4 font-bold">Asesor</th>
-                    <th className="py-2.5 pr-4 font-bold text-right">Referidos</th>
-                    <th className="py-2.5 pr-4 font-bold text-right">Cierres</th>
-                    <th className="py-2.5 font-bold text-right">Premios ganados</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-brand-border-1">
-                  {topReferrers.map((t) => (
-                    <tr key={`${t.name}-${t.advisorName}`}>
-                      <td className="py-3 pr-4 font-semibold text-brand-ink whitespace-nowrap">{t.name}</td>
-                      <td className="py-3 pr-4 text-brand-gray-3 whitespace-nowrap">{t.advisorName}</td>
-                      <td className="py-3 pr-4 text-right text-brand-ink">{t.referidos}</td>
-                      <td className="py-3 pr-4 text-right font-bold text-brand-ink">{t.conversiones}</td>
-                      <td className="py-3 text-right text-brand-ink">{formatCurrency(t.premios)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-2.5">
+              <p className="text-sm text-brand-gray-2 mb-3">
+                <b className="text-brand-ink">{productiveReferrers}</b> clientes han generado al menos un referido
+              </p>
+              {referrerDistribution.map((b) => {
+                const width = productiveReferrers > 0 ? Math.max(2, Math.round((b.count / productiveReferrers) * 100)) : 0;
+                return (
+                  <div key={b.label} className="flex items-center gap-3">
+                    <span className="w-32 flex-shrink-0 text-sm text-brand-gray-2">{b.label}</span>
+                    <span className="flex-1 h-7 bg-brand-surface rounded-lg overflow-hidden relative">
+                      <span className="block h-full bg-[#2563EB]/15 rounded-lg" style={{ width: `${width}%` }} />
+                      <span className="absolute inset-y-0 left-3 flex items-center text-sm font-bold text-brand-ink tabular-nums">{b.count}</span>
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getAdvisorSession, isPlatformOwner } from "@/lib/auth";
 import { MONTHLY_PRICE_MXN } from "@/lib/mercadopago";
 import { computeMorosos, computeOwnerProblems } from "@/lib/owner-problems";
+import { REAL_ADVISOR_WHERE, REAL_ADVISOR_RELATION_WHERE, REAL_REFERRAL_WHERE } from "@/lib/analytics-scope";
 
 // Misma fecha que summary/route.ts: lessioCommission solo existe desde aquí.
 const LESSIO_COMMISSION_SINCE = "2026-06-24";
@@ -48,30 +49,33 @@ export async function GET(req: NextRequest) {
 
   const [advisors, referrals, planEvents, bubbleClaims] = await Promise.all([
     db.advisor.findMany({
-      where: { deletedAt: null },
-      select: { id: true, name: true, plan: true, createdAt: true, paymentFailedAt: true },
+      // DATA TRUTH: solo asesores reales (no borrados, no internos/QA).
+      where: REAL_ADVISOR_WHERE,
+      select: { id: true, name: true, plan: true, mpPreapprovalId: true, createdAt: true, paymentFailedAt: true },
       orderBy: { createdAt: "asc" },
     }),
     db.referral.findMany({
-      where: { advisor: { deletedAt: null } },
+      // Antes NO filtraba Referral.deletedAt → contaba referidos ya borrados.
+      where: REAL_REFERRAL_WHERE,
       select: {
         advisorId: true,
-        leadName: true,
         status: true,
         saleAmount: true,
         productType: true,
         lessioCommission: true,
         createdAt: true,
         updatedAt: true,
-        referrer: { select: { name: true } },
+        // Sin leadName ni referrer.name: PII de cliente/lead fuera de analytics.
       },
     }),
     db.planEvent.findMany({
+      where: REAL_ADVISOR_RELATION_WHERE,
       orderBy: { createdAt: "desc" },
       take: 60,
-      select: { event: true, createdAt: true, advisor: { select: { name: true, plan: true } } },
+      select: { event: true, createdAt: true, advisor: { select: { id: true, name: true, plan: true } } },
     }),
     db.bubbleClaim.findMany({
+      where: { client: { advisor: REAL_ADVISOR_WHERE } },
       orderBy: { createdAt: "desc" },
       take: 10,
       select: { amount: true, createdAt: true, client: { select: { advisor: { select: { name: true } } } } },
@@ -84,13 +88,19 @@ export async function GET(req: NextRequest) {
   const convertedInPeriod = converted.filter((r) => inPeriod(r.updatedAt));
 
   // ── Stat cards ──
-  const proCount = advisors.filter((a) => a.plan === "paid").length;
-  const freemiumCount = advisors.length - proCount;
-  const mrr = proCount * MONTHLY_PRICE_MXN;
+  // MRR REAL: `plan="paid"` SIN mpPreapprovalId es trial o comp manual, NO
+  // ingreso. (Un backfill histórico dejó muchos advisors en "paid" sin
+  // suscripción → MRR fantasma.) Solo cuentan suscripciones MP vivas.
+  const subscribedCount = advisors.filter((a) => a.plan === "paid" && a.mpPreapprovalId).length;
+  const trialOrCompCount = advisors.filter((a) => a.plan === "paid" && !a.mpPreapprovalId).length;
+  const proCount = subscribedCount;
+  const freemiumCount = advisors.length - subscribedCount - trialOrCompCount;
+  const mrr = subscribedCount * MONTHLY_PRICE_MXN;
+  // Dedupe por ID (antes era por NOMBRE: dos asesores homónimos colapsaban).
   const newProAdvisors = new Set(
     planEvents
       .filter((e) => e.event === "activated" && e.createdAt >= monthStart && e.advisor.plan === "paid")
-      .map((e) => e.advisor.name)
+      .map((e) => e.advisor.id)
   );
   const mrrNew = newProAdvisors.size * MONTHLY_PRICE_MXN;
 
@@ -195,18 +205,19 @@ export async function GET(req: NextRequest) {
   type Activity = { type: "conversion" | "payment" | "bubble" | "new" | "alert"; text: string; amount: number | null; date: string };
   const activity: Activity[] = [];
 
+  // PRIVACIDAD: la actividad describe al ASESOR, nunca al cliente/lead.
   for (const r of converted) {
     if (r.saleAmount) {
       activity.push({
         type: "conversion",
-        text: `${advisorName.get(r.advisorId) ?? "Asesor"} cerró un ${r.productType ?? "contrato"} — cliente referido por ${r.referrer.name}`,
+        text: `${advisorName.get(r.advisorId) ?? "Asesor"} cerró un ${r.productType ?? "contrato"} referido`,
         amount: r.lessioCommission,
         date: r.updatedAt.toISOString(),
       });
     } else {
       activity.push({
         type: "alert",
-        text: `${advisorName.get(r.advisorId) ?? "Asesor"} registró una conversión sin monto (${r.leadName})`,
+        text: `${advisorName.get(r.advisorId) ?? "Asesor"} registró una conversión sin monto`,
         amount: 0,
         date: r.updatedAt.toISOString(),
       });
@@ -248,7 +259,11 @@ export async function GET(req: NextRequest) {
     mrrNew,
     proCount,
     freemiumCount,
-    activeCount: advisors.length,
+    // Antes se llamaba `activeCount` pero era "todos los asesores no borrados"
+    // (ni login ni actividad requeridos). Nombre honesto + desglose real.
+    advisorCount: advisors.length,
+    subscribedCount,
+    trialOrCompCount,
     commissionTotal,
     commissionSince: LESSIO_COMMISSION_SINCE,
     conversionsCount,

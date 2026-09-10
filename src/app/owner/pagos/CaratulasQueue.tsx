@@ -6,7 +6,8 @@ import { formatCurrency } from "@/lib/utils";
 export type CaratulaRow = {
   referralId: string;
   advisorName: string;
-  leadName: string;
+  // Referencia anónima del documento — el owner valida montos, no identidades.
+  docRef: string;
   productType: string | null;
   saleAmount: number | null;
   caratulaUrl: string;
@@ -57,7 +58,7 @@ export function CaratulasQueue({ initialRows }: { initialRows: CaratulaRow[] }) 
               )}
             </div>
             <p className="text-xs text-brand-gray-4 mt-0.5">
-              {r.leadName} · asesor: {r.advisorName} · {r.convertedAt}
+              {r.docRef} · asesor: {r.advisorName} · {r.convertedAt}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">

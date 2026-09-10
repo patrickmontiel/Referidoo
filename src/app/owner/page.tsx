@@ -13,7 +13,9 @@ type Overview = {
   mrrNew: number;
   proCount: number;
   freemiumCount: number;
-  activeCount: number;
+  advisorCount: number;
+  subscribedCount: number;
+  trialOrCompCount: number;
   commissionTotal: number;
   commissionSince: string;
   conversionsCount: number;
@@ -208,10 +210,12 @@ export default function OwnerResumenPage() {
               </p>
             </div>
             <div className="bg-white rounded-2xl border border-brand-border-1 p-5">
-              <p className="text-sm text-brand-gray-3 mb-3">Asesores activos</p>
-              <p className="text-[34px] font-bold text-brand-ink leading-none mb-3">{data.activeCount}</p>
+              {/* Nombre honesto: son asesores REALES registrados (excluye
+                  internos/QA), no "activos" — registrado ≠ activado. */}
+              <p className="text-sm text-brand-gray-3 mb-3">Asesores reales</p>
+              <p className="text-[34px] font-bold text-brand-ink leading-none mb-3">{data.advisorCount}</p>
               <p className="text-sm text-brand-gray-4">
-                <span className="text-green-600 font-semibold">{data.proCount} Pro</span> · {data.freemiumCount} freemium
+                <span className="text-green-600 font-semibold">{data.subscribedCount} Pro</span> · {data.trialOrCompCount} trial/comp · {data.freemiumCount} freemium
               </p>
             </div>
           </div>

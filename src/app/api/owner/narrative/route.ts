@@ -4,6 +4,7 @@ import { getAdvisorSession, isPlatformOwner } from "@/lib/auth";
 import { MONTHLY_PRICE_MXN } from "@/lib/mercadopago";
 import { computeMorosos, computeOwnerProblems } from "@/lib/owner-problems";
 import { generateOwnerNarrative, NARRATIVE_REFRESH_MS } from "@/lib/owner-narrative-ai";
+import { REAL_ADVISOR_WHERE, REAL_REFERRAL_WHERE } from "@/lib/analytics-scope";
 
 // Independiente del selector de periodo de /owner (mes/90d/todo) — el
 // briefing siempre refleja el estado operativo actual, no una ventana de
@@ -26,14 +27,14 @@ export async function GET() {
 
   const [advisors, referrals] = await Promise.all([
     db.advisor.findMany({
-      where: { deletedAt: null },
-      select: { id: true, name: true, plan: true, createdAt: true, paymentFailedAt: true },
+      where: REAL_ADVISOR_WHERE,
+      select: { id: true, name: true, plan: true, mpPreapprovalId: true, createdAt: true, paymentFailedAt: true },
     }),
     db.referral.findMany({
-      where: { advisor: { deletedAt: null } },
+      where: REAL_REFERRAL_WHERE,
       select: {
         advisorId: true,
-        leadName: true,
+        // Sin leadName: los nombres de leads NO deben llegar al prompt de OpenAI.
         status: true,
         saleAmount: true,
         productType: true,
@@ -47,7 +48,8 @@ export async function GET() {
   const morosos = await computeMorosos(now);
   const problems = computeOwnerProblems({ advisors, referrals, morosos, now });
 
-  const proCount = advisors.filter((a) => a.plan === "paid").length;
+  // MRR real: solo suscripciones MP vivas (paid sin mpPreapprovalId = trial/comp).
+  const proCount = advisors.filter((a) => a.plan === "paid" && a.mpPreapprovalId).length;
   const mrr = proCount * MONTHLY_PRICE_MXN;
   const convertedThisMonth = referrals.filter((r) => r.status === "converted" && r.updatedAt >= monthStart);
   const commissionTotal = convertedThisMonth.reduce((s, r) => s + (r.lessioCommission ?? 0), 0);

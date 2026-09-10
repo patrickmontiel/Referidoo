@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { MONTHLY_PRICE_MXN } from "@/lib/mercadopago";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { CaratulasQueue } from "./CaratulasQueue";
+import { REAL_PAID_SUBSCRIPTION_WHERE, REAL_REFERRAL_WHERE, REAL_ADVISOR_RELATION_WHERE } from "@/lib/analytics-scope";
 
 const EVENT_LABEL: Record<string, { label: string; cls: string }> = {
   activated: { label: "Suscripción activada", cls: "bg-green-50 text-green-700" },
@@ -17,25 +18,28 @@ export default async function OwnerPagosPage() {
 
   const [proAdvisors, pendingCommissions, planEvents, caratulasPendientes] = await Promise.all([
     db.advisor.findMany({
-      where: { plan: "paid", deletedAt: null },
+      // MRR real: solo suscripciones MP vivas (paid sin mpPreapprovalId = trial/comp).
+      where: REAL_PAID_SUBSCRIPTION_WHERE,
       select: { id: true, name: true, email: true, paidUntil: true, paymentFailedAt: true },
       orderBy: { createdAt: "asc" },
     }),
     db.referral.findMany({
-      where: { billedAt: null, lessioCommission: { not: null }, advisor: { deletedAt: null } },
+      where: { billedAt: null, lessioCommission: { not: null }, ...REAL_REFERRAL_WHERE },
       select: { advisorId: true, lessioCommission: true, advisor: { select: { name: true } } },
     }),
     db.planEvent.findMany({
+      where: REAL_ADVISOR_RELATION_WHERE,
       orderBy: { createdAt: "desc" },
       take: 12,
       select: { id: true, event: true, createdAt: true, advisor: { select: { name: true } } },
     }),
     db.referral.findMany({
-      where: { caratulaStatus: { in: ["pendiente", "discrepancia"] }, advisor: { deletedAt: null } },
+      where: { caratulaStatus: { in: ["pendiente", "discrepancia"] }, ...REAL_REFERRAL_WHERE },
       orderBy: { updatedAt: "desc" },
       select: {
         id: true,
-        leadName: true,
+        // Sin leadName en la LISTA: es una cola operativa, no analytics. La
+        // identidad solo aparece al ABRIR el documento (operación, no dashboard).
         productType: true,
         saleAmount: true,
         caratulaUrl: true,
@@ -89,7 +93,9 @@ export default async function OwnerPagosPage() {
             .map((c) => ({
               referralId: c.id,
               advisorName: c.advisor.name,
-              leadName: c.leadName,
+              // Referencia anónima en la lista: la identidad del lead solo se ve
+              // al abrir el documento (acceso operacional, no analytics).
+              docRef: `Doc #${c.id.slice(-4).toUpperCase()}`,
               productType: c.productType,
               saleAmount: c.saleAmount,
               caratulaUrl: c.caratulaUrl!,

@@ -2,13 +2,12 @@ import "dotenv/config";
 import { createClient } from "@libsql/client";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
+import { assertLocalDatabase } from "./_guard";
 
-const envUrl = process.env.DATABASE_URL ?? "file:./dev.db";
-const isRemote = envUrl.startsWith("libsql://") || envUrl.startsWith("https://");
-const db = createClient({
-  url: envUrl,
-  ...(isRemote && process.env.TURSO_AUTH_TOKEN ? { authToken: process.env.TURSO_AUTH_TOKEN } : {}),
-});
+// ⚠️ DESTRUCTIVO: borra Referral/RewardTier/AdvisorSettings/Client/Advisor.
+// Solo corre contra una base LOCAL (la guardia aborta si apunta a remoto).
+const envUrl = assertLocalDatabase("seed.ts");
+const db = createClient({ url: envUrl });
 
 function cuid(): string {
   return "c" + randomBytes(10).toString("base64url");

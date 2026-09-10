@@ -13,9 +13,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test"
   },
-  "prisma": {
-    "seed": "npx tsx prisma/seed.ts"
-  },
+  "_comment_prisma_seed": "El bloque `prisma.seed` se ELIMINÓ a propósito: hacía que `prisma db seed` y `prisma migrate reset` invocaran automáticamente un script que BORRA todas las tablas. El seed sigue disponible de forma explícita con `npm run seed` (y solo corre contra una base local, ver prisma/_guard.ts).",
   "dependencies": {
     "@base-ui/react": "^1.6.0",
     "@libsql/client": "^0.17.3",

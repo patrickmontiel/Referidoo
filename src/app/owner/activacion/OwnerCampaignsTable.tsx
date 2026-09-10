@@ -17,7 +17,9 @@ export type OwnerCampaignRow = {
   leadYield: number | null;
 };
 
-type Drill = { clientName: string; contacted: boolean; opened: boolean; shared: boolean; referrals: number };
+// `ref` es una referencia ANÓNIMA (ej. "Referidor #A82F") — el owner nunca
+// recibe nombres de clientes desde el API.
+type Drill = { ref: string; contacted: boolean; opened: boolean; shared: boolean; referrals: number };
 
 const pct = (v: number | null) => (v === null ? "—" : `${Math.round(v * 100)}%`);
 const num = (v: number | null) => (v === null ? "—" : (Math.round(v * 10) / 10).toString());
@@ -80,7 +82,7 @@ export function OwnerCampaignsTable({ rows }: { rows: OwnerCampaignRow[] }) {
                       <div className="space-y-1">
                         {drill[r.id].map((d, i) => (
                           <div key={i} className="flex items-center gap-3 text-xs text-brand-gray-2">
-                            <span className="w-40 truncate text-brand-ink">{d.clientName}</span>
+                            <span className="w-40 truncate text-brand-ink tabular-nums">{d.ref}</span>
                             <span>action {d.contacted ? "✅" : "—"}</span>
                             <span>open {d.opened ? "✅" : "—"}</span>
                             <span>share {d.shared ? "✅" : "❌"}</span>

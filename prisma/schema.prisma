@@ -22,6 +22,11 @@ model Advisor {
   paymentFailedAt   DateTime?
   onboardedAt       DateTime?
   deletedAt         DateTime?
+  // Excluye a esta cuenta de TODAS las métricas de Owner (analytics).
+  // true = cuenta interna: owner, QA, smoke tests, e2e, demos, seeds.
+  // Es una propiedad explícita: las queries de analytics NUNCA deben filtrar
+  // por email/nombre hardcodeado. Ver src/lib/analytics-scope.ts.
+  analyticsExcluded Boolean          @default(false)
   createdAt         DateTime         @default(now())
   clients           Client[]
   referrals         Referral[]
@@ -75,16 +80,28 @@ model Client {
   clabe            String?
   clabeBank        String?
   clabeHolder      String?
+  // CARTERA PERSISTENTE: claves de identidad para deduplicar dentro del MISMO
+  // asesor. `normalizedPhone` = últimos 10 dígitos; `normalizedEmail` = lowercase.
+  // NO son unique a nivel DB a propósito (pueden ser null y dos asesores pueden
+  // tener al mismo humano); el dedupe se aplica en la app, por advisorId.
+  // Ver src/lib/client-identity.ts y 11-PORTFOLIO-PERSISTENCE-IMPLEMENTATION.md.
+  normalizedPhone  String?
+  normalizedEmail  String?
   accessToken      String     @unique @default(cuid())
   referralCode     String     @unique
   active           Boolean    @default(true)
   launchBonusUsed  Boolean    @default(false)
   bubblePoints     Int        @default(0)
   createdAt        DateTime   @default(now())
+  // Antes NO existía: sin él no se podía saber si un import actualizó a un
+  // cliente ya conectado. La cartera es un activo que se corrige, no se re-crea.
+  updatedAt        DateTime   @default(now()) @updatedAt
   referrals        Referral[]
   bubbleClaims     BubbleClaim[]
 
   @@index([advisorId])
+  @@index([advisorId, normalizedPhone])
+  @@index([advisorId, normalizedEmail])
 }
 
 model BubbleClaim {
