@@ -3,7 +3,9 @@ import { NextRequest } from "next/server";
 
 vi.mock("@/lib/db", () => ({
   db: {
-    client: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), count: vi.fn() },
+    // findFirst/update: dedupe de cartera persistente (no duplicar al mismo
+    // humano dentro del mismo asesor).
+    client: { findMany: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },
     advisor: { findUnique: vi.fn() },
   },
 }));

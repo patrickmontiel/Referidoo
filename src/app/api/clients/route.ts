@@ -4,6 +4,7 @@ import { getAdvisorSession } from "@/lib/auth";
 import { generateReferralCode } from "@/lib/utils";
 import { canAdvisorAddClients, gateErrorMessage } from "@/lib/plan";
 import { trackProductEvent } from "@/lib/track";
+import { normalizeClientPhone, normalizeClientEmail } from "@/lib/client-identity";
 
 export async function GET() {
   const session = await getAdvisorSession();
@@ -49,6 +50,25 @@ export async function POST(req: NextRequest) {
   const takenSet = new Set(taken.map((c) => c.referralCode));
   const referralCode = candidates.find((c) => !takenSet.has(c)) ?? candidates[0];
 
+  // CARTERA PERSISTENTE: si ya existe un cliente del MISMO asesor con el mismo
+  // teléfono normalizado, se actualiza en vez de duplicar — conservando su
+  // referralCode/accessToken para no romper links ya compartidos.
+  const normalizedPhone = normalizeClientPhone(phone);
+  const normalizedEmail = normalizeClientEmail(email);
+  if (normalizedPhone) {
+    const dupe = await db.client.findFirst({
+      where: { advisorId: session.advisorId, normalizedPhone },
+      select: { id: true },
+    });
+    if (dupe) {
+      const updated = await db.client.update({
+        where: { id: dupe.id },
+        data: { name, email: email || null, phone: phone || null, policyNumber: policyNumber || null, normalizedPhone, normalizedEmail, active: true },
+      });
+      return NextResponse.json({ ...updated, deduped: true }, { status: 200 });
+    }
+  }
+
   const client = await db.client.create({
     data: {
       advisorId: session.advisorId,
@@ -56,6 +76,8 @@ export async function POST(req: NextRequest) {
       email: email || null,
       phone: phone || null,
       policyNumber: policyNumber || null,
+      normalizedPhone,
+      normalizedEmail,
       referralCode,
     },
   });

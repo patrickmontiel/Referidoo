@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getAdvisorSession } from "@/lib/auth";
+import { normalizeClientPhone, normalizeClientEmail } from "@/lib/client-identity";
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getAdvisorSession();
@@ -27,13 +28,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   const body = await req.json();
+  const nextEmail = body.email ?? client.email;
+  const nextPhone = body.phone ?? client.phone;
   const updated = await db.client.update({
     where: { id },
     data: {
       name: body.name ?? client.name,
-      email: body.email ?? client.email,
-      phone: body.phone ?? client.phone,
+      email: nextEmail,
+      phone: nextPhone,
       policyNumber: body.policyNumber ?? client.policyNumber,
+      // Mantener la identidad de la cartera en sincronía: si cambia el teléfono
+      // o el correo, el dedupe de futuros imports debe usar el valor nuevo.
+      normalizedPhone: normalizeClientPhone(nextPhone),
+      normalizedEmail: normalizeClientEmail(nextEmail),
     },
   });
 
