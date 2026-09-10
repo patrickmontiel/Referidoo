@@ -23,12 +23,21 @@ Todo lo demás debe demostrarse antes de contarse como negocio real.
 
 **Ya mitigado en código (Fase 1):** #2, #3 y #6 ya no pueden correr contra prod (`prisma/_guard.ts`); `prisma.seed` desenganchado; `/api/demo/reset` da 404 en producción.
 
-## 3. ⚠️ El caso Eduardo Neri — UNKNOWN, requiere tu decisión
-`seed.ts` crea un advisor llamado **"Eduardo Neri"** con email `eduardo@referidoo.mx`. Pero **EDUARDO NERI es un asesor REAL** según tu lista. Además existe `eduardo.neri.test@referidoo.mx` como cuenta placeholder de prueba.
+## 3. ✅ Caso Eduardo Neri — RESUELTO (decisión de Patrick, sep-2026)
+| Cuenta | Clasificación | `analyticsExcluded` |
+|---|---|---|
+| **`planeacion.finanzas@gmail.com`** — EDUARDO NERI | **ASESOR REAL** | **`false`** |
+| `eduardo@referidoo.mx` (creada por `seed.ts`) | DEMO/TEST | **`true`** |
+| `eduardo.neri.test@referidoo.mx` (placeholder) | DEMO/TEST | **`true`** |
 
-**No voy a adivinar cuál es cuál.** El dry-run los lista lado a lado (punto 1 del SQL). Tú decides:
-- ¿Cuál email corresponde al Eduardo Neri **real**?
-- ¿La otra cuenta se marca `analyticsExcluded` o se da de baja?
+Salvo que el dry-run encuentre **evidencia inequívoca en contra**, las dos últimas se tratan como demo/test. **Ninguna se borra todavía** — solo se marcan.
+
+### Asesores reales definitivos (`analyticsExcluded = false`)
+1. CECILIA CARRASCO CAMPOS
+2. Omar Juarez
+3. EDUARDO NERI — `planeacion.finanzas@gmail.com`
+
+Todo lo demás → `analyticsExcluded = true`.
 
 ## 4. Orden de ejecución propuesto
 
@@ -51,14 +60,18 @@ Todas son `ADD COLUMN` / `CREATE TABLE IF NOT EXISTS` / `CREATE INDEX`. **Ningun
 Con la lista del PASO A ya revisada por ti. **Reversible** (volver a `0` restaura).
 ```sql
 -- Owner + QA + e2e + seeds. AJUSTAR según el inventario real del PASO A.
-UPDATE Advisor SET analyticsExcluded = 1
-WHERE email IN (
-  'patrickkarim2002@hotmail.com',   -- owner real
-  'patrickkarim2002@gmail.com',     -- cuenta QA de smoke tests
-  'blur-test@referidoo.mx'          -- seed de pruebas visuales
-)
-   OR email LIKE '%@referidoo-test.mx'   -- e2e
-   OR email LIKE '%@local.test';         -- QA local
+-- 1) Marcar TODO como interno por defecto…
+UPDATE Advisor SET analyticsExcluded = 1;
+
+-- 2) …y devolver a REAL solo a los tres confirmados por Patrick.
+--    (Ajustar los nombres exactos con el inventario del PASO A.)
+UPDATE Advisor SET analyticsExcluded = 0
+WHERE email = 'planeacion.finanzas@gmail.com'          -- EDUARDO NERI (real)
+   OR name LIKE '%CECILIA%' OR name LIKE '%Cecilia%'   -- CECILIA CARRASCO CAMPOS
+   OR name LIKE '%Omar%';                              -- Omar Juarez
+
+-- Este orden (denegar-por-defecto) es más seguro que enumerar las de test:
+-- una cuenta nueva desconocida queda FUERA de métricas hasta aprobarla.
 
 -- Verificar ANTES de continuar:
 SELECT name, email, analyticsExcluded FROM Advisor ORDER BY analyticsExcluded DESC, name;
