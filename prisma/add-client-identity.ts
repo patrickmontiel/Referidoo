@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { createClient } from "@libsql/client";
+import { runDDL, runMigration, assertColumns, assertTables } from "./_migrate-utils";
 
 // CARTERA PERSISTENTE: claves de identidad para deduplicar la cartera.
 // Agrega Client.normalizedPhone / normalizedEmail / updatedAt + índices, y
@@ -42,14 +43,7 @@ function normEmail(email: string | null): string | null {
 }
 
 async function main() {
-  for (const sql of ddl) {
-    try {
-      await db.execute(sql);
-      console.log(`✓ ${sql.slice(0, 78)}...`);
-    } catch (e) {
-      console.log(`Info:`, (e as Error).message); // duplicate column = ya corrido
-    }
-  }
+  await runDDL(db, ddl);
 
   // Backfill de updatedAt: las filas existentes nunca se han "actualizado",
   // así que su updatedAt honesto es su createdAt.
@@ -89,6 +83,9 @@ async function main() {
   } else {
     console.log(`✓ sin duplicados por teléfono dentro de un mismo asesor`);
   }
+
+  // Verificación: "sin error" no prueba que exista. Esto sí.
+  await assertColumns(db, "Client", ["normalizedPhone", "normalizedEmail", "updatedAt"]);
 }
 
-main().finally(() => db.close());
+runMigration(db, main, "client identity");

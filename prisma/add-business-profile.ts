@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { createClient } from "@libsql/client";
+import { runDDL, runMigration, assertColumns, assertTables } from "./_migrate-utils";
 
 // Perfil de negocio mínimo en AdvisorSettings: `products` y `defaultChannel`.
 // Son las DOS únicas preguntas del recovery flow, porque son las dos únicas
@@ -19,14 +20,10 @@ const statements = [
 ];
 
 async function main() {
-  for (const sql of statements) {
-    try {
-      await db.execute(sql);
-      console.log(`✓ ${sql.slice(0, 78)}...`);
-    } catch (e) {
-      console.log(`Info:`, (e as Error).message); // duplicate column = ya corrido
-    }
-  }
+  await runDDL(db, statements);
+
+  // Verificación: "sin error" no prueba que exista. Esto sí.
+  await assertColumns(db, "AdvisorSettings", ["products", "defaultChannel"]);
 }
 
-main().finally(() => db.close());
+runMigration(db, main, "business profile");

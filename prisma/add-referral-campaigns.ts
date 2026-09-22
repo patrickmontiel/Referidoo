@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { createClient } from "@libsql/client";
+import { runDDL, runMigration, assertColumns, assertTables } from "./_migrate-utils";
 
 // Portfolio Activation Campaigns (ver 08-PORTFOLIO-CAMPAIGNS.md).
 // Crea ReferralCampaign + CampaignRecipient y AGREGA campaignId/campaignRecipientId
@@ -50,15 +51,11 @@ const statements = [
 ];
 
 async function main() {
-  for (const sql of statements) {
-    try {
-      await db.execute(sql);
-      console.log(`✓ ${sql.split("\n")[0].trim()}...`);
-    } catch (e) {
-      // "duplicate column name" es esperado si ya se corrió (idempotencia de los ALTER).
-      console.log(`Info:`, (e as Error).message);
-    }
-  }
+  await runDDL(db, statements);
+
+  // Verificación: "sin error" no prueba que exista. Esto sí.
+  await assertTables(db, ["ReferralCampaign", "CampaignRecipient"]);
+  await assertColumns(db, "ProductEvent", ["campaignId", "campaignRecipientId"]);
 }
 
-main().finally(() => db.close());
+runMigration(db, main, "referral campaigns");

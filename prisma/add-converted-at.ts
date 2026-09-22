@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { createClient } from "@libsql/client";
+import { runDDL, runMigration, assertColumns, assertTables } from "./_migrate-utils";
 
 // FECHA DE CIERRE INMUTABLE (Referral.convertedAt).
 //
@@ -34,14 +35,7 @@ const ddl = [
 ];
 
 async function main() {
-  for (const sql of ddl) {
-    try {
-      await db.execute(sql);
-      console.log(`✓ ${sql.slice(0, 78)}...`);
-    } catch (e) {
-      console.log(`Info:`, (e as Error).message); // duplicate column = ya corrido
-    }
-  }
+  await runDDL(db, ddl);
 
   // ── Clasificación del backfill ──────────────────────────────────────────
   // Señal de edición posterior al cierre: carátula subida/validada, premio
@@ -84,6 +78,9 @@ async function main() {
   `);
   console.log(`\n✓ backfill seguro aplicado a ${res.rowsAffected} referidos (grupo A).`);
   console.log(`  El grupo B queda en NULL a propósito: su fecha real es desconocida.`);
+
+  // Verificación: "sin error" no prueba que exista. Esto sí.
+  await assertColumns(db, "Referral", ["convertedAt"]);
 }
 
-main().finally(() => db.close());
+runMigration(db, main, "convertedAt");

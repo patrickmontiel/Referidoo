@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { createClient } from "@libsql/client";
+import { runDDL, runMigration, assertColumns, assertTables } from "./_migrate-utils";
 
 // Data Truth: marca cuentas internas (owner, QA, e2e, demos, seeds) para que
 // NUNCA entren en las métricas de Owner. Ver 12-OWNER-DATA-TRUTH-REDESIGN.md.
@@ -21,15 +22,10 @@ const statements = [
 ];
 
 async function main() {
-  for (const sql of statements) {
-    try {
-      await db.execute(sql);
-      console.log(`✓ ${sql.slice(0, 80)}...`);
-    } catch (e) {
-      // "duplicate column name" es esperado si ya se corrió (idempotencia).
-      console.log(`Info:`, (e as Error).message);
-    }
-  }
+  await runDDL(db, statements);
+
+  // Verificación: "sin error" no prueba que exista. Esto sí.
+  await assertColumns(db, "Advisor", ["analyticsExcluded"]);
 }
 
-main().finally(() => db.close());
+runMigration(db, main, "analyticsExcluded");
