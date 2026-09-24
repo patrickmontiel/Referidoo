@@ -78,7 +78,10 @@ describe("OwnerAsesoresPage", () => {
     expect(screen.getByText(/24 jul 2026/i)).toBeInTheDocument();
   });
 
-  it("toggles the plan without navigating the row click handler", async () => {
+  // Subir a Pro pide vigencia (30 / 90 días / 1 año) en lugar de un "Confirmar"
+  // seco: el servidor tiene que escribir un `paidUntil`, porque un "paid" sin
+  // fecha de corte lo revierte el cron de billing-downgrade.
+  it("regala Pro mandando los días elegidos, sin navegar por el click de la fila", async () => {
     const fetchMock = vi.fn((url: string, init?: RequestInit) => {
       if (!init) return Promise.resolve({ ok: true, json: () => Promise.resolve({ advisors: [advisor()], nextCursor: null }) });
       return Promise.resolve({ ok: true, json: () => Promise.resolve(advisor({ plan: "paid" })) });
@@ -86,12 +89,51 @@ describe("OwnerAsesoresPage", () => {
     vi.stubGlobal("fetch", fetchMock as unknown as typeof fetch);
 
     render(React.createElement(OwnerAsesoresPage));
-    const button = await screen.findByRole("button", { name: /pasar a pagado/i });
-    fireEvent.click(button);
+    fireEvent.click(await screen.findByRole("button", { name: /pasar a pagado/i }));
 
-    const confirmButton = await screen.findByRole("button", { name: /confirmar/i });
-    fireEvent.click(confirmButton);
+    // El diálogo del upgrade ofrece vigencias, no un confirmar genérico.
+    fireEvent.click(await screen.findByRole("button", { name: /^30 días$/i }));
 
+    const patchCall = fetchMock.mock.calls.find((c) => c[1]?.method === "PATCH");
+    expect(patchCall).toBeDefined();
+    expect(JSON.parse(patchCall![1]!.body as string)).toEqual({ plan: "paid", compDays: 30 });
+
+    // Sin suscripción de MP es un regalo, y la tabla lo dice para no leerlo
+    // como ingreso.
+    expect(await screen.findByText("Pro de regalo")).toBeInTheDocument();
+  });
+
+  it("una suscripción real de MP se muestra como Pagado, no como regalo", async () => {
+    vi.stubGlobal("fetch", vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          advisors: [advisor({ plan: "paid", mpPreapprovalId: "mp-123" })],
+          nextCursor: null,
+        }),
+      })
+    ) as unknown as typeof fetch);
+
+    render(React.createElement(OwnerAsesoresPage));
     expect(await screen.findByText("Pagado")).toBeInTheDocument();
+    expect(screen.queryByText("Pro de regalo")).not.toBeInTheDocument();
+  });
+
+  it("bajar a freemium sigue pidiendo una sola confirmación", async () => {
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      if (!init) return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ advisors: [advisor({ plan: "paid" })], nextCursor: null }),
+      });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(advisor({ plan: "freemium" })) });
+    });
+    vi.stubGlobal("fetch", fetchMock as unknown as typeof fetch);
+
+    render(React.createElement(OwnerAsesoresPage));
+    fireEvent.click(await screen.findByRole("button", { name: /pasar a freemium/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /confirmar baja/i }));
+
+    const patchCall = fetchMock.mock.calls.find((c) => c[1]?.method === "PATCH");
+    expect(JSON.parse(patchCall![1]!.body as string)).toEqual({ plan: "freemium" });
   });
 });

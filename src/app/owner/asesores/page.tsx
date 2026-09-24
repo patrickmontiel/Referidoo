@@ -97,13 +97,16 @@ export default function OwnerAsesoresPage() {
     );
   }
 
-  async function togglePlan(advisor: AdvisorRow) {
+  // `compDays` solo aplica al subir a pagado: es la vigencia del regalo. El
+  // servidor SIEMPRE fija una fecha de corte, porque un "paid" sin `paidUntil`
+  // lo baja el cron de billing-downgrade al día siguiente.
+  async function togglePlan(advisor: AdvisorRow, compDays?: number) {
     setBusyId(advisor.id);
     const nextPlan = advisor.plan === "paid" ? "freemium" : "paid";
     const res = await fetch(`/api/admin/advisors/${advisor.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan: nextPlan }),
+      body: JSON.stringify(nextPlan === "paid" ? { plan: nextPlan, compDays } : { plan: nextPlan }),
     });
     setBusyId(null);
     setConfirmToggleId(null);
@@ -154,7 +157,14 @@ export default function OwnerAsesoresPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-brand-gray-4">{advisor.email}</td>
-                  <td className="px-4 py-3">{advisor.plan === "paid" ? "Pagado" : "Freemium"}</td>
+                  {/* Un comp NO es una suscripción: distinguirlos evita leer
+                      regalos como ingreso (ver 12-OWNER-DATA-TRUTH). La fecha de
+                      vigencia ya vive en el panel de detalle, no se repite aquí. */}
+                  <td className="px-4 py-3">
+                    {advisor.plan === "paid"
+                      ? advisor.mpPreapprovalId ? "Pagado" : "Pro de regalo"
+                      : "Freemium"}
+                  </td>
                   <td className="px-4 py-3">{advisor.emailVerified ? "Sí" : "No"}</td>
                   <td className="px-4 py-3 text-brand-gray-4">{formatDate(advisor.createdAt)}</td>
                   {showActions ? (
@@ -177,22 +187,47 @@ export default function OwnerAsesoresPage() {
                           </button>
                         </div>
                       ) : confirmToggleId === advisor.id ? (
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); togglePlan(advisor); }}
-                            disabled={busyId === advisor.id}
-                            className="text-xs font-medium px-3 py-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 transition"
-                          >
-                            {busyId === advisor.id ? "Cambiando..." : "Confirmar"}
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setConfirmToggleId(null); }}
-                            disabled={busyId === advisor.id}
-                            className="text-xs text-brand-gray-4 hover:text-brand-gray-1 transition"
-                          >
-                            Cancelar
-                          </button>
-                        </div>
+                        advisor.plan === "paid" ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); togglePlan(advisor); }}
+                              disabled={busyId === advisor.id}
+                              className="text-xs font-medium px-3 py-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 transition"
+                            >
+                              {busyId === advisor.id ? "Cambiando..." : "Confirmar baja"}
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setConfirmToggleId(null); }}
+                              disabled={busyId === advisor.id}
+                              className="text-xs text-brand-gray-4 hover:text-brand-gray-1 transition"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        ) : (
+                          // Subir a Pro es un regalo y necesita vigencia: un "paid"
+                          // sin fecha de corte lo revierte el cron al día siguiente.
+                          <div className="flex items-center justify-end gap-2 flex-wrap">
+                            <span className="text-xs text-brand-gray-4">Regalar Pro por:</span>
+                            {[30, 90, 365].map((d) => (
+                              <button
+                                key={d}
+                                onClick={(e) => { e.stopPropagation(); togglePlan(advisor, d); }}
+                                disabled={busyId === advisor.id}
+                                className="text-xs font-medium px-3 py-1.5 rounded-full border border-brand-border-4 hover:bg-brand-surface disabled:opacity-50 transition"
+                              >
+                                {d === 365 ? "1 año" : `${d} días`}
+                              </button>
+                            ))}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setConfirmToggleId(null); }}
+                              disabled={busyId === advisor.id}
+                              className="text-xs text-brand-gray-4 hover:text-brand-gray-1 transition"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        )
                       ) : (
                         <div className="flex items-center justify-end gap-2">
                           {!advisor.emailVerified && (
