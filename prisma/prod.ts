@@ -99,10 +99,11 @@ async function runSql(file: string, allowWrite: boolean) {
   }
 }
 
-function runScript(file: string) {
+function runScript(file: string, extraArgs: string[]) {
   const { url, authToken } = loadCreds();
+  if (extraArgs.length) console.log(`→ argumentos: ${extraArgs.join(" ")}`);
   // Las credenciales viajan por el entorno del proceso hijo, nunca por argv.
-  const r = spawnSync("npx", ["tsx", file], {
+  const r = spawnSync("npx", ["tsx", file, ...extraArgs], {
     stdio: "inherit",
     shell: process.platform === "win32",
     env: { ...process.env, DATABASE_URL: url, TURSO_AUTH_TOKEN: authToken },
@@ -113,6 +114,8 @@ function runScript(file: string) {
 const args = process.argv.slice(2);
 const allowWrite = args.includes("--write");
 const target = args.find((a) => !a.startsWith("--"));
+// Todo flag que no sea --write se reenvía al script hijo (ej. --backfill-safe).
+const extraArgs = args.filter((a) => a.startsWith("--") && a !== "--write");
 
 if (!target || !fs.existsSync(target)) {
   console.error(`\nUso: npx tsx prisma/prod.ts <archivo.sql|archivo.ts> [--write]\n`);
@@ -128,5 +131,5 @@ if (target.endsWith(".sql")) {
   console.error(`\n✗ ${target} es un script y puede escribir. Requiere --write explícito.\n`);
   process.exit(1);
 } else {
-  runScript(target);
+  runScript(target, extraArgs);
 }

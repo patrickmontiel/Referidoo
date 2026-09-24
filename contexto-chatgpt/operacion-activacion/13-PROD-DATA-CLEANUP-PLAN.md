@@ -1,6 +1,56 @@
 # 13 · Plan de limpieza de datos en producción
 
-> **NADA SE HA EJECUTADO CONTRA PRODUCCIÓN.** Este doc + `prisma/prod-data-truth-dry-run.sql` (solo `SELECT`) son la fase de **diagnóstico**. El borrado requiere aprobación explícita de Patrick.
+> **EJECUTADO PARCIALMENTE EL 24-SEP-2026.** Se corrieron las 5 migraciones aditivas y el marcado de cuentas internas. **No se ha borrado nada.** Ver §0 bis.
+
+---
+
+# 0 bis · RESULTADO REAL DEL DRY RUN (24-sep-2026)
+
+Ya no son hipótesis. Cifras leídas de Turso producción con `prisma/prod-dry-run-ONE.sql`.
+
+**38 cuentas de asesor en total; solo 9 vivas** (29 con `deletedAt`).
+
+| Cuenta | Cartera | Referidos | Clasificación (decidida por Patrick) |
+|---|---|---|---|
+| Patrick (dueño) · hotmail | 4 | 6 | **Excluida** — owner |
+| QA Smoke Test · patrickkarim2002@gmail | 0 | 0 | **Excluida** — pruebas de prod |
+| Marcela Romo | 0 | 0 | **Excluida** — alta de cortesía, nunca usó el producto |
+| Patrik Montiel · gmail | 0 | 0 | **Excluida** — origen desconocido, 0 uso |
+| CECILIA CARRASCO CAMPOS | 1 | 1 | Real |
+| Omar Juarez | 2 | 5 | Real |
+| EDUARDO NERI · planeacion.finanzas | 2 | 1 | Real (cuenta viva confirmada) |
+| Angel Israel Sosa Gómez | 1 | 1 | Real |
+| Rodrigo De la Mora · @ahoraseguros.com | 0 | 0 | Real — **inbound orgánico, 18-sep** |
+
+## Baseline honesto de Referidoo
+| Métrica | Valor real |
+|---|---|
+| Asesores reales | **5** |
+| MRR | **$0** — ninguna cuenta tiene suscripción de MercadoPago |
+| Cartera conectada (total, los 5) | **6 clientes** |
+| Referidos | **8** |
+| Conversiones **reales de negocio** | **0** (la única `converted` es una prueba de Cecilia) |
+| Activaciones de cartera | **0** |
+
+## Hallazgos que corrigen supuestos anteriores
+1. **Cecilia tiene 1 cliente, no 4–5.** Su único referido convertido **fue una prueba** (confirmado por Patrick), así que **nadie está activado todavía**. El experimento arranca desde cero y empieza por importar su cartera real.
+2. **Rodrigo De la Mora es el primer asesor que llegó solo** (por redes, 18-sep). Verificó cuenta, está en trial y lleva días sentado en un onboarding vacío. Es el caso de uso más urgente del producto.
+3. **30 de los 46 clientes de la base están en una cuenta borrada** (`patrickmontiel@outlook.com`). Patrick decidió que no importan; ya quedan fuera de analytics por `deletedAt`.
+4. **El MRR fantasma era pequeño:** solo 2 cuentas en `plan='paid'` sin MercadoPago ($1,078 nominales), ambas ahora excluidas.
+5. **Cero referidos borrados y cero huella de fixtures en prod.** El bug de no filtrar `Referral.deletedAt` era real pero no había hecho daño.
+6. **Existe 1 grupo de clientes duplicados** por teléfono dentro del mismo asesor. No se fusionó (requiere decisión).
+
+## Lo que se ejecutó
+- Las 5 migraciones aditivas, cada una verificando su propio resultado: `analyticsExcluded`, `normalizedPhone/Email/updatedAt` (+ backfill de 46 clientes), `products/defaultChannel`, `ReferralCampaign`/`CampaignRecipient` (+ `campaignId` en `ProductEvent`), `convertedAt`.
+- `prisma/prod-mark-internal-accounts.sql` — un `UPDATE` marcando las 4 cuentas internas. Reversible.
+- Verificado con `prisma/prod-verify-truth.sql`.
+
+## Lo que quedó pendiente
+- **Backfill de `convertedAt` grupo A** (4 de 9 convertidos con fecha confiable). Sin correr. Es cosmético: ninguno pertenece a un asesor real.
+- **El referido de prueba de Cecilia** sigue contando como 1 conversión en Owner. No se toca por la regla de no alterar datos de Cecilia/Omar/Eduardo. Lo más limpio es que **Cecilia lo borre desde su propio panel**.
+- **Ningún borrado.** Las 29 cuentas con `deletedAt` siguen ahí y ya están fuera de analytics.
+
+---
 
 ## 0. Principio
 > No se borra nada que no podamos **demostrar** que es falso. Lo que no se pueda demostrar se marca **UNKNOWN** y se decide a mano.
