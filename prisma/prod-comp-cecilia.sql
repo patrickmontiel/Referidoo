@@ -1,8 +1,8 @@
 -- ============================================================================
--- COMP para CECILIA CARRASCO CAMPOS — Pro de regalo por 1 año
+-- COMP para CECILIA CARRASCO CAMPOS — Pro de regalo por 3 meses
 -- ============================================================================
--- Decidido por Patrick el 24-sep-2026: le regala el acceso Pro para el
--- experimento de activación.
+-- Decidido por Patrick el 24-sep-2026: le regala 3 meses de acceso Pro para el
+-- experimento de activación. Vence ~23-dic-2026.
 --
 -- Por qué se escribe `paidUntil` y no solo `plan`: Ceci arrastraba un
 -- `paidUntil` VENCIDO (2026-08-17) de un trial anterior. Al subirla a "paid"
@@ -21,7 +21,7 @@
 
 UPDATE "Advisor"
 SET plan              = 'paid',
-    "paidUntil"       = strftime('%Y-%m-%dT%H:%M:%S.000+00:00', 'now', '+365 days'),
+    "paidUntil"       = strftime('%Y-%m-%dT%H:%M:%S.000+00:00', 'now', '+90 days'),
     "paymentFailedAt" = NULL
 WHERE email = 'ceci.c.carrasco@gmail.com'
   AND "deletedAt" IS NULL;
