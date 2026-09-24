@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import os from "node:os";
 import { spawnSync } from "node:child_process";
 import { createClient } from "@libsql/client";
 
@@ -19,7 +20,15 @@ import { createClient } from "@libsql/client";
 // Sin --write: un .sql con cualquier sentencia de escritura se rechaza ANTES de
 // conectarse, y los scripts .ts no corren. La intención de escribir es explícita.
 
-const ENV_FILE = ".env.turso-prod";
+// Las credenciales viven FUERA del repo, en el home del usuario.
+//
+// Por qué: cuando el archivo está dentro del workspace, el editor notifica los
+// cambios al agente incluyendo el contenido — así que un token pegado ahí acaba
+// en el transcript de la sesión aunque nunca se escriba en el chat. Fuera del
+// workspace eso no pasa, y el agente nunca abre este archivo: solo lo lee este
+// runner para armar la conexión.
+const ENV_FILE = path.join(os.homedir(), ".referidoo-turso.env");
+const LEGACY_ENV_FILE = ".env.turso-prod";
 // Ojo: `REPLACE` solo escribe como `REPLACE INTO` / `INSERT OR REPLACE`.
 // `replace(x,y,z)` es la función de cadenas de SQLite y la usa el dry-run para
 // normalizar teléfonos — incluirla suelta bloqueaba una query de solo lectura.
@@ -27,13 +36,19 @@ const WRITE_SQL =
   /\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|VACUUM|ATTACH)\b|\bREPLACE\s+INTO\b/i;
 
 function loadCreds(): { url: string; authToken: string } {
-  const p = path.resolve(ENV_FILE);
-  if (!fs.existsSync(p)) {
-    console.error(`\n✗ Falta ${ENV_FILE} en la raíz del proyecto.\n`);
+  if (!fs.existsSync(ENV_FILE)) {
+    console.error(`\n✗ Falta el archivo de credenciales:\n    ${ENV_FILE}\n`);
+    console.error(`  Debe tener dos líneas:`);
+    console.error(`    DATABASE_URL=libsql://<tu-base>.turso.io`);
+    console.error(`    TURSO_AUTH_TOKEN=<token de BASE DE DATOS, no de la Platform API>\n`);
+    if (fs.existsSync(path.resolve(LEGACY_ENV_FILE))) {
+      console.error(`  Hay un ${LEGACY_ENV_FILE} dentro del repo: mueve su contenido al de`);
+      console.error(`  arriba y vacíalo. Dentro del workspace el editor expone su contenido.\n`);
+    }
     process.exit(1);
   }
   const env: Record<string, string> = {};
-  for (const line of fs.readFileSync(p, "utf8").split(/\r?\n/)) {
+  for (const line of fs.readFileSync(ENV_FILE, "utf8").split(/\r?\n/)) {
     if (/^\s*#/.test(line)) continue;
     const m = line.match(/^\s*([A-Z_]+)\s*=\s*(.*?)\s*$/);
     if (m) env[m[1]] = m[2].replace(/^["']|["']$/g, "");
