@@ -17,7 +17,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
   }
 
-  const advisor = await db.advisor.findUnique({ where: { email } });
+  // Una cuenta dada de baja NO debe poder volver a entrar. No basta con que el
+  // soft-delete renombre el correo: hay dos caminos de baja y solo uno renombra
+  // (el DELETE de /api/admin/advisors/[id] únicamente pone `deletedAt`), así que
+  // en producción hay cuentas borradas con su correo original intacto. Filtrar
+  // por `deletedAt` es la única garantía. `/api/auth/refresh` ya lo hacía.
+  //
+  // El error es el mismo que para una contraseña mala, a propósito: decir "esta
+  // cuenta está dada de baja" permitiría enumerar qué correos existen.
+  const advisor = await db.advisor.findFirst({ where: { email, deletedAt: null } });
   if (!advisor) {
     return NextResponse.json({ error: "Credenciales incorrectas" }, { status: 401 });
   }

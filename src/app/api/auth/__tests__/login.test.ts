@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
 
 vi.mock("@/lib/db", () => ({
-  db: { advisor: { findUnique: vi.fn() } },
+  db: { advisor: { findFirst: vi.fn() } },
 }));
 vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
@@ -14,7 +14,7 @@ import { verifyPassword, signToken } from "@/lib/auth";
 import { __resetRateLimit } from "@/lib/rate-limit";
 import { POST } from "../login/route";
 
-const mockFindUnique = db.advisor.findUnique as unknown as ReturnType<typeof vi.fn>;
+const mockFindFirst = db.advisor.findFirst as unknown as ReturnType<typeof vi.fn>;
 const mockVerifyPassword = verifyPassword as unknown as ReturnType<typeof vi.fn>;
 const mockSignToken = signToken as unknown as ReturnType<typeof vi.fn>;
 
@@ -28,7 +28,7 @@ function postRequest(body: unknown) {
 const ORIGINAL_OWNER_EMAIL = process.env.PLATFORM_OWNER_EMAIL;
 
 beforeEach(() => {
-  mockFindUnique.mockReset();
+  mockFindFirst.mockReset();
   mockVerifyPassword.mockReset();
   mockSignToken.mockReset();
   mockSignToken.mockReturnValue("token");
@@ -45,7 +45,7 @@ describe("POST /api/auth/login", () => {
   // que la cuenta era la del dueño de la plataforma — el dueño caía en el
   // panel de asesor en vez de /owner.
   it("includes isOwner: true when the email matches PLATFORM_OWNER_EMAIL", async () => {
-    mockFindUnique.mockResolvedValue({ id: "adv1", email: "patrick@referidoo.com", password: "hashed" });
+    mockFindFirst.mockResolvedValue({ id: "adv1", email: "patrick@referidoo.com", password: "hashed" });
     mockVerifyPassword.mockResolvedValue(true);
 
     const res = await POST(postRequest({ email: "patrick@referidoo.com", password: "secret123" }));
@@ -55,7 +55,7 @@ describe("POST /api/auth/login", () => {
   });
 
   it("includes isOwner: false for a regular advisor", async () => {
-    mockFindUnique.mockResolvedValue({ id: "adv2", email: "asesor@demo.com", password: "hashed" });
+    mockFindFirst.mockResolvedValue({ id: "adv2", email: "asesor@demo.com", password: "hashed" });
     mockVerifyPassword.mockResolvedValue(true);
 
     const res = await POST(postRequest({ email: "asesor@demo.com", password: "secret123" }));
@@ -65,7 +65,7 @@ describe("POST /api/auth/login", () => {
   });
 
   it("signs the token with enriched advisor fields (name, emailVerified, plan, onboardedAt)", async () => {
-    mockFindUnique.mockResolvedValue({
+    mockFindFirst.mockResolvedValue({
       id: "adv2",
       email: "asesor@demo.com",
       password: "hashed",
@@ -84,10 +84,49 @@ describe("POST /api/auth/login", () => {
   });
 
   it("returns 401 on wrong password", async () => {
-    mockFindUnique.mockResolvedValue({ id: "adv1", email: "patrick@referidoo.com", password: "hashed" });
+    mockFindFirst.mockResolvedValue({ id: "adv1", email: "patrick@referidoo.com", password: "hashed" });
     mockVerifyPassword.mockResolvedValue(false);
 
     const res = await POST(postRequest({ email: "patrick@referidoo.com", password: "wrong" }));
     expect(res.status).toBe(401);
+  });
+
+  // ── REGRESIÓN: cuenta dada de baja ────────────────────────────────────────
+  // El login buscaba por correo sin filtrar `deletedAt`, así que una cuenta dada
+  // de baja podía volver a entrar con su contraseña de siempre. No alcanzaba con
+  // que el soft-delete renombre el correo: el DELETE de /api/admin/advisors/[id]
+  // solo escribe `deletedAt`, y en producción hay cuentas borradas con su correo
+  // intacto — una de ellas con 30 clientes en su cartera.
+  describe("cuentas dadas de baja", () => {
+    it("pide explícitamente deletedAt: null al buscar al asesor", async () => {
+      mockFindFirst.mockResolvedValue(null);
+      await POST(postRequest({ email: "de-baja@x.com", password: "la-correcta" }));
+
+      // Si alguien quita el filtro, este assert truena.
+      expect(mockFindFirst).toHaveBeenCalledWith({
+        where: { email: "de-baja@x.com", deletedAt: null },
+      });
+    });
+
+    it("responde 401 sin verificar la contraseña ni emitir token", async () => {
+      // Con el filtro puesto, Prisma no devuelve la cuenta borrada.
+      mockFindFirst.mockResolvedValue(null);
+      const res = await POST(postRequest({ email: "de-baja@x.com", password: "la-correcta" }));
+
+      expect(res.status).toBe(401);
+      expect(mockVerifyPassword).not.toHaveBeenCalled();
+      expect(mockSignToken).not.toHaveBeenCalled();
+    });
+
+    it("no revela que la cuenta existe: mismo mensaje que una contraseña mala", async () => {
+      mockFindFirst.mockResolvedValue(null);
+      const baja = await POST(postRequest({ email: "de-baja@x.com", password: "x" }));
+
+      mockFindFirst.mockResolvedValue({ id: "adv1", email: "viva@x.com", password: "hashed" });
+      mockVerifyPassword.mockResolvedValue(false);
+      const malaPass = await POST(postRequest({ email: "viva@x.com", password: "mala" }));
+
+      expect(await baja.json()).toEqual(await malaPass.json());
+    });
   });
 });

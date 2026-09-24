@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
 vi.mock("@/lib/db", () => ({
-  db: { advisor: { findUnique: vi.fn().mockResolvedValue(null) } },
+  db: { advisor: { findFirst: vi.fn().mockResolvedValue(null) } },
 }));
 
 import { __resetRateLimit } from "@/lib/rate-limit";

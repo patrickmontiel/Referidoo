@@ -40,6 +40,15 @@ function renderPerfil(advisorOverrides: Record<string, unknown> = {}, clientCoun
       initialClientCount: clientCount,
       initialLeadCount: leadCount,
       initialCredibility: { credential: null, yearsExperience: null, peopleServed: null },
+      // El componente ganó estas props (comparativa de comisión y estado de
+      // cobro) y la fixture se quedó atrás, dejando a tsc en rojo. En 0 para no
+      // afectar los asserts existentes, que no miran estos valores.
+      freemiumCommission: 0,
+      proCommission: 0,
+      commissionDiff: 0,
+      netWithPro: 0,
+      convertedCount: 0,
+      billingStatus: "freemium" as const,
     })
   );
 }

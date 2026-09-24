@@ -24,9 +24,16 @@ function defaultProps(overrides: Partial<{
   };
 }
 
+// `children` va DENTRO de props: AdminLayoutShellProps lo declara requerido, y
+// pasarlo solo como tercer argumento de createElement deja a tsc en rojo aunque
+// en runtime funcione.
+function shellChildren() {
+  return React.createElement("div", null, "content");
+}
+
 function renderShell(props: ReturnType<typeof defaultProps>) {
   return render(
-    React.createElement(AdminLayoutShell, props, React.createElement("div", null, "content"))
+    React.createElement(AdminLayoutShell, { ...props, children: shellChildren() })
   );
 }
 
@@ -51,7 +58,7 @@ describe("AdminLayout welcome screen", () => {
       React.createElement(
         React.StrictMode,
         null,
-        React.createElement(AdminLayoutShell, defaultProps(), React.createElement("div", null, "content"))
+        React.createElement(AdminLayoutShell, { ...defaultProps(), children: shellChildren() })
       )
     );
 
